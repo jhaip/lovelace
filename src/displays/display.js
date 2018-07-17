@@ -99,12 +99,12 @@ const updateCircle = ({ assertions, retractions }) => {
 
   assertions.forEach(circle => {
     circles.set(JSON.stringify(circle), {
-      x: circle.x,
-      y: circle.y,
-      r: circle.r,
-      g: circle.g,
-      b: circle.b,
-      radius: circle.radius
+      x: circle.x || 0,
+      y: circle.y || 0,
+      r: circle.r || 0,
+      g: circle.g || 0,
+      b: circle.b || 0,
+      radius: circle.radius || 0
     })
   })
 
@@ -214,7 +214,7 @@ async function draw (time) {
 
   circles.forEach(({ x, y, r, g, b, radius }) => {
     context.save()
-    context.strokeStyle = `rgb(${r},${g},${b})`
+    context.fillStyle = `rgb(${r},${g},${b})`
     context.beginPath()
     context.ellipse(
       normToCoord(x, canvas.width),
@@ -225,7 +225,7 @@ async function draw (time) {
       0,
       2 * Math.PI
     )
-    context.stroke()
+    context.fill()
     context.restore()
   })
 
