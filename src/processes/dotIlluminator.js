@@ -7,6 +7,7 @@ module.exports = Room => {
     `camera $cameraId sees dots $dotsString @ $time`,
     `dotIlluminator is active`,
     ({ cameraId, dotsString, time }) => {
+      console.error("got message")
       if (time > lastTime) {
         lastTime = time;
         console.error(dotsString);
@@ -15,11 +16,11 @@ module.exports = Room => {
         console.error(dots);
 
         room
-          .retract(`table: draw a ($, $, $) circle at ($, $) with radius 0.02`);
+          .retract(`table: draw a ($, $, $) circle at ($, $) with radius 0.005`);
 
         dots.forEach(dot => {
           room
-            .assert(`table: draw a (${dot.r}, ${dot.g}, ${dot.b}) circle at (${dot.x}, ${dot.y}) with radius 0.02`)
+            .assert(`table: draw a (${dot.r}, ${dot.g}, ${dot.b}) circle at (${dot.x}, ${dot.y}) with radius 0.005`)
         });
       }
   })
@@ -29,7 +30,7 @@ module.exports = Room => {
   const updateDots = ({ assertions, retractions }) => {
     if (!assertions) {
       room
-        .retract(`table: draw a ($, $, $) circle at ($, $) with radius 0.02`);
+        .retract(`table: draw a ($, $, $) circle at ($, $) with radius 0.005`);
     }
     assertions.forEach(A => {
       console.error(A);
@@ -46,7 +47,7 @@ module.exports = Room => {
 
         dots.forEach(dot => {
           room
-            .assert(`table: draw a (${dot.r}, ${dot.g}, ${dot.b}) circle at (${dot.x}, ${dot.y}) with radius 0.02`)
+            .assert(`table: draw a (${dot.r}, ${dot.g}, ${dot.b}) circle at (${dot.x}, ${dot.y}) with radius 0.005`)
         });
       }
     })
