@@ -43,6 +43,7 @@ let texts = new Map()
 let circles = new Map()
 let halos = new Map()
 let lines = new Map()
+let containedPapers = new Map()
 
 const normToCoord = (n, s = canvas.height) => (Number.isInteger(n) ? n : n * s)
 
@@ -50,11 +51,14 @@ const updateLabel = ({ assertions, retractions }) => {
   retractions.forEach(label => labels.delete(JSON.stringify(label)))
 
   assertions.forEach(label => {
+    console.log("label:");
+    console.log(label);
     labels.set(JSON.stringify(label), {
       centered: label.centered || false,
       label: label.name,
       x: label.x,
-      y: label.y
+      y: label.y,
+      paper: label.paper
     })
   })
 
@@ -128,11 +132,30 @@ const updateHalo = ({ assertions, retractions }) => {
   scheduleDraw()
 }
 
+const updateContainedPapers = ({ assertions, retractions }) => {
+  retractions.forEach(r => {
+    containedPapers.delete(r.p);
+    console.log(containedPapers)
+  })
+
+  assertions.forEach(a => {
+    containedPapers.set(a.p, {
+      id: a.p,
+      x: a.x,
+      y: a.y
+    });
+    console.log(containedPapers)
+  })
+
+  scheduleDraw()
+}
+
 // Query labels
 room.subscribe(`draw label $name at ($x, $y)`, updateLabel)
 room.subscribe(`${namespace}: draw label $name at ($x, $y)`, updateLabel)
 room.subscribe(`draw $centered label $name at ($x, $y)`, updateLabel)
 room.subscribe(`${namespace}: draw $centered label $name at ($x, $y)`, updateLabel)
+room.subscribe(`draw $centered label $name at ($x, $y) on paper $paper`, updateLabel)
 
 // Query text
 room.subscribe(`draw text $text at ($x, $y)`, updateText)
@@ -176,6 +199,12 @@ room.subscribe(
   updateHalo
 )
 
+// Query where papers are
+room.subscribe(
+  `paper $p is on ${namespace} at ($x, $y)`,
+  updateContainedPapers
+)
+
 async function draw (time) {
   // if the window is resized, change the canvas to fill the window
   canvas.width = canvas.clientWidth * window.devicePixelRatio
@@ -187,13 +216,27 @@ async function draw (time) {
   context.fillStyle = '#fff'
   context.font = `${40 * window.devicePixelRatio}px sans-serif`
 
-  labels.forEach(({ label, x, y, centered }) => {
+  labels.forEach(({ label, x, y, centered, paper }) => {
     context.save()
     if (centered === 'centered') {
       context.textBaseline = `middle`
       context.textAlign = `center`
     }
-    context.fillText(label, normToCoord(x, canvas.width), normToCoord(y))
+    console.log("paper", paper)
+    if (!!paper && containedPapers.has(paper)) {
+      console.log("DRAWING ON A PAER I KNOW ABOUT!!")
+      console.log(containedPapers.get(paper))
+      containerPaper = containedPapers.get(paper);
+      const paper_width = 100;
+      const paper_height = 100;
+      context.fillText(
+        label,
+        normToCoord(containerPaper.x, canvas.width) + normToCoord(x, paper_width),
+        normToCoord(containerPaper.y) + normToCoord(y, paper_height)
+      )
+    } else {
+      context.fillText(label, normToCoord(x, canvas.width), normToCoord(y))
+    }
     context.restore()
   })
 
