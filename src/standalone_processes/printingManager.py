@@ -24,5 +24,6 @@ while True:
         retract('wish {} would be printed'.format(name))
         if '.py' not in name and '.js' not in name:
             name += '.js'
+        print("PRINTING:", name)
         subprocess.call(['/usr/bin/lpr', 'src/standalone_processes/{}'.format(name)])
     time.sleep(1)
