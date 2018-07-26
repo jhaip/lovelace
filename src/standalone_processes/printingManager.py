@@ -1,6 +1,16 @@
 import subprocess
 import requests
 import time
+import sys
+import os
+
+print os.path.dirname(__file__)
+
+# log_file = open('/path/to/redirect.txt', 'w')
+# sys.stdout = log_file
+# sys.stderr = log_file
+
+print("printingManager started!")
 
 URL = "http://localhost:3000/"
 
@@ -18,6 +28,7 @@ def select(fact):
     return response.json()
 
 while True:
+    print("checking for printing wishes")
     print_wishes = select('wish $name would be printed')
     for wish in print_wishes:
         name = wish['name']['word']
