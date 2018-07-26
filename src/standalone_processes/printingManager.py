@@ -4,15 +4,15 @@ import time
 import sys
 import os
 
+scriptName = os.path.basename(__file__)
+scriptNameNoExtension = os.path.splitext(scriptName)[0]
 fileDir = os.path.dirname(os.path.realpath('__file__'))
-log_filename = os.path.join(fileDir, 'logs/same.txt')
-print(fileDir)
-print(log_filename)
-print(os.path.basename(__file__))
+logPath = os.path.join(fileDir, 'logs/' + scriptNameNoExtension + '.log')
+print(logPath)
 
-# log_file = open('/path/to/redirect.txt', 'w')
-# sys.stdout = log_file
-# sys.stderr = log_file
+log_file = open(logPath, 'w')
+sys.stdout = log_file
+sys.stderr = log_file
 
 print("printingManager started!")
 
