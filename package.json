@@ -14,7 +14,7 @@
     "format": "prettier-standard 'src/*/*.js'",
     "alex": "alex readme.md",
     "processes": "node src/coordinator",
-    "start": "npm-run-all --silent check -p server processes",
+    "start": "npm-run-all check -p server processes",
     "room": "npx room",
     "assert": "npx room assert",
     "retract": "npx room retract",
