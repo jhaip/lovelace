@@ -1,6 +1,7 @@
 const Room = require('@living-room/client-js')
 const fs = require('fs');
 const path = require('path');
+const readline = require('readline');
 
 const scriptName = path.basename(__filename);
 const scriptNameNoExtension = path.parse(scriptName).name;
@@ -14,11 +15,14 @@ process.on('uncaughtException', function(err) {
 const room = new Room()
 
 console.log("start testProcess")
-room.retract(`hello from testProcess @ $`)
 
-setInterval(() => {
-  console.error("hello from testProcess", new Date())
-  room
-    .retract(`hello from testProcess @ $`)
-    .assert(`hello from testProcess @ ${(new Date()).getTime()}`)
-}, 1000)
+const targetProcess = 'testProcess'
+const readLogPath = __filename.replace(scriptName, `logs/${targetProcess}.log`)
+const rl = readline.createInterface({
+  input: fs.createReadStream(readLogPath),
+  crlfDelay: Infinity
+});
+
+rl.on('line', (line) => {
+  console.log(`Line from file: ${line}`);
+});
