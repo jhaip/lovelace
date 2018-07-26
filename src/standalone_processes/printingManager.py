@@ -4,7 +4,11 @@ import time
 import sys
 import os
 
-print os.path.dirname(__file__)
+fileDir = os.path.dirname(os.path.realpath('__file__'))
+log_filename = os.path.join(fileDir, 'logs/same.txt')
+print(fileDir)
+print(log_filename)
+print(os.path.basename(__file__))
 
 # log_file = open('/path/to/redirect.txt', 'w')
 # sys.stdout = log_file
