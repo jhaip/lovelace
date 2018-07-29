@@ -12,6 +12,6 @@ const room = new Room()
 room.assert('hello from way inside programEditTest')
 `;
 
-sourceCode = sourceCode.replace(/\n/g, "\\n")
+sourceCode = sourceCode.replace(/\n/g, '\\n')
 
-room.assert(`wish testy.js has source code \"${sourceCode}\"`)
+room.assert(`wish testy.js has source code "${sourceCode}"`)

@@ -51,3 +51,6 @@ room.subscribe(
 )
 
 room.assert(`processManager is active`)
+room.assert('wish initialProgramCode.js would be running')
+room.assert('wish printingManager.py would be running')
+room.assert('wish programEditor.js would be running')

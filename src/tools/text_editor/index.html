@@ -92,7 +92,7 @@ const loadPrograms = () => {
       const code = fact.sourceCode.value;
       store.programs[name] = {
         'name': name,
-        'code': code
+        'code': code.replace(/☻/g, '"')
       }
     }
     console.log(store);
@@ -153,7 +153,7 @@ programsEl.addEventListener('change', e => {
 
 saveButtonEl.addEventListener('click', e => {
   let shortFilename = ""
-  let sourceCode = codeareaEl.value.replace(/\n/g, "\\n");
+  let sourceCode = codeareaEl.value.replace(/\n/g, "\\n").replace(/"/g, '☻');
   console.log(store.selection);
   if (store.selection === null) {
     let newCodeName = codenameEl.value.trim();
