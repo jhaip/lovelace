@@ -32,24 +32,6 @@ def select(fact):
 
 ###########
 
-while True:
-    result = select('camera $cameraId sees papers $papersString @ $time')
-    raw_papers = result["papersString"]["word"]
-    logging.info("papers:")
-    logging.info(raw_papers)
-    papers = json.loads(raw_papers)
-    logging.info(papers)
-
-    WISKER_LENGTH = 150
-    room.retract("paper $ is pointing at paper $")
-    for paper in papers:
-        other_paper = get_paper_you_point_at(papers, paper["id"], WISKER_LENGTH)
-        logging.info(other_paper)
-        if other_paper is not None:
-            room.say("paper {} is pointing at paper {}".format(paper["id"], other_paper))
-
-    time.sleep(1)
-
 def get_papers_corners(paper):
     tl = None
     tr = None
@@ -73,7 +55,9 @@ def get_paper_center(c):
 
 def move_along_vector(amount, vector):
     size = math.sqrt(vector["x"]**2 + vector["y"]**2)
-    C = 1.0 * amount / size
+    C = 1.0
+    if size != 0:
+        C = 1.0 * amount / size
     return {"x": C * vector["x"], "y": C * vector["y"]}
 
 def add_vec(vec1, vec2):
@@ -139,3 +123,26 @@ def get_paper_you_point_at(papers, you_id, WISKER_LENGTH):
                intersects(wisker[0], wisker[1], corners[3], corners[0]):
                 return paper["id"]
     return None
+
+#####
+
+while True:
+    result = select('camera $cameraId sees papers $papersString @ $time')
+    if not result:
+        continue
+    logging.error(result)
+    raw_papers = result[0]["papersString"]["value"].replace("'", '"')
+    logging.info("papers:")
+    logging.info(raw_papers)
+    papers = json.loads(raw_papers)
+    logging.info(papers)
+
+    WISKER_LENGTH = 150
+    retract("paper $ is pointing at paper $")
+    for paper in papers:
+        other_paper = get_paper_you_point_at(papers, paper["id"], WISKER_LENGTH)
+        logging.info(other_paper)
+        if other_paper is not None:
+            say("paper {} is pointing at paper {}".format(paper["id"], other_paper))
+
+    time.sleep(1)
