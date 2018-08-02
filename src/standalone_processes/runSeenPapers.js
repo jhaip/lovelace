@@ -14,15 +14,12 @@ process.on('uncaughtException', function(err) {
 
 const room = new Room()
 
-room.on(
-  `camera $cameraId sees papers $papersString @ $time`,
-  async ({ cameraId, papersString, time }) => {
-    console.error(papersString);
-    const papers = JSON.parse(papersString.replace(/'/g, '"'));
-    console.error(papers);
-    
+room.subscribe(
+  `camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time`,
+  async ({ assertions }) => {
+    console.log(assertions);
     const knownPapers = (await room.select(`$processName has paper ID $paperId`))
-    const visibleIDs = papers.map(paper => String(paper.id))
+    const visibleIDs = assertions.map(paper => String(paper.id))
     console.log("knownPapers", knownPapers)
     console.log("visibleIDs", visibleIDs)
 
