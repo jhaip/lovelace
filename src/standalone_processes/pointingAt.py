@@ -32,22 +32,6 @@ def select(fact):
 
 ###########
 
-def get_papers_corners(paper):
-    tl = None
-    tr = None
-    br = None
-    bl = None
-    for corner in paper["corners"]:
-        if corner["CornerId"] == 0:
-            tl = corner
-        elif corner["CornerId"] == 1:
-            tr = corner
-        elif corner["CornerId"] == 2:
-            br = corner
-        elif corner["CornerId"] == 3:
-            bl = corner
-    return (tl, tr, br, bl)
-
 def get_paper_center(c):
     x = (c[0]["x"] + c[1]["x"] + c[2]["x"] + c[3]["x"]) * 0.25
     y = (c[0]["y"] + c[1]["y"] + c[2]["y"] + c[3]["y"]) * 0.25
@@ -94,29 +78,19 @@ def intersects(v1,  v2,  v3,  v4):
         gamma = ((v1["y"] - v2["y"]) * (v4["x"] - v1["x"]) + (v2["x"] - v1["x"]) * (v4["y"] - v1["y"])) / det
         return (0 < _lambda and _lambda < 1) and (0 < gamma and gamma < 1)
 
-def get_my_paper(papers, you_id):
-    for paper in papers:
-        if len(paper["corners"]) == 4:
-            tl, tr, br, bl = get_papers_corners(paper)
-            if paper["id"] == str(you_id):
-                return (tl, tr, br, bl)
-    return None
-
 def get_paper_you_point_at(papers, you_id, WISKER_LENGTH):
     valid_papers = []
     my_paper = None
     for paper in papers:
         if len(paper["corners"]) == 4:
-            tl, tr, br, bl = get_papers_corners(paper)
             if paper["id"] == str(you_id):
-                my_paper = (tl, tr, br, bl)
+                my_paper = paper["corners"]
             else:
-                paper["ordered_corners"] = (tl, tr, br, bl)
                 valid_papers.append(paper)
     if my_paper is not None and len(valid_papers) > 0:
         wisker = get_paper_wisker(my_paper, "up", WISKER_LENGTH)
         for paper in valid_papers:
-            corners = paper["ordered_corners"]
+            corners = paper["corners"]
             if intersects(wisker[0], wisker[1], corners[0], corners[1]) or \
                intersects(wisker[0], wisker[1], corners[1], corners[2]) or \
                intersects(wisker[0], wisker[1], corners[2], corners[3]) or \
