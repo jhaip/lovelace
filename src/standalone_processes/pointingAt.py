@@ -83,7 +83,7 @@ def get_paper_you_point_at(papers, you_id, WISKER_LENGTH):
     my_paper = None
     for paper in papers:
         if len(paper["corners"]) == 4:
-            if paper["id"] == str(you_id):
+            if str(paper["id"]) == str(you_id):
                 my_paper = paper["corners"]
             else:
                 valid_papers.append(paper)
@@ -102,25 +102,24 @@ def get_paper_you_point_at(papers, you_id, WISKER_LENGTH):
 
 while True:
     result = select('camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time')
-    logging.info(result)
     if not result:
         continue
     papers = list(map(lambda p: ({
-        "id": result["id"]["value"],
+        "id": p["id"]["value"],
         "corners": [
-            {"x": result["x1"]["value"], "y": result["y1"]["value"]},
-            {"x": result["x2"]["value"], "y": result["y2"]["value"]},
-            {"x": result["x3"]["value"], "y": result["y3"]["value"]},
-            {"x": result["x4"]["value"], "y": result["y4"]["value"]}
+            {"x": p["x1"]["value"], "y": p["y1"]["value"]},
+            {"x": p["x2"]["value"], "y": p["y2"]["value"]},
+            {"x": p["x3"]["value"], "y": p["y3"]["value"]},
+            {"x": p["x4"]["value"], "y": p["y4"]["value"]}
         ]
     }), result))
-    logging.info(papers)
+    logging.info("--")
 
     WISKER_LENGTH = 150
     retract("paper $ is pointing at paper $")
     for paper in papers:
         other_paper = get_paper_you_point_at(papers, paper["id"], WISKER_LENGTH)
-        logging.info(other_paper)
+        logging.info("{} pointing at {}".format(paper["id"], other_paper))
         if other_paper is not None:
             say("paper {} is pointing at paper {}".format(paper["id"], other_paper))
 
