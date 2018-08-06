@@ -55,3 +55,7 @@ room.assert('wish initialProgramCode.js would be running')
 room.assert('wish printingManager.py would be running')
 room.assert('wish programEditor.js would be running')
 room.assert('wish runSeenPapers.js would be running')
+
+room.assert("taco has paper ID 395")
+room.assert("testProcess has paper ID 472")
+room.assert("pythonTest.py has paper ID 1924")
