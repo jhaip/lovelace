@@ -85,13 +85,14 @@ const updateLine = ({ retractions, assertions }) => {
 
   assertions.forEach(line => {
     lines.set(JSON.stringify(line), {
-      r: line.r,
-      g: line.g,
-      b: line.b,
-      x: line.x,
-      y: line.y,
-      xx: line.xx,
-      yy: line.yy
+      r: line.r || 0,
+      g: line.g || 0,
+      b: line.b || 0,
+      x: line.x || 0,
+      y: line.y || 0,
+      xx: line.xx || 0,
+      yy: line.yy || 0,
+      paper: line.paper
     })
   })
 
@@ -132,20 +133,28 @@ const updateHalo = ({ assertions, retractions }) => {
   scheduleDraw()
 }
 
-const updateContainedPapers = ({ assertions, retractions }) => {
-  retractions.forEach(r => {
-    containedPapers.delete(r.p);
-    console.log(containedPapers)
-  })
-
-  assertions.forEach(a => {
-    containedPapers.set(a.p, {
-      id: a.p,
-      x: a.x,
-      y: a.y
-    });
-    console.log(containedPapers)
-  })
+const updateContainedPapers = ({ assertions }) => {
+  if (!assertions || assertions.length === 0) {
+    return;
+  }
+  containedPapers = new Map();
+  assertions.forEach(p => {
+    if (
+      !isNaN(p.x1) && !isNaN(p.y1) &&
+      !isNaN(p.x2) && !isNaN(p.y2) &&
+      !isNaN(p.x3) && !isNaN(p.y3) &&
+      !isNaN(p.x4) && !isNaN(p.y4)
+    ) {
+      containedPapers.set(p.id, {
+        id: p.id,
+        TL: {x: p.x1, y: p.y1},
+        TR: {x: p.x2, y: p.y2},
+        BR: {x: p.x3, y: p.y3},
+        BL: {x: p.x4, y: p.y4}
+      });
+    }
+  });
+  // console.log(containedPapers)
 
   scheduleDraw()
 }
@@ -156,6 +165,7 @@ room.subscribe(`${namespace}: draw label $name at ($x, $y)`, updateLabel)
 room.subscribe(`draw $centered label $name at ($x, $y)`, updateLabel)
 room.subscribe(`${namespace}: draw $centered label $name at ($x, $y)`, updateLabel)
 room.subscribe(`draw $centered label $name at ($x, $y) on paper $paper`, updateLabel)
+// draw centered label "Hello" at (0.5, 0.5) on paper 395
 
 // Query text
 room.subscribe(`draw text $text at ($x, $y)`, updateText)
@@ -180,6 +190,16 @@ room.subscribe(
   `${namespace}: draw a ($r, $g, $b) line from ($x, $y) to ($xx, $yy)`,
   updateLine
 )
+room.subscribe(
+  `draw a ($r, $g, $b) line from ($x, $y) to ($xx, $yy) on paper $paper`,
+  updateLine
+)
+// draw a (1, 1, 255) line from (0.01, 0.01) to (1.0, 1.0) on paper 395
+// draw a (1, 1, 255) line from (0.2, 0.2) to (0.8, 0.2) on paper 395
+// draw a (1, 1, 255) line from (0.8, 0.2) to (0.8, 0.8) on paper 395
+// draw a (1, 1, 255) line from (0.8, 0.8) to (0.2, 0.8) on paper 395
+// draw a (1, 1, 255) line from (0.2, 0.8) to (0.2, 0.2) on paper 395
+
 // Query circles
 room.subscribe(
   `draw a ($r, $g, $b) circle at ($x, $y) with radius $radius`,
@@ -201,9 +221,33 @@ room.subscribe(
 
 // Query where papers are
 room.subscribe(
-  `paper $p is on ${namespace} at ($x, $y)`,
+  `camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time`,
   updateContainedPapers
 )
+
+const add_vec = (vec1, vec2) =>
+  ({"x": vec1["x"] + vec2["x"], "y": vec1["y"] + vec2["y"]})
+
+const diff_vec = (vec1, vec2) =>
+  ({"x": vec1["x"] - vec2["x"], "y": vec1["y"] - vec2["y"]})
+
+const scale_vec = (vec, scale) =>
+  ({"x": vec["x"] * scale, "y": vec["y"] * scale})
+
+const vec_length = (vec) =>
+  Math.sqrt(vec["x"] * vec["x"] + vec["y"] * vec["y"])
+
+const paper_approximation = (paper) => {
+  const top = diff_vec(paper.TR, paper.TL);
+  const left = diff_vec(paper.BL, paper.TL);
+  const projTR = add_vec(paper.TL, top);
+  const projBL = add_vec(paper.TL, left);
+  const origin = paper.TL;
+  const width = vec_length(top);
+  const height = vec_length(left);
+  const angle_radians = Math.atan2(top.y, top.x);
+  return {width, height, angle_radians, origin};
+}
 
 async function draw (time) {
   // if the window is resized, change the canvas to fill the window
@@ -224,16 +268,11 @@ async function draw (time) {
     }
     console.log("paper", paper)
     if (!!paper && containedPapers.has(paper)) {
-      console.log("DRAWING ON A PAER I KNOW ABOUT!!")
-      console.log(containedPapers.get(paper))
       containerPaper = containedPapers.get(paper);
-      const paper_width = 100;
-      const paper_height = 100;
-      context.fillText(
-        label,
-        normToCoord(containerPaper.x, canvas.width) + normToCoord(x, paper_width),
-        normToCoord(containerPaper.y) + normToCoord(y, paper_height)
-      )
+      const paperApprox = paper_approximation(containerPaper);
+      context.translate(paperApprox.origin.x, paperApprox.origin.y);
+      context.rotate(paperApprox.angle_radians)
+      context.fillText(label, x * paperApprox.width, y * paperApprox.height);
     } else {
       context.fillText(label, normToCoord(x, canvas.width), normToCoord(y))
     }
@@ -290,12 +329,24 @@ async function draw (time) {
     context.restore()
   })
 
-  lines.forEach(({ x, y, xx, yy, r, g, b }) => {
+  lines.forEach(({ x, y, xx, yy, r, g, b, paper }) => {
     context.save()
     context.strokeStyle = `rgb(${r},${g},${b})`
     context.beginPath()
-    context.moveTo(x * canvas.width, y * canvas.height)
-    context.lineTo(xx * canvas.width, yy * canvas.height)
+    // console.log("PAPER:")
+    // console.log(paper);
+    // console.log(containedPapers)
+    if (!!paper && containedPapers.has(paper)) {
+      containerPaper = containedPapers.get(paper);
+      const paperApprox = paper_approximation(containerPaper);
+      context.translate(paperApprox.origin.x, paperApprox.origin.y);
+      context.rotate(paperApprox.angle_radians)
+      context.moveTo(x * paperApprox.width, y * paperApprox.height);
+      context.lineTo(xx * paperApprox.width, yy * paperApprox.height);
+    } else {
+      context.moveTo(x * canvas.width, y * canvas.height)
+      context.lineTo(xx * canvas.width, yy * canvas.height)
+    }
     context.stroke()
     context.restore()
   })
