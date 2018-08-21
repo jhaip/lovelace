@@ -29,6 +29,7 @@
 // Drawing a halo:
 //  `draw a ($r, $g, $b) halo around ($x, $y) with radius $radius`
 //  `draw a (255, 12, 123) halo around (0.5, 0.6) with radius 0.1`
+const PerspT = require('perspective-transform');
 const { canvas } = window
 const hostname = location.hostname
 const pathArray = location.pathname.split('/')
@@ -44,6 +45,12 @@ let circles = new Map()
 let halos = new Map()
 let lines = new Map()
 let containedPapers = new Map()
+let projectorCalibration = [
+  0, 0,
+  1920, 0,
+  1920, 1080,
+  0, 1080
+];
 
 const normToCoord = (n, s = canvas.height) => (Number.isInteger(n) ? n : n * s)
 
@@ -159,6 +166,20 @@ const updateContainedPapers = ({ assertions }) => {
   scheduleDraw()
 }
 
+const updateProjectorCalibration = ({ assertions }) => {
+  if (!assertions || assertions.length === 0) {
+    return;
+  }
+  assertions.forEach(a => {
+    projectorCalibration = [
+      a.x1, a.y1,
+      a.x2, a.y2,
+      a.x3, a.y3,
+      a.x4, a.y4,
+    ];
+  })
+}
+
 // Query labels
 room.subscribe(`draw label $name at ($x, $y)`, updateLabel)
 room.subscribe(`${namespace}: draw label $name at ($x, $y)`, updateLabel)
@@ -225,6 +246,11 @@ room.subscribe(
   updateContainedPapers
 )
 
+room.subscribe(
+  `camera $cameraId has projector calibration TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time`,
+  updateProjectorCalibration
+)
+
 const add_vec = (vec1, vec2) =>
   ({"x": vec1["x"] + vec2["x"], "y": vec1["y"] + vec2["y"]})
 
@@ -237,12 +263,20 @@ const scale_vec = (vec, scale) =>
 const vec_length = (vec) =>
   Math.sqrt(vec["x"] * vec["x"] + vec["y"] * vec["y"])
 
-const paper_approximation = (paper) => {
-  const top = diff_vec(paper.TR, paper.TL);
-  const left = diff_vec(paper.BL, paper.TL);
-  const projTR = add_vec(paper.TL, top);
-  const projBL = add_vec(paper.TL, left);
-  const origin = paper.TL;
+const paper_approximation = (paper, perspT) => {
+  const perspTCorner = corner => {
+    const pt = perspT.transform(corner.x, corner.y)
+    return {x: pt[0], y: pt[1]};
+  }
+  const perspTL = perspTCorner(paper.TL);
+  const perspTR = perspTCorner(paper.TR);
+  const perspBR = perspTCorner(paper.BR);
+  const perspBL = perspTCorner(paper.BL);
+  const top = diff_vec(perspTR, perspTL);
+  const left = diff_vec(perspBL, perspTL);
+  const projTR = add_vec(perspTL, top);
+  const projBL = add_vec(perspTL, left);
+  const origin = perspTL;
   const width = vec_length(top);
   const height = vec_length(left);
   const angle_radians = Math.atan2(top.y, top.x);
@@ -253,6 +287,8 @@ async function draw (time) {
   // if the window is resized, change the canvas to fill the window
   canvas.width = canvas.clientWidth * window.devicePixelRatio
   canvas.height = canvas.clientHeight * window.devicePixelRatio
+
+  const perspT = PerspT(projectorCalibration, [0, 0, 1.0, 0, 1.0, 1.0, 0, 1.0]);
 
   // clear the canvas
   context.clearRect(0, 0, canvas.width, canvas.height)
@@ -269,8 +305,11 @@ async function draw (time) {
     console.log("paper", paper)
     if (!!paper && containedPapers.has(paper)) {
       containerPaper = containedPapers.get(paper);
-      const paperApprox = paper_approximation(containerPaper);
-      context.translate(paperApprox.origin.x, paperApprox.origin.y);
+      const paperApprox = paper_approximation(containerPaper, perspT);
+      context.translate(
+        normToCoord(paperApprox.origin.x, canvas.width),
+        normToCoord(paperApprox.origin.y)
+      );
       context.rotate(paperApprox.angle_radians)
       context.fillText(label, x * paperApprox.width, y * paperApprox.height);
     } else {
@@ -338,8 +377,11 @@ async function draw (time) {
     // console.log(containedPapers)
     if (!!paper && containedPapers.has(paper)) {
       containerPaper = containedPapers.get(paper);
-      const paperApprox = paper_approximation(containerPaper);
-      context.translate(paperApprox.origin.x, paperApprox.origin.y);
+      const paperApprox = paper_approximation(containerPaper, perspT);
+      context.translate(
+        normToCoord(paperApprox.origin.x, canvas.width),
+        normToCoord(paperApprox.origin.y)
+      );
       context.rotate(paperApprox.angle_radians)
       context.moveTo(x * paperApprox.width, y * paperApprox.height);
       context.lineTo(xx * paperApprox.width, yy * paperApprox.height);
