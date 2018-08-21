@@ -262,10 +262,10 @@ const scale_vec = (vec, scale) =>
 const vec_length = (vec) =>
   Math.sqrt(vec["x"] * vec["x"] + vec["y"] * vec["y"])
 
-const paper_approximation = (paper, perspT) => {
+const paper_approximation = (paper, perspT, canvasWidth) => {
   const perspTCorner = corner => {
     const pt = perspT.transform(corner.x, corner.y)
-    return {x: pt[0], y: pt[1]};
+    return {x: normToCoord(pt[0], canvasWidth), y: normToCoord(pt[1])};
   }
   const perspTL = perspTCorner(paper.TL);
   const perspTR = perspTCorner(paper.TR);
@@ -304,13 +304,10 @@ async function draw (time) {
     console.log("paper", paper)
     if (!!paper && containedPapers.has(paper)) {
       containerPaper = containedPapers.get(paper);
-      const paperApprox = paper_approximation(containerPaper, perspT);
-      context.translate(
-        normToCoord(paperApprox.origin.x, canvas.width),
-        normToCoord(paperApprox.origin.y)
-      );
+      const paperApprox = paper_approximation(containerPaper, perspT, canvas.width);
+      context.translate(paperApprox.origin.x, paperApprox.origin.y);
       context.rotate(paperApprox.angle_radians)
-      context.fillText(label, x * normToCoord(paperApprox.width, canvas.width), y * normToCoord(paperApprox.height));
+      context.fillText(label, x * paperApprox.width, y * paperApprox.height);
     } else {
       context.fillText(label, normToCoord(x, canvas.width), normToCoord(y))
     }
@@ -376,14 +373,11 @@ async function draw (time) {
     // console.log(containedPapers)
     if (!!paper && containedPapers.has(paper)) {
       containerPaper = containedPapers.get(paper);
-      const paperApprox = paper_approximation(containerPaper, perspT);
-      context.translate(
-        normToCoord(paperApprox.origin.x, canvas.width),
-        normToCoord(paperApprox.origin.y)
-      );
+      const paperApprox = paper_approximation(containerPaper, perspT, canvas.width);
+      context.translate(paperApprox.origin.x, paperApprox.origin.y);
       context.rotate(paperApprox.angle_radians)
-      context.moveTo(x * normToCoord(paperApprox.width, canvas.width), y * normToCoord(paperApprox.height));
-      context.lineTo(xx * normToCoord(paperApprox.width, canvas.width), yy * normToCoord(paperApprox.height));
+      context.moveTo(x * paperApprox.width, y * paperApprox.height);
+      context.lineTo(xx * paperApprox.width, yy * paperApprox.height);
     } else {
       context.moveTo(x * canvas.width, y * canvas.height)
       context.lineTo(xx * canvas.width, yy * canvas.height)
