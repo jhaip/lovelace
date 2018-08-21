@@ -214,11 +214,11 @@ room.subscribe(
   `draw a ($r, $g, $b) line from ($x, $y) to ($xx, $yy) on paper $paper`,
   updateLine
 )
-// draw a (1, 1, 255) line from (0.01, 0.01) to (1.0, 1.0) on paper 395
-// draw a (1, 1, 255) line from (0.2, 0.2) to (0.8, 0.2) on paper 395
-// draw a (1, 1, 255) line from (0.8, 0.2) to (0.8, 0.8) on paper 395
-// draw a (1, 1, 255) line from (0.8, 0.8) to (0.2, 0.8) on paper 395
-// draw a (1, 1, 255) line from (0.2, 0.8) to (0.2, 0.2) on paper 395
+// draw a (254, 254, 255) line from (0.01, 0.01) to (1.0, 1.0) on paper 395
+// draw a (254, 254, 255) line from (0.2, 0.2) to (0.8, 0.2) on paper 395
+// draw a (254, 254, 255) line from (0.8, 0.2) to (0.8, 0.8) on paper 395
+// draw a (254, 254, 255) line from (0.8, 0.8) to (0.2, 0.8) on paper 395
+// draw a (254, 254, 255) line from (0.2, 0.8) to (0.2, 0.2) on paper 395
 
 // Query circles
 room.subscribe(
@@ -310,7 +310,7 @@ async function draw (time) {
         normToCoord(paperApprox.origin.y)
       );
       context.rotate(paperApprox.angle_radians)
-      context.fillText(label, x * paperApprox.width, y * paperApprox.height);
+      context.fillText(label, x * normToCoord(paperApprox.width, canvas.width), y * normToCoord(paperApprox.height));
     } else {
       context.fillText(label, normToCoord(x, canvas.width), normToCoord(y))
     }
@@ -382,8 +382,8 @@ async function draw (time) {
         normToCoord(paperApprox.origin.y)
       );
       context.rotate(paperApprox.angle_radians)
-      context.moveTo(x * paperApprox.width, y * paperApprox.height);
-      context.lineTo(xx * paperApprox.width, yy * paperApprox.height);
+      context.moveTo(x * normToCoord(paperApprox.width, canvas.width), y * normToCoord(paperApprox.height));
+      context.lineTo(xx * normToCoord(paperApprox.width, canvas.width), yy * normToCoord(paperApprox.height));
     } else {
       context.moveTo(x * canvas.width, y * canvas.height)
       context.lineTo(xx * canvas.width, yy * canvas.height)
