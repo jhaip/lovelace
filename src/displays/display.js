@@ -1,34 +1,4 @@
 /* global LivingRoom, location */
-
-// This is a demo of subscribing to a server query.
-
-// Draw a word
-//  `draw label $name at ($x, $y)`
-//  `draw label Timon at (0.3, 0.3)`
-
-// Draw a centered word
-//  `draw centered label $name at ($x, $y)`
-//  `draw centered label Timon at (0.3, 0.3)`
-
-// Draw a sentence
-//  `draw text $text at ($x, $y)`
-//  `draw text "timon is cool" at (0.8, 0.8)`
-
-// Draw a tiny sentence
-//  `draw small text $text at ($x, $y)`
-//  `draw small text "timon is cool" at (0.8, 0.8)`
-
-// Drawing a line
-//  `draw a ($r, $g, $b) line from ($x, $y) to ($xx, $yy)`
-//  `draw a (255, 255, 0) line from (0.3, 0.3) to (0.5, 0.5)`
-
-// Drawing a circle:
-//  `$name is a ($r, $g, $b) circle at ($x, $y) with radius $radius`
-//  `draw a (255, 12, 123) circle at (0.5, 0.6) with radius 0.1`
-
-// Drawing a halo:
-//  `draw a ($r, $g, $b) halo around ($x, $y) with radius $radius`
-//  `draw a (255, 12, 123) halo around (0.5, 0.6) with radius 0.1`
 const { canvas } = window
 const hostname = location.hostname
 const pathArray = location.pathname.split('/')
@@ -53,201 +23,148 @@ let projectorCalibration = [
 
 const normToCoord = (n, s = canvas.height) => (Number.isInteger(n) ? n : n * s)
 
-const updateLabel = ({ assertions, retractions }) => {
-  retractions.forEach(label => labels.delete(JSON.stringify(label)))
-
-  assertions.forEach(label => {
-    console.log("label:");
-    console.log(label);
-    labels.set(JSON.stringify(label), {
-      centered: label.centered || false,
-      label: label.name,
-      x: label.x,
-      y: label.y,
-      paper: label.paper
-    })
-  })
-
-  scheduleDraw()
-}
-
-const updateText = ({ assertions, retractions }) => {
-  retractions.forEach(text => texts.delete(JSON.stringify(text)))
-
-  assertions.forEach(text => {
-    texts.set(JSON.stringify(text), {
-      size: text.size,
-      angle: text.angle,
-      text: text.text,
-      x: text.x,
-      y: text.y
-    })
-  })
-  scheduleDraw()
-}
-
-const updateLine = ({ retractions, assertions }) => {
-  retractions.forEach(line => lines.delete(JSON.stringify(line)))
-
-  assertions.forEach(line => {
-    lines.set(JSON.stringify(line), {
-      r: line.r || 0,
-      g: line.g || 0,
-      b: line.b || 0,
-      x: line.x || 0,
-      y: line.y || 0,
-      xx: line.xx || 0,
-      yy: line.yy || 0,
-      paper: line.paper
-    })
-  })
-
-  scheduleDraw()
-}
-
-const updateCircle = ({ assertions, retractions }) => {
-  retractions.forEach(circle => circles.delete(JSON.stringify(circle)))
-
-  assertions.forEach(circle => {
-    circles.set(JSON.stringify(circle), {
-      x: circle.x || 0,
-      y: circle.y || 0,
-      r: circle.r || 0,
-      g: circle.g || 0,
-      b: circle.b || 0,
-      radius: circle.radius || 0
-    })
-  })
-
-  scheduleDraw()
-}
-
-const updateHalo = ({ assertions, retractions }) => {
-  retractions.forEach(halo => halos.delete(JSON.stringify(halo)))
-
-  assertions.forEach(halo => {
-    halos.set(JSON.stringify(halo), {
-      x: halo.x,
-      y: halo.y,
-      r: halo.r,
-      g: halo.g,
-      b: halo.b,
-      radius: halo.radius
-    })
-  })
-
-  scheduleDraw()
-}
-
-const updateContainedPapers = ({ assertions }) => {
-  if (!assertions || assertions.length === 0) {
-    return;
+const extendLanguage = (language, storage, convertFunc) => {
+  const update = ({ assertions, retractions }) => {
+    retractions.forEach(x => storage.delete(JSON.stringify(x)));
+    assertions.forEach(x => storage.set(
+      JSON.stringify(x),
+      Object.assign(convertFunc(x), {paper: x.paper})
+    ));
+    scheduleDraw();
   }
-  containedPapers = new Map();
-  assertions.forEach(p => {
-    if (
-      !isNaN(p.x1) && !isNaN(p.y1) &&
-      !isNaN(p.x2) && !isNaN(p.y2) &&
-      !isNaN(p.x3) && !isNaN(p.y3) &&
-      !isNaN(p.x4) && !isNaN(p.y4)
-    ) {
-      containedPapers.set(p.id, {
-        id: p.id,
-        TL: {x: p.x1, y: p.y1},
-        TR: {x: p.x2, y: p.y2},
-        BR: {x: p.x3, y: p.y3},
-        BL: {x: p.x4, y: p.y4}
-      });
-    }
+  language.forEach(statement => {
+    room.subscribe(`${statement}`, update);
+    room.subscribe(`${statement} on paper $paper`, update);
+    room.subscribe(`${namespace}: ${statement}`, update);
+    room.subscribe(`${namespace}: ${statement} on paper $paper`, update);
   });
-  // console.log(containedPapers)
-
-  scheduleDraw()
 }
 
-const updateProjectorCalibration = ({ assertions }) => {
-  if (!assertions || assertions.length === 0) {
-    return;
-  }
-  assertions.forEach(a => {
-    projectorCalibration = [
-      a.x1, a.y1,
-      a.x2, a.y2,
-      a.x3, a.y3,
-      a.x4, a.y4,
-    ];
-  })
-}
-
-// Query labels
-room.subscribe(`draw label $name at ($x, $y)`, updateLabel)
-room.subscribe(`${namespace}: draw label $name at ($x, $y)`, updateLabel)
-room.subscribe(`draw $centered label $name at ($x, $y)`, updateLabel)
-room.subscribe(`${namespace}: draw $centered label $name at ($x, $y)`, updateLabel)
-room.subscribe(`draw $centered label $name at ($x, $y) on paper $paper`, updateLabel)
+// draw label Timon at (0.3, 0.3)
 // draw centered label "Hello" at (0.5, 0.5) on paper 395
+extendLanguage(
+  [
+    `draw label $name at ($x, $y)`,
+    `draw $centered label $name at ($x, $y)`
+  ],
+  labels,
+  label => ({
+    centered: label.centered || false,
+    label: label.name || "",
+    x: label.x || 0,
+    y: label.y || 0
+  })
+);
 
-// Query text
-room.subscribe(`draw text $text at ($x, $y)`, updateText)
-room.subscribe(`${namespace}: draw text $text at ($x, $y)`, updateText)
+//  `draw text "timon is cool" at (0.8, 0.8)`
+//  `draw small text "timon is cool" at (0.8, 0.8)`
+extendLanguage(
+  [
+    `draw text $text at ($x, $y)`,
+    `draw $size text $text at ($x, $y)`,
+    `draw $size text $text at ($x, $y) at angle $angle`
+  ],
+  texts,
+  text => ({
+    size: text.size,
+    angle: text.angle,
+    text: text.text || "",
+    x: text.x || 0,
+    y: text.y || 0
+  })
+);
 
-// Query small text
-room.subscribe(`draw $size text $text at ($x, $y)`, updateText)
-room.subscribe(`${namespace}: draw $size text $text at ($x, $y)`, updateText)
-
-room.subscribe(`draw $size text $text at ($x, $y) at angle $angle`, updateText)
-room.subscribe(
-  `${namespace}: draw $size text $text at ($x, $y) at angle $angle`,
-  updateText
-)
-
-// Query lines
-room.subscribe(
-  `draw a ($r, $g, $b) line from ($x, $y) to ($xx, $yy)`,
-  updateLine
-)
-room.subscribe(
-  `${namespace}: draw a ($r, $g, $b) line from ($x, $y) to ($xx, $yy)`,
-  updateLine
-)
-room.subscribe(
-  `draw a ($r, $g, $b) line from ($x, $y) to ($xx, $yy) on paper $paper`,
-  updateLine
-)
 // draw a (254, 254, 255) line from (0.01, 0.01) to (1.0, 1.0) on paper 395
-// draw a (254, 254, 255) line from (0.2, 0.2) to (0.8, 0.2) on paper 395
-// draw a (254, 254, 255) line from (0.8, 0.2) to (0.8, 0.8) on paper 395
-// draw a (254, 254, 255) line from (0.8, 0.8) to (0.2, 0.8) on paper 395
-// draw a (254, 254, 255) line from (0.2, 0.8) to (0.2, 0.2) on paper 395
+extendLanguage(
+  [
+    `draw a ($r, $g, $b) line from ($x, $y) to ($xx, $yy)`
+  ],
+  lines,
+  line => ({
+    r: line.r || 0,
+    g: line.g || 0,
+    b: line.b || 0,
+    x: line.x || 0,
+    y: line.y || 0,
+    xx: line.xx || 0,
+    yy: line.yy || 0
+  })
+);
 
-// Query circles
-room.subscribe(
-  `draw a ($r, $g, $b) circle at ($x, $y) with radius $radius`,
-  updateCircle
-)
-room.subscribe(
-  `${namespace}: draw a ($r, $g, $b) circle at ($x, $y) with radius $radius`,
-  updateCircle
-)
-// Query halos
-room.subscribe(
-  `draw a ($r, $g, $b) halo around ($x, $y) with radius $radius`,
-  updateHalo
-)
-room.subscribe(
-  `${namespace}: draw a ($r, $g, $b) halo around ($x, $y) with radius $radius`,
-  updateHalo
-)
+//  `draw a (255, 12, 123) circle at (0.5, 0.6) with radius 0.1`
+extendLanguage(
+  [
+    `draw a ($r, $g, $b) circle at ($x, $y) with radius $radius`
+  ],
+  circles,
+  circle => ({
+    x: circle.x || 0,
+    y: circle.y || 0,
+    r: circle.r || 0,
+    g: circle.g || 0,
+    b: circle.b || 0,
+    radius: circle.radius || 0
+  })
+);
 
-// Query where papers are
+//  `draw a (255, 12, 123) halo around (0.5, 0.6) with radius 0.1`
+extendLanguage(
+  [
+    `draw a ($r, $g, $b) halo around ($x, $y) with radius $radius`
+  ],
+  halos,
+  halo => ({
+    x: halo.x || 0,
+    y: halo.y || 0,
+    r: halo.r || 0,
+    g: halo.g || 0,
+    b: halo.b || 0,
+    radius: halo.radius || 0
+  })
+);
+
 room.subscribe(
   `camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time`,
-  updateContainedPapers
+  ({ assertions }) => {
+    if (!assertions || assertions.length === 0) {
+      return;
+    }
+    containedPapers = new Map();
+    assertions.forEach(p => {
+      if (
+        !isNaN(p.x1) && !isNaN(p.y1) &&
+        !isNaN(p.x2) && !isNaN(p.y2) &&
+        !isNaN(p.x3) && !isNaN(p.y3) &&
+        !isNaN(p.x4) && !isNaN(p.y4)
+      ) {
+        containedPapers.set(p.id, {
+          id: p.id,
+          TL: {x: p.x1, y: p.y1},
+          TR: {x: p.x2, y: p.y2},
+          BR: {x: p.x3, y: p.y3},
+          BL: {x: p.x4, y: p.y4}
+        });
+      }
+    });
+    scheduleDraw()
+  }
 )
 
 room.subscribe(
   `camera $cameraId has projector calibration TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time`,
-  updateProjectorCalibration
+  ({ assertions }) => {
+    if (!assertions || assertions.length === 0) {
+      return;
+    }
+    assertions.forEach(a => {
+      projectorCalibration = [
+        a.x1, a.y1,
+        a.x2, a.y2,
+        a.x3, a.y3,
+        a.x4, a.y4,
+      ];
+    })
+  }
 )
 
 const add_vec = (vec1, vec2) =>
