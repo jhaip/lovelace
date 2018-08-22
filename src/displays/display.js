@@ -8,10 +8,8 @@ const namespace = htmlpath.split('.')[0]
 const room = new LivingRoom(`http://${hostname}:3000`)
 const context = canvas.getContext('2d')
 
-let labels = new Map()
 let texts = new Map()
 let circles = new Map()
-let halos = new Map()
 let lines = new Map()
 let containedPapers = new Map()
 let projectorCalibration = [
@@ -42,30 +40,19 @@ const extendLanguage = (language, storage, convertFunc) => {
 
 // draw label Timon at (0.3, 0.3)
 // draw centered label "Hello" at (0.5, 0.5) on paper 395
+// `draw text "timon is cool" at (0.8, 0.8)`
+// `draw small text "timon is cool" at (0.8, 0.8)`
 extendLanguage(
   [
-    `draw label $name at ($x, $y)`,
-    `draw $centered label $name at ($x, $y)`
-  ],
-  labels,
-  label => ({
-    centered: label.centered || false,
-    label: label.name || "",
-    x: label.x || 0,
-    y: label.y || 0
-  })
-);
-
-//  `draw text "timon is cool" at (0.8, 0.8)`
-//  `draw small text "timon is cool" at (0.8, 0.8)`
-extendLanguage(
-  [
+    `draw label $text at ($x, $y)`,
+    `draw $centered label $text at ($x, $y)`,
     `draw text $text at ($x, $y)`,
     `draw $size text $text at ($x, $y)`,
     `draw $size text $text at ($x, $y) at angle $angle`
   ],
   texts,
   text => ({
+    centered: label.centered || false,
     size: text.size,
     angle: text.angle,
     text: text.text || "",
@@ -92,34 +79,23 @@ extendLanguage(
 );
 
 //  `draw a (255, 12, 123) circle at (0.5, 0.6) with radius 0.1`
+//  `draw a (255, 12, 123) halo around (0.5, 0.6) with radius 0.1`
 extendLanguage(
   [
-    `draw a ($r, $g, $b) circle at ($x, $y) with radius $radius`
+    `draw a ($fillR, $fillG, $fillB) circle at ($x, $y) with radius $radius`,
+    `draw a ($strokeR, $strokeG, $strokeB) halo around ($x, $y) with radius $radius`
   ],
   circles,
   circle => ({
     x: circle.x || 0,
     y: circle.y || 0,
-    r: circle.r || 0,
-    g: circle.g || 0,
-    b: circle.b || 0,
+    fillR: circle.fillR || 0,
+    fillG: circle.fillG || 0,
+    fillB: circle.fillB || 0,
+    strokeR: circle.strokeR || 0,
+    strokeG: circle.strokeG || 0,
+    strokeB: circle.strokeB || 0,
     radius: circle.radius || 0
-  })
-);
-
-//  `draw a (255, 12, 123) halo around (0.5, 0.6) with radius 0.1`
-extendLanguage(
-  [
-    `draw a ($r, $g, $b) halo around ($x, $y) with radius $radius`
-  ],
-  halos,
-  halo => ({
-    x: halo.x || 0,
-    y: halo.y || 0,
-    r: halo.r || 0,
-    g: halo.g || 0,
-    b: halo.b || 0,
-    radius: halo.radius || 0
   })
 );
 
@@ -209,74 +185,62 @@ async function draw (time) {
   // clear the canvas
   context.clearRect(0, 0, canvas.width, canvas.height)
 
-  context.fillStyle = '#fff'
-  context.font = `${40 * window.devicePixelRatio}px sans-serif`
-
-  labels.forEach(({ label, x, y, centered, paper }) => {
+  texts.forEach(({ text, x, y, centered, size, angle, paper }) => {
     context.save()
+    context.fillStyle = '#fff'
+    context.font = `${40 * window.devicePixelRatio}px sans-serif`
+    if (size === 'small') {
+      context.font = `${20 * window.devicePixelRatio}px sans-serif`
+    }
     if (centered === 'centered') {
       context.textBaseline = `middle`
       context.textAlign = `center`
     }
-    console.log("paper", paper)
+    // TODO:
+    // if (typeof angle !== 'undefined') {
+    //   context.translate(normToCoord(x, canvas.width), normToCoord(y))
+    //   context.rotate(-angle) // counterclockwise
+    //   context.translate(-normToCoord(x, canvas.width), -normToCoord(y))
+    // }
+    let width = canvas.width;
+    let height = canvas.height;
     if (!!paper && containedPapers.has(paper)) {
       containerPaper = containedPapers.get(paper);
       const paperApprox = paper_approximation(containerPaper, perspT, canvas.width);
       context.translate(paperApprox.origin.x, paperApprox.origin.y);
       context.rotate(paperApprox.angle_radians)
-      context.fillText(label, x * paperApprox.width, y * paperApprox.height);
-    } else {
-      context.fillText(label, normToCoord(x, canvas.width), normToCoord(y))
+      width = paperApprox.width;
+      height = paperApprox.height;
     }
+    context.fillText(text, normToCoord(x, width), normToCoord(y, height))
     context.restore()
   })
 
-  texts.forEach(({ text, x, y, size, angle }) => {
+  circles.forEach(({ x, y, fillR, fillG, fillB, strokeR, strokeG, strokeB, radius, paper }) => {
     context.save()
-    context.fillStyle = '#9999ff'
-    if (size === 'small') {
-      context.font = `${20 * window.devicePixelRatio}px sans-serif`
+    context.fillStyle = `rgb(${fillR},${fillG},${fillB})`
+    context.fillStyle = `rgb(${strokeR},${strokeG},${strokeB})`
+    let width = canvas.width;
+    let height = canvas.height;
+    if (!!paper && containedPapers.has(paper)) {
+      containerPaper = containedPapers.get(paper);
+      const paperApprox = paper_approximation(containerPaper, perspT, canvas.width);
+      context.translate(paperApprox.origin.x, paperApprox.origin.y);
+      context.rotate(paperApprox.angle_radians)
+      width = paperApprox.width;
+      height = paperApprox.height;
     }
-    if (typeof angle !== 'undefined') {
-      context.translate(normToCoord(x, canvas.width), normToCoord(y))
-      context.rotate(-angle) // counterclockwise
-      context.translate(-normToCoord(x, canvas.width), -normToCoord(y))
-    }
-    context.fillText(text, normToCoord(x, canvas.width), normToCoord(y))
-    context.restore()
-  })
-
-  circles.forEach(({ x, y, r, g, b, radius }) => {
-    context.save()
-    context.fillStyle = `rgb(${r},${g},${b})`
     context.beginPath()
     context.ellipse(
-      normToCoord(x, canvas.width),
-      normToCoord(y),
-      normToCoord(radius),
-      normToCoord(radius),
+      normToCoord(x, width),
+      normToCoord(y, height),
+      normToCoord(radius, height),
+      normToCoord(radius, height),
       0,
       0,
       2 * Math.PI
     )
     context.fill()
-    context.restore()
-  })
-
-  halos.forEach(({ x, y, r, g, b, radius }) => {
-    context.save()
-    context.strokeStyle = `rgb(${r},${g},${b})`
-    context.fillStyle = `rgb(${r},${g},${b},0)`
-    context.beginPath()
-    context.ellipse(
-      normToCoord(x, canvas.width),
-      normToCoord(y),
-      normToCoord(radius),
-      normToCoord(radius),
-      0,
-      0,
-      2 * Math.PI
-    )
     context.stroke()
     context.restore()
   })
@@ -285,20 +249,18 @@ async function draw (time) {
     context.save()
     context.strokeStyle = `rgb(${r},${g},${b})`
     context.beginPath()
-    // console.log("PAPER:")
-    // console.log(paper);
-    // console.log(containedPapers)
+    let width = canvas.width;
+    let height = canvas.height;
     if (!!paper && containedPapers.has(paper)) {
       containerPaper = containedPapers.get(paper);
       const paperApprox = paper_approximation(containerPaper, perspT, canvas.width);
       context.translate(paperApprox.origin.x, paperApprox.origin.y);
       context.rotate(paperApprox.angle_radians)
-      context.moveTo(x * paperApprox.width, y * paperApprox.height);
-      context.lineTo(xx * paperApprox.width, yy * paperApprox.height);
-    } else {
-      context.moveTo(x * canvas.width, y * canvas.height)
-      context.lineTo(xx * canvas.width, yy * canvas.height)
+      width = paperApprox.width;
+      height = paperApprox.height;
     }
+    context.moveTo(x * width, y * height)
+    context.lineTo(xx * width, yy * height)
     context.stroke()
     context.restore()
   })
