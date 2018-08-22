@@ -63,9 +63,7 @@ extendLanguage(
 
 // draw a (254, 254, 255) line from (0.01, 0.01) to (1.0, 1.0) on paper 395
 extendLanguage(
-  [
-    `draw a ($r, $g, $b) line from ($x, $y) to ($xx, $yy)`
-  ],
+  [`draw a ($r, $g, $b) line from ($x, $y) to ($xx, $yy)`],
   lines,
   line => ({
     r: line.r || 0,
@@ -81,17 +79,28 @@ extendLanguage(
 //  `draw a (255, 12, 123) circle at (0.5, 0.6) with radius 0.1`
 //  `draw a (255, 12, 123) halo around (0.5, 0.6) with radius 0.1`
 extendLanguage(
-  [
-    `draw a ($fillR, $fillG, $fillB) circle at ($x, $y) with radius $radius`,
-    `draw a ($strokeR, $strokeG, $strokeB) halo around ($x, $y) with radius $radius`
-  ],
+  [`draw a ($fillR, $fillG, $fillB) circle at ($x, $y) with radius $radius`],
   circles,
   circle => ({
     x: circle.x || 0,
     y: circle.y || 0,
+    fill: true,
+    stroke: false,
     fillR: circle.fillR || 0,
     fillG: circle.fillG || 0,
     fillB: circle.fillB || 0,
+    radius: circle.radius || 0
+  })
+);
+
+extendLanguage(
+  [`draw a ($strokeR, $strokeG, $strokeB) halo around ($x, $y) with radius $radius`],
+  circles,
+  circle => ({
+    x: circle.x || 0,
+    y: circle.y || 0,
+    fill: false,
+    stroke: true,
     strokeR: circle.strokeR || 0,
     strokeG: circle.strokeG || 0,
     strokeB: circle.strokeB || 0,
@@ -216,10 +225,14 @@ async function draw (time) {
     context.restore()
   })
 
-  circles.forEach(({ x, y, fillR, fillG, fillB, strokeR, strokeG, strokeB, radius, paper }) => {
+  circles.forEach(({ x, y, fill, stroke, fillR, fillG, fillB, strokeR, strokeG, strokeB, radius, paper }) => {
     context.save()
-    context.fillStyle = `rgb(${fillR},${fillG},${fillB})`
-    context.strokeStyle = `rgb(${strokeR},${strokeG},${strokeB})`
+    if (fill) {
+      context.fillStyle = `rgb(${fillR},${fillG},${fillB})`
+    }
+    if (stroke) {
+      context.strokeStyle = `rgb(${strokeR},${strokeG},${strokeB})`
+    }
     let width = canvas.width;
     let height = canvas.height;
     if (!!paper && containedPapers.has(paper)) {
@@ -240,8 +253,12 @@ async function draw (time) {
       0,
       2 * Math.PI
     )
-    context.fill()
-    context.stroke()
+    if (fill) {
+      context.fill()
+    }
+    if (stroke) {
+      context.stroke()
+    }
     context.restore()
   })
 
