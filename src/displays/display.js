@@ -52,7 +52,7 @@ extendLanguage(
   ],
   texts,
   text => ({
-    centered: label.centered || false,
+    centered: text.centered || false,
     size: text.size,
     angle: text.angle,
     text: text.text || "",
@@ -219,7 +219,7 @@ async function draw (time) {
   circles.forEach(({ x, y, fillR, fillG, fillB, strokeR, strokeG, strokeB, radius, paper }) => {
     context.save()
     context.fillStyle = `rgb(${fillR},${fillG},${fillB})`
-    context.fillStyle = `rgb(${strokeR},${strokeG},${strokeB})`
+    context.strokeStyle = `rgb(${strokeR},${strokeG},${strokeB})`
     let width = canvas.width;
     let height = canvas.height;
     if (!!paper && containedPapers.has(paper)) {
