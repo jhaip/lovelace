@@ -197,10 +197,6 @@ async function draw (time) {
   texts.forEach(({ text, x, y, centered, size, angle, paper }) => {
     context.save()
     context.fillStyle = '#fff'
-    context.font = `${40 * window.devicePixelRatio}px sans-serif`
-    if (size === 'small') {
-      context.font = `${20 * window.devicePixelRatio}px sans-serif`
-    }
     if (centered === 'centered') {
       context.textBaseline = `middle`
       context.textAlign = `center`
@@ -220,6 +216,13 @@ async function draw (time) {
       context.rotate(paperApprox.angle_radians)
       width = paperApprox.width;
       height = paperApprox.height;
+    }
+    context.font = `${(40./1080.) * height}px monospace`
+    if (size === 'small') {
+      context.font = `${(20./1080.) * height}px monospace`
+    }
+    if (typeof size === "string" && size.includes("pt") && !isNaN(parseInt(size))) {
+      context.font = `${height * parseInt(size) / 1080.}px monospace`
     }
     context.fillText(text, normToCoord(x, width), normToCoord(y, height))
     context.restore()
@@ -265,6 +268,7 @@ async function draw (time) {
   lines.forEach(({ x, y, xx, yy, r, g, b, paper }) => {
     context.save()
     context.strokeStyle = `rgb(${r},${g},${b})`
+    context.lineWidth = 3;
     context.beginPath()
     let width = canvas.width;
     let height = canvas.height;
@@ -276,8 +280,8 @@ async function draw (time) {
       width = paperApprox.width;
       height = paperApprox.height;
     }
-    context.moveTo(x * width, y * height)
-    context.lineTo(xx * width, yy * height)
+    context.moveTo(normToCoord(x, width), normToCoord(y, height))
+    context.lineTo(normToCoord(xx, width), normToCoord(yy, height))
     context.stroke()
     context.restore()
   })
