@@ -61,9 +61,9 @@ def add_key(key, special_key):
     retract("keyboard {} typed special key $ @ $".format(id))
     if special_key:
         special_key = map_special_key(special_key)
-        assert("keyboard {} typed key \"{}\" @ {}".format(id, key, timestamp))
+        say("keyboard {} typed special key \"{}\" @ {}".format(id, special_key, timestamp))
     else:
-        assert("keyboard {} typed special key \"{}\" @ {}".format(id, key, timestamp))
+        say("keyboard {} typed key \"{}\" @ {}".format(id, key, timestamp))
 
 def add_ctrl_key_combo(key):
     add_key(None, "C-{0}".format(key))
