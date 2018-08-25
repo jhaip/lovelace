@@ -28,7 +28,7 @@ room.subscribe(
     console.log("visibleIDs", visibleIDs)
 
     knownPapers.forEach(paper => {
-        const processName = paper.processName.word;
+        const processName = paper.processName.word || paper.processName.value;
         if (visibleIDs.includes(String(paper.paperId.value))) {
           room.assert(`wish ${processName} would be running`);
         } else {
