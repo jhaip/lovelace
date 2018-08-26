@@ -42,6 +42,29 @@ const correctCursorPosition = () => {
   );
 }
 
+const insertChar = (char) => {
+  console.log("inserting char", char);
+  const index = getCursorIndex();
+  console.log("index is", index)
+  currentSourceCode = [
+    currentSourceCode.slice(0, index),
+    char,
+    currentSourceCode.slice(index)
+  ].join('');
+  if (char === "\n") {
+    cursorPosition = [0, cursorPosition[1] + 1];
+  } else {
+    cursorPosition[0] += 1;
+  }
+  render();
+}
+
+const getCursorIndex = () => {
+  const lines = currentSourceCode.split("\n");
+  const linesBeforeCursor = lines.slice(0, cursorPosition[1])
+  return linesBeforeCursor.reduce((acc, line) => acc + line.length + 1, 0) + cursorPosition[0]
+}
+
 const render = () => {
   correctCursorPosition();
   room.retract(`draw $ text $ at ($, $) on paper ${myId}`)
@@ -93,6 +116,7 @@ room.on(
   `keyboard $ typed key $key @ $`,
   ({ key }) => {
     console.log("key", key);
+    insertChar(key);
   }
 )
 
@@ -100,7 +124,14 @@ room.on(
   `keyboard $ typed special key $specialKey @ $`,
   ({ specialKey }) => {
     console.log("special key", specialKey);
-    if (specialKey === "up") {
+    const special_key_map = {
+      "enter": "\n",
+      "space": " ",
+      "tab": "\t"
+    }
+    if (!!special_key_map[specialKey]) {
+      insertChar(special_key_map[specialKey])
+    } else if (specialKey === "up") {
       cursorPosition[1] -= 1;
       render();
     } else if (specialKey === "right") {
