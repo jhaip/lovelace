@@ -23,6 +23,46 @@ const cursorColor = `(255, 128, 2)`
 let cursorPosition = [10, 10]
 let editorWidthCharacters = 40
 let editorHeightCharacters = 20
+let currentTargetName;
+let currentSourceCode = "";
+
+const correctCursorPosition = () => {
+  const lines = currentSourceCode.split("\n");
+  cursorPosition[1] = Math.max(0,
+    Math.min(
+      cursorPosition[1],
+      Math.max(0, lines.length - 1)
+    )
+  );
+  cursorPosition[0] = Math.max(0,
+    Math.min(
+      cursorPosition[0],
+      Math.max(0, lines[cursorPosition[1]].length)
+    )
+  );
+}
+
+const render = () => {
+  correctCursorPosition();
+  room.retract(`draw $ text $ at ($, $) on paper ${myId}`)
+  room.retract(`draw a ${cursorColor} line from ($, $) to ($, $) on paper ${myId}`)
+  let lines = ["Point at something!"]
+  if (currentTargetName) {
+    lines = currentSourceCode.split("\n")
+    console.error(lines)
+  }
+  lines.slice(0, editorHeightCharacters).forEach((lineRaw, i) => {
+    const line = lineRaw.substring(0, editorWidthCharacters);
+    room.assert(`draw "${fontSize}pt" text "${line}" at (${origin[0]}, ${origin[1] + i * lineHeight}) on paper ${myId}`)
+  });
+  room.assert(
+    `draw a ${cursorColor} line from ` +
+    `(${origin[0] + cursorPosition[0] * charWidth}, ${origin[1] + cursorPosition[1] * lineHeight})` +
+    ` to ` +
+    `(${origin[0] + cursorPosition[0] * charWidth}, ${origin[1] + cursorPosition[1] * lineHeight - fontHeight})` +
+    ` on paper ${myId}`
+  );
+}
 
 console.error("HEllo from text editor")
 
@@ -31,28 +71,53 @@ room.subscribe(
   `$targetName has paper ID $targetId`,
   `$targetName has source code $sourceCode`,
   ({assertions, retractions}) => {
-    room.retract(`draw $ text $ at ($, $) on paper ${myId}`)
-    room.retract(`draw a ${cursorColor} line from ($, $) to ($, $) on paper ${myId}`)
     console.error("got stuff")
     console.error(assertions)
     console.error(retractions)
     if (retractions.length > 0) {
       room.assert(`draw "${fontSize}pt" text "Point at something!" at (${origin[0]}, ${origin[1]}) on paper ${myId}`)
+      currentTargetName = undefined;
+      currentSourceCode = "";
+      cursorPosition = [0, 0];
+      render();
     }
     assertions.forEach(({targetId, targetName, sourceCode}) => {
-      lines = sourceCode.split("\n")
-      console.error(lines)
-      lines.slice(0, editorHeightCharacters).forEach((lineRaw, i) => {
-        const line = lineRaw.substring(0, editorWidthCharacters);
-        room.assert(`draw "${fontSize}pt" text "${line}" at (${origin[0]}, ${origin[1] + i * lineHeight}) on paper ${myId}`)
-      });
-      room.assert(
-        `draw a ${cursorColor} line from ` +
-        `(${origin[0] + cursorPosition[0] * charWidth}, ${origin[1] + cursorPosition[1] * lineHeight})` +
-        ` to ` +
-        `(${origin[0] + cursorPosition[0] * charWidth}, ${origin[1] + cursorPosition[1] * lineHeight - fontHeight})` +
-        ` on paper ${myId}`
-      );
+      currentTargetName = targetName;
+      currentSourceCode = sourceCode;
+      render();
     })
+  }
+)
+
+room.on(
+  `keyboard $ typed key $key @ $`,
+  ({ key }) => {
+    console.log("key", key);
+  }
+)
+
+room.on(
+  `keyboard $ typed special key $specialKey @ $`,
+  ({ specialKey }) => {
+    console.log("special key", specialKey);
+    if (specialKey === "up") {
+      cursorPosition[1] -= 1;
+      render();
+    } else if (specialKey === "right") {
+      cursorPosition[0] += 1;
+      render();
+    } else if (specialKey === "down") {
+      cursorPosition[1] += 1;
+      render();
+    } else if (specialKey === "left") {
+      cursorPosition[0] -= 1;
+      render();
+    } else if (specialKey === "C-s") {
+      console.log("TODO save / create new paper with the current code")
+      console.log(currentSourceCode);
+    } else if (specialKey === "C-p") {
+      console.log(`wish ${currentTargetName} would be printed`)
+      room.assert(`wish ${currentTargetName} would be printed`);
+    }
   }
 )
