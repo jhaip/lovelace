@@ -59,6 +59,24 @@ const insertChar = (char) => {
   render();
 }
 
+const deleteChar = () => {
+  const index = getCursorIndex();
+  if (index > 0) {
+    if (cursorPosition[0] === 0) {
+      cursorPosition[1] = Math.max(0, cursorPosition[1] - 1);
+      const lines = currentSourceCode.split("\n");
+      cursorPosition[0] = lines[cursorPosition[1]].length;
+    } else {
+      cursorPosition[0] -= 1;
+    }
+    currentSourceCode = [
+      currentSourceCode.slice(0, index-1),
+      currentSourceCode.slice(index)
+    ].join('');
+    render();
+  }
+}
+
 const getCursorIndex = () => {
   const lines = currentSourceCode.split("\n");
   const linesBeforeCursor = lines.slice(0, cursorPosition[1])
@@ -143,6 +161,8 @@ room.on(
     } else if (specialKey === "left") {
       cursorPosition[0] -= 1;
       render();
+    } else if (specialKey === "backspace") {
+      deleteChar();
     } else if (specialKey === "C-s") {
       console.log("TODO save / create new paper with the current code")
       console.log(currentSourceCode);
