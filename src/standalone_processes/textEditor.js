@@ -21,8 +21,11 @@ const origin = [0.0001, 0.0001 + lineHeight]
 let charWidth = fontHeight * 0.38;
 const cursorColor = `(255, 128, 2)`
 let cursorPosition = [10, 10]
-let editorWidthCharacters = 40
-let editorHeightCharacters = 20
+let currentWidth = 1;
+let currentHeight = 1;
+let editorWidthCharacters = 1;
+let editorHeightCharacters = 1;
+let windowPosition = [0, 0]
 let currentTargetName;
 let currentSourceCode = "";
 
@@ -40,6 +43,14 @@ const correctCursorPosition = () => {
       Math.max(0, lines[cursorPosition[1]].length)
     )
   );
+}
+
+const correctWindowPosition = () => {
+  if (cursorPosition[1] < windowPosition[1]) {
+    windowPosition[1] = cursorPosition[1];
+  } else if (cursorPosition[1] >= windowPosition[1] + editorHeightCharacters) {
+    windowPosition[1] = Math.max(0, cursorPosition[1] - editorHeightCharacters + 1);
+  }
 }
 
 const insertChar = (char) => {
@@ -85,6 +96,7 @@ const getCursorIndex = () => {
 
 const render = () => {
   correctCursorPosition();
+  correctWindowPosition();
   room.retract(`draw $ text $ at ($, $) on paper ${myId}`)
   room.retract(`draw a ${cursorColor} line from ($, $) to ($, $) on paper ${myId}`)
   let lines = ["Point at something!"]
@@ -92,15 +104,18 @@ const render = () => {
     lines = currentSourceCode.split("\n")
     console.error(lines)
   }
-  lines.slice(0, editorHeightCharacters).forEach((lineRaw, i) => {
+  editorWidthCharacters = 1000;
+  editorHeightCharacters = Math.floor(currentHeight / (fontSize * 1.3));
+  console.log("editor height", editorHeightCharacters);
+  lines.slice(windowPosition[1], windowPosition[1] + editorHeightCharacters).forEach((lineRaw, i) => {
     const line = lineRaw.substring(0, editorWidthCharacters);
     room.assert(`draw "${fontSize}pt" text "${line}" at (${origin[0]}, ${origin[1] + i * lineHeight}) on paper ${myId}`)
   });
   room.assert(
     `draw a ${cursorColor} line from ` +
-    `(${origin[0] + cursorPosition[0] * charWidth}, ${origin[1] + cursorPosition[1] * lineHeight})` +
+    `(${origin[0] + cursorPosition[0] * charWidth}, ${origin[1] + (cursorPosition[1] - windowPosition[1]) * lineHeight})` +
     ` to ` +
-    `(${origin[0] + cursorPosition[0] * charWidth}, ${origin[1] + cursorPosition[1] * lineHeight - fontHeight})` +
+    `(${origin[0] + cursorPosition[0] * charWidth}, ${origin[1] + (cursorPosition[1] - windowPosition[1]) * lineHeight - fontHeight})` +
     ` on paper ${myId}`
   );
 }
@@ -111,6 +126,7 @@ room.subscribe(
   `paper ${myId} is pointing at paper $targetId`,
   `$targetName has paper ID $targetId`,
   `$targetName has source code $sourceCode`,
+  `paper ${myId} has width $myWidth height $myHeight angle $ at ($, $)`,
   ({assertions, retractions}) => {
     console.error("got stuff")
     console.error(assertions)
@@ -122,9 +138,11 @@ room.subscribe(
       cursorPosition = [0, 0];
       render();
     }
-    assertions.forEach(({targetId, targetName, sourceCode}) => {
+    assertions.forEach(({targetId, targetName, sourceCode, myWidth, myHeight}) => {
       currentTargetName = targetName;
       currentSourceCode = sourceCode;
+      curentWidth = myWidth;
+      currentHeight = myHeight;
       render();
     })
   }
