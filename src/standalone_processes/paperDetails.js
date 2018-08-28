@@ -27,10 +27,10 @@ const scale_vec = (vec, scale) =>
 const vec_length = (vec) =>
   Math.sqrt(vec["x"] * vec["x"] + vec["y"] * vec["y"])
 
-const paper_approximation = (paper, perspT, canvasWidth) => {
+const paper_approximation = (paper, perspT, canvasWidth, canvasHeight) => {
   const perspTCorner = corner => {
     const pt = perspT.transform(corner.x, corner.y)
-    return {x: normToCoord(pt[0], canvasWidth), y: normToCoord(pt[1])};
+    return {x: pt[0] * canvasWidth, y: pt[1] * canvasHeight};
   }
   const perspTL = perspTCorner(paper.TL);
   const perspTR = perspTCorner(paper.TR);
@@ -58,13 +58,14 @@ room.on(
       !isNaN(data.x4) && !isNaN(data.y4)
     ) {
       const projectorCalibration = [
-        data.PCx1, data.PCy1,
-        data.PCx2, data.PCy2,
-        data.PCx3, data.PCy3,
-        data.PCx4, data.PCy4
-      ]
-      const perspT = PerspT(projectorCalibration, [0, 0, 1.0, 0, 1.0, 1.0, 0, 1.0]);
-      const canvasWidth = 1920
+        data.PCx1 || 0, data.PCy1 || 0,
+        data.PCx2 || 0, data.PCy2 || 0,
+        data.PCx3 || 0, data.PCy3 || 0,
+        data.PCx4 || 0, data.PCy4 || 0
+      ];
+      const perspT = PerspT(projectorCalibration, [0.0001, 0, 1.0, 0, 1.0, 1.0, 0, 1.0]);
+      const canvasWidth = 1920;
+      const canvasHeight = 1080;
       const paper = {
         id: data.id,
         TL: {x: data.x1, y: data.y1},
@@ -72,7 +73,7 @@ room.on(
         BR: {x: data.x3, y: data.y3},
         BL: {x: data.x4, y: data.y4}
       };
-      const paperApprox = paper_approximation(paper, perspT, canvasWidth);
+      const paperApprox = paper_approximation(paper, perspT, canvasWidth, canvasHeight);
       room.retract(`paper ${data.id} has width $ height $ angle $ at ($, $)`)
       room.assert(
         `paper ${data.id} has width ${paperApprox.width}` +
