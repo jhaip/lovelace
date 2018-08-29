@@ -188,10 +188,10 @@ room.on(
       console.log("TODO save / create new paper with the current code")
       console.log(currentSourceCode);
       const cleanSourceCode = currentSourceCode.replace(/\n/g, '\\n').replace(/"/g, String.fromCharCode(9787))
-      room.assert(`wish ${currentTargetName} has source code "${cleanSourceCode}"`);
+      room.assert(`wish "${currentTargetName}" has source code "${cleanSourceCode}"`);
     } else if (specialKey === "C-p") {
-      console.log(`wish ${currentTargetName} would be printed`)
-      room.assert(`wish ${currentTargetName} would be printed`);
+      console.log(`wish "${currentTargetName}" would be printed`)
+      room.assert(`wish "${currentTargetName}" would be printed`);
     }
   }
 )

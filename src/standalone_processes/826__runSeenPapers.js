@@ -30,9 +30,9 @@ room.subscribe(
     knownPapers.forEach(paper => {
         const processName = paper.processName.word || paper.processName.value;
         if (visibleIDs.includes(String(paper.paperId.value))) {
-          room.assert(`wish ${processName} would be running`);
+          room.assert(`wish "${processName}" would be running`);
         } else {
-          room.retract(`wish ${processName} would be running`);
+          room.retract(`wish "${processName}" would be running`);
         }
     });
   }
@@ -48,7 +48,7 @@ room.subscribe(
     const knownPapers = (await room.select(`$processName has paper ID $paperId`))
     knownPapers.forEach(paper => {
         const processName = paper.processName.word;
-        room.retract(`wish ${processName} would be running`);
+        room.retract(`wish "${processName}" would be running`);
     });
   }
 )

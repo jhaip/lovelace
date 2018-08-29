@@ -19,7 +19,9 @@ const readFile = readLogPath => {
     sourceCode = sourceCodeData.replace(/\n/g, '\\n').replace(/"/g, String.fromCharCode(9787))
     console.log(`"${readLogPath}" has source code "${sourceCode}"`)
     const shortFilename = path.basename(readLogPath);
+    const paperId = shortFilename.split("__")[0];
     room.assert(`"${shortFilename}" has source code "${sourceCode}"`)
+    room.assert(`"${shortFilename}" has paper ID ${paperId}`)
   });
 }
 
