@@ -55,8 +55,11 @@ room.assert('wish initialProgramCode.js would be running')
 room.assert('wish printingManager.py would be running')
 room.assert('wish programEditor.js would be running')
 room.assert('wish runSeenPapers.js would be running')
-room.assert('wish textEditor.js would be running')
+room.assert('wish pointingAt.py would be running')
+room.assert('wish paperDetails.js would be running')
 
 room.assert(`"taco.js" has paper ID 395`)
 room.assert(`"testProcess.js" has paper ID 472`)
-room.assert(`"pythonTest.py" has paper ID 1924`)
+room.assert(`"textEditor.js" has paper ID 1924`)
+
+room.assert(`camera 1 has projector calibration TL (0, 0) TR (1920, 0) BR (1920, 1080) BL (0, 1080) @ 1`)

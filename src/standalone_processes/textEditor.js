@@ -13,7 +13,7 @@ process.on('uncaughtException', function(err) {
 
 const room = new Room()
 
-const myId = 472
+const myId = 1924
 let fontSize = 32;
 let fontHeight = fontSize / 1080.0;
 let lineHeight = 1.3 * fontHeight;
@@ -101,11 +101,11 @@ const render = () => {
   room.retract(`draw a ${cursorColor} line from ($, $) to ($, $) on paper ${myId}`)
   let lines = ["Point at something!"]
   if (currentTargetName) {
-    lines = currentSourceCode.split("\n")
+    lines = currentSourceCode.replace(new RegExp(String.fromCharCode(34), 'g'), String.fromCharCode(9787)).split("\n")
     console.error(lines)
   }
   editorWidthCharacters = 1000;
-  editorHeightCharacters = Math.floor(currentHeight / (fontSize * 1.3));
+  editorHeightCharacters = Math.floor(currentHeight / (fontSize * 1.3 * 0.5));
   console.log("editor height", editorHeightCharacters);
   lines.slice(windowPosition[1], windowPosition[1] + editorHeightCharacters).forEach((lineRaw, i) => {
     const line = lineRaw.substring(0, editorWidthCharacters);
@@ -131,7 +131,7 @@ room.subscribe(
     console.error("got stuff")
     console.error(assertions)
     console.error(retractions)
-    if (retractions.length > 0) {
+    if (false && retractions.length > 0) {
       room.assert(`draw "${fontSize}pt" text "Point at something!" at (${origin[0]}, ${origin[1]}) on paper ${myId}`)
       currentTargetName = undefined;
       currentSourceCode = "";
@@ -139,8 +139,10 @@ room.subscribe(
       render();
     }
     assertions.forEach(({targetId, targetName, sourceCode, myWidth, myHeight}) => {
-      currentTargetName = targetName;
-      currentSourceCode = sourceCode;
+      if (currentTargetName !== targetName) {
+        currentTargetName = targetName;
+        currentSourceCode = sourceCode;
+      }
       curentWidth = myWidth;
       currentHeight = myHeight;
       render();
@@ -163,7 +165,8 @@ room.on(
     const special_key_map = {
       "enter": "\n",
       "space": " ",
-      "tab": "\t"
+      "tab": "\t",
+      "doublequote": String.fromCharCode(34)
     }
     if (!!special_key_map[specialKey]) {
       insertChar(special_key_map[specialKey])

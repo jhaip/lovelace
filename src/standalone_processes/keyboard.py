@@ -50,6 +50,7 @@ def map_special_key(key):
     m[keyboard.Key.down] = "down"
     m["C-p"] = "C-p"
     m["C-s"] = "C-s"
+    m["doublequote"] = "doublequote"
     if key in m:
         return m[key]
     return None
@@ -76,6 +77,8 @@ def on_press(key):
             key.char))
         if is_ctrl_pressed:
             add_ctrl_key_combo(key.char)
+        elif key.char == chr(34):
+            add_key(None, "doublequote")
         else:
             add_key(key.char, None)
     except AttributeError:
