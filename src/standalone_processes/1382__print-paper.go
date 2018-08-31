@@ -2,10 +2,80 @@ package main
 
 import (
 	"fmt"
+  "encoding/json"
+  "net/http"
+  "net/url"
 	"github.com/jung-kurt/gofpdf"
 )
 
+const URL = "http://localhost:3000/"
+
+func say(fact string) {
+  formData := url.Values{
+		"facts": {fact},
+	}
+  resp, err := http.PostForm(URL + "assert", formData)
+	if err != nil {
+		fmt.Println(err)
+	}
+  defer resp.Body.Close()
+}
+
+func retract(fact string) {
+  formData := url.Values{
+		"facts": {fact},
+	}
+  resp, err := http.PostForm(URL + "retract", formData)
+	if err != nil {
+		fmt.Println(err)
+	}
+  defer resp.Body.Close()
+}
+
+func selectt(fact string) {
+  formData := url.Values{
+		"facts": {fact},
+	}
+  // http://polyglot.ninja/golang-making-http-requests/
+  // https://postman-echo.com/post
+  resp, err := http.PostForm(URL + "select", formData)
+  fmt.Println(URL + "select")
+  fmt.Println(formData)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+  fmt.Println(resp)
+
+  var result map[string]interface{}
+
+	json.NewDecoder(resp.Body).Decode(&result)
+
+	fmt.Println(result)
+  defer resp.Body.Close()
+  // return result
+  // Example JSON:
+  /*
+  [
+      {
+          "id": {
+              "value": 561
+          },
+          "shortFilename": {
+              "value": "561.py"
+          }
+      }
+  ]
+  */
+}
+
 func main() {
+  selectt("wish paper $id at $shortFilename would be printed")
+  // select
+  // wish paper $id at $shortFilename would be printed
+  // every second or so
+  // later:
+  // room.assert(`wish file Y would be printed`)
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.AddPage()
 

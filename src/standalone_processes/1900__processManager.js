@@ -56,8 +56,25 @@ room.assert('wish "577__programEditor.js" would be running')
 room.assert('wish "826__runSeenPapers.js" would be running')
 room.assert('wish "277__pointingAt.py" would be running')
 room.assert('wish "620__paperDetails.js" would be running')
+room.assert('wish "1459__createNewPaper.js" would be running')
 
 room.assert(`camera 1 has projector calibration TL (0, 0) TR (1920, 0) BR (1920, 1080) BL (0, 1080) @ 1`)
+
+const sourceCode = `
+import requests
+import time
+import json
+
+URL = 'http://localhost:3000/'
+
+def say(fact):
+    payload = {'facts': fact}
+    return requests.post(URL + 'assert', data=payload)
+
+say('hello from python')
+`;
+const cleanSourceCode = sourceCode.replace(/\n/g, '\\n').replace(/"/g, String.fromCharCode(9787));
+room.assert(`wish a paper would be created in "py" with source code "${cleanSourceCode}" @ 1`)
 
 // room.assert(`camera 1 sees paper 1924 at TL (100, 100) TR (1200, 100) BR (1200, 800) BL (100, 800) @ 1`)
 // room.assert(`paper 1924 is pointing at paper 472`)  // comment out if pointingAt.py is running
