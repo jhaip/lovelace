@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+  // "bytes"
   "encoding/json"
+  "io/ioutil"
   "net/http"
   "net/url"
 	"github.com/jung-kurt/gofpdf"
@@ -32,10 +34,37 @@ func retract(fact string) {
   defer resp.Body.Close()
 }
 
-func selectt(fact string) {
+type SampleId struct {
+  Value int
+}
+
+type SampleFilename struct {
+  Value string
+}
+
+type Sample struct {
+  Id SampleId
+  ShortFilename SampleFilename
+}
+
+func selectt(fact string) []Sample {
   formData := url.Values{
 		"facts": {fact},
 	}
+
+  // message := map[string]interface{}{
+	// 	"facts": fact,
+	// }
+  // bytesRepresentation, err := json.Marshal(message)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+  //
+  // resp, err := http.Post(URL + "select", "application/json", bytes.NewBuffer(bytesRepresentation))
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+
   // http://polyglot.ninja/golang-making-http-requests/
   // https://postman-echo.com/post
   resp, err := http.PostForm(URL + "select", formData)
@@ -46,13 +75,30 @@ func selectt(fact string) {
 	}
 
   fmt.Println(resp)
+  fmt.Println(resp.Body)
 
-  var result map[string]interface{}
+  body, err := ioutil.ReadAll(resp.Body)
+  fmt.Println(body)
+  bodyString := string(body)
+  fmt.Println(bodyString)
 
-	json.NewDecoder(resp.Body).Decode(&result)
+  bodyStringBytes := []byte(bodyString)
 
-	fmt.Println(result)
+  samples := make([]Sample,0)
+  json.Unmarshal(bodyStringBytes, &samples)
+
+
+
+
+
+  // var result map[string]interface{}
+  //
+	// json.NewDecoder(resp.Body).Decode(&result)
+  //
+	// fmt.Println(result)
   defer resp.Body.Close()
+
+  return samples
   // return result
   // Example JSON:
   /*
@@ -70,7 +116,11 @@ func selectt(fact string) {
 }
 
 func main() {
-  selectt("wish paper $id at $shortFilename would be printed")
+  samples := selectt("wish paper $id at $shortFilename would be printed")
+  fmt.Printf("%#v\n", samples)
+  fmt.Printf("%#v\n", samples[0])
+  fmt.Printf("%#v\n", samples[0].Id.Value)
+  fmt.Printf("%#v\n", samples[0].ShortFilename.Value)
   // select
   // wish paper $id at $shortFilename would be printed
   // every second or so
