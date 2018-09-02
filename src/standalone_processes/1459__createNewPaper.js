@@ -35,8 +35,9 @@ room.on(
       if (err) {
         return console.log(err);
       }
+      sourceCodeNewlineCleaned = sourceCode.replace(/\n/g, '\\n')
       room.retract(`wish a paper would be created in ${language} with source code $ @ ${time}`)
-      room.assert(`"${shortFilename}" has source code "${sourceCode}"`)
+      room.assert(`"${shortFilename}" has source code "${sourceCodeNewlineCleaned}"`)
       room.assert(`"${shortFilename}" has paper ID ${newId}`)
       room.assert(`wish paper ${newId} at "${shortFilename}" would be printed`)
       // room.assert(`wish file Y would be printed`)
