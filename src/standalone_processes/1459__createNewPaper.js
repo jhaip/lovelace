@@ -40,7 +40,6 @@ room.on(
       room.assert(`"${shortFilename}" has source code "${sourceCodeNewlineCleaned}"`)
       room.assert(`"${shortFilename}" has paper ID ${newId}`)
       room.assert(`wish paper ${newId} at "${shortFilename}" would be printed`)
-      // room.assert(`wish file Y would be printed`)
     });
   }
 );
