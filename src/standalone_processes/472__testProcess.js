@@ -45,11 +45,19 @@ room.subscribe(
         !isNaN(p.x3) && !isNaN(p.y3) &&
         !isNaN(p.x4) && !isNaN(p.y4)
       ) {
-        room.assert(`draw a (255, 255, 1) line from (${p.x1/W}, ${p.y1/H}) to (${p.x2/W}, ${p.y2/H})`)
-        room.assert(`draw a (255, 255, 1) line from (${p.x2/W}, ${p.y2/H}) to (${p.x3/W}, ${p.y3/H})`)
-        room.assert(`draw a (255, 255, 1) line from (${p.x3/W}, ${p.y3/H}) to (${p.x4/W}, ${p.y4/H})`)
-        room.assert(`draw a (255, 255, 1) line from (${p.x4/W}, ${p.y4/H}) to (${p.x1/W}, ${p.y1/H})`)
-        room.assert(`draw text "Paper ${p.id}" at (${p.x1/W}, ${p.y1/H})`)
+        // room.assert(`draw a (255, 255, 1) line from (${p.x1/W}, ${p.y1/H}) to (${p.x2/W}, ${p.y2/H})`)
+        // room.assert(`draw a (255, 255, 1) line from (${p.x2/W}, ${p.y2/H}) to (${p.x3/W}, ${p.y3/H})`)
+        // room.assert(`draw a (255, 255, 1) line from (${p.x3/W}, ${p.y3/H}) to (${p.x4/W}, ${p.y4/H})`)
+        // room.assert(`draw a (255, 255, 1) line from (${p.x4/W}, ${p.y4/H}) to (${p.x1/W}, ${p.y1/H})`)
+        // room.assert(`draw text "Paper ${p.id}" at (${p.x1/W}, ${p.y1/H})`)
+        const margin = 0.1;
+        const low = 0.01 + margin;
+        const high = 1.0 - margin;
+        room.assert(`draw a (255, 255, 1) line from (${low}, ${low}) to (${high}, ${low}) on paper ${p.id}`);
+        room.assert(`draw a (255, 255, 1) line from (${high}, ${low}) to (${high}, ${high}) on paper ${p.id}`);
+        room.assert(`draw a (255, 255, 1) line from (${high}, ${high}) to (${low}, ${high}) on paper ${p.id}`);
+        room.assert(`draw a (255, 255, 1) line from (${low}, ${high}) to (${low}, ${low}) on paper ${p.id}`);
+        room.assert(`draw centered label "What is ${p.id}" at (0.5, 0.5) on paper ${p.id}`);
       }
     })
   }
@@ -63,7 +71,7 @@ room.subscribe(
     }
     // this may not do anything because this program might not be running
     // when there are no papers. If it's not running then it can't retract it.
-    room.retract(`draw a (255, 255, 1) line from ($, $) to ($, $)`)
-    room.retract(`draw text $ at ($, $)`);
+    room.retract(`draw a (255, 255, 1) line from ($, $) to ($, $) on paper $`)
+    room.retract(`draw centered label $ at ($, $) on paper $`);
   }
 )
