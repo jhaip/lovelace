@@ -16,6 +16,8 @@ import (
 const URL = "http://localhost:3000/"
 const DOT_CODES_PATH = "/Users/jhaip/Code/lovelace/src/standalone_processes/files/dot-codes.txt"
 const PDF_OUTPUT_FOLDER = "/Users/jhaip/Code/go/src/github.com/jhaip/gofpdf-test-1/"
+// const DOT_CODES_PATH = "/home/jacob/lovelace/src/standalone_processes/files/dot-codes.txt"
+// const PDF_OUTPUT_FOLDER = "/home/jacob/go/src/github.com/jhaip/gofpdf-test-1/"
 
 func say(fact string) {
   formData := url.Values{
@@ -113,7 +115,7 @@ func setFillColorFromDotCode(pdf *gofpdf.Fpdf, codeChar byte) {
 }
 
 func generatePrintFile(sourceCode string, programId int, name string, code8400 []string) {
-  pdf := gofpdf.New("P", "mm", "A4", "")
+  pdf := gofpdf.New("P", "mm", "Letter", "")
 	pdf.AddPage()
 
 	pdf.SetAutoPageBreak(false, 0)
