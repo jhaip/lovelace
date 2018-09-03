@@ -16,6 +16,8 @@ import (
 const URL = "http://localhost:3000/"
 const DOT_CODES_PATH = "/Users/jhaip/Code/lovelace/src/standalone_processes/files/dot-codes.txt"
 const PDF_OUTPUT_FOLDER = "/Users/jhaip/Code/go/src/github.com/jhaip/gofpdf-test-1/"
+// const DOT_CODES_PATH = "/home/jacob/lovelace/src/standalone_processes/files/dot-codes.txt"
+// const PDF_OUTPUT_FOLDER = "/home/jacob/go/src/github.com/jhaip/gofpdf-test-1/"
 
 func say(fact string) {
   formData := url.Values{
