@@ -113,7 +113,7 @@ func setFillColorFromDotCode(pdf *gofpdf.Fpdf, codeChar byte) {
 }
 
 func generatePrintFile(sourceCode string, programId int, name string, code8400 []string) {
-  pdf := gofpdf.New("P", "mm", "A4", "")
+  pdf := gofpdf.New("P", "mm", "Letter", "")
 	pdf.AddPage()
 
 	pdf.SetAutoPageBreak(false, 0)
