@@ -14,6 +14,8 @@ import (
 )
 
 const URL = "http://localhost:3000/"
+const DOT_CODES_PATH = "/Users/jhaip/Code/lovelace/src/standalone_processes/files/dot-codes.txt"
+const PDF_OUTPUT_FOLDER = "/Users/jhaip/Code/go/src/github.com/jhaip/gofpdf-test-1/"
 
 func say(fact string) {
   formData := url.Values{
@@ -165,7 +167,7 @@ func generatePrintFile(sourceCode string, programId int, name string, code8400 [
   pdf.SetXY(0, pageHeight - topMargin * 2 - bottomMargin - circleRadius)
   pdf.WriteAligned(0, 20, name, "C")
 
-	err := pdf.OutputFileAndClose(strconv.Itoa(programId) + ".pdf")
+	err := pdf.OutputFileAndClose(PDF_OUTPUT_FOLDER + strconv.Itoa(programId) + ".pdf")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -197,7 +199,7 @@ func get_source_code(shortFilename string) (string, bool) {
 }
 
 func main() {
-  code8400, err := readLines("/Users/jhaip/Code/lovelace/src/standalone_processes/files/dot-codes.txt")
+  code8400, err := readLines(DOT_CODES_PATH)
   if err != nil {
 		fmt.Println(err)
     return
@@ -222,7 +224,7 @@ func main() {
     	sourceCode := "const Room = require('@living-room/client-js')\nconst execFile = require('child_process').execFile;\n\nconst room = new Room()\n\nroom.subscribe(\n  `wish $name would be running`,\n  ({assertions, retractions}) => {\n    retractions.forEach(async ({ name }) => {\n      const existing_pid = await room.select(`☻${name}☻ has process id $pid`)\n      console.error(`making ${name} NOT be running`)\n      console.error(existing_pid)\n      existing_pid.forEach(({ pid }) => {\n        pid = pid.value;\n        console.log(☻STOPPING PID☻, pid)\n        process.kill(pid, 'SIGTERM')\n        room.retract(`☻${name}☻ has process id $`);\n        room.retract(`☻${name}☻ is active`);\n      })\n    })\n    assertions.forEach(async ({ name }) => {\n      const existing_pid = await room.select(`☻${name}☻ has process id $pid`)\n      if (existing_pid.length === 0) {\n        console.error(`making ${name} be running!`)\n        let languageProcess = 'node'\n        let programSource = `src/standalone_processes/${name}`\n        if (name.includes('.py')) {\n          console.error(☻running as Python!☻)\n          languageProcess = 'python3'\n        }\n        const child = execFile(\n          languageProcess,\n          [programSource],\n          (error, stdout, stderr) => {\n            // TODO: check if program should still be running\n            // and start it again if so.\n            room.retract(`☻${name}☻ has process id $`);\n            room.retract(`☻${name}☻ is active`);\n            console.log(`${name} callback`)\n            if (error) {\n                console.error('stderr', stderr);\n            }\n            console.log('stdout', stdout);\n        });\n        const pid = child.pid;\n        room.assert(`☻${name}☻ has process id ${pid}`);\n        console.error(pid);\n      }\n    })\n  }\n)\n\nroom.assert('wish ☻390__initialProgramCode.js☻ would be running')\nroom.assert('wish ☻498__printingManager.py☻ would be running')\nroom.assert('wish ☻577__programEditor.js☻ would be running')\nroom.assert('wish ☻826__runSeenPapers.js☻ would be running')\nroom.assert('wish ☻277__pointingAt.py☻ would be running')\nroom.assert('wish ☻620__paperDetails.js☻ would be running')\n\nroom.assert(`camera 1 has projector calibration TL (0, 0) TR (1920, 0) BR (1920, 1080) BL (0, 1080) @ 1`)\n\n// room.assert(`camera 1 sees paper 1924 at TL (100, 100) TR (1200, 100) BR (1200, 800) BL (100, 800) @ 1`)\n// room.assert(`paper 1924 is pointing at paper 472`)  // comment out if pointingAt.py is running\n"
       */
       generatePrintFile(sourceCode, programId, shortFilename, code8400)
-      say("wish file \"" + "/Users/jhaip/Code/go/src/github.com/jhaip/gofpdf-test-1/" + strconv.Itoa(programId) + ".pdf" + "\" would be printed")
+      say("wish file \"" + PDF_OUTPUT_FOLDER + strconv.Itoa(programId) + ".pdf" + "\" would be printed")
     }
     time.Sleep(100 * time.Millisecond)
     break
