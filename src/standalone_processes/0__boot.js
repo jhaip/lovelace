@@ -3,9 +3,22 @@ const execFile = require('child_process').execFile;
 
 const room = new Room()
 
-/*** Start the programs that can start all other programs ***/
+/*** Start the program that can start all other programs ***/
+const child = execFile(
+  'node',
+  [`src/standalone_processes/1900__processManager.js`],
+  (error, stdout, stderr) => {
+    if (error) {
+        console.error('stderr', stderr);
+        console.error(error);
+    }
+    console.log('stdout', stdout);
+});
+
+/*** Start he programs that actually starts all boot programs ***/
 room.assert('wish "1900__processManager.js" would be running')
 room.assert('wish "826__runSeenPapers.js" would be running')
+room.assert('wish "390__initialProgramCode.js" would be running')
 
 /*** Claim that a (fake) camera can see all boot papers ***/
 // Initial Program Code:
@@ -24,11 +37,12 @@ room.assert(`camera 1 sees paper 620 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) 
 room.assert(`camera 1 sees paper 1459 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Process Manager
 room.assert(`camera 1 sees paper 1900 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// Print paper
+room.assert(`camera 1 sees paper 1382 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 /* TODO:
-- keyboard
-- frame-to-dots
-- dots-to-papers
-- print-paper.go
+- keyboard.py
+- frame-to-dots.py
+- dots-to-papers.go
 */
 
 /*** Initial boot values ***/
