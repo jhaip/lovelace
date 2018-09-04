@@ -2,6 +2,7 @@ const Room = require('@living-room/client-js')
 const fs = require('fs');
 const path = require('path');
 const execFile = require('child_process').execFile;
+const process = require('process');
 
 const scriptName = path.basename(__filename);
 const scriptNameNoExtension = path.parse(scriptName).name;
@@ -13,6 +14,8 @@ process.on('uncaughtException', function(err) {
 })
 
 const room = new Room()
+
+room.assert(`"${path.basename(__filename)}" has process id ${process.pid}`);
 
 room.subscribe(
   `wish $name would be running`,
@@ -35,13 +38,18 @@ room.subscribe(
         console.error(`making ${name} be running!`)
         let languageProcess = 'node'
         let programSource = `src/standalone_processes/${name}`
+        let runArgs = [programSource];
         if (name.includes('.py')) {
           console.error("running as Python!")
           languageProcess = 'python3'
+        } else if (name.includes('.go')) {
+          console.error("running as golang")
+          languageProcess = 'go'
+          runArgs = ['run', programSource]
         }
         const child = execFile(
           languageProcess,
-          [programSource],
+          runArgs,
           (error, stdout, stderr) => {
             // TODO: check if program should still be running
             // and start it again if so.
