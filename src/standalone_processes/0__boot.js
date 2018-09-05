@@ -39,6 +39,8 @@ room.assert(`camera 1 sees paper 1459 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2)
 room.assert(`camera 1 sees paper 1900 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Print paper
 room.assert(`camera 1 sees paper 1382 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// Dots to papers
+room.assert(`camera 1 sees paper 1800 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 /* TODO:
 - keyboard.py
 - frame-to-dots.py

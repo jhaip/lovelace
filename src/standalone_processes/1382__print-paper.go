@@ -2,9 +2,9 @@ package main
 
 import (
   "bufio"
-	"fmt"
   "time"
   "os"
+  "log"
   "encoding/json"
   "io/ioutil"
   "net/http"
@@ -14,10 +14,11 @@ import (
 )
 
 const URL = "http://localhost:3000/"
-const DOT_CODES_PATH = "/Users/jhaip/Code/lovelace/src/standalone_processes/files/dot-codes.txt"
-const PDF_OUTPUT_FOLDER = "/Users/jhaip/Code/go/src/github.com/jhaip/gofpdf-test-1/"
-// const DOT_CODES_PATH = "/home/jacob/lovelace/src/standalone_processes/files/dot-codes.txt"
-// const PDF_OUTPUT_FOLDER = "/home/jacob/go/src/github.com/jhaip/gofpdf-test-1/"
+const BASE_PATH = "/Users/jhaip/Code/lovelace/src/standalone_processes/"
+// const BASE_PATH = "/home/jacob/lovelace/src/standalone_processes/"
+const DOT_CODES_PATH = BASE_PATH + "files/dot-codes.txt"
+const PDF_OUTPUT_FOLDER = BASE_PATH + "files/"
+const LOG_PATH = BASE_PATH + "logs/1382__print-paper.log"
 
 func say(fact string) {
   formData := url.Values{
@@ -25,7 +26,7 @@ func say(fact string) {
 	}
   resp, err := http.PostForm(URL + "assert", formData)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
   defer resp.Body.Close()
 }
@@ -36,7 +37,7 @@ func retract(fact string) {
 	}
   resp, err := http.PostForm(URL + "retract", formData)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
   defer resp.Body.Close()
 }
@@ -64,20 +65,20 @@ func selectt(fact string) []byte {
 	}
 
   resp, err := http.PostForm(URL + "select", formData)
-  fmt.Println(URL + "select")
-  fmt.Println(formData)
+  log.Println(URL + "select")
+  log.Println(formData)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 
-  fmt.Println(resp)
-  fmt.Println(resp.Body)
+  log.Println(resp)
+  log.Println(resp.Body)
 
   body, err := ioutil.ReadAll(resp.Body)
-  fmt.Println(body)
+  log.Println(body)
   bodyString := string(body)
-  fmt.Println("bodyString ---")
-  fmt.Println(bodyString)
+  log.Println("bodyString ---")
+  log.Println(bodyString)
 
   bodyStringBytes := []byte(bodyString)
 
@@ -171,7 +172,7 @@ func generatePrintFile(sourceCode string, programId int, name string, code8400 [
 
 	err := pdf.OutputFileAndClose(PDF_OUTPUT_FOLDER + strconv.Itoa(programId) + ".pdf")
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 }
 
@@ -179,47 +180,58 @@ func get_wishes() []Sample {
   bodyStringBytes := selectt("wish paper $id at $shortFilename would be printed")
   samples := make([]Sample,0)
   json.Unmarshal(bodyStringBytes, &samples)
-  fmt.Println("GET WISHES -------------")
-  fmt.Println(samples)
+  log.Println("GET WISHES -------------")
+  log.Println(samples)
   return samples
 }
 
 func get_source_code(shortFilename string) (string, bool) {
   bodyStringBytes := selectt("\"" + shortFilename + "\" has source code $sourceCode")
-  fmt.Println(bodyStringBytes)
+  log.Println(bodyStringBytes)
   samples := make([]SourceCodeSample,0)
   json.Unmarshal(bodyStringBytes, &samples)
-  fmt.Println("GET SOURCE CODE -----------")
-  fmt.Println(samples)
+  log.Println("GET SOURCE CODE -----------")
+  log.Println(samples)
   if (len(samples) > 0) {
-    fmt.Println(samples[0])
-    fmt.Println(samples[0].SourceCode.Value)
-    fmt.Println("^^^^^^^^^")
+    log.Println(samples[0])
+    log.Println(samples[0].SourceCode.Value)
+    log.Println("^^^^^^^^^")
     return samples[0].SourceCode.Value, true
   }
   return "", false
 }
 
 func main() {
+  /*** Set up logging ***/
+  f, err := os.OpenFile(LOG_PATH, os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+  if err != nil {
+      log.Fatalf("error opening file: %v", err)
+  }
+  defer f.Close()
+
+  log.SetOutput(f)
+  // log.Println("This is a test log entry")
+  /*** /end logging setup ***/
+
   code8400, err := readLines(DOT_CODES_PATH)
   if err != nil {
-		fmt.Println(err)
+		log.Println(err)
     return
 	}
   for {
     samples := get_wishes()
     for _, sample := range samples {
 
-      fmt.Printf("%#v\n", sample)
-      fmt.Println("PROGRAM ID:::")
-      fmt.Printf("%#v\n", sample.Id.Value)
-      fmt.Printf("%#v\n", sample.ShortFilename.Value)
+      log.Printf("%#v\n", sample)
+      log.Println("PROGRAM ID:::")
+      log.Printf("%#v\n", sample.Id.Value)
+      log.Printf("%#v\n", sample.ShortFilename.Value)
       programId := sample.Id.Value
       retract("wish paper " + strconv.Itoa(programId) + " at $ would be printed")
       shortFilename := sample.ShortFilename.Value
       sourceCode, foundSourceCode := get_source_code(shortFilename)
       if (foundSourceCode == false) {
-        fmt.Println("SOURCE CODE NOT FOUND!")
+        log.Println("SOURCE CODE NOT FOUND!")
         return
       }
       /*
