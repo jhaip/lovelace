@@ -241,7 +241,7 @@ func main() {
       say("wish file \"" + PDF_OUTPUT_FOLDER + strconv.Itoa(programId) + ".pdf" + "\" would be printed")
     }
     time.Sleep(100 * time.Millisecond)
-    break
+    // break
   }
 
 }

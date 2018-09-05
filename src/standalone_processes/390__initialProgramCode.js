@@ -14,31 +14,55 @@ process.on('uncaughtException', function(err) {
 const room = new Room()
 
 const readFile = readLogPath => {
-  fs.readFile(readLogPath, 'utf8', (err, sourceCodeData) => {
-    if (err) throw err;
+  try {
+    sourceCodeData = fs.readFileSync(readLogPath, 'utf8');
     sourceCode = sourceCodeData.replace(/\n/g, '\\n').replace(/"/g, String.fromCharCode(9787))
-    console.log(`"${readLogPath}" has source code "${sourceCode}"`)
+    // console.log(`"${readLogPath}" has source code "${sourceCode}"`)
+
     const shortFilename = path.basename(readLogPath);
-    const paperId = shortFilename.split("__")[0];
+    let paperId = "";
+    if (!shortFilename.includes(".")) {
+      console.log("skipping the binary", shortFilename)
+      return;
+    }
+    if (shortFilename.includes("__")) {
+      paperId = shortFilename.split("__")[0];
+    } else if (shortFilename.includes(".")) {
+      paperId = shortFilename.split(".")[0];
+    }
+    console.log(`"${shortFilename}" has paper ID ${paperId}`)
+
     room.assert(`"${shortFilename}" has source code "${sourceCode}"`)
     room.assert(`"${shortFilename}" has paper ID ${paperId}`)
-  });
+    console.log(`done with "${shortFilename}"`)
+  } catch (e) {
+    console.error("readLogPath", readLogPath)
+    console.error(e);
+  }
 }
 
 const loadModulesInFolder = folder => {
   const processesFolder = path.join(__dirname, folder)
   console.log(processesFolder)
-  fs.readdir(processesFolder, (_, processFiles) => {
-    processFiles.forEach(processFile => {
-      try {
-        const processFilePath = path.join(processesFolder, processFile)
-        if (!fs.lstatSync(processFilePath).isFile) return
-        readFile(processFilePath)
-      } catch (e) {
-        console.error(e)
-      }
-    })
+  const processFiles = fs.readdirSync(processesFolder);
+  console.log(processFiles);
+  console.log("---")
+  processFiles.forEach(processFile => {
+    try {
+      const processFilePath = path.join(processesFolder, processFile)
+      console.log(fs.lstatSync(processFilePath).isFile())
+      if (!fs.lstatSync(processFilePath).isFile()) return
+      readFile(processFilePath)
+    } catch (e) {
+      console.error(e)
+    }
   })
 }
 
 loadModulesInFolder('.');
+// TODO: remove this HACK
+// need a way to exit the node program after all promises have returned
+// promises come from asserting and retracting things in the lovelace library code
+setTimeout(() => {
+  process.exit()
+}, 5000)

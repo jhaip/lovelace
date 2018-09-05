@@ -1,9 +1,16 @@
 const Room = require('@living-room/client-js')
 const execFile = require('child_process').execFile;
+const execFileSync = require('child_process').execFileSync;
 
 const room = new Room()
 
 /*** Start the program that can start all other programs ***/
+console.error("pre--------DONE WITH INITIAL PROGRAM CODE")
+const child0 = execFileSync(
+  'node',
+  [`src/standalone_processes/390__initialProgramCode.js`]
+);
+console.error("DONE WITH INITIAL PROGRAM CODE")
 const child = execFile(
   'node',
   [`src/standalone_processes/1900__processManager.js`],
@@ -15,14 +22,16 @@ const child = execFile(
     console.log('stdout', stdout);
 });
 
-/*** Start he programs that actually starts all boot programs ***/
+
+/*** Start the programs that actually starts all boot programs ***/
+room.assert(`camera 1 sees paper 1900 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 room.assert('wish "1900__processManager.js" would be running')
 room.assert('wish "826__runSeenPapers.js" would be running')
-room.assert('wish "390__initialProgramCode.js" would be running')
+// room.assert('wish "390__initialProgramCode.js" would be running')
 
 /*** Claim that a (fake) camera can see all boot papers ***/
 // Initial Program Code:
-room.assert(`camera 1 sees paper 390 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// room.assert(`camera 1 sees paper 390 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Printing Manager:
 room.assert(`camera 1 sees paper 498 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Program Editor (may not be needed now?)
@@ -36,11 +45,11 @@ room.assert(`camera 1 sees paper 620 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) 
 // Create New Paper
 room.assert(`camera 1 sees paper 1459 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Process Manager
-room.assert(`camera 1 sees paper 1900 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+room.assert(`camera 1 sees paper 1800 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Print paper
 room.assert(`camera 1 sees paper 1382 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Dots to papers
-room.assert(`camera 1 sees paper 1800 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+room.assert(`camera 1 sees paper 1900 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 /* TODO:
 - keyboard.py
 - frame-to-dots.py
