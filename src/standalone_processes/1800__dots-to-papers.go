@@ -15,8 +15,8 @@ import (
   "github.com/kokardy/listing"
 )
 
-const BASE_PATH = "/Users/jhaip/Code/lovelace/src/standalone_processes/"
-// const BASE_PATH = "/home/jacob/lovelace/src/standalone_processes/"
+// const BASE_PATH = "/Users/jhaip/Code/lovelace/src/standalone_processes/"
+const BASE_PATH = "/home/jacob/lovelace/src/standalone_processes/"
 const LOG_PATH = BASE_PATH + "logs/1800__dots-to-papers.log"
 
 type Vec struct {

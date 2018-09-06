@@ -14,8 +14,8 @@ import (
 )
 
 const URL = "http://localhost:3000/"
-const BASE_PATH = "/Users/jhaip/Code/lovelace/src/standalone_processes/"
-// const BASE_PATH = "/home/jacob/lovelace/src/standalone_processes/"
+// const BASE_PATH = "/Users/jhaip/Code/lovelace/src/standalone_processes/"
+const BASE_PATH = "/home/jacob/lovelace/src/standalone_processes/"
 const DOT_CODES_PATH = BASE_PATH + "files/dot-codes.txt"
 const PDF_OUTPUT_FOLDER = BASE_PATH + "files/"
 const LOG_PATH = BASE_PATH + "logs/1382__print-paper.log"
@@ -123,7 +123,7 @@ func generatePrintFile(sourceCode string, programId int, name string, code8400 [
 
 	pageWidth, pageHeight := pdf.GetPageSize()
 	leftMargin, topMargin, rightMargin, bottomMargin := pdf.GetMargins()
-	circleRadius := 7.0
+	circleRadius := 8.0
 	circleSpacing := circleRadius * 2.0 * 1.3
 	circleMargin := 10 + circleRadius
 
@@ -140,14 +140,14 @@ func generatePrintFile(sourceCode string, programId int, name string, code8400 [
   	pdf.SetFillColor(0, 0, 0)
     if (i == 0) {
 	    pdf.TransformTranslate(circleMargin+0, circleMargin+0)
-    } else if (i == 1) {
+    } else if (i == 3) {
       pdf.TransformTranslate(circleMargin, pageHeight-circleMargin)
     } else if (i == 2) {
       pdf.TransformTranslate(pageWidth-circleMargin, pageHeight-circleMargin)
     } else {
       pdf.TransformTranslate(pageWidth-circleMargin, circleMargin)
     }
-  	pdf.TransformRotate(90.0 * float64(i), 0, 0)
+  	pdf.TransformRotate(-90.0 * float64(i), 0, 0)
     code := code8400[i*(8400/4) + programId]
     setFillColorFromDotCode(pdf, code[0])
   	pdf.Circle(circleSpacing*0.0, circleSpacing*3.0, circleRadius, "F")

@@ -26,13 +26,14 @@ room.subscribe(
     const visibleIDs = assertions.map(paper => String(paper.id))
     console.log("knownPapers", knownPapers)
     console.log("visibleIDs", visibleIDs)
+    const bootPapers = ["0", "826", "498", "577", "277", "620", "1459", "1800", "1382", "1900"]
 
     knownPapers.forEach(paper => {
         const processName = paper.processName.word || paper.processName.value;
         if (visibleIDs.includes(String(paper.paperId.value))) {
           console.error(`wish "${processName}" would be running`)
           room.assert(`wish "${processName}" would be running`);
-        } else {
+        } else if (!bootPapers.includes(String(paper.paperId.value))) {
           console.error(`RETRACT: wish "${processName}" would be running`)
           room.retract(`wish "${processName}" would be running`);
         }
