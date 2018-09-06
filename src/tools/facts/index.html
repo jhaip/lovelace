@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <style>
 
+body {
+	font-family: "Inconsolata", monospace;
+	font-size: 12px;
+  background-color: black;
+  color: #EEE;
+}
+
 #newFactForm > input {
 	width: 30em;
 }
@@ -9,6 +16,17 @@
 	text-decoration: line-through;
 	color: red;
 	cursor: pointer;
+}
+
+#facts {
+	list-style-type: none;
+	padding-left: 5px;
+}
+
+#facts li {
+	margin-bottom: 8px;
+	white-space: nowrap;
+	overflow-x: scroll;
 }
 
 </style>
@@ -29,6 +47,7 @@ const refreshFacts = () => {
             for (fact of facts.assertions) {
                 addFact(fact);
             }
+						setTimeout(() => refreshFacts(), 100);
         });
 };
 
@@ -73,13 +92,14 @@ const removeFact = fact => {
 
 let api = `//${location.hostname}:3000`
 
-var es = new EventSource(`${api}/facts`);
-es.addEventListener('assert', e => {
-	addFact(e.data);
-});
-es.addEventListener('retract', e => {
-	removeFact(e.data);
-});
+// var es = new EventSource(`${api}/facts`);
+// es.addEventListener('assert', e => {
+// 	addFact(e.data);
+// });
+// es.addEventListener('retract', e => {
+// 	console.log(e.data);
+// 	removeFact(e.data);
+// });
 
 newFactFormEl.addEventListener('submit', e => {
 	e.preventDefault();
