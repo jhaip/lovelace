@@ -14,13 +14,13 @@ const myId = (scriptName.split(".")[0]).split("__")[0]
 
 const room = new Room()
 
-let fontSize = 32;
+let fontSize = 48; // 32;
 let fontHeight = fontSize / 1080.0;
 let lineHeight = 1.3 * fontHeight;
-const origin = [0.0001, 0.0001 + lineHeight]
+const origin = [0.0001 + 0.1, 0.1 + 0.0001 + lineHeight]
 let charWidth = fontHeight * 0.38;
 const cursorColor = `(255, 128, 2)`
-let cursorPosition = [10, 10]
+let cursorPosition = [0, 0]
 let currentWidth = 1;
 let currentHeight = 1;
 let editorWidthCharacters = 1;
@@ -105,7 +105,7 @@ const render = () => {
     console.error(lines)
   }
   editorWidthCharacters = 1000;
-  editorHeightCharacters = Math.floor(currentHeight / (fontSize * 1.3 * 0.5));
+  editorHeightCharacters = Math.floor(currentHeight / (fontSize * 1.3 * 0.7123));
   console.log("editor height", editorHeightCharacters);
   lines.slice(windowPosition[1], windowPosition[1] + editorHeightCharacters).forEach((lineRaw, i) => {
     const line = lineRaw.substring(0, editorWidthCharacters);
