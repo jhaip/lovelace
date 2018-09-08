@@ -35,6 +35,8 @@ const extendLanguage = (language, storage, convertFunc) => {
     room.subscribe(`${statement} on paper $paper`, update);
     room.subscribe(`${namespace}: ${statement}`, update);
     room.subscribe(`${namespace}: ${statement} on paper $paper`, update);
+    room.subscribe(`$ ${statement}`, update);  // to match "#150 draw ..."
+    room.subscribe(`$ ${statement} on paper $paper`, update);
   });
 }
 
@@ -109,7 +111,7 @@ extendLanguage(
 );
 
 room.subscribe(
-  `camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time`,
+  `$ camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time`,
   ({ assertions }) => {
     if (!assertions || assertions.length === 0) {
       return;
@@ -136,7 +138,7 @@ room.subscribe(
 )
 
 room.subscribe(
-  `camera $cameraId has projector calibration TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time`,
+  `$ camera $cameraId has projector calibration TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time`,
   ({ assertions }) => {
     if (!assertions || assertions.length === 0) {
       return;
@@ -306,15 +308,6 @@ function scheduleDraw () {
     drawAnimationFrame = null
     draw()
   })
-}
-
-canvas.onclick = async () => {
-  const frames = await room.select(`time is $frame`)
-  if (!frames.length) return
-  const frame = frames[0].frame.value
-  room
-    .retract(`mouse clicked on frame $`)
-    .assert(`mouse clicked on frame ${frame}`)
 }
 
 window.addEventListener('resize', draw)
