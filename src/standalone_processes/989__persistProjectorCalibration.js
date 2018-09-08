@@ -16,18 +16,26 @@ const room = new Room()
 
 const savedCalibrationLocation = __filename.replace(scriptName, 'files/projectorCalibration.txt')
 
-fs.readFile(savedCalibrationLocation, 'utf8', function(err, contents) {
-    if (err) return console.error(err);
-    console.log("loaded initial calibration:")
-    console.log(contents);
-    room.assert(contents);
-});
+fs.exists(path, (exists) => {
+  if (exists) {
+    fs.readFile(savedCalibrationLocation, 'utf8', function(err, contents) {
+        if (err) return console.error(err);
+        console.log("loaded initial calibration:")
+        console.log(contents);
+        room.assert(contents);
+    });
+  } else {
+    console.log("saved projector calibration doesn't exist")
+  }
+})
 
 // Listen for calibration updates and save them
 room.on(
   `$wisherId camera $cameraId has projector calibration TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $`,
-  (data) => {
-    fs.writeFile(savedCalibrationLocation, "Hey there!", function(err) {
+  ({ wisherId, cameraId, x1, y1, x2, y2, x3, y3, x4, y4 }) => {
+    const millis = (new Date()).getTime()
+    const s = `#${wisherId} camera ${cameraId} has projector calibration TL (${x1}, ${y1}) TR (${x2}, ${y2}) BR (${x3}, ${y3}) BL (${x4}, ${y4}) @ ${millis}`
+    fs.writeFile(savedCalibrationLocation, s, function(err) {
         if (err) return console.log(err)
         console.log("The file was saved!");
     });
