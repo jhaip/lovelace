@@ -18,7 +18,7 @@ const savedCalibrationLocation = __filename.replace(scriptName, 'files/projector
 
 fs.readFile(savedCalibrationLocation, 'utf8', function(err, contents) {
     if (err) {
-      room.claim(`#0 camera 1 has projector calibration TL (0, 0) TR (1920, 0) BR (1920, 1080) BL (0, 1080) @ 1`)
+      room.assert(`#0 camera 1 has projector calibration TL (0, 0) TR (1920, 0) BR (1920, 1080) BL (0, 1080) @ 1`)
       console.log("claiming default calibration because save file didn't exist")
       console.error(err);
     } else {
