@@ -209,13 +209,17 @@ async function draw (time) {
     // }
     let width = canvas.width;
     let height = canvas.height;
-    if (!!paper && containedPapers.has(paper)) {
-      containerPaper = containedPapers.get(paper);
-      const paperApprox = paper_approximation(containerPaper, perspT, canvas.width);
-      context.translate(paperApprox.origin.x, paperApprox.origin.y);
-      context.rotate(paperApprox.angle_radians)
-      width = paperApprox.width;
-      height = paperApprox.height;
+    if (!!paper) {
+      if (containedPapers.has(paper)) {
+        containerPaper = containedPapers.get(paper);
+        const paperApprox = paper_approximation(containerPaper, perspT, canvas.width);
+        context.translate(paperApprox.origin.x, paperApprox.origin.y);
+        context.rotate(paperApprox.angle_radians)
+        width = paperApprox.width;
+        height = paperApprox.height;
+      } else {
+        return; // paper details aren't known, so don't draw this.
+      }
     }
     context.font = `${(40./1080.) * height}px monospace`
     if (size === 'small') {
@@ -238,13 +242,17 @@ async function draw (time) {
     }
     let width = canvas.width;
     let height = canvas.height;
-    if (!!paper && containedPapers.has(paper)) {
-      containerPaper = containedPapers.get(paper);
-      const paperApprox = paper_approximation(containerPaper, perspT, canvas.width);
-      context.translate(paperApprox.origin.x, paperApprox.origin.y);
-      context.rotate(paperApprox.angle_radians)
-      width = paperApprox.width;
-      height = paperApprox.height;
+    if (!!paper) {
+      if (containedPapers.has(paper)) {
+        containerPaper = containedPapers.get(paper);
+        const paperApprox = paper_approximation(containerPaper, perspT, canvas.width);
+        context.translate(paperApprox.origin.x, paperApprox.origin.y);
+        context.rotate(paperApprox.angle_radians)
+        width = paperApprox.width;
+        height = paperApprox.height;
+      } else {
+        return; // paper details aren't known, so don't draw this.
+      }
     }
     context.beginPath()
     context.ellipse(
@@ -272,13 +280,17 @@ async function draw (time) {
     context.beginPath()
     let width = canvas.width;
     let height = canvas.height;
-    if (!!paper && containedPapers.has(paper)) {
-      containerPaper = containedPapers.get(paper);
-      const paperApprox = paper_approximation(containerPaper, perspT, canvas.width);
-      context.translate(paperApprox.origin.x, paperApprox.origin.y);
-      context.rotate(paperApprox.angle_radians)
-      width = paperApprox.width;
-      height = paperApprox.height;
+    if (!!paper) {
+      if (containedPapers.has(paper)) {
+        containerPaper = containedPapers.get(paper);
+        const paperApprox = paper_approximation(containerPaper, perspT, canvas.width);
+        context.translate(paperApprox.origin.x, paperApprox.origin.y);
+        context.rotate(paperApprox.angle_radians)
+        width = paperApprox.width;
+        height = paperApprox.height;
+      } else {
+        return; // paper details aren't known, so don't draw this.
+      }
     }
     context.moveTo(normToCoord(x, width), normToCoord(y, height))
     context.lineTo(normToCoord(xx, width), normToCoord(yy, height))
