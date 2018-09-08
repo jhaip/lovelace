@@ -44,20 +44,22 @@ room.assert(`#0 camera 99 sees paper 277 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1,
 room.assert(`#0 camera 99 sees paper 620 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Create New Paper
 room.assert(`#0 camera 99 sees paper 1459 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
-// Process Manager
+// Dots to papers
 room.assert(`#0 camera 99 sees paper 1800 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Print paper
 room.assert(`#0 camera 99 sees paper 1382 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
-// Dots to papers
+// Process Manager
 room.assert(`#0 camera 99 sees paper 1900 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// Persist Projector Calibration
+room.assert(`#0 camera 99 sees paper 989 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+//
 /* TODO:
 - keyboard.py
 - frame-to-dots.py
-- dots-to-papers.go
 */
 
 /*** Initial boot values ***/
-room.assert(`#0 camera 1 has projector calibration TL (0, 0) TR (1920, 0) BR (1920, 1080) BL (0, 1080) @ 1`)
+// room.assert(`#0 camera 1 has projector calibration TL (0, 0) TR (1920, 0) BR (1920, 1080) BL (0, 1080) @ 1`)
 
 /*** DEBUG STUFF ***/
 const sourceCode = `

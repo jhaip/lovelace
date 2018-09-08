@@ -27,7 +27,7 @@ room.subscribe(
     const visibleIDs = assertions.map(paper => String(paper.id))
     console.log("knownPapers", knownPapers)
     console.log("visibleIDs", visibleIDs)
-    const bootPapers = ["0", "826", "498", "577", "277", "620", "1459", "1800", "1382", "1900"]
+    const bootPapers = ["0", "498", "577", "826", "277", "620", "1459", "1800", "1382", "1900", "989"]
 
     knownPapers.forEach(paper => {
         const processName = paper.processName.word || paper.processName.value;
