@@ -29,6 +29,9 @@ room.assert('#0 wish "1900__processManager.js" would be running')
 room.assert('#0 wish "826__runSeenPapers.js" would be running')
 // room.assert('#0 wish "390__initialProgramCode.js" would be running')
 
+/*** Initial boot values ***/
+room.assert(`#0 camera 1 has projector calibration TL (0, 0) TR (1920, 0) BR (1920, 1080) BL (0, 1080) @ 1`)
+
 /*** Claim that a (fake) camera can see all boot papers ***/
 // Initial Program Code:
 // room.assert(`#0 camera 1 sees paper 390 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
@@ -57,9 +60,6 @@ room.assert(`#0 camera 99 sees paper 989 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1,
 - keyboard.py
 - frame-to-dots.py
 */
-
-/*** Initial boot values ***/
-// room.assert(`#0 camera 1 has projector calibration TL (0, 0) TR (1920, 0) BR (1920, 1080) BL (0, 1080) @ 1`)
 
 /*** DEBUG STUFF ***/
 const sourceCode = `
