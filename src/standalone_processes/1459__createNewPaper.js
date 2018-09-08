@@ -11,15 +11,16 @@ process.stdout.write = process.stderr.write = access.write.bind(access);
 process.on('uncaughtException', function(err) {
   console.error((err && err.stack) ? err.stack : err);
 })
+const myId = (scriptName.split(".")[0]).split("__")[0]
 
 const room = new Room()
 
 // const dotCodes = fs.readFileSync("./mytext.txt", "utf-8").split("\n");
 room.on(
-  `wish a paper would be created in $language with source code $sourceCode @ $time`,
+  `$ wish a paper would be created in $language with source code $sourceCode @ $time`,
   async ({ language, sourceCode, time }) => {
     // choose ID that is unique
-    const existingIds = (await room.select(`$ has paper ID $id`)).map(p => p.id.value);
+    const existingIds = (await room.select(`$ $ has paper ID $id`)).map(p => p.id.value);
     console.error("Existing IDs")
     console.error(existingIds);
     let newId = null;
@@ -36,10 +37,10 @@ room.on(
         return console.log(err);
       }
       sourceCodeNewlineCleaned = sourceCode.replace(/\n/g, '\\n')
-      room.retract(`wish a paper would be created in ${language} with source code $ @ ${time}`)
-      room.assert(`"${shortFilename}" has source code "${sourceCodeNewlineCleaned}"`)
-      room.assert(`"${shortFilename}" has paper ID ${newId}`)
-      room.assert(`wish paper ${newId} at "${shortFilename}" would be printed`)
+      room.retract(`#${myId} wish a paper would be created in ${language} with source code $ @ ${time}`)
+      room.assert(`#${myId} "${shortFilename}" has source code "${sourceCodeNewlineCleaned}"`)
+      room.assert(`#${myId} "${shortFilename}" has paper ID ${newId}`)
+      room.assert(`#${myId} wish paper ${newId} at "${shortFilename}" would be printed`)
     });
   }
 );

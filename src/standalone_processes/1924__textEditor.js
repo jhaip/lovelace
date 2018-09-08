@@ -10,10 +10,10 @@ process.stdout.write = process.stderr.write = access.write.bind(access);
 process.on('uncaughtException', function(err) {
   console.error((err && err.stack) ? err.stack : err);
 })
+const myId = (scriptName.split(".")[0]).split("__")[0]
 
 const room = new Room()
 
-const myId = 1924
 let fontSize = 32;
 let fontHeight = fontSize / 1080.0;
 let lineHeight = 1.3 * fontHeight;
@@ -97,8 +97,8 @@ const getCursorIndex = () => {
 const render = () => {
   correctCursorPosition();
   correctWindowPosition();
-  room.retract(`draw $ text $ at ($, $) on paper ${myId}`)
-  room.retract(`draw a ${cursorColor} line from ($, $) to ($, $) on paper ${myId}`)
+  room.retract(`#${myId} draw $ text $ at ($, $) on paper ${myId}`)
+  room.retract(`#${myId} draw a ${cursorColor} line from ($, $) to ($, $) on paper ${myId}`)
   let lines = ["Point at something!"]
   if (currentTargetName) {
     lines = currentSourceCode.replace(new RegExp(String.fromCharCode(34), 'g'), String.fromCharCode(9787)).split("\n")
@@ -109,10 +109,10 @@ const render = () => {
   console.log("editor height", editorHeightCharacters);
   lines.slice(windowPosition[1], windowPosition[1] + editorHeightCharacters).forEach((lineRaw, i) => {
     const line = lineRaw.substring(0, editorWidthCharacters);
-    room.assert(`draw "${fontSize}pt" text "${line}" at (${origin[0]}, ${origin[1] + i * lineHeight}) on paper ${myId}`)
+    room.assert(`#${myId} draw "${fontSize}pt" text "${line}" at (${origin[0]}, ${origin[1] + i * lineHeight}) on paper ${myId}`)
   });
   room.assert(
-    `draw a ${cursorColor} line from ` +
+    `#${myId} draw a ${cursorColor} line from ` +
     `(${origin[0] + cursorPosition[0] * charWidth}, ${origin[1] + (cursorPosition[1] - windowPosition[1]) * lineHeight})` +
     ` to ` +
     `(${origin[0] + cursorPosition[0] * charWidth}, ${origin[1] + (cursorPosition[1] - windowPosition[1]) * lineHeight - fontHeight})` +
@@ -123,16 +123,16 @@ const render = () => {
 console.error("HEllo from text editor")
 
 room.subscribe(
-  `paper ${myId} is pointing at paper $targetId`,
-  `$targetName has paper ID $targetId`,
-  `$targetName has source code $sourceCode`,
-  `paper ${myId} has width $myWidth height $myHeight angle $ at ($, $)`,
+  `$ paper ${myId} is pointing at paper $targetId`,
+  `$ $targetName has paper ID $targetId`,
+  `$ $targetName has source code $sourceCode`,
+  `$ paper ${myId} has width $myWidth height $myHeight angle $ at ($, $)`,
   ({assertions, retractions}) => {
     console.error("got stuff")
     console.error(assertions)
     console.error(retractions)
     if (false && retractions.length > 0) {
-      room.assert(`draw "${fontSize}pt" text "Point at something!" at (${origin[0]}, ${origin[1]}) on paper ${myId}`)
+      room.assert(`#${myId} draw "${fontSize}pt" text "Point at something!" at (${origin[0]}, ${origin[1]}) on paper ${myId}`)
       currentTargetName = undefined;
       currentSourceCode = "";
       cursorPosition = [0, 0];
@@ -151,7 +151,7 @@ room.subscribe(
 )
 
 room.on(
-  `keyboard $ typed key $key @ $`,
+  `$ keyboard $ typed key $key @ $`,
   ({ key }) => {
     console.log("key", key);
     insertChar(key);
@@ -159,7 +159,7 @@ room.on(
 )
 
 room.on(
-  `keyboard $ typed special key $specialKey @ $`,
+  `$ keyboard $ typed special key $specialKey @ $`,
   ({ specialKey }) => {
     console.log("special key", specialKey);
     const special_key_map = {
@@ -188,7 +188,7 @@ room.on(
       const language = currentTargetName.split(".")[1];
       const cleanSourceCode = currentSourceCode.replace(/\n/g, '\\n').replace(/"/g, String.fromCharCode(9787))
       const millis = (new Date()).getTime()
-      room.assert(`wish a paper would be created in "${language}" with source code "${cleanSourceCode}" @ ${millis}`);
+      room.assert(`#${myId} wish a paper would be created in "${language}" with source code "${cleanSourceCode}" @ ${millis}`);
     }
   }
 )

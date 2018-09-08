@@ -19,10 +19,11 @@ const BASE_PATH = "/home/jacob/lovelace/src/standalone_processes/"
 const DOT_CODES_PATH = BASE_PATH + "files/dot-codes.txt"
 const PDF_OUTPUT_FOLDER = BASE_PATH + "files/"
 const LOG_PATH = BASE_PATH + "logs/1382__print-paper.log"
+const MY_ID = 1382;
 
 func say(fact string) {
   formData := url.Values{
-		"facts": {fact},
+		"facts": {fmt.Sprintf("#%s %s", MY_ID, fact)},
 	}
   resp, err := http.PostForm(URL + "assert", formData)
 	if err != nil {
@@ -33,7 +34,7 @@ func say(fact string) {
 
 func retract(fact string) {
   formData := url.Values{
-		"facts": {fact},
+		"facts": {fmt.Sprintf("#%s %s", MY_ID, fact)},
 	}
   resp, err := http.PostForm(URL + "retract", formData)
 	if err != nil {
@@ -61,7 +62,7 @@ type SourceCodeSample struct {
 
 func selectt(fact string) []byte {
   formData := url.Values{
-		"facts": {fact},
+		"facts": {fmt.Sprintf("$ %s", MY_ID, fact)},
 	}
 
   resp, err := http.PostForm(URL + "select", formData)

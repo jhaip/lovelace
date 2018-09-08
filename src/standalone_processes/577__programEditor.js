@@ -10,12 +10,13 @@ process.stdout.write = process.stderr.write = access.write.bind(access);
 process.on('uncaughtException', function(err) {
   console.error((err && err.stack) ? err.stack : err);
 })
+const myId = (scriptName.split(".")[0]).split("__")[0]
 
 const room = new Room()
 
 function main() {
   room
-    .select(`wish $name has source code $sourceCode`)
+    .select(`$ wish $name has source code $sourceCode`)
     .then(data => {
       console.error(data);
       data.forEach(({ name, sourceCode }) => {
@@ -26,10 +27,10 @@ function main() {
         if (!name.includes('.py') && !name.includes('.js')) {
           name += '.js'
         }
-        sourceCode = sourceCode.value.replace(new RegExp(String.fromCharCode(9787), 'g'), String.fromCharCode(34)) 
+        sourceCode = sourceCode.value.replace(new RegExp(String.fromCharCode(9787), 'g'), String.fromCharCode(34))
         console.log('debug:::')
         console.log(`wish "${name}" has source code $`)
-        room.retract(`wish "${name}" has source code $`)
+        room.retract(`#${myId} wish "${name}" has source code $`)
         fs.writeFile(`src/standalone_processes/${name}`, sourceCode, (err) => {
           if (err) throw err;
           console.error('The file has been saved!');

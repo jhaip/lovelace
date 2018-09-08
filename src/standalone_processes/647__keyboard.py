@@ -18,15 +18,15 @@ logging.basicConfig(filename=logPath, level=logging.INFO)
 URL = "http://localhost:3000/"
 
 def say(fact):
-    payload = {'facts': fact}
+    payload = {'facts': MY_ID + fact}
     return requests.post(URL + "assert", data=payload)
 
 def retract(fact):
-    payload = {'facts': fact}
+    payload = {'facts': MY_ID + fact}
     return requests.post(URL + "retract", data=payload)
 
 def select(fact):
-    payload = {'facts': fact}
+    payload = {'facts': "$ " + fact}
     response = requests.post(URL + "select", data=payload)
     return response.json()
 

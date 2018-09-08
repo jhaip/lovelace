@@ -10,6 +10,7 @@ process.stdout.write = process.stderr.write = access.write.bind(access);
 process.on('uncaughtException', function(err) {
   console.error((err && err.stack) ? err.stack : err);
 })
+const myId = (scriptName.split(".")[0]).split("__")[0]
 
 const room = new Room()
 
@@ -30,10 +31,10 @@ const readFile = readLogPath => {
     } else if (shortFilename.includes(".")) {
       paperId = shortFilename.split(".")[0];
     }
-    console.log(`"${shortFilename}" has paper ID ${paperId}`)
+    console.log(`#${myId} "${shortFilename}" has paper ID ${paperId}`)
 
-    room.assert(`"${shortFilename}" has source code "${sourceCode}"`)
-    room.assert(`"${shortFilename}" has paper ID ${paperId}`)
+    room.assert(`#${myId} "${shortFilename}" has source code "${sourceCode}"`)
+    room.assert(`#${myId} "${shortFilename}" has paper ID ${paperId}`)
     console.log(`done with "${shortFilename}"`)
   } catch (e) {
     console.error("readLogPath", readLogPath)
