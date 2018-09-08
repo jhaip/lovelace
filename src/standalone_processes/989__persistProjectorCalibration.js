@@ -16,18 +16,12 @@ const room = new Room()
 
 const savedCalibrationLocation = __filename.replace(scriptName, 'files/projectorCalibration.txt')
 
-fs.exists(path, (exists) => {
-  if (exists) {
-    fs.readFile(savedCalibrationLocation, 'utf8', function(err, contents) {
-        if (err) return console.error(err);
-        console.log("loaded initial calibration:")
-        console.log(contents);
-        room.assert(contents);
-    });
-  } else {
-    console.log("saved projector calibration doesn't exist")
-  }
-})
+fs.readFile(savedCalibrationLocation, 'utf8', function(err, contents) {
+    if (err) return console.error(err);
+    console.log("loaded initial calibration:")
+    console.log(contents);
+    room.assert(contents);
+});
 
 // Listen for calibration updates and save them
 room.on(
