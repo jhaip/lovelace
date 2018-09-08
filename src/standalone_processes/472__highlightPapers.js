@@ -14,17 +14,6 @@ const myId = (scriptName.split(".")[0]).split("__")[0]
 
 const room = new Room()
 
-console.log("start testProcess")
-room.retract(`#${myId} hello from testProcess @ $`)
-
-setInterval(() => {
-  console.error("hello from testProcess", new Date())
-  room
-    .retract(`#${myId} hello from testProcess @ $`)
-    .assert(`#${myId} hello from testProcess @ ${(new Date()).getTime()}`)
-}, 1000)
-
-
 // DRAW PAPERS
 room.subscribe(
   `$ camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time`,

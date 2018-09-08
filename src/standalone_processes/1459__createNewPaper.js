@@ -17,8 +17,8 @@ const room = new Room()
 
 // const dotCodes = fs.readFileSync("./mytext.txt", "utf-8").split("\n");
 room.on(
-  `$ wish a paper would be created in $language with source code $sourceCode @ $time`,
-  async ({ language, sourceCode, time }) => {
+  `$wisherId wish a paper would be created in $language with source code $sourceCode @ $time`,
+  async ({ wisherId, language, sourceCode, time }) => {
     // choose ID that is unique
     const existingIds = (await room.select(`$ $ has paper ID $id`)).map(p => p.id.value);
     console.error("Existing IDs")
@@ -37,7 +37,7 @@ room.on(
         return console.log(err);
       }
       sourceCodeNewlineCleaned = sourceCode.replace(/\n/g, '\\n')
-      room.retract(`#${myId} wish a paper would be created in ${language} with source code $ @ ${time}`)
+      room.retract(`#${wisherId.id} wish a paper would be created in ${language} with source code $ @ ${time}`)
       room.assert(`#${myId} "${shortFilename}" has source code "${sourceCodeNewlineCleaned}"`)
       room.assert(`#${myId} "${shortFilename}" has paper ID ${newId}`)
       room.assert(`#${myId} wish paper ${newId} at "${shortFilename}" would be printed`)

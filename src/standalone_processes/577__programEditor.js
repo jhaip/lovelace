@@ -16,21 +16,23 @@ const room = new Room()
 
 function main() {
   room
-    .select(`$ wish $name has source code $sourceCode`)
+    .select(`$wisherId wish $name has source code $sourceCode`)
     .then(data => {
       console.error(data);
-      data.forEach(({ name, sourceCode }) => {
+      data.forEach(({ name, sourceCode, wisherId }) => {
         console.error("ON WISH SOURCE CODE")
         console.error(name)
         console.error(sourceCode)
+        console.error(wisherId)
         name = name.word || name.value
         if (!name.includes('.py') && !name.includes('.js')) {
           name += '.js'
         }
         sourceCode = sourceCode.value.replace(new RegExp(String.fromCharCode(9787), 'g'), String.fromCharCode(34))
+        wisherId = wisherId.id
         console.log('debug:::')
-        console.log(`wish "${name}" has source code $`)
-        room.retract(`#${myId} wish "${name}" has source code $`)
+        console.log(`#${wisherId} wish "${name}" has source code $`)
+        room.retract(`#${wisherId} wish "${name}" has source code $`)
         fs.writeFile(`src/standalone_processes/${name}`, sourceCode, (err) => {
           if (err) throw err;
           console.error('The file has been saved!');

@@ -32,9 +32,9 @@ func say(fact string) {
   defer resp.Body.Close()
 }
 
-func retract(fact string) {
+func retract(fact string, targetPaper string) {
   formData := url.Values{
-		"facts": {fmt.Sprintf("#%s %s", MY_ID, fact)},
+		"facts": {fmt.Sprintf("#%s %s", targetPaper, fact)},
 	}
   resp, err := http.PostForm(URL + "retract", formData)
 	if err != nil {
@@ -62,7 +62,7 @@ type SourceCodeSample struct {
 
 func selectt(fact string) []byte {
   formData := url.Values{
-		"facts": {fmt.Sprintf("$ %s", MY_ID, fact)},
+		"facts": {fmt.Sprintf("$ %s", fact)},
 	}
 
   resp, err := http.PostForm(URL + "select", formData)
@@ -228,7 +228,7 @@ func main() {
       log.Printf("%#v\n", sample.Id.Value)
       log.Printf("%#v\n", sample.ShortFilename.Value)
       programId := sample.Id.Value
-      retract("wish paper " + strconv.Itoa(programId) + " at $ would be printed")
+      retract("wish paper " + strconv.Itoa(programId) + " at $ would be printed", "$")
       shortFilename := sample.ShortFilename.Value
       sourceCode, foundSourceCode := get_source_code(shortFilename)
       if (foundSourceCode == false) {
