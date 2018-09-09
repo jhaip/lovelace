@@ -199,6 +199,8 @@ async function draw (time) {
   texts.forEach(({ text, x, y, centered, size, angle, paper }) => {
     context.save()
     context.fillStyle = '#fff'
+    context.textBaseline = 'alphabetic';
+    context.textAlign = 'start';
     if (centered === 'centered') {
       context.textBaseline = `middle`
       context.textAlign = `center`
