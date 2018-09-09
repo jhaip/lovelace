@@ -33,7 +33,6 @@ room.subscribe(
         console.log("STOPPING PID", pid)
         process.kill(pid, 'SIGTERM')
         room.retract(`#${myId} "${name}" has process id $`);
-        room.retract(`#${myId} "${name}" is active`);
         const dyingPaperId = (name.split(".")[0]).split("__")[0]
         console.log("done STOPPING PID", pid, "with ID", dyingPaperId)
         cleanUpPaperFacts(dyingPaperId)
@@ -47,10 +46,8 @@ room.subscribe(
         let programSource = `src/standalone_processes/${name}`
         let runArgs = [programSource];
         if (name.includes('.py')) {
-          console.error("running as Python!")
           languageProcess = 'python3'
         } else if (name.includes('.go')) {
-          console.error("running as golang")
           languageProcess = 'go'
           runArgs = ['run', programSource]
         }
@@ -61,7 +58,6 @@ room.subscribe(
             // TODO: check if program should still be running
             // and start it again if so.
             room.retract(`#${myId} "${name}" has process id $`);
-            room.retract(`#${myId} "${name}" is active`);
             console.log(`${name} callback`)
             if (error) {
                 console.error('stderr', stderr);

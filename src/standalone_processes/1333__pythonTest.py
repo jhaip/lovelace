@@ -21,11 +21,11 @@ def select(fact, targetPaper='$'):
 print('Hello from pythonTest.py')
 retract('hello from testProcess @ $')
 
-programs = select('$program is active')
+programs = select('$program has paper ID $paperId')
 active_programs = []
 for program in programs:
     active_programs.append(program['program']['word'])
-print('Active programs:')
+print('programs:')
 print(active_programs)
 
 while True:
