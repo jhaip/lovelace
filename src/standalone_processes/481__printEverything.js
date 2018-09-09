@@ -16,6 +16,7 @@ const myId = (scriptName.split(".")[0]).split("__")[0]
 const room = new Room()
 
 room.on(`$ wish everything would be printed`, async (options) => {
+  room.retract(`$ wish everything would be printed`)
   const papers = (await room.select(`$ $processName has paper ID $paperId`))
   console.log("papers:")
   console.log(papers);
