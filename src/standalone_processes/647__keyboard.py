@@ -16,6 +16,7 @@ print(logPath)
 logging.basicConfig(filename=logPath, level=logging.INFO)
 
 URL = "http://localhost:3000/"
+MY_ID = (scriptName.split(".")[0]).split("__")[0]
 
 def say(fact):
     payload = {'facts': MY_ID + ' ' + fact}
