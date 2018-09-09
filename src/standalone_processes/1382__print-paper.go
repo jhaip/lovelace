@@ -35,7 +35,7 @@ func say(fact string) {
 
 func retract(fact string, targetPaper string) {
   formData := url.Values{
-		"facts": {fmt.Sprintf("#%s %s", targetPaper, fact)},
+		"facts": {fmt.Sprintf("%s %s", targetPaper, fact)},
 	}
   resp, err := http.PostForm(URL + "retract", formData)
 	if err != nil {
