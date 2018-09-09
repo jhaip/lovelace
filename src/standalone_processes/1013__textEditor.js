@@ -1,18 +1,4 @@
-const Room = require('@living-room/client-js')
-const fs = require('fs');
-const path = require('path');
-
-const scriptName = path.basename(__filename);
-const scriptNameNoExtension = path.parse(scriptName).name;
-const logPath = __filename.replace(scriptName, 'logs/' + scriptNameNoExtension + '.log')
-const access = fs.createWriteStream(logPath)
-process.stdout.write = process.stderr.write = access.write.bind(access);
-process.on('uncaughtException', function(err) {
-  console.error((err && err.stack) ? err.stack : err);
-})
-const myId = (scriptName.split(".")[0]).split("__")[0]
-
-const room = new Room()
+const { room, myId } = require('../helper')(__filename);
 
 let fontSize = 48; // 32;
 let fontHeight = fontSize / 1080.0;
