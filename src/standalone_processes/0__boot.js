@@ -80,5 +80,5 @@ const cleanSourceCode = sourceCode.replace(/\n/g, '\\n').replace(/"/g, String.fr
 // room.assert(`#0 wish a paper would be created in "py" with source code "${cleanSourceCode}" @ 1`)
 
 // room.assert(`#0 camera 99 has projector calibration TL (0, 0) TR (1920, 0) BR (1920, 1080) BL (0, 1080) @ 1`)
-// room.assert(`#0 camera 99 sees paper 1924 at TL (100, 100) TR (1200, 100) BR (1200, 800) BL (100, 800) @ 1`)
-// room.assert(`#0 paper 1924 is pointing at paper 472`)  // comment out if pointingAt.py is running
+// room.assert(`#0 camera 99 sees paper 1013 at TL (100, 100) TR (1200, 100) BR (1200, 800) BL (100, 800) @ 1`)
+// room.assert(`#0 paper 1013 is pointing at paper 472`)  // comment out if pointingAt.py is running
