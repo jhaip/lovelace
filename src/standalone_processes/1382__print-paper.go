@@ -20,7 +20,7 @@ const BASE_PATH = "/home/jacob/lovelace/src/standalone_processes/"
 const DOT_CODES_PATH = BASE_PATH + "files/dot-codes.txt"
 const PDF_OUTPUT_FOLDER = BASE_PATH + "files/"
 const LOG_PATH = BASE_PATH + "logs/1382__print-paper.log"
-const MY_ID = 1382;
+const MY_ID = "1382";
 
 func say(fact string) {
   formData := url.Values{
