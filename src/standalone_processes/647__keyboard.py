@@ -1,43 +1,11 @@
 from pynput import keyboard
-import requests
-import time
-import sys
-import os
-import logging
-import math
-import json
+from helper import *
+init(__file__)
 
-scriptName = os.path.basename(__file__)
-scriptNameNoExtension = os.path.splitext(scriptName)[0]
-fileDir = os.path.dirname(os.path.realpath(__file__))
-logPath = os.path.join(fileDir, 'logs/' + scriptNameNoExtension + '.log')
-print(logPath)
-
-logging.basicConfig(filename=logPath, level=logging.INFO)
-
-URL = "http://localhost:3000/"
-MY_ID = (scriptName.split(".")[0]).split("__")[0]
-
-def say(fact):
-    payload = {'facts': MY_ID + ' ' + fact}
-    return requests.post(URL + "assert", data=payload)
-
-def retract(fact, targetPaper=MY_ID):
-    payload = {'facts': targetPaper + ' ' + fact}
-    return requests.post(URL + "retract", data=payload)
-
-def select(fact, targetPaper='$'):
-    payload = {'facts': targetPaper + ' ' + fact}
-    response = requests.post(URL + "select", data=payload)
-    return response.json()
-
-###########
-
-id = 999  # TODO
 is_ctrl_pressed = False
 
-retract("keyboard {} typed key $ @ $".format(id))
-retract("keyboard {} typed special key $ @ $".format(id))
+retract("keyboard {} typed key $ @ $".format(MY_ID))
+retract("keyboard {} typed special key $ @ $".format(MY_ID))
 
 def map_special_key(key):
     m = {}
@@ -59,13 +27,13 @@ def map_special_key(key):
 
 def add_key(key, special_key):
     timestamp = int(time.time()*1000.0)
-    retract("keyboard {} typed key $ @ $".format(id))
-    retract("keyboard {} typed special key $ @ $".format(id))
+    retract("keyboard {} typed key $ @ $".format(MY_ID))
+    retract("keyboard {} typed special key $ @ $".format(MY_ID))
     if special_key:
         special_key = map_special_key(special_key)
-        say("keyboard {} typed special key \"{}\" @ {}".format(id, special_key, timestamp))
+        say("keyboard {} typed special key \"{}\" @ {}".format(MY_ID, special_key, timestamp))
     else:
-        say("keyboard {} typed key \"{}\" @ {}".format(id, key, timestamp))
+        say("keyboard {} typed key \"{}\" @ {}".format(MY_ID, key, timestamp))
 
 def add_ctrl_key_combo(key):
     add_key(None, "C-{0}".format(key))

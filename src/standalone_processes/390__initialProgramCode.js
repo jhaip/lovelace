@@ -14,6 +14,9 @@ const readFile = readLogPath => {
       console.log("skipping the binary", shortFilename)
       return;
     }
+    if (shortFilename === '__init__.py' && shortFilename === 'helper.py') {
+      return;
+    }
     if (shortFilename.includes("__")) {
       paperId = shortFilename.split("__")[0];
     } else if (shortFilename.includes(".")) {

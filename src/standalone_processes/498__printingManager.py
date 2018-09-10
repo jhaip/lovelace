@@ -1,35 +1,6 @@
 import subprocess
-import requests
-import time
-import sys
-import os
-import logging
-
-scriptName = os.path.basename(__file__)
-scriptNameNoExtension = os.path.splitext(scriptName)[0]
-fileDir = os.path.dirname(os.path.realpath(__file__))
-logPath = os.path.join(fileDir, 'logs/' + scriptNameNoExtension + '.log')
-print(logPath)
-
-logging.basicConfig(filename=logPath, level=logging.INFO)
-
-logging.info("printingManager started!")
-
-URL = "http://localhost:3000/"
-MY_ID = (scriptName.split(".")[0]).split("__")[0]
-
-def say(fact):
-    payload = {'facts': MY_ID + ' ' + fact}
-    return requests.post(URL + "assert", data=payload)
-
-def retract(fact, targetPaper=MY_ID):
-    payload = {'facts': targetPaper + ' ' + fact}
-    return requests.post(URL + "retract", data=payload)
-
-def select(fact, targetPaper='$'):
-    payload = {'facts': targetPaper + ' ' + fact}
-    response = requests.post(URL + "select", data=payload)
-    return response.json()
+from helper import *
+init(__file__)
 
 while True:
     logging.info("checking for printing wishes")
