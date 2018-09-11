@@ -135,12 +135,13 @@ func generatePrintFile(sourceCode string, programId int, name string, code8400 [
 	pdf.ClipRect(circleMargin+leftMargin, circleMargin+topMargin, pageWidth-circleMargin*2-leftMargin-rightMargin, pageHeight-topMargin*2-bottomMargin-circleMargin*2, useOutline)
 	pdf.TransformBegin()
 	pdf.TransformTranslate(circleMargin, circleMargin)
-  lineNumbers := make([]string, N)
-  for i := 0; i < 74; i++ {
+  NlinesOnPaper := 74
+  lineNumbers := make([]string, NlinesOnPaper)
+  for i := 0; i < NlinesOnPaper; i++ {
     lineNumbers[i] = strconv.Itoa(i)
   }
-  lineNumbersString := strings.Join([]string, '\n')
-  lineNumbersWidth := 5
+  lineNumbersString := strings.Join(lineNumbers, "\n")
+  lineNumbersWidth := 5.0
   pdf.MultiCell(pageWidth-circleMargin*2-leftMargin-rightMargin, 4, lineNumbersString, "", "", false)
 	pdf.MultiCell(pageWidth-circleMargin*2-leftMargin-rightMargin + lineNumbersWidth, 4, sourceCode, "", "", false)
 	pdf.TransformEnd()
