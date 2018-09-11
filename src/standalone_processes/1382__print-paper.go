@@ -126,25 +126,29 @@ func generatePrintFile(sourceCode string, programId int, name string, code8400 [
 
 	pageWidth, pageHeight := pdf.GetPageSize()
 	leftMargin, topMargin, rightMargin, bottomMargin := pdf.GetMargins()
-	circleRadius := 8.0
-	circleSpacing := circleRadius * 2.0 * 1.3
+	circleRadius := 7.5
+	circleSpacing := circleRadius * 2.0 * 1.4
 	circleMargin := 10 + circleRadius
 
-	pdf.SetFont("Courier", "", 8)
+	pdf.SetFont("Courier", "", 7)
   useOutline := false
 	pdf.ClipRect(circleMargin+leftMargin, circleMargin+topMargin, pageWidth-circleMargin*2-leftMargin-rightMargin, pageHeight-topMargin*2-bottomMargin-circleMargin*2, useOutline)
 	pdf.TransformBegin()
 	pdf.TransformTranslate(circleMargin, circleMargin)
+  prevX, prevY := pdf.GetXY()
   NlinesOnPaper := 74
   lineNumbers := make([]string, NlinesOnPaper)
   for i := 0; i < NlinesOnPaper; i++ {
     lineNumbers[i] = strconv.Itoa(i)
   }
   lineNumbersString := strings.Join(lineNumbers, "\n")
-  lineNumbersWidth := 5.0
-  pdf.MultiCell(lineNumbersWidth, 4, lineNumbersString, "", "", false)
+  lineNumbersWidth := 6.0
+  pdf.SetTextColor(150, 150, 150)
+  pdf.MultiCell(lineNumbersWidth, 3, lineNumbersString, "", "R", false)
+  pdf.SetXY(prevX, prevY)
   pdf.TransformTranslate(lineNumbersWidth, 0)
-	pdf.MultiCell(pageWidth-circleMargin*2-leftMargin-rightMargin - lineNumbersWidth, 4, sourceCode, "", "", false)
+  pdf.SetTextColor(0, 0, 0)
+	pdf.MultiCell(pageWidth-circleMargin*2-leftMargin-rightMargin - lineNumbersWidth, 3, strings.Replace(sourceCode, string(9787), "\"", -1), "", "L", false)
 	pdf.TransformEnd()
 	pdf.ClipEnd()
 
@@ -180,7 +184,10 @@ func generatePrintFile(sourceCode string, programId int, name string, code8400 [
   }
 
   pdf.SetFont("Courier", "B", 10)
-  pdf.SetXY(0, pageHeight - topMargin * 2 - bottomMargin - circleRadius)
+  pdf.SetXY(0, pageHeight - topMargin * 2 - bottomMargin - circleRadius - 2)
+  pdf.WriteAligned(0, 20, strconv.Itoa(programId), "C")
+  pdf.SetXY(0, pageHeight - topMargin * 2 - bottomMargin - circleRadius -2 + 6)
+  pdf.SetFont("Courier", "", 8)
   pdf.WriteAligned(0, 20, name, "C")
 
 	err := pdf.OutputFileAndClose(PDF_OUTPUT_FOLDER + strconv.Itoa(programId) + ".pdf")
