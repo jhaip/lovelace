@@ -11,6 +11,7 @@ import (
   "net/http"
   "net/url"
   "strconv"
+  "strings"
 	"github.com/jung-kurt/gofpdf"
 )
 
@@ -130,10 +131,18 @@ func generatePrintFile(sourceCode string, programId int, name string, code8400 [
 	circleMargin := 10 + circleRadius
 
 	pdf.SetFont("Courier", "", 8)
-	pdf.ClipRect(circleMargin+leftMargin, circleMargin+topMargin, pageWidth-circleMargin*2-leftMargin-rightMargin, pageHeight-topMargin*2-bottomMargin-circleMargin*2, true)
+  useOutline := false
+	pdf.ClipRect(circleMargin+leftMargin, circleMargin+topMargin, pageWidth-circleMargin*2-leftMargin-rightMargin, pageHeight-topMargin*2-bottomMargin-circleMargin*2, useOutline)
 	pdf.TransformBegin()
 	pdf.TransformTranslate(circleMargin, circleMargin)
-	pdf.MultiCell(pageWidth-circleMargin*2-leftMargin-rightMargin, 4, sourceCode, "", "", false)
+  lineNumbers := make([]string, N)
+  for i := 0; i < 74; i++ {
+    lineNumbers[i] = strconv.Itoa(i)
+  }
+  lineNumbersString := strings.Join([]string, '\n')
+  lineNumbersWidth = 5
+  pdf.MultiCell(pageWidth-circleMargin*2-leftMargin-rightMargin, 4, lineNumbersString, "", "", false)
+	pdf.MultiCell(pageWidth-circleMargin*2-leftMargin-rightMargin + lineNumbersWidth, 4, sourceCode, "", "", false)
 	pdf.TransformEnd()
 	pdf.ClipEnd()
 
