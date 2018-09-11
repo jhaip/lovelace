@@ -1,6 +1,7 @@
 const execFile = require('child_process').execFile;
 const process = require('process');
 const request = require('request');
+const path = require('path');
 const { room, myId, scriptName } = require('../helper')(__filename);
 
 const URL = 'http://localhost:3000/'
