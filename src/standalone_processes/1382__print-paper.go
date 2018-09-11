@@ -140,7 +140,7 @@ func generatePrintFile(sourceCode string, programId int, name string, code8400 [
     lineNumbers[i] = strconv.Itoa(i)
   }
   lineNumbersString := strings.Join([]string, '\n')
-  lineNumbersWidth = 5
+  lineNumbersWidth := 5
   pdf.MultiCell(pageWidth-circleMargin*2-leftMargin-rightMargin, 4, lineNumbersString, "", "", false)
 	pdf.MultiCell(pageWidth-circleMargin*2-leftMargin-rightMargin + lineNumbersWidth, 4, sourceCode, "", "", false)
 	pdf.TransformEnd()
