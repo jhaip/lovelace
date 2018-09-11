@@ -142,8 +142,9 @@ func generatePrintFile(sourceCode string, programId int, name string, code8400 [
   }
   lineNumbersString := strings.Join(lineNumbers, "\n")
   lineNumbersWidth := 5.0
-  pdf.MultiCell(pageWidth-circleMargin*2-leftMargin-rightMargin, 4, lineNumbersString, "", "", false)
-	pdf.MultiCell(pageWidth-circleMargin*2-leftMargin-rightMargin + lineNumbersWidth, 4, sourceCode, "", "", false)
+  pdf.MultiCell(lineNumbersWidth, 4, lineNumbersString, "", "", false)
+  pdf.TransformTranslate(lineNumbersWidth, 0)
+	pdf.MultiCell(pageWidth-circleMargin*2-leftMargin-rightMargin - lineNumbersWidth, 4, sourceCode, "", "", false)
 	pdf.TransformEnd()
 	pdf.ClipEnd()
 
