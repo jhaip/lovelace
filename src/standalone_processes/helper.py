@@ -24,16 +24,31 @@ def say(fact, targetPaper=None):
     if targetPaper is None:
         targetPaper = MY_ID
     payload = {'facts': targetPaper + ' ' + fact}
-    return requests.post(URL + "assert", data=payload)
+    try:
+        return requests.post(URL + "assert", data=payload)
+    except requests.ConnectionError as e:
+        print("OOPS!! Connection Error. Make sure you are connected to Internet. Technical Details given below.\n")
+        print(str(e))
+        return None
 
 def retract(fact, targetPaper=MY_ID):
     global MY_ID
     if targetPaper is None:
         targetPaper = MY_ID
     payload = {'facts': targetPaper + ' ' + fact}
-    return requests.post(URL + "retract", data=payload)
+    try:
+        return requests.post(URL + "retract", data=payload)
+    except requests.ConnectionError as e:
+        print("OOPS!! Connection Error. Make sure you are connected to Internet. Technical Details given below.\n")
+        print(str(e))
+        return None
 
 def select(fact, targetPaper='$'):
     payload = {'facts': targetPaper + ' ' + fact}
     response = requests.post(URL + "select", data=payload)
-    return response.json()
+    try:
+        return response.json()
+    except requests.ConnectionError as e:
+        print("OOPS!! Connection Error. Make sure you are connected to Internet. Technical Details given below.\n")
+        print(str(e))
+        return None
