@@ -1,11 +1,19 @@
 from timeit import default_timer as timer
 import logging
 import sqlite3
+from populate import init
 
 logging.basicConfig(level=logging.INFO)
 
-conn = sqlite3.connect('example.db')  # ':memory:'
+conn = sqlite3.connect(':memory:')  # ':memory:', 'example.db'
 c = conn.cursor()
+next_fact_id = 0
+
+def get_max_fact_id():
+    return c.execute('SELECT max(factid) FROM facts').fetchone()[0]
+
+def print_all():
+    print_results(c.execute('SELECT * FROM facts').fetchall())
 
 def get_all_subscriptions():
     e = c.execute('''
@@ -62,7 +70,7 @@ def query_extract_variables_and_query_parts(source, subscription_id):
     return e.fetchall()
 
 
-def query_facts(query):
+def select_facts(query, get_ids=False):
     # query = [
     #     [("VAR", "X"), ("STR", "sees"), ("STR", "a"), ("VAR", "Y")],
     #     [("VAR", "Y"), ("STR", "has"), ("VAR", "Z"), ("STR", "toes")],
@@ -80,6 +88,9 @@ def query_facts(query):
         if i != 0:
             sql += ",\n"
         sql += 'facts{}_{}.value as "{}"'.format(variables[v]["fact"], variables[v]["position"], v)
+        if get_ids:
+            sql += ",\n"
+            sql += 'facts{}_{}.id as "other"'.format(variables[v]["fact"], variables[v]["position"])
     sql += '\nFROM\n'
     for ix, x in enumerate(query):
         for iy, y in enumerate(x):
@@ -104,8 +115,6 @@ def query_facts(query):
         sql = sql[:-4]
     logging.debug(sql)
     e = c.execute(sql)
-    # for row in e:
-    #     print(row)
     return e.fetchall()
 
 
@@ -119,7 +128,7 @@ def get_facts_for_subscription(source, subscription_id):
         query[row[0]].append((row[3], row[2]))
     logging.debug(query)
     logging.debug("----------")
-    return query_facts(query)
+    return select_facts(query)
 
 
 def measure1000(f):
@@ -149,15 +158,52 @@ def update_all_subscriptions():
         facts = get_facts_for_subscription(source, subscription_id)
         send_subscription_results(source, subscription_id, facts)
 
+
+def claim_fact(fact, source):
+    global next_fact_id
+    # [("VAR", "X"), ("STR", "sees"), ("STR", "a"), ("VAR", "Y")]
+    datoms = []
+    for i, (type, value) in enumerate(fact):
+        datoms.append((next_fact_id, i, value, type, source))
+    logging.debug(datoms)
+    c.executemany('INSERT INTO facts (factid, position, value, type, source) VALUES (?,?,?,?,?)', datoms)
+    conn.commit()
+    next_fact_id += 1
+
+def retract_fact(query):
+    # query = [
+    #     [("VAR", "X"), ("STR", "sees"), ("STR", "a"), ("VAR", "Y")],
+    #     [("VAR", "Y"), ("STR", "has"), ("VAR", "Z"), ("STR", "toes")],
+    # ]
+    datoms_to_be_deleted = select_facts(query, get_ids=True)
+    delete_ids = []
+    for _, id in datoms_to_be_deleted:
+        delete_ids.append((id,))
+    logging.debug(delete_ids)
+    c.executemany('DELETE FROM facts WHERE id = ?', delete_ids)
+    print_results(datoms_to_be_deleted)
+
+
 # def foo():
 #     get_facts_for_subscription('source394', '2lj43lkj34')
 # measure1000(foo)
 
-# TODO: claim fact(s)
-# TODO: retract fact(s)
-# TODO: select
 # TODO: add subscription (should be just a regular claim)
 # TODO: how to notify of both assertions and retractions? Is this needed?
-update_all_subscriptions()
+init(conn, c)
+next_fact_id = get_max_fact_id() + 1
+
+logging.info("--- select before")
+print_results(select_facts([[('variable', 'X'), ('text', 'has'),('integer', 5),('text', 'toes')]]))
+logging.info("--- new claim")
+claim_fact([('text', 'bear'), ('text', 'has'),('integer', 5),('text', 'toes')], 'bearSource')
+logging.info("--- select after claim")
+print_results(select_facts([[('variable', 'X'), ('text', 'has'),('integer', 5),('text', 'toes')]]))
+logging.info("--- retract")
+retract_fact([[('variable', 'X'), ('text', 'has'),('integer', 5),('text', 'toes')]])
+logging.info("--- select after retract")
+print_results(select_facts([[('variable', 'X'), ('text', 'has'),('integer', 5),('text', 'toes')]]))
+
+# update_all_subscriptions()
 
 conn.close()
