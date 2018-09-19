@@ -3,7 +3,7 @@ import sqlite3
 conn = sqlite3.connect('example.db')  # ':memory:'
 c = conn.cursor()
 
-def init_table():
+def init_table(conn, c):
     c.execute('''CREATE TABLE IF NOT EXISTS facts (
       id INTEGER PRIMARY KEY,
       factid INTEGER,
@@ -15,7 +15,7 @@ def init_table():
     conn.commit()
 
 
-def populate():
+def populate(conn, c):
     source = 'source0'
     facts = [
         (0, 0, 'A', 'text', source),
@@ -38,7 +38,7 @@ def populate():
     c.executemany('INSERT INTO facts (factid, position, value, type, source) VALUES (?,?,?,?,?)', facts)
     conn.commit()
 
-def populate_subscriptions():
+def populate_subscriptions(conn, c):
     source1 = 'source394'
     subscription_id1 = '2lj43lkj34'
     subscription_id2 = 'QOUERJKERO'
@@ -71,10 +71,11 @@ def populate_subscriptions():
     conn.commit()
 
 
-def init():
-    init_table()
-    populate()
-    populate_subscriptions()
+def init(conn, c):
+    init_table(conn, c)
+    populate(conn, c)
+    populate_subscriptions(conn, c)
 
 
-init()
+if __name__ == "__main__":
+    init(conn, c)
