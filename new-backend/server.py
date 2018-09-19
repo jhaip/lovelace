@@ -15,24 +15,6 @@ def get_max_fact_id():
 def print_all():
     print_results(c.execute('SELECT * FROM facts').fetchall())
 
-def get_all_subscriptions():
-    e = c.execute('''
-    SELECT DISTINCT t.source, t2."subscription_id"
-    FROM (
-        SELECT factid, source
-        FROM facts
-        WHERE position = 0 AND value = 'subscription'
-    ) AS t
-    -- get the subscription_id at position 1
-    INNER JOIN (
-        SELECT factid, source, value as "subscription_id"
-        FROM facts
-        WHERE position = 1
-    ) AS t2 ON t.factid = t2.factid AND t.source = t2.source
-    ''')
-    return e.fetchall()
-
-
 def select_facts(query, get_ids=False, include_types=False):
     # query = [
     #     [("VAR", "X"), ("STR", "sees"), ("STR", "a"), ("VAR", "Y")],
@@ -51,7 +33,10 @@ def select_facts(query, get_ids=False, include_types=False):
                 postfixes[y[1]] = {"fact": ix, "position": iy}
     sql = "SELECT DISTINCT\n"
     for i, v in enumerate(variables.keys()):
-        if i != 0:
+        if v == "":
+            logging.debug("skipping variable with no name")
+            continue
+        if sql != "SELECT DISTINCT\n":
             sql += ",\n"
         sql += 'facts{}_{}.value as "{}"'.format(variables[v]["fact"], variables[v]["position"], v)
         if include_types:
@@ -61,7 +46,10 @@ def select_facts(query, get_ids=False, include_types=False):
             sql += ",\n"
             sql += 'facts{}_{}.id as "other"'.format(variables[v]["fact"], variables[v]["position"])
     for i, v in enumerate(postfixes.keys()):
-        if i != 0 or len(variables.keys()) > 0:
+        if v == "":
+            logging.debug("skipping postfix with no name")
+            continue
+        if sql != "SELECT DISTINCT\n":
             sql += ",\n"
         sql += 'facts{}_{}.value as "{}"'.format(postfixes[v]["fact"], postfixes[v]["position"], v)
         if include_types:
@@ -83,7 +71,7 @@ def select_facts(query, get_ids=False, include_types=False):
                 sql += 'facts{}_{}.position = {} AND\n'.format(ix, iy, iy)
             if y[0] not in ["variable", "postfix"]:
                 sql += "facts{}_{}.type = '{}' AND\n".format(ix, iy, y[0])
-            if y[0] == "text":
+            if y[0] in ["text", "source"]:
                 sql += 'facts{}_{}.value = {} AND\n'.format(ix, iy, "'{}'".format(y[1]))
             elif y[0] not in ["variable", "postfix"]:
                 sql += 'facts{}_{}.value = {} AND\n'.format(ix, iy, y[1])
@@ -98,14 +86,15 @@ def select_facts(query, get_ids=False, include_types=False):
 
 
 def get_facts_for_subscription(source, subscription_id):
-    # TODO: use source
-    selection = [[('text', 'subscription'), ('text', subscription_id), ('variable', 'part'), ('postfix', 'X')]]
+    selection = [[('source', source), ('text', 'subscription'), ('text', subscription_id), ('variable', 'part'), ('postfix', 'X')]]
+    # logging.error(get_facts_for_subscription)
+    # logging.error(selection)
     r = select_facts(selection, include_types=True)
     logging.debug("----")
     query = []
     for row in r:
         if row[0] >= len(query):
-            query.append([])
+            query.append([('source', source)])
         query[row[0]].append((row[3], row[2]))
     logging.debug(query)
     logging.debug("----------")
@@ -134,8 +123,11 @@ def send_subscription_results(source, subscription_id, results):
 
 
 def update_all_subscriptions():
-    subscriptions = get_all_subscriptions()
-    for source, subscription_id in subscriptions:
+    # Get all subscriptions
+    subscriptions = select_facts([[('variable','source'),('text','subscription'),('variable','subscription_id'),('postfix','')]])
+    for row in subscriptions:
+        source = row[0]
+        subscription_id = row[1]
         facts = get_facts_for_subscription(source, subscription_id)
         send_subscription_results(source, subscription_id, facts)
 
@@ -144,10 +136,11 @@ def claim_fact(fact, source):
     global next_fact_id
     # [("VAR", "X"), ("STR", "sees"), ("STR", "a"), ("VAR", "Y")]
     datoms = []
+    datoms.append((next_fact_id, 0, source, 'source'))
     for i, (type, value) in enumerate(fact):
-        datoms.append((next_fact_id, i, value, type, source))
+        datoms.append((next_fact_id, i+1, value, type))
     logging.debug(datoms)
-    c.executemany('INSERT INTO facts (factid, position, value, type, source) VALUES (?,?,?,?,?)', datoms)
+    c.executemany('INSERT INTO facts (factid, position, value, type) VALUES (?,?,?,?)', datoms)
     conn.commit()
     next_fact_id += 1
 
@@ -177,20 +170,21 @@ next_fact_id = get_max_fact_id() + 1
 
 # print_results(get_facts_for_subscription('source394', '2lj43lkj34'))
 # print_results(get_facts_for_subscription('source394', 'QOUERJKERO'))
-# print_results(select_facts([[('variable', 'A'), ('text', 'sees'),('postfix', 'X')]]))
+# print_results(select_facts([[('variable', ''), ('variable', 'A'), ('text', 'sees'),('postfix', 'X')]]))
 # print_results(select_facts([[('text', 'subscription'), ('text', '2lj43lkj34'), ('variable', 'part'), ('postfix', 'X')]]))
 
 # logging.info("--- select before")
-# print_results(select_facts([[('variable', 'X'), ('text', 'has'),('integer', 5),('text', 'toes')]]))
+# print_results(select_facts([[('variable', ''), ('variable', 'X'), ('text', 'has'),('integer', 5),('text', 'toes')]]))
 # logging.info("--- new claim")
 # claim_fact([('text', 'bear'), ('text', 'has'),('integer', 5),('text', 'toes')], 'bearSource')
 # logging.info("--- select after claim")
-# print_results(select_facts([[('variable', 'X'), ('text', 'has'),('integer', 5),('text', 'toes')]]))
+# print_results(select_facts([[('variable', ''), ('variable', 'X'), ('text', 'has'),('integer', 5),('text', 'toes')]]))
 # logging.info("--- retract")
-# retract_fact([[('variable', 'X'), ('text', 'has'),('integer', 5),('text', 'toes')]])
+# retract_fact([[('variable', ''), ('variable', 'X'), ('text', 'has'),('integer', 5),('text', 'toes')]])
 # logging.info("--- select after retract")
-# print_results(select_facts([[('variable', 'X'), ('text', 'has'),('integer', 5),('text', 'toes')]]))
+# print_results(select_facts([[('variable', ''), ('variable', 'X'), ('text', 'has'),('integer', 5),('text', 'toes')]]))
 
 update_all_subscriptions()
+# print_results(select_facts([[('variable','source'),('text','subscription'),('variable','subscription_id'),('postfix','')]]))
 
 conn.close()
