@@ -33,49 +33,13 @@ def get_all_subscriptions():
     return e.fetchall()
 
 
-def query_extract_variables_and_query_parts(source, subscription_id):
-    # query = [
-    #     [("VAR", "X"), ("STR", "sees"), ("STR", "a"), ("VAR", "Y")],
-    #     [("VAR", "Y"), ("STR", "has"), ("VAR", "Z"), ("STR", "toes")],
-    # ]
-    # get X, Y, TYPE, VALUE
-    e = c.execute('''
-    SELECT t3."subscription_part", facts.position - 3, facts.value, facts.type
-    FROM facts
-    -- filter to only subscriptions by the value 'subscription' at position 0
-    LEFT JOIN (
-        SELECT factid, source
-        FROM facts
-        WHERE position = 0 AND value = 'subscription'
-    ) AS t ON facts.factid = t.factid AND facts.source = t.source
-    -- get the subscription_id at position 1
-    LEFT JOIN (
-        SELECT factid, source, value as "subscription_id"
-        FROM facts
-        WHERE position = 1
-    ) AS t2 ON t.factid = t2.factid AND t.source = t2.source
-    -- get the subscription_part at position 2
-    LEFT JOIN (
-        SELECT factid, source, value as "subscription_part"
-        FROM facts
-        WHERE position = 2
-    ) AS t3 ON t.factid = t3.factid AND t.source = t3.source
-    -- select on things that start with $ to indicate a variable...
-    WHERE facts.position >= 3
-      AND facts.source = '{}'
-      AND t2."subscription_id" = '{}'
-    '''.format(source, subscription_id))
-    # for row in e:
-    #     print(row)
-    return e.fetchall()
-
-
-def select_facts(query, get_ids=False):
+def select_facts(query, get_ids=False, include_types=False):
     # query = [
     #     [("VAR", "X"), ("STR", "sees"), ("STR", "a"), ("VAR", "Y")],
     #     [("VAR", "Y"), ("STR", "has"), ("VAR", "Z"), ("STR", "toes")],
     # ]
     variables = {}
+    postfixes = {}
     for ix, x in enumerate(query):
         for iy, y in enumerate(x):
             if y[0] == "variable":
@@ -83,14 +47,26 @@ def select_facts(query, get_ids=False):
                     variables[y[1]]["equals"].append({"fact": ix, "position": iy})
                 else:
                     variables[y[1]] = {"fact": ix, "position": iy, "equals": []}
+            elif y[0] == "postfix":
+                postfixes[y[1]] = {"fact": ix, "position": iy}
     sql = "SELECT DISTINCT\n"
     for i, v in enumerate(variables.keys()):
         if i != 0:
             sql += ",\n"
         sql += 'facts{}_{}.value as "{}"'.format(variables[v]["fact"], variables[v]["position"], v)
+        if include_types:
+            sql += ",\n"
+            sql += 'facts{}_{}.type as "{}_type"'.format(variables[v]["fact"], variables[v]["position"], v)
         if get_ids:
             sql += ",\n"
             sql += 'facts{}_{}.id as "other"'.format(variables[v]["fact"], variables[v]["position"])
+    for i, v in enumerate(postfixes.keys()):
+        if i != 0 or len(variables.keys()) > 0:
+            sql += ",\n"
+        sql += 'facts{}_{}.value as "{}"'.format(postfixes[v]["fact"], postfixes[v]["position"], v)
+        if include_types:
+            sql += ",\n"
+            sql += 'facts{}_{}.type as "{}_type"'.format(postfixes[v]["fact"], postfixes[v]["position"], v)
     sql += '\nFROM\n'
     for ix, x in enumerate(query):
         for iy, y in enumerate(x):
@@ -101,12 +77,15 @@ def select_facts(query, get_ids=False):
     for ix, x in enumerate(query):
         for iy, y in enumerate(x):
             sql += 'facts{}_0.factid = facts{}_{}.factid AND\n'.format(ix, ix, iy)
-            sql += 'facts{}_{}.position = {} AND\n'.format(ix, iy, iy)
-            if y[0] != "variable":
+            if y[0] == "postfix":
+                sql += 'facts{}_{}.position >= {} AND\n'.format(ix, iy, iy)
+            else:
+                sql += 'facts{}_{}.position = {} AND\n'.format(ix, iy, iy)
+            if y[0] not in ["variable", "postfix"]:
                 sql += "facts{}_{}.type = '{}' AND\n".format(ix, iy, y[0])
             if y[0] == "text":
                 sql += 'facts{}_{}.value = {} AND\n'.format(ix, iy, "'{}'".format(y[1]))
-            elif y[0] != "variable":
+            elif y[0] not in ["variable", "postfix"]:
                 sql += 'facts{}_{}.value = {} AND\n'.format(ix, iy, y[1])
     for v in variables.values():
         for k in v["equals"]:
@@ -119,9 +98,11 @@ def select_facts(query, get_ids=False):
 
 
 def get_facts_for_subscription(source, subscription_id):
-    query = []
-    r = query_extract_variables_and_query_parts(source, subscription_id)
+    # TODO: use source
+    selection = [[('text', 'subscription'), ('text', subscription_id), ('variable', 'part'), ('postfix', 'X')]]
+    r = select_facts(selection, include_types=True)
     logging.debug("----")
+    query = []
     for row in r:
         if row[0] >= len(query):
             query.append([])
@@ -190,20 +171,26 @@ def retract_fact(query):
 
 # TODO: add subscription (should be just a regular claim)
 # TODO: how to notify of both assertions and retractions? Is this needed?
+# TODO: handle selects and subscriptions with no variables
 init(conn, c)
 next_fact_id = get_max_fact_id() + 1
 
-logging.info("--- select before")
-print_results(select_facts([[('variable', 'X'), ('text', 'has'),('integer', 5),('text', 'toes')]]))
-logging.info("--- new claim")
-claim_fact([('text', 'bear'), ('text', 'has'),('integer', 5),('text', 'toes')], 'bearSource')
-logging.info("--- select after claim")
-print_results(select_facts([[('variable', 'X'), ('text', 'has'),('integer', 5),('text', 'toes')]]))
-logging.info("--- retract")
-retract_fact([[('variable', 'X'), ('text', 'has'),('integer', 5),('text', 'toes')]])
-logging.info("--- select after retract")
-print_results(select_facts([[('variable', 'X'), ('text', 'has'),('integer', 5),('text', 'toes')]]))
+# print_results(get_facts_for_subscription('source394', '2lj43lkj34'))
+# print_results(get_facts_for_subscription('source394', 'QOUERJKERO'))
+# print_results(select_facts([[('variable', 'A'), ('text', 'sees'),('postfix', 'X')]]))
+# print_results(select_facts([[('text', 'subscription'), ('text', '2lj43lkj34'), ('variable', 'part'), ('postfix', 'X')]]))
 
-# update_all_subscriptions()
+# logging.info("--- select before")
+# print_results(select_facts([[('variable', 'X'), ('text', 'has'),('integer', 5),('text', 'toes')]]))
+# logging.info("--- new claim")
+# claim_fact([('text', 'bear'), ('text', 'has'),('integer', 5),('text', 'toes')], 'bearSource')
+# logging.info("--- select after claim")
+# print_results(select_facts([[('variable', 'X'), ('text', 'has'),('integer', 5),('text', 'toes')]]))
+# logging.info("--- retract")
+# retract_fact([[('variable', 'X'), ('text', 'has'),('integer', 5),('text', 'toes')]])
+# logging.info("--- select after retract")
+# print_results(select_facts([[('variable', 'X'), ('text', 'has'),('integer', 5),('text', 'toes')]]))
+
+update_all_subscriptions()
 
 conn.close()
