@@ -10,7 +10,9 @@ def postfix():          return '$+'
 def wildcard():         return '$'
 def variable():         return wildcard, _('\w+')
 def postfixvariable():  return postfix, _('\w+')
-def char():             return [('\\', ['"', '\'', '\\']), _('.')]
+def escapedchar():      return ('\\', ['"', '\'', '\\'])
+def anychar():          return _('.')
+def char():             return [escapedchar, anychar, whitespace]
 def string():           return '"', ZeroOrMore(Not('"'), char), '"'
 def value():            return  _('[^"\s]+')
 def number():           return _('-?\d+((\.\d*)?((e|E)(\+|-)?\d+)?)?')
@@ -19,16 +21,66 @@ def term():             return [postfixvariable, variable, postfix, wildcard, id
 def fact():             return OneOrMore(term), EOF
 
 
+class CalcVisitor(PTNodeVisitor):
+    def visit_string(self, node, children):
+        if self.debug:
+            print("Expression {}".format(children))
+            print("Node {}".format(node))
+            print("---")
+        return ('text', "".join(children))
+
+    def visit_value(self, node, children):
+        if self.debug:
+            print("value Expression {}".format(children))
+            print("value Node {}".format(node))
+            print("---")
+        return ('text', str(node))
+
+    def visit_id(self, node, children):
+        if self.debug:
+            print("ID Expression {}".format(children))
+            print("ID Node {}".format(node))
+        return ('id', str(children[0]))
+
+    def visit_term(self, node, children):
+        if self.debug:
+            print("term Expression {}".format(children))
+            print("term Node {}".format(node))
+        if len(children) is 0:
+            return None
+        return children
+
+    def visit_whitespace(self, node, children):
+        return None
+
+    def visit_variable(self, node, children):
+        return ('variable', str(children[1]))
+
+    def visit_postfix(self, node, children):
+        return ('postfix', '')
+
+    def visit_postfixvariable(self, node, children):
+        return ('postfixvariable', str(children[1]))
+
+    def visit_wildcard(self, node, children):
+        return ('wildcard', '')
+
+    def visit_fact(self, node, children):
+        return [x for x in children if x != None]
+
+
 def main(debug=False):
-    parser = ParserPython(fact, debug=debug)
+    parser = ParserPython(fact, debug=debug, skipws=False)
     testdata = '#0 bird1 "has" 8 toes'
     testdata1 = '#0 bird1 "has" 8 nice toes 0.5 1. .99999 1.23e8'
     testdata2 = '$ $Animal "has" $+TheRest1'
-    testdata3 = '#0 "This \\"is\\" a test" one "two"'
+    testdata3 = '#0 "This \\"is\\" a test" one "two" $ $X $+ $+Z'
     print(testdata3)
     parse_tree = parser.parse(testdata3)
     # parse_tree can now be analysed and transformed to some other form
     # using e.g. visitor support. See http://igordejanovic.net/Arpeggio/semantics/
+    result = visit_parse_tree(parse_tree, CalcVisitor(debug=debug))
+    print(result)
 
 if __name__ == "__main__":
     # In debug mode dot (graphviz) files for parser model
