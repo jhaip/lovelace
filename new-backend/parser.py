@@ -69,14 +69,9 @@ class CalcVisitor(PTNodeVisitor):
         return [x for x in children if x != None]
 
 
-def main(debug=False):
+def parse(fact_string, debug=False):
     parser = ParserPython(fact, debug=debug, skipws=False)
-    testdata = '#0 bird1 "has" 8 toes'
-    testdata1 = '#0 bird1 "has" 8 nice toes 0.5 1. .99999 1.23e8'
-    testdata2 = '$ $Animal "has" $+TheRest1'
-    testdata3 = '#0 "This \\"is\\" a test" one "two" $ $X $+ $+Z'
-    print(testdata3)
-    parse_tree = parser.parse(testdata3)
+    parse_tree = parser.parse(fact_string)
     # parse_tree can now be analysed and transformed to some other form
     # using e.g. visitor support. See http://igordejanovic.net/Arpeggio/semantics/
     result = visit_parse_tree(parse_tree, CalcVisitor(debug=debug))
@@ -86,4 +81,8 @@ if __name__ == "__main__":
     # In debug mode dot (graphviz) files for parser model
     # and parse tree will be created for visualization.
     # Checkout current folder for .dot files.
-    main(debug=True)
+    testdata = '#0 bird1 "has" 8 toes'
+    testdata1 = '#0 bird1 "has" 8 nice toes 0.5 1. .99999 1.23e8'
+    testdata2 = '$ $Animal "has" $+TheRest1'
+    testdata3 = '#0 "This \\"is\\" a test" one "two" $ $X $+ $+Z'
+    parse(testdata3, debug=True)
