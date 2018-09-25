@@ -10,7 +10,7 @@ c = conn.cursor()
 next_fact_id = 0
 
 def get_max_fact_id():
-    return c.execute('SELECT max(factid) FROM facts').fetchone()[0]
+    return c.execute('SELECT max(factid) FROM facts').fetchone()[0] or 1
 
 def print_all():
     print_results(c.execute('SELECT * FROM facts').fetchall())
@@ -90,14 +90,16 @@ def get_facts_for_subscription(source, subscription_id):
     # logging.error(get_facts_for_subscription)
     # logging.error(selection)
     r = select_facts(selection, include_types=True)
-    logging.debug("----")
+    logging.info("----")
     query = []
     for row in r:
         if row[0] >= len(query):
-            query.append([('source', source)])
+            # query.append([('source', source)])
+            # Should should not be auto added for subscription
+            query.append([])
         query[row[0]].append((row[3], row[2]))
-    logging.debug(query)
-    logging.debug("----------")
+    logging.info(query)
+    logging.info("----------")
     return select_facts(query)
 
 
@@ -125,6 +127,8 @@ def send_subscription_results(source, subscription_id, results):
 def update_all_subscriptions():
     # Get all subscriptions
     subscriptions = select_facts([[('variable','source'),('text','subscription'),('variable','subscription_id'),('postfix','')]])
+    logging.info("GOT SUBSCRIPTIONS:::::::::::::")
+    logging.info(subscriptions)
     for row in subscriptions:
         source = row[0]
         subscription_id = row[1]

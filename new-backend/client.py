@@ -1,5 +1,5 @@
 from parser import parse
-from server import claim_fact, retract_fact, select_facts, get_facts_for_subscription
+from server import claim_fact, retract_fact, select_facts, get_facts_for_subscription, print_all
 import time
 import zmq
 import logging
@@ -16,19 +16,21 @@ sub_socket.connect("tcp://{0}:5556".format(rpc_url))
 pub_socket = context.socket(zmq.PUB)
 pub_socket.connect("tcp://{0}:5555".format(rpc_url))
 
+PARSER_DEBUG = False
+
 def claim(fact_string, source):
     logging.info("fact_string")
     logging.info(fact_string)
     logging.info("source")
     logging.info(source)
-    fact = parse(fact_string, debug=True)
+    fact = parse(fact_string, debug=PARSER_DEBUG)
     logging.info("FACT:")
     logging.info(fact)
     claim_fact(fact, source)
     update_all_subscriptions()
 
 def retract(fact_string):
-    fact = parse(fact_string, debug=True)
+    fact = parse(fact_string, debug=PARSER_DEBUG)
     retract_fact(fact)
     update_all_subscriptions()
 
@@ -44,7 +46,7 @@ def select(query_strings, select_id, source):
     logging.info(source)
     logging.info("query_strings:")
     logging.info(query_strings)
-    query = list(map(lambda x: parse(x, debug=True), query_strings))
+    query = list(map(lambda x: parse(x, debug=PARSER_DEBUG), query_strings))
     logging.info("QUERY:")
     logging.info(query)
     facts = select_facts(query)
@@ -56,15 +58,23 @@ def update_all_subscriptions():
     # Get all subscriptions
     query = [[('variable','source'),('text','subscription'),('variable','subscription_id'),('postfix','')]]
     subscriptions = select_facts(query)
+    logging.info("CLIENT, got subscriptions:")
+    logging.info(subscriptions)
+    print_all()
     for row in subscriptions:
         source = row[0]
         subscription_id = row[1]
         facts = get_facts_for_subscription(source, subscription_id)
+        logging.info("FACTS FOR SUBSCRIPTION {} {}".format(source, subscription_id))
+        logging.info(facts)
         send_results(source, subscription_id, facts)
 
 def subscribe(fact_strings, subscription_id, source):
     for i, fact_string in enumerate(fact_strings):
-        claim("subscription {} {} {}".format(subscription_id, i, fact_string), source)
+        print("FACT STRING:::::::::::::::")
+        print(fact_string)
+        claim("subscription \"{}\" {} {}".format(subscription_id, i, fact_string), source)
+    print_all()
 
 sub_socket.setsockopt_string(zmq.SUBSCRIBE, "....CLAIM")
 sub_socket.setsockopt_string(zmq.SUBSCRIBE, "...SELECT")

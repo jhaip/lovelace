@@ -84,8 +84,8 @@ def populate_subscriptions(conn, c):
 
 def init(conn, c):
     init_table(conn, c)
-    populate(conn, c)
-    populate_subscriptions(conn, c)
+    # populate(conn, c)
+    # populate_subscriptions(conn, c)
 
 
 if __name__ == "__main__":

@@ -2,14 +2,15 @@ from client_helper import init, claim, retract
 MY_ID = 2
 
 def prehook():
-    pass
+    claim("Bird has 5 toes")
+    claim("Man has 10 toes")
 
-def select_callback(results):
-    print("SELECT CALLBACK!")
+def sub_callback(results):
+    print("sub CALLBACK!")
     print(results)
 
-selects = [
-    (["$ $X has $Y toes"], select_callback)
+subscriptions = [
+    (["$ $X has $Y toes"], sub_callback)
 ]
 
-init(MY_ID, prehook, selects)
+init(MY_ID, prehook, [], subscriptions)

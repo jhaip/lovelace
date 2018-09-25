@@ -66,12 +66,13 @@ class CalcVisitor(PTNodeVisitor):
         return ('variable', '')
 
     def visit_number(self, node, children):
-        print("NUMBER")
-        print(node)
-        print(type(node))
-        print("---")
-        print(children)
-        print("----------")
+        if self.debug:
+            print("NUMBER")
+            print(node)
+            print(type(node))
+            print("---")
+            print(children)
+            print("----------")
         value = node.value
         try:
             return ('integer', int(value))
@@ -83,10 +84,6 @@ class CalcVisitor(PTNodeVisitor):
             return None
 
     def visit_fact(self, node, children):
-        for x in children:
-            if x != None:
-                print("VISIT FACT:")
-                print(x[0])
         return [x[0] for x in children if x != None]
 
 
@@ -96,7 +93,8 @@ def parse(fact_string, debug=False):
     # parse_tree can now be analysed and transformed to some other form
     # using e.g. visitor support. See http://igordejanovic.net/Arpeggio/semantics/
     result = visit_parse_tree(parse_tree, CalcVisitor(debug=debug))
-    print(result)
+    if debug:
+        print(result)
     return result
 
 if __name__ == "__main__":

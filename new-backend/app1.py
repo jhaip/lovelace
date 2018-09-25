@@ -3,6 +3,7 @@ MY_ID = 1
 
 def prehook():
     claim("Bird has 5 toes")
+    claim("Worm has no toes")
 
 def select_callback(results):
     print("SELECT CALLBACK!")
