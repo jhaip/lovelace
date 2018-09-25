@@ -34,11 +34,22 @@ def retract(fact_string):
 
 def send_results(source, id, results):
     results_str = json.dumps(results)
-    pub_socket.send_string("{}{}{}".format(source, id, results_str), zmq.NOBLOCK)
+    msg = "{}{}{}".format(source, id, results_str)
+    logging.info("SEND RESULTS:")
+    logging.info(msg)
+    pub_socket.send_string(msg, zmq.NOBLOCK)
 
 def select(query_strings, select_id, source):
-    query = map(lambda x: parse(x, debug=True), query_strings)
+    logging.info("SOURCE:")
+    logging.info(source)
+    logging.info("query_strings:")
+    logging.info(query_strings)
+    query = list(map(lambda x: parse(x, debug=True), query_strings))
+    logging.info("QUERY:")
+    logging.info(query)
     facts = select_facts(query)
+    logging.info("RESULT:")
+    logging.info(facts)
     send_results(source, select_id, facts)
 
 def update_all_subscriptions():
@@ -68,7 +79,7 @@ while True:
             event_type_len = 9
             source_len = 4
             event_type = string[:event_type_len]
-            source = string[event_type_len:source_len]
+            source = string[event_type_len:(event_type_len + source_len)]
             val = string[(event_type_len + source_len):]
             if event_type ==   "....CLAIM":
                 claim(val, source)
