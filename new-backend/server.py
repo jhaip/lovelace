@@ -184,7 +184,7 @@ next_fact_id = get_max_fact_id() + 1
 # logging.info("--- select after retract")
 # print_results(select_facts([[('variable', ''), ('variable', 'X'), ('text', 'has'),('integer', 5),('text', 'toes')]]))
 
-update_all_subscriptions()
+# update_all_subscriptions()
 # print_results(select_facts([[('variable','source'),('text','subscription'),('variable','subscription_id'),('postfix','')]]))
 
-conn.close()
+# conn.close()

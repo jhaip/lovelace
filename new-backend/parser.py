@@ -60,13 +60,34 @@ class CalcVisitor(PTNodeVisitor):
         return ('postfix', '')
 
     def visit_postfixvariable(self, node, children):
-        return ('postfixvariable', str(children[1]))
+        return ('postfix', str(children[1]))
 
     def visit_wildcard(self, node, children):
-        return ('wildcard', '')
+        return ('variable', '')
+
+    def visit_number(self, node, children):
+        print("NUMBER")
+        print(node)
+        print(type(node))
+        print("---")
+        print(children)
+        print("----------")
+        value = node.value
+        try:
+            return ('integer', int(value))
+        except:
+            pass
+        try:
+            return ('float', float(value))
+        except:
+            return None
 
     def visit_fact(self, node, children):
-        return [x for x in children if x != None]
+        for x in children:
+            if x != None:
+                print("VISIT FACT:")
+                print(x[0])
+        return [x[0] for x in children if x != None]
 
 
 def parse(fact_string, debug=False):
@@ -76,6 +97,7 @@ def parse(fact_string, debug=False):
     # using e.g. visitor support. See http://igordejanovic.net/Arpeggio/semantics/
     result = visit_parse_tree(parse_tree, CalcVisitor(debug=debug))
     print(result)
+    return result
 
 if __name__ == "__main__":
     # In debug mode dot (graphviz) files for parser model
