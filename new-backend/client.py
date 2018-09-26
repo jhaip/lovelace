@@ -76,6 +76,7 @@ def subscribe(fact_strings, subscription_id, source):
         claim("subscription \"{}\" {} {}".format(subscription_id, i, fact_string), source)
     print_all()
 
+sub_socket.setsockopt_string(zmq.SUBSCRIBE, ".....PING")
 sub_socket.setsockopt_string(zmq.SUBSCRIBE, "....CLAIM")
 sub_socket.setsockopt_string(zmq.SUBSCRIBE, "...SELECT")
 sub_socket.setsockopt_string(zmq.SUBSCRIBE, "..RETRACT")
@@ -91,7 +92,10 @@ while True:
             event_type = string[:event_type_len]
             source = string[event_type_len:(event_type_len + source_len)]
             val = string[(event_type_len + source_len):]
-            if event_type ==   "....CLAIM":
+            if event_type == ".....PING":
+                id = val
+                send_results(source, id, "")
+            elif event_type == "....CLAIM":
                 claim(val, source)
             elif event_type == "..RETRACT":
                 retract(val)
@@ -103,5 +107,6 @@ while True:
                 subscribe(json_val["facts"], json_val["id"], source)
         except zmq.Again:
             break
-    logging.info("loop")
-    time.sleep(0.5)
+    # logging.info("loop")
+    time.sleep(0.001)
+    # time.sleep(0.5)

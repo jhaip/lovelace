@@ -17,6 +17,8 @@ pub_socket.connect("tcp://{0}:5555".format(rpc_url))
 MY_ID = 1
 MY_ID_STR = str(MY_ID).zfill(4)
 SUBSCRIPTION_ID_LEN = len(str(uuid.uuid4()))
+init_ping_id = str(uuid.uuid4())
+server_listening = False
 select_ids = {}
 subscription_ids = {}
 
@@ -51,35 +53,44 @@ def subscribe(query_strings, callback):
     pub_socket.send_string(msg, zmq.NOBLOCK)
 
 def listen():
+    global server_listening
     while True:
-        while True:
-            try:
-                string = sub_socket.recv_string(flags=zmq.NOBLOCK)
-                source_len = 4
-                id = string[source_len:(source_len + SUBSCRIPTION_ID_LEN)]
-                val = string[(source_len + SUBSCRIPTION_ID_LEN):]
-                if id in select_ids:
-                    callback = select_ids[id]
-                    del select_ids[id]
-                    callback(val)
-                elif id in subscription_ids:
-                    logging.info(string)
-                    callback = subscription_ids[id]
-                    callback(val)
-                else:
-                    logging.info("UNRECOGNIZED:")
-                    logging.info(string)
-            except zmq.Again:
-                break
-        logging.info("loop")
-        time.sleep(0.5)
+        try:
+            string = sub_socket.recv_string(flags=zmq.NOBLOCK)
+            source_len = 4
+            id = string[source_len:(source_len + SUBSCRIPTION_ID_LEN)]
+            val = string[(source_len + SUBSCRIPTION_ID_LEN):]
+            if id == init_ping_id:
+                server_listening = True
+                return
+            if id in select_ids:
+                callback = select_ids[id]
+                del select_ids[id]
+                callback(val)
+            elif id in subscription_ids:
+                logging.info(string)
+                callback = subscription_ids[id]
+                callback(val)
+            # else:
+            #     logging.info("UNRECOGNIZED:")
+            #     logging.info(string)
+        except zmq.Again:
+            break
+    # logging.info("loop")
+    time.sleep(0.01)
 
 def init(my_id, prehook=None, selects=[], subscriptions=[]):
     global MY_ID, MY_ID_STR
     MY_ID = my_id
     MY_ID_STR = str(MY_ID).zfill(4)
     sub_socket.setsockopt_string(zmq.SUBSCRIBE, MY_ID_STR)
-    time.sleep(1.0)  # Give time for server to acknowledge us as a subscriber and publisher
+    start = time.time()
+    while not server_listening:
+        pub_socket.send_string(".....PING{}{}".format(MY_ID_STR, init_ping_id), zmq.NOBLOCK)
+        listen()
+    end = time.time()
+    print("INIT TIME: {} ms".format((end - start)*1000.0))
+    # time.sleep(0.2)
     if prehook:
         prehook()
     for s in selects:
@@ -90,4 +101,5 @@ def init(my_id, prehook=None, selects=[], subscriptions=[]):
         query = s[0]
         callback = s[1]
         subscribe(query, callback)
-    listen()
+    while True:
+        listen()
