@@ -19,15 +19,29 @@ pub_socket.connect("tcp://{0}:5555".format(rpc_url))
 PARSER_DEBUG = False
 
 def claim(fact_string, source):
-    logging.info("fact_string")
-    logging.info(fact_string)
-    logging.info("source")
-    logging.info(source)
+    # logging.info("fact_string")
+    # logging.info(fact_string)
+    # logging.info("source")
+    # logging.info(source)
+    total = 0
+    start = time.time()
     fact = parse(fact_string, debug=PARSER_DEBUG)
-    logging.info("FACT:")
-    logging.info(fact)
+    end = time.time()
+    total += end - start
+    print("PARSE TIME: {} ms".format((end - start)*1000.0))
+    # logging.info("FACT:")
+    # logging.info(fact)
+    start = time.time()
     claim_fact(fact, source)
+    end = time.time()
+    total += end - start
+    print("CLAIM TIME: {} ms".format((end - start)*1000.0))
+    start = time.time()
     update_all_subscriptions()
+    end = time.time()
+    total += end - start
+    print("SUBSCRIPTION UPDATE TIME: {} ms".format((end - start)*1000.0))
+    print("== CLAIM TOTAL {} ms".format(total*1000.0))
 
 def retract(fact_string):
     fact = parse(fact_string, debug=PARSER_DEBUG)
@@ -37,8 +51,8 @@ def retract(fact_string):
 def send_results(source, id, results):
     results_str = json.dumps(results)
     msg = "{}{}{}".format(source, id, results_str)
-    logging.info("SEND RESULTS:")
-    logging.info(msg)
+    # logging.info("SEND RESULTS:")
+    # logging.info(msg)
     pub_socket.send_string(msg, zmq.NOBLOCK)
 
 def select(query_strings, select_id, source):
@@ -58,23 +72,23 @@ def update_all_subscriptions():
     # Get all subscriptions
     query = [[('variable','source'),('text','subscription'),('variable','subscription_id'),('postfix','')]]
     subscriptions = select_facts(query)
-    logging.info("CLIENT, got subscriptions:")
-    logging.info(subscriptions)
-    print_all()
+    # logging.info("CLIENT, got subscriptions:")
+    # logging.info(subscriptions)
+    # print_all()
     for row in subscriptions:
         source = row[0]
         subscription_id = row[1]
         facts = get_facts_for_subscription(source, subscription_id)
-        logging.info("FACTS FOR SUBSCRIPTION {} {}".format(source, subscription_id))
-        logging.info(facts)
+        # logging.info("FACTS FOR SUBSCRIPTION {} {}".format(source, subscription_id))
+        # logging.info(facts)
         send_results(source, subscription_id, facts)
 
 def subscribe(fact_strings, subscription_id, source):
     for i, fact_string in enumerate(fact_strings):
-        print("FACT STRING:::::::::::::::")
-        print(fact_string)
+        # print("FACT STRING:::::::::::::::")
+        # print(fact_string)
         claim("subscription \"{}\" {} {}".format(subscription_id, i, fact_string), source)
-    print_all()
+    # print_all()
 
 sub_socket.setsockopt_string(zmq.SUBSCRIBE, ".....PING")
 sub_socket.setsockopt_string(zmq.SUBSCRIBE, "....CLAIM")
@@ -108,5 +122,5 @@ while True:
         except zmq.Again:
             break
     # logging.info("loop")
-    time.sleep(0.001)
+    # time.sleep(0.001)
     # time.sleep(0.5)

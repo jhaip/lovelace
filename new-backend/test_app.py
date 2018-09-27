@@ -4,21 +4,21 @@ import time
 MY_ID = sys.argv[1]
 print(MY_ID)
 
-N = 10
+N = 100
 i = 0
 start = None
 
 def prehook():
     global start
     start = time.time()
-    claim("Bird has 5 toes")
-    claim("Man has 10 toes")
+    # claim("Bird has 5 toes")
+    claim("Man has 1000 toes")
 
 def sub_callback(results):
     global i, N, start
-    print("sub CALLBACK!")
-    print(results)
-    print(i)
+    # print("sub CALLBACK!")
+    # print(results)
+    # print(i)
     i += 1
     if i >= N:
         end = time.time()

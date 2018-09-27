@@ -1,6 +1,7 @@
 import os
 from arpeggio import *
 from arpeggio import RegExMatch as _
+import time
 
 # Escaped strings inspired from this:
 # https://github.com/PhilippeSigaud/Pegged/blob/master/pegged/examples/strings.d
@@ -20,6 +21,8 @@ def id():               return '#', _('\d+')
 def term():             return [postfixvariable, variable, postfix, wildcard, id, string, number, value, whitespace]
 def fact():             return OneOrMore(term), EOF
 
+
+parser = ParserPython(fact, debug=False, skipws=False)
 
 class CalcVisitor(PTNodeVisitor):
     def visit_string(self, node, children):
@@ -88,11 +91,29 @@ class CalcVisitor(PTNodeVisitor):
 
 
 def parse(fact_string, debug=False):
-    parser = ParserPython(fact, debug=debug, skipws=False)
+    global parser
+    total = 0
+    # start = time.time()
+    # parser = ParserPython(fact, debug=debug, skipws=False)
+    # end = time.time()
+    # total += end - start
+    # print("~ make parser TIME: {} ms".format((end - start)*1000.0))
+
+    start = time.time()
     parse_tree = parser.parse(fact_string)
+    end = time.time()
+    total += end - start
+    print("~ parser TIME: {} ms".format((end - start)*1000.0))
+
+    start = time.time()
     # parse_tree can now be analysed and transformed to some other form
     # using e.g. visitor support. See http://igordejanovic.net/Arpeggio/semantics/
     result = visit_parse_tree(parse_tree, CalcVisitor(debug=debug))
+    end = time.time()
+    total += end - start
+    print("~ visit parse tree TIME: {} ms".format((end - start)*1000.0))
+    print("~~~~ TOTAL PARSE TIME: {} ms".format(total*1000.0))
+
     if debug:
         print(result)
     return result

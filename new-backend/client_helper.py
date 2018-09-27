@@ -77,7 +77,7 @@ def listen():
         except zmq.Again:
             break
     # logging.info("loop")
-    time.sleep(0.01)
+    # time.sleep(0.01)
 
 def init(my_id, prehook=None, selects=[], subscriptions=[]):
     global MY_ID, MY_ID_STR

@@ -90,7 +90,7 @@ def get_facts_for_subscription(source, subscription_id):
     # logging.error(get_facts_for_subscription)
     # logging.error(selection)
     r = select_facts(selection, include_types=True)
-    logging.info("----")
+    # logging.info("----")
     query = []
     for row in r:
         if row[0] >= len(query):
@@ -98,8 +98,8 @@ def get_facts_for_subscription(source, subscription_id):
             # Should should not be auto added for subscription
             query.append([])
         query[row[0]].append((row[3], row[2]))
-    logging.info(query)
-    logging.info("----------")
+    # logging.info(query)
+    # logging.info("----------")
     return select_facts(query)
 
 
