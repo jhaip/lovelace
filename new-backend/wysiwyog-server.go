@@ -7,6 +7,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"log"
   zmq "github.com/pebbe/zmq4"
+  "github.com/alecthomas/participle"
+  "github.com/alecthomas/repr"
 )
 
 var next_fact_id int = 1
@@ -20,6 +22,30 @@ type SubscriptionData struct {
   Id    string   `json:"id"`
   Facts []string `json:"facts"`
 }
+
+// Grammar Start
+type Fact struct {
+  FactTerm []*FactTerm `{ @@ }`
+}
+
+type Postfix struct {
+  Postfix string `"%"[@Ident]`
+}
+
+type Wildcard struct {
+  Wildcard string `"$"[@Ident]`
+}
+
+type FactTerm struct {
+  Postfix *Postfix `@@ |`
+  Wildcard *Wildcard `@@ |`
+  Id string `"#"(@Ident|@Int) |`
+  String string `@String |`
+  Integer int `@Int |`
+  Number float64 `@Float |`
+  Value string `@Ident`
+}
+//
 
 func init_db(db *sql.DB) {
   sqlStmt := `
@@ -116,6 +142,17 @@ func main() {
 
   event_type_len := 9
   source_len := 4
+
+  parser, err := participle.Build(&Fact{})
+  if err != nil {
+		panic(err)
+	}
+  fact := &Fact{}
+  err = parser.ParseString("#P5 #0 \"This \\\"is\\\" a test\" one \"two\" 0.5 1. .99999 1.23e8 $ $X % %Z", fact)
+	if err != nil {
+		panic(err)
+	}
+  repr.Println(fact, repr.Indent("  "), repr.OmitEmpty(true))
 
 	for {
 		msg, _ := subscriber.Recv(0)
