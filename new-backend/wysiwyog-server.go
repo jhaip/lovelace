@@ -8,7 +8,8 @@ import (
 	"log"
   zmq "github.com/pebbe/zmq4"
   "github.com/alecthomas/participle"
-  "github.com/alecthomas/repr"
+  // "github.com/alecthomas/repr"
+  "strconv"
 )
 
 var next_fact_id int = 1
@@ -102,9 +103,10 @@ func print_all(db *sql.DB) {
 	checkErr(err)
 }
 
-func send_results(publisher *zmq.Socket, source string, id string, results_str string) {
-  // results_str = json.dumps(results)
-  msg := fmt.Sprintf("%s%s%s", source, id, results_str)
+func send_results(publisher *zmq.Socket, source string, id string, results [][]string) {
+  results_json_str, err := json.Marshal(results)
+  checkErr(err)
+  msg := fmt.Sprintf("%s%s%s", source, id, string(results_json_str))
   fmt.Println("Sending ", msg)
   publisher.Send(msg, 0)
 }
@@ -169,7 +171,8 @@ func parse_fact_string(parser *participle.Parser, fact_string string) []Term {
   return fact_terms
 }
 
-func select_facts(db *sql.DB, query [][]Term, get_ids bool, include_types bool) bool {
+func select_facts(db *sql.DB, query [][]Term, get_ids bool, include_types bool) [][]string {
+  // include_types = true
   // TODO: what is the return type?
   // variable length type and list of results
   variables := make(map[string]SelectQueryVariable)
@@ -263,53 +266,112 @@ func select_facts(db *sql.DB, query [][]Term, get_ids bool, include_types bool) 
 	checkErr(err)
 	defer rows.Close()
   fmt.Println(":::::::")
-  repr.Println(rows, repr.Indent("  "), repr.OmitEmpty(true))
-	// for rows.Next() {
+  // repr.Println(rows, repr.Indent("  "), repr.OmitEmpty(true))
+  fmt.Println("rows.Columns")
+  fmt.Println(rows.Columns())
+  fmt.Println("rows.ColumnTypes")
+  fmt.Println(rows.ColumnTypes())
+  column_types, err := rows.ColumnTypes()
+  checkErr(err)
+  fmt.Println(column_types[0].Name())
+  fmt.Println(column_types[1].Name())
+  result_columns, err := rows.Columns()
+  checkErr(err)
+  results := make([][]string, 0)
+	for rows.Next() {
+    row_results := make([]string, len(result_columns))
+    row_results_pointers := make([]interface{}, len(result_columns))
+    for i, _ := range row_results {
+      row_results_pointers[i] = &row_results[i]
+    }
 	// 	var id int
 	// 	var factid int
   //   var position int
   //   var value string
   //   var typee string
-	// 	err = rows.Scan(&id, &factid, &position, &value, &typee)
-	// 	checkErr(err)
-	// 	fmt.Println(id, factid, position, value, typee)
-	// }
+    // err = rows.Scan(&id, &factid, &position, &value, &typee)
+    // var source interface{}
+    // var subscription_id interface{}
+    // var source string
+    // var subscription_id string
+		err = rows.Scan(row_results_pointers...)
+    // err = rows.Scan(&row_results[0], &row_results[1])
+    // err = rows.Scan(&source, &subscription_id)
+		checkErr(err)
+    fmt.Println("row_results")
+		fmt.Println(row_results)
+    // fmt.Println(source.(type), subscription_id.(type))
+    // msg := fmt.Sprintf("%v %v", source, subscription_id)
+    // fmt.Println(msg)
+    // switch subscription_id.(type) {
+		// case int:
+		// 	fmt.Printf("int: %d\n", subscription_id.(int))
+		// case string:
+		// 	fmt.Printf("string: %s\n", subscription_id.(string))
+		// case bool:
+		// 	fmt.Printf("bool: %t\n", subscription_id.(bool))
+    // default:
+    //   fmt.Printf("didn't match type :(\n")
+		// }
+    // fmt.Println(source, subscription_id)
+    // fmt.Println(id, factid, position, value, typee)
+    results = append(results, row_results)
+	}
 	err = rows.Err()
 	checkErr(err)
+  fmt.Println("final results")
+  fmt.Println(results)
 
-  return false
+  return results
 }
 
-func update_all_subscriptions(db *sql.DB) {
+func get_facts_for_subscription(db *sql.DB, source string, subscription_id string) [][]string {
+  selection_query_part := []Term{Term{"source", source}, Term{"text", "subscription"}, Term{"text", subscription_id}, Term{"variable", "part"}, Term{"postfix", "X"}}
+  selection_query := [][]Term{selection_query_part}
+  fmt.Println("SELECTION QUERY::::::")
+  r := select_facts(db, selection_query, false, true)
+  query := make([][]Term, 0)
+  for _, row := range r {
+    subscription_part, err := strconv.Atoi(row[0])
+    checkErr(err)
+    if subscription_part >= len(query) {
+      query = append(query, make([]Term, 0))
+    }
+    query[subscription_part] = append(query[subscription_part], Term{row[3], row[2]})
+  }
+  fmt.Println("GET FACTS QUERY::::::")
+  return select_facts(db, query, false, false)
+}
+
+func update_all_subscriptions(db *sql.DB, publisher *zmq.Socket) {
   query_part := []Term{Term{"variable", "source"}, Term{"text", "subscription"}, Term{"variable", "subscription_id"}, Term{"postfix", ""}}
   query := [][]Term{query_part}
-  // TODO: select_facts
+  fmt.Println("UPDATE ALL SUBSCRIPTIONS::::::")
   subscriptions := select_facts(db, query, false, false)
   fmt.Println(subscriptions)
-  // for _, row := range subscriptions {
-  //   source = row[0]
-  //   subscription_id = row[1]
-  //   // TODO: get_facts_for_subscription
-  //   facts := get_facts_for_subscription(source, subscription_id)
-  //   // logging.info("FACTS FOR SUBSCRIPTION {} {}".format(source, subscription_id))
-  //   // logging.info(facts)
-  //   send_results(publisher, source, subscription_id, facts)
-  // }
+  for _, row := range subscriptions {
+    source := row[0]
+    subscription_id := row[1]
+    facts := get_facts_for_subscription(db, source, subscription_id)
+    fmt.Printf("FACTS FOR SUBSCRIPTION %v %v", source, subscription_id)
+    fmt.Println(facts)
+    send_results(publisher, source, subscription_id, facts)
+  }
 }
 
-func claim(db *sql.DB, parser *participle.Parser, fact_string string, source string) {
+func claim(db *sql.DB, parser *participle.Parser, publisher *zmq.Socket, fact_string string, source string) {
   fact := parse_fact_string(parser, fact_string)  // TODO
   claim_fact(db, fact, source)
   print_all(db)
-  update_all_subscriptions(db)
+  update_all_subscriptions(db, publisher)
 }
 
-func subscribe(db *sql.DB, parser *participle.Parser, fact_strings []string, subscription_id string, source string) {
+func subscribe(db *sql.DB, parser *participle.Parser, publisher *zmq.Socket, fact_strings []string, subscription_id string, source string) {
   for i, fact_string := range fact_strings {
     fmt.Println(subscription_id)
     msg := fmt.Sprintf("subscription \"%s\" %v %s", subscription_id, i, fact_string)
     fmt.Println(msg)
-    claim(db, parser, msg, source)
+    claim(db, parser, publisher, msg, source)
   }
 }
 
@@ -348,9 +410,9 @@ func main() {
     source := msg[event_type_len:(event_type_len + source_len)]
     val := msg[(event_type_len + source_len):]
     if event_type == ".....PING" {
-      send_results(publisher, source, val, "")
+      send_results(publisher, source, val, make([][]string, 0))
     } else if event_type == "....CLAIM" {
-      claim(db, parser, val, source)
+      claim(db, parser, publisher, val, source)
     // } else if event_type == "..RETRACT" {
     //     retract(val)
     // } else if event_type == "...SELECT" {
@@ -359,7 +421,7 @@ func main() {
     } else if event_type == "SUBSCRIBE" {
       subscription_data := SubscriptionData{}
       json.Unmarshal([]byte(val), &subscription_data)
-      subscribe(db, parser, subscription_data.Facts, subscription_data.Id, source)
+      subscribe(db, parser, publisher, subscription_data.Facts, subscription_data.Id, source)
     }
   }
 }
