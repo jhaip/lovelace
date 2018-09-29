@@ -8,7 +8,7 @@ import (
 	"log"
   zmq "github.com/pebbe/zmq4"
   "github.com/alecthomas/participle"
-  "github.com/alecthomas/repr"
+  // "github.com/alecthomas/repr"
 )
 
 var next_fact_id int = 1
@@ -25,7 +25,7 @@ type SubscriptionData struct {
 
 // Grammar Start
 type Fact struct {
-  FactTerm []*FactTerm `{ @@ }`
+  FactTerms []*FactTerm `{ @@ }`
 }
 
 type Postfix struct {
@@ -36,13 +36,21 @@ type Wildcard struct {
   Wildcard string `"$"[@Ident]`
 }
 
+type Number struct {
+  Number float64 `@Float`
+}
+
+type Integer struct {
+  Integer int `@Int`
+}
+
 type FactTerm struct {
   Postfix *Postfix `@@ |`
   Wildcard *Wildcard `@@ |`
   Id string `"#"(@Ident|@Int) |`
   String string `@String |`
-  Integer int `@Int |`
-  Number float64 `@Float |`
+  Integer *Integer `@@ |`
+  Number *Number `@@ |`
   Value string `@Ident`
 }
 //
@@ -148,11 +156,43 @@ func main() {
 		panic(err)
 	}
   fact := &Fact{}
-  err = parser.ParseString("#P5 #0 \"This \\\"is\\\" a test\" one \"two\" 0.5 1. .99999 1.23e8 $ $X % %Z", fact)
+  err = parser.ParseString("#P5 #0 \"This \\\"is\\\" a test\" one \"two\" 0.5 2 1. .99999 1.23e8 $ $X % %Z", fact)
 	if err != nil {
 		panic(err)
 	}
-  repr.Println(fact, repr.Indent("  "), repr.OmitEmpty(true))
+  for _, fact_term := range (*fact).FactTerms {
+      if fact_term.String != "" {
+        fmt.Println(Term{"text", fact_term.String})
+      }
+      if fact_term.Value != "" {
+        fmt.Println(Term{"text", fact_term.Value})
+      }
+      if fact_term.Id != "" {
+        fmt.Println(Term{"id", fact_term.Id})
+      }
+      if fact_term.Integer != nil {
+        fmt.Println(Term{"integer", fmt.Sprintf("%v", (*fact_term.Integer).Integer)})
+      }
+      if fact_term.Number != nil {
+        fmt.Println(Term{"float", fmt.Sprintf("%f", (*fact_term.Number).Number)})
+      }
+      if fact_term.Wildcard != nil {
+        if fact_term.Wildcard == nil {
+          fmt.Println(Term{"variable", ""})
+        } else {
+          fmt.Println(Term{"variable", (*fact_term.Wildcard).Wildcard})
+        }
+      }
+      if fact_term.Postfix != nil {
+        if fact_term.Postfix == nil {
+          fmt.Println(Term{"postfix", ""})
+        } else {
+          fmt.Println(Term{"postfix", (*fact_term.Postfix).Postfix})
+        }
+      }
+      // repr.Println(fact_term, repr.Indent("  "), repr.OmitEmpty(true))
+  }
+  // repr.Println(fact, repr.Indent("  "), repr.OmitEmpty(true))
 
 	for {
 		msg, _ := subscriber.Recv(0)
