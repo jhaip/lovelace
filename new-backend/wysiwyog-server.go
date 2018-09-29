@@ -160,38 +160,40 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+  fact_terms := make([]Term, 0)
   for _, fact_term := range (*fact).FactTerms {
       if fact_term.String != "" {
-        fmt.Println(Term{"text", fact_term.String})
+        fact_terms = append(fact_terms, Term{"text", fact_term.String})
       }
       if fact_term.Value != "" {
-        fmt.Println(Term{"text", fact_term.Value})
+        fact_terms = append(fact_terms, Term{"text", fact_term.Value})
       }
       if fact_term.Id != "" {
-        fmt.Println(Term{"id", fact_term.Id})
+        fact_terms = append(fact_terms, Term{"id", fact_term.Id})
       }
       if fact_term.Integer != nil {
-        fmt.Println(Term{"integer", fmt.Sprintf("%v", (*fact_term.Integer).Integer)})
+        fact_terms = append(fact_terms, Term{"integer", fmt.Sprintf("%v", (*fact_term.Integer).Integer)})
       }
       if fact_term.Number != nil {
-        fmt.Println(Term{"float", fmt.Sprintf("%f", (*fact_term.Number).Number)})
+        fact_terms = append(fact_terms, Term{"float", fmt.Sprintf("%f", (*fact_term.Number).Number)})
       }
       if fact_term.Wildcard != nil {
         if fact_term.Wildcard == nil {
-          fmt.Println(Term{"variable", ""})
+          fact_terms = append(fact_terms, Term{"variable", ""})
         } else {
-          fmt.Println(Term{"variable", (*fact_term.Wildcard).Wildcard})
+          fact_terms = append(fact_terms, Term{"variable", (*fact_term.Wildcard).Wildcard})
         }
       }
       if fact_term.Postfix != nil {
         if fact_term.Postfix == nil {
-          fmt.Println(Term{"postfix", ""})
+          fact_terms = append(fact_terms, Term{"postfix", ""})
         } else {
-          fmt.Println(Term{"postfix", (*fact_term.Postfix).Postfix})
+          fact_terms = append(fact_terms, Term{"postfix", (*fact_term.Postfix).Postfix})
         }
       }
       // repr.Println(fact_term, repr.Indent("  "), repr.OmitEmpty(true))
   }
+  fmt.Println(fact_terms)
   // repr.Println(fact, repr.Indent("  "), repr.OmitEmpty(true))
 
 	for {
