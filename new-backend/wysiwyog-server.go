@@ -8,7 +8,7 @@ import (
 	"log"
   zmq "github.com/pebbe/zmq4"
   "github.com/alecthomas/participle"
-  // "github.com/alecthomas/repr"
+  "github.com/alecthomas/repr"
 )
 
 var next_fact_id int = 1
@@ -16,6 +16,12 @@ var next_fact_id int = 1
 type Term struct {
 	Type string
 	Value string
+}
+
+type SelectQueryVariable struct {
+  Fact int
+  Position int
+  Equals []SelectQueryVariable
 }
 
 type SubscriptionData struct {
@@ -72,11 +78,15 @@ func init_db(db *sql.DB) {
 	}
 }
 
+func checkErr(err error) {
+  if err != nil {
+    log.Fatal(err)
+  }
+}
+
 func print_all(db *sql.DB) {
   rows, err := db.Query("SELECT * FROM facts")
-	if err != nil {
-		log.Fatal(err)
-	}
+	checkErr(err)
 	defer rows.Close()
 	for rows.Next() {
 		var id int
@@ -85,15 +95,11 @@ func print_all(db *sql.DB) {
     var value string
     var typee string
 		err = rows.Scan(&id, &factid, &position, &value, &typee)
-		if err != nil {
-			log.Fatal(err)
-		}
+		checkErr(err)
 		fmt.Println(id, factid, position, value, typee)
 	}
 	err = rows.Err()
-	if err != nil {
-		log.Fatal(err)
-	}
+	checkErr(err)
 }
 
 func send_results(publisher *zmq.Socket, source string, id string, results_str string) {
@@ -105,25 +111,17 @@ func send_results(publisher *zmq.Socket, source string, id string, results_str s
 
 func claim_fact(db *sql.DB, fact []Term, source string) {
   tx, err := db.Begin()
-  if err != nil {
-  	log.Fatal(err)
-  }
+  checkErr(err)
   stmt, err := tx.Prepare("INSERT INTO facts (factid, position, value, type) VALUES (?,?,?,?)")
-  if err != nil {
-  	log.Fatal(err)
-  }
+  checkErr(err)
   defer stmt.Close()
   _, err = stmt.Exec(next_fact_id, 0, source, "source")
-  if err != nil {
-    log.Fatal(err)
-  }
+  checkErr(err)
   for i, term := range fact {
     term_type := term.Type
     term_value := term.Value
   	_, err = stmt.Exec(next_fact_id, i+1, term_value, term_type)
-  	if err != nil {
-  		log.Fatal(err)
-  	}
+  	checkErr(err)
   }
   tx.Commit()
   next_fact_id += 1
@@ -133,9 +131,7 @@ func parse_fact_string(parser *participle.Parser, fact_string string) []Term {
   fmt.Println("PARSE", fact_string)
   fact := &Fact{}
   err := parser.ParseString(fact_string, fact)
-	if err != nil {
-		panic(err)
-	}
+	checkErr(err)
   fact_terms := make([]Term, 0)
   for _, fact_term := range (*fact).FactTerms {
       if fact_term.String != "" {
@@ -173,11 +169,139 @@ func parse_fact_string(parser *participle.Parser, fact_string string) []Term {
   return fact_terms
 }
 
+func select_facts(db *sql.DB, query [][]Term, get_ids bool, include_types bool) bool {
+  // TODO: what is the return type?
+  // variable length type and list of results
+  variables := make(map[string]SelectQueryVariable)
+  postfixes := make(map[string]SelectQueryVariable)
+  for ix, x := range query {
+    for iy, y := range x {
+      if y.Type == "variable" {
+        _, yValueInVariables := variables[y.Value]
+        if yValueInVariables {
+          variables[y.Value] = SelectQueryVariable{ix, iy, append(variables[y.Value].Equals, SelectQueryVariable{ix, iy, make([]SelectQueryVariable, 0)})}
+        } else {
+          variables[y.Value] = SelectQueryVariable{ix, iy, make([]SelectQueryVariable, 0)}
+        }
+      } else if y.Type == "postfix" {
+        postfixes[y.Value] = SelectQueryVariable{ix, iy, make([]SelectQueryVariable, 0)}
+      }
+    }
+  }
+  sql := "SELECT DISTINCT\n"
+  for v, variableValue := range variables {
+    if v == "" {
+      fmt.Println("skipping variable with no name")
+      continue
+    }
+    if sql != "SELECT DISTINCT\n" {
+      sql += ",\n"
+    }
+    sql += fmt.Sprintf("facts%d_%d.value as \"%v\"", variableValue.Fact, variableValue.Position, v)
+    if include_types {
+      sql += ",\n"
+      sql += fmt.Sprintf("facts%d_%d.type as \"%v_type\"", variableValue.Fact, variableValue.Position, v)
+    }
+    if get_ids {
+      sql += ",\n"
+      sql += fmt.Sprintf("facts%d_%d.id as \"other\"", variableValue.Fact, variableValue.Position)
+    }
+  }
+  for v, postfixValue := range postfixes {
+    if v == "" {
+      fmt.Println("skipping variable with no name")
+      continue
+    }
+    if sql != "SELECT DISTINCT\n" {
+      sql += ",\n"
+    }
+    sql += fmt.Sprintf("facts%d_%d.value as \"%v\"", postfixValue.Fact, postfixValue.Position, v)
+    if include_types {
+      sql += ",\n"
+      sql += fmt.Sprintf("facts%d_%d.type as \"%v_type\"", postfixValue.Fact, postfixValue.Position, v)
+    }
+  }
+  sql += "\nFROM\n"
+  for ix, x := range query {
+    for iy, _ := range x {
+      if ix != 0 || iy != 0 {
+        sql += ",\n"
+      }
+      sql += fmt.Sprintf("facts as facts%d_%d", ix, iy)
+    }
+  }
+  sql += "\nWHERE\n"
+  for ix, x := range query {
+    for iy, y := range x {
+      sql += fmt.Sprintf("facts%d_0.factid = facts%d_%d.factid AND\n", ix, ix, iy)
+      if y.Type == "postfix" {
+        sql += fmt.Sprintf("facts%d_%d.position >= %d AND\n", ix, iy, iy)
+      } else {
+        sql += fmt.Sprintf("facts%d_%d.position = %d AND\n", ix, iy, iy)
+      }
+      if y.Type != "variable" && y.Type != "postfix" {
+        sql += fmt.Sprintf("facts%d_%d.type = '%s' AND\n", ix, iy, y.Type)
+      }
+      if y.Type == "text" || y.Type == "source" {
+        sql += fmt.Sprintf("facts%d_%d.value = '%s' AND\n", ix, iy, y.Value)
+      } else if y.Type != "variable" && y.Type != "postfix" {
+        sql += fmt.Sprintf("facts%d_%d.value = %s AND\n", ix, iy, y.Value)
+      }
+    }
+  }
+  for _, v := range variables {
+    for _, k := range v.Equals {
+      sql += fmt.Sprintf("facts%d_%d.value = facts%d_%d.value AND\n", v.Fact, v.Position, k.Fact, k.Position)
+    }
+  }
+  if sql[len(sql)-4:] == "AND\n" {
+    sql = sql[:len(sql)-4]
+  }
+  fmt.Println(sql)
+
+  rows, err := db.Query(sql)
+	checkErr(err)
+	defer rows.Close()
+  fmt.Println(":::::::")
+  repr.Println(rows, repr.Indent("  "), repr.OmitEmpty(true))
+	// for rows.Next() {
+	// 	var id int
+	// 	var factid int
+  //   var position int
+  //   var value string
+  //   var typee string
+	// 	err = rows.Scan(&id, &factid, &position, &value, &typee)
+	// 	checkErr(err)
+	// 	fmt.Println(id, factid, position, value, typee)
+	// }
+	err = rows.Err()
+	checkErr(err)
+
+  return false
+}
+
+func update_all_subscriptions(db *sql.DB) {
+  query_part := []Term{Term{"variable", "source"}, Term{"text", "subscription"}, Term{"variable", "subscription_id"}, Term{"postfix", ""}}
+  query := [][]Term{query_part}
+  // TODO: select_facts
+  subscriptions := select_facts(db, query, false, false)
+  fmt.Println(subscriptions)
+  // for _, row := range subscriptions {
+  //   source = row[0]
+  //   subscription_id = row[1]
+  //   // TODO: get_facts_for_subscription
+  //   facts := get_facts_for_subscription(source, subscription_id)
+  //   // logging.info("FACTS FOR SUBSCRIPTION {} {}".format(source, subscription_id))
+  //   // logging.info(facts)
+  //   send_results(publisher, source, subscription_id, facts)
+  // }
+}
+
 func claim(db *sql.DB, parser *participle.Parser, fact_string string, source string) {
   fact := parse_fact_string(parser, fact_string)  // TODO
   claim_fact(db, fact, source)
   print_all(db)
-  // update_all_subscriptions()  // TODO
+  update_all_subscriptions(db)
 }
 
 func subscribe(db *sql.DB, parser *participle.Parser, fact_strings []string, subscription_id string, source string) {
@@ -191,16 +315,12 @@ func subscribe(db *sql.DB, parser *participle.Parser, fact_strings []string, sub
 
 func main() {
   parser, err := participle.Build(&Fact{})
-  if err != nil {
-		panic(err)
-	}
+  checkErr(err)
   // parse_fact_string("#P5 #0 \"This \\\"is\\\" a test\" one \"two\" 0.5 2 1. .99999 1.23e8 $ $X % %Z")
   // repr.Println(fact, repr.Indent("  "), repr.OmitEmpty(true))
 
   db, err := sql.Open("sqlite3", ":memory:")
-	if err != nil {
-		log.Fatal(err)
-	}
+	checkErr(err)
 	defer db.Close()
 
   init_db(db)
