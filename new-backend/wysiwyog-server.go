@@ -72,6 +72,30 @@ func init_db(db *sql.DB) {
 	}
 }
 
+func print_all(db *sql.DB) {
+  rows, err := db.Query("SELECT * FROM facts")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id int
+		var factid int
+    var position int
+    var value string
+    var typee string
+		err = rows.Scan(&id, &factid, &position, &value, &typee)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(id, factid, position, value, typee)
+	}
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func send_results(publisher *zmq.Socket, source string, id string, results_str string) {
   // results_str = json.dumps(results)
   msg := fmt.Sprintf("%s%s%s", source, id, results_str)
@@ -105,58 +129,10 @@ func claim_fact(db *sql.DB, fact []Term, source string) {
   next_fact_id += 1
 }
 
-func parse_fact_string(fact_string string) []Term {
+func parse_fact_string(parser *participle.Parser, fact_string string) []Term {
   fmt.Println("PARSE", fact_string)
-  fact := make([]Term, 0)
-  return fact
-}
-
-func claim(db *sql.DB, fact_string string, source string) {
-  fact := parse_fact_string(fact_string)  // TODO
-  claim_fact(db, fact, source)
-  // update_all_subscriptions()  // TODO
-}
-
-func subscribe(db *sql.DB, fact_strings []string, subscription_id string, source string) {
-  for i, fact_string := range fact_strings {
-    fmt.Println(subscription_id)
-    msg := fmt.Sprintf("subscription \"%s\" %v %s", subscription_id, i, fact_string)
-    fmt.Println(msg)
-    claim(db, msg, source)
-  }
-}
-
-func main() {
-  db, err := sql.Open("sqlite3", ":memory:")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
-  init_db(db)
-
-  fmt.Println("Connecting to hello world server...")
-  publisher, _ := zmq.NewSocket(zmq.PUB)
-  defer publisher.Close()
-  publisher.Connect("tcp://localhost:5555")
-  subscriber, _ := zmq.NewSocket(zmq.SUB)
-	defer subscriber.Close()
-  subscriber.Connect("tcp://localhost:5556")
-	subscriber.SetSubscribe(".....PING")
-  subscriber.SetSubscribe("....CLAIM")
-  subscriber.SetSubscribe("...SELECT")
-  subscriber.SetSubscribe("..RETRACT")
-  subscriber.SetSubscribe("SUBSCRIBE")
-
-  event_type_len := 9
-  source_len := 4
-
-  parser, err := participle.Build(&Fact{})
-  if err != nil {
-		panic(err)
-	}
   fact := &Fact{}
-  err = parser.ParseString("#P5 #0 \"This \\\"is\\\" a test\" one \"two\" 0.5 2 1. .99999 1.23e8 $ $X % %Z", fact)
+  err := parser.ParseString(fact_string, fact)
 	if err != nil {
 		panic(err)
 	}
@@ -194,7 +170,56 @@ func main() {
       // repr.Println(fact_term, repr.Indent("  "), repr.OmitEmpty(true))
   }
   fmt.Println(fact_terms)
+  return fact_terms
+}
+
+func claim(db *sql.DB, parser *participle.Parser, fact_string string, source string) {
+  fact := parse_fact_string(parser, fact_string)  // TODO
+  claim_fact(db, fact, source)
+  print_all(db)
+  // update_all_subscriptions()  // TODO
+}
+
+func subscribe(db *sql.DB, parser *participle.Parser, fact_strings []string, subscription_id string, source string) {
+  for i, fact_string := range fact_strings {
+    fmt.Println(subscription_id)
+    msg := fmt.Sprintf("subscription \"%s\" %v %s", subscription_id, i, fact_string)
+    fmt.Println(msg)
+    claim(db, parser, msg, source)
+  }
+}
+
+func main() {
+  parser, err := participle.Build(&Fact{})
+  if err != nil {
+		panic(err)
+	}
+  // parse_fact_string("#P5 #0 \"This \\\"is\\\" a test\" one \"two\" 0.5 2 1. .99999 1.23e8 $ $X % %Z")
   // repr.Println(fact, repr.Indent("  "), repr.OmitEmpty(true))
+
+  db, err := sql.Open("sqlite3", ":memory:")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+  init_db(db)
+
+  fmt.Println("Connecting to hello world server...")
+  publisher, _ := zmq.NewSocket(zmq.PUB)
+  defer publisher.Close()
+  publisher.Connect("tcp://localhost:5555")
+  subscriber, _ := zmq.NewSocket(zmq.SUB)
+	defer subscriber.Close()
+  subscriber.Connect("tcp://localhost:5556")
+	subscriber.SetSubscribe(".....PING")
+  subscriber.SetSubscribe("....CLAIM")
+  subscriber.SetSubscribe("...SELECT")
+  subscriber.SetSubscribe("..RETRACT")
+  subscriber.SetSubscribe("SUBSCRIBE")
+
+  event_type_len := 9
+  source_len := 4
 
 	for {
 		msg, _ := subscriber.Recv(0)
@@ -204,8 +229,8 @@ func main() {
     val := msg[(event_type_len + source_len):]
     if event_type == ".....PING" {
       send_results(publisher, source, val, "")
-    // } else if event_type == "....CLAIM" {
-    //     claim(val, source)
+    } else if event_type == "....CLAIM" {
+      claim(db, parser, val, source)
     // } else if event_type == "..RETRACT" {
     //     retract(val)
     // } else if event_type == "...SELECT" {
@@ -214,7 +239,7 @@ func main() {
     } else if event_type == "SUBSCRIBE" {
       subscription_data := SubscriptionData{}
       json.Unmarshal([]byte(val), &subscription_data)
-      subscribe(db, subscription_data.Facts, subscription_data.Id, source)
+      subscribe(db, parser, subscription_data.Facts, subscription_data.Id, source)
     }
   }
 }
