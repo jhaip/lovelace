@@ -10,6 +10,7 @@ import (
   "github.com/alecthomas/participle"
   // "github.com/alecthomas/repr"
   "strconv"
+  "time"
 )
 
 var next_fact_id int = 1
@@ -97,18 +98,21 @@ func print_all(db *sql.DB) {
     var typee string
 		err = rows.Scan(&id, &factid, &position, &value, &typee)
 		checkErr(err)
-		fmt.Println(id, factid, position, value, typee)
+		// fmt.Println(id, factid, position, value, typee)
 	}
 	err = rows.Err()
 	checkErr(err)
 }
 
 func send_results(publisher *zmq.Socket, source string, id string, results [][]string) {
+  start := time.Now()
   results_json_str, err := json.Marshal(results)
   checkErr(err)
   msg := fmt.Sprintf("%s%s%s", source, id, string(results_json_str))
-  fmt.Println("Sending ", msg)
-  publisher.Send(msg, 0)
+  // fmt.Println("Sending ", msg)
+  publisher.Send(msg, zmq.DONTWAIT)
+  timeToSendResults := time.Since(start)
+  fmt.Printf("time to send results: %s \n", timeToSendResults)
 }
 
 func claim_fact(db *sql.DB, fact []Term, source string) {
@@ -130,7 +134,7 @@ func claim_fact(db *sql.DB, fact []Term, source string) {
 }
 
 func parse_fact_string(parser *participle.Parser, fact_string string) []Term {
-  fmt.Println("PARSE", fact_string)
+  // fmt.Println("PARSE", fact_string)
   fact := &Fact{}
   err := parser.ParseString(fact_string, fact)
 	checkErr(err)
@@ -167,11 +171,12 @@ func parse_fact_string(parser *participle.Parser, fact_string string) []Term {
       }
       // repr.Println(fact_term, repr.Indent("  "), repr.OmitEmpty(true))
   }
-  fmt.Println(fact_terms)
+  // fmt.Println(fact_terms)
   return fact_terms
 }
 
 func select_facts(db *sql.DB, query [][]Term, get_ids bool, include_types bool) [][]string {
+  start := time.Now()
   // include_types = true
   // TODO: what is the return type?
   // variable length type and list of results
@@ -194,7 +199,7 @@ func select_facts(db *sql.DB, query [][]Term, get_ids bool, include_types bool) 
   sql := "SELECT DISTINCT\n"
   for v, variableValue := range variables {
     if v == "" {
-      fmt.Println("skipping variable with no name")
+      // fmt.Println("skipping variable with no name")
       continue
     }
     if sql != "SELECT DISTINCT\n" {
@@ -212,7 +217,7 @@ func select_facts(db *sql.DB, query [][]Term, get_ids bool, include_types bool) 
   }
   for v, postfixValue := range postfixes {
     if v == "" {
-      fmt.Println("skipping variable with no name")
+      // fmt.Println("skipping variable with no name")
       continue
     }
     if sql != "SELECT DISTINCT\n" {
@@ -260,24 +265,29 @@ func select_facts(db *sql.DB, query [][]Term, get_ids bool, include_types bool) 
   if sql[len(sql)-4:] == "AND\n" {
     sql = sql[:len(sql)-4]
   }
-  fmt.Println(sql)
-
+  // fmt.Println(sql)
+  makeSqlQuery := time.Since(start)
+  start2 := time.Now()
   rows, err := db.Query(sql)
+  doQuery := time.Since(start2)
+  start3 := time.Now()
 	checkErr(err)
 	defer rows.Close()
-  fmt.Println(":::::::")
+  // fmt.Println(":::::::")
   // repr.Println(rows, repr.Indent("  "), repr.OmitEmpty(true))
-  fmt.Println("rows.Columns")
-  fmt.Println(rows.Columns())
-  fmt.Println("rows.ColumnTypes")
-  fmt.Println(rows.ColumnTypes())
+  // fmt.Println("rows.Columns")
+  // fmt.Println(rows.Columns())
+  // fmt.Println("rows.ColumnTypes")
+  // fmt.Println(rows.ColumnTypes())
   column_types, err := rows.ColumnTypes()
   checkErr(err)
   fmt.Println(column_types[0].Name())
-  fmt.Println(column_types[1].Name())
+  // fmt.Println(column_types[1].Name())
   result_columns, err := rows.Columns()
   checkErr(err)
   results := make([][]string, 0)
+  // NOTE: golang's Next() and Scan() are slow :(, even slower than Python
+  // https://github.com/mattn/go-sqlite3/issues/379
 	for rows.Next() {
     row_results := make([]string, len(result_columns))
     row_results_pointers := make([]interface{}, len(result_columns))
@@ -298,44 +308,50 @@ func select_facts(db *sql.DB, query [][]Term, get_ids bool, include_types bool) 
     // err = rows.Scan(&row_results[0], &row_results[1])
     // err = rows.Scan(&source, &subscription_id)
 		checkErr(err)
-    fmt.Println("row_results")
-		fmt.Println(row_results)
-    // fmt.Println(source.(type), subscription_id.(type))
+    // fmt.Println("row_results")
+		// fmt.Println(row_results)
+    // // fmt.Println(source.(type), subscription_id.(type))
     // msg := fmt.Sprintf("%v %v", source, subscription_id)
-    // fmt.Println(msg)
+    // // fmt.Println(msg)
     // switch subscription_id.(type) {
 		// case int:
-		// 	fmt.Printf("int: %d\n", subscription_id.(int))
+		// 	// fmt.Printf("int: %d\n", subscription_id.(int))
 		// case string:
-		// 	fmt.Printf("string: %s\n", subscription_id.(string))
+		// 	// fmt.Printf("string: %s\n", subscription_id.(string))
 		// case bool:
-		// 	fmt.Printf("bool: %t\n", subscription_id.(bool))
+		// 	// fmt.Printf("bool: %t\n", subscription_id.(bool))
     // default:
-    //   fmt.Printf("didn't match type :(\n")
+    //   // fmt.Printf("didn't match type :(\n")
 		// }
-    // fmt.Println(source, subscription_id)
-    // fmt.Println(id, factid, position, value, typee)
+    // // fmt.Println(source, subscription_id)
+    // // fmt.Println(id, factid, position, value, typee)
     results = append(results, row_results)
 	}
 	err = rows.Err()
 	checkErr(err)
-  fmt.Println("final results")
-  fmt.Println(results)
-
+  // fmt.Println("final results")
+  // fmt.Println(results)
+  putTogetherResults := time.Since(start3)
+  fmt.Printf("_ _ _ _makeSqlQuery  : %s \n", makeSqlQuery)
+  fmt.Printf("_ _ _ _doQuery: %s \n", doQuery)
+  fmt.Printf("_ _ _ _putTogetherResults     : %s \n", putTogetherResults)
   return results
 }
 
 func get_facts_for_subscription(db *sql.DB, source string, subscription_id string) [][]string {
+  start := time.Now()
   selection_query_part := []Term{Term{"source", source}, Term{"text", "subscription"}, Term{"text", subscription_id}, Term{"variable", "part"}, Term{"postfix", "X"}}
   selection_query := [][]Term{selection_query_part}
-  fmt.Println("SELECTION QUERY::::::")
+  // fmt.Println("SELECTION QUERY::::::")
+  start2 := time.Now()
   r := select_facts(db, selection_query, false, true)
-	fmt.Println("SELECTION QUERY RESULTS -------!!!!!!!!!")
-	fmt.Println(r)
+  selectFactsTime := time.Since(start2)
+	// fmt.Println("SELECTION QUERY RESULTS -------!!!!!!!!!")
+	// fmt.Println(r)
   query := make([][]Term, 0)
   for _, row := range r {
-		fmt.Println("SELECTION QUERY RESULTS ----------------------")
-		fmt.Println(row)
+		// fmt.Println("SELECTION QUERY RESULTS ----------------------")
+		// fmt.Println(row)
     subscription_part, err := strconv.Atoi(row[0])
     checkErr(err)
     if subscription_part >= len(query) {
@@ -343,16 +359,23 @@ func get_facts_for_subscription(db *sql.DB, source string, subscription_id strin
     }
     query[subscription_part] = append(query[subscription_part], Term{row[3], row[2]})
   }
-  fmt.Println("GET FACTS QUERY::::::")
-  return select_facts(db, query, false, false)
+  // fmt.Println("GET FACTS QUERY::::::")
+  start3 := time.Now()
+  results := select_facts(db, query, false, false)
+  getResultsTime := time.Since(start3)
+  getFactsTotalTime := time.Since(start)
+  fmt.Printf("__selectFactsTime: %s \n", selectFactsTime)
+  fmt.Printf("__getResultsTime: %s \n", getResultsTime)
+  fmt.Printf("getFactsTotalTime: %s \n", getFactsTotalTime)
+  return results
 }
 
 func update_all_subscriptions(db *sql.DB, publisher *zmq.Socket) {
   query_part := []Term{Term{"variable", "source"}, Term{"text", "subscription"}, Term{"variable", "subscription_id"}, Term{"postfix", ""}}
   query := [][]Term{query_part}
-  fmt.Println("UPDATE ALL SUBSCRIPTIONS::::::")
+  // fmt.Println("UPDATE ALL SUBSCRIPTIONS::::::")
   subscriptions := select_facts(db, query, false, false)
-  fmt.Println(subscriptions)
+  // fmt.Println(subscriptions)
   for _, row := range subscriptions {
     source := row[0]
     subscription_id := row[1]
@@ -361,24 +384,33 @@ func update_all_subscriptions(db *sql.DB, publisher *zmq.Socket) {
 			subscription_id = row[0]
 		}
     facts := get_facts_for_subscription(db, source, subscription_id)
-    fmt.Printf("FACTS FOR SUBSCRIPTION %v %v", source, subscription_id)
-    fmt.Println(facts)
+    // fmt.Printf("FACTS FOR SUBSCRIPTION %v %v", source, subscription_id)
+    // fmt.Println(facts)
     send_results(publisher, source, subscription_id, facts)
   }
 }
 
 func claim(db *sql.DB, parser *participle.Parser, publisher *zmq.Socket, fact_string string, source string) {
-  fact := parse_fact_string(parser, fact_string)  // TODO
+  start := time.Now()
+  fact := parse_fact_string(parser, fact_string)
+  parseTime := time.Since(start)
+  start2 := time.Now()
   claim_fact(db, fact, source)
-  print_all(db)
+  claimTime := time.Since(start2)
+  // print_all(db)
+  start3 := time.Now()
   update_all_subscriptions(db, publisher)
+  updateSubscribersTime := time.Since(start3)
+  fmt.Printf("...parse: %s \n", parseTime)
+  fmt.Printf("....claim: %s \n", claimTime)
+  fmt.Printf(".....update: %s \n", updateSubscribersTime)
 }
 
 func subscribe(db *sql.DB, parser *participle.Parser, publisher *zmq.Socket, fact_strings []string, subscription_id string, source string) {
   for i, fact_string := range fact_strings {
-    fmt.Println(subscription_id)
+    // fmt.Println(subscription_id)
     msg := fmt.Sprintf("subscription \"%s\" %v %s", subscription_id, i, fact_string)
-    fmt.Println(msg)
+    // fmt.Println(msg)
     claim(db, parser, publisher, msg, source)
   }
 }
@@ -395,7 +427,7 @@ func main() {
 
   init_db(db)
 
-  fmt.Println("Connecting to hello world server...")
+  // fmt.Println("Connecting to hello world server...")
   publisher, _ := zmq.NewSocket(zmq.PUB)
   defer publisher.Close()
   publisher.Connect("tcp://localhost:5555")
@@ -413,14 +445,17 @@ func main() {
 
 	for {
 		msg, _ := subscriber.Recv(0)
-		fmt.Printf("%s\n", msg)
+		// fmt.Printf("%s\n", msg)
     event_type := msg[0:event_type_len]
     source := msg[event_type_len:(event_type_len + source_len)]
     val := msg[(event_type_len + source_len):]
     if event_type == ".....PING" {
       send_results(publisher, source, val, make([][]string, 0))
     } else if event_type == "....CLAIM" {
+      start := time.Now()
       claim(db, parser, publisher, val, source)
+      timeProcessing := time.Since(start)
+      fmt.Printf("processing: %s \n", timeProcessing)
     // } else if event_type == "..RETRACT" {
     //     retract(val)
     // } else if event_type == "...SELECT" {
