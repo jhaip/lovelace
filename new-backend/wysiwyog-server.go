@@ -330,8 +330,12 @@ func get_facts_for_subscription(db *sql.DB, source string, subscription_id strin
   selection_query := [][]Term{selection_query_part}
   fmt.Println("SELECTION QUERY::::::")
   r := select_facts(db, selection_query, false, true)
+	fmt.Println("SELECTION QUERY RESULTS -------!!!!!!!!!")
+	fmt.Println(r)
   query := make([][]Term, 0)
   for _, row := range r {
+		fmt.Println("SELECTION QUERY RESULTS ----------------------")
+		fmt.Println(row)
     subscription_part, err := strconv.Atoi(row[0])
     checkErr(err)
     if subscription_part >= len(query) {
@@ -352,6 +356,10 @@ func update_all_subscriptions(db *sql.DB, publisher *zmq.Socket) {
   for _, row := range subscriptions {
     source := row[0]
     subscription_id := row[1]
+		if len(row[1]) == 4 {
+			source = row[1]
+			subscription_id = row[0]
+		}
     facts := get_facts_for_subscription(db, source, subscription_id)
     fmt.Printf("FACTS FOR SUBSCRIPTION %v %v", source, subscription_id)
     fmt.Println(facts)
