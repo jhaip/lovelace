@@ -34,6 +34,16 @@
 # Full Golang, parse, sqlite, zmq, N=100:
 300ms
 3 ms (300 us) per iteration
+- put together query results: 429us - 800us
+
+# Full Golang, parse, sqlite, zmq, subscriber notification is 1 query, N=100:
+170ms
+1.7ms per iteration
+- time to read query results is still the slowest part at up to 1.5ms per iteration
+- Assuming 10 iterations, this is in budget for 60fps!
+- In golang, it would probably be faster to not use SQLite but there may be
+advantages for concurrency
+- Critical path meets budget but this needs to be scaled horizontally to 1000 concurrent paths
 
 -----
 
