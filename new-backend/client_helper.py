@@ -37,7 +37,7 @@ def select(query_strings, callback):
     query_msg = json.dumps(query)
     select_ids[select_id] = callback
     msg = "...SELECT{}{}".format(MY_ID_STR, query_msg)
-    logging.info(msg)
+    logging.debug(msg)
     pub_socket.send_string(msg, zmq.NOBLOCK)
 
 def subscribe(query_strings, callback):
@@ -49,7 +49,7 @@ def subscribe(query_strings, callback):
     query_msg = json.dumps(query)
     subscription_ids[subscription_id] = callback
     msg = "SUBSCRIBE{}{}".format(MY_ID_STR, query_msg)
-    logging.info(msg)
+    logging.debug(msg)
     pub_socket.send_string(msg, zmq.NOBLOCK)
 
 def listen():
@@ -68,7 +68,7 @@ def listen():
                 del select_ids[id]
                 callback(val)
             elif id in subscription_ids:
-                logging.info(string)
+                logging.debug(string)
                 callback = subscription_ids[id]
                 callback(val)
             # else:

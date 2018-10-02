@@ -12,14 +12,14 @@ next_fact_id = 0
 def get_max_fact_id():
     return c.execute('SELECT max(factid) FROM facts').fetchone()[0] or 1
 
+def print_results(rows):
+    for row in rows:
+        logging.info(row)
+
 def print_all():
     print_results(c.execute('SELECT * FROM facts').fetchall())
 
 def select_facts(query, get_ids=False, include_types=False):
-    # query = [
-    #     [("VAR", "X"), ("STR", "sees"), ("STR", "a"), ("VAR", "Y")],
-    #     [("VAR", "Y"), ("STR", "has"), ("VAR", "Z"), ("STR", "toes")],
-    # ]
     variables = {}
     postfixes = {}
     for ix, x in enumerate(query):
@@ -87,54 +87,13 @@ def select_facts(query, get_ids=False, include_types=False):
 
 def get_facts_for_subscription(source, subscription_id):
     selection = [[('source', source), ('text', 'subscription'), ('text', subscription_id), ('variable', 'part'), ('postfix', 'X')]]
-    # logging.error(get_facts_for_subscription)
-    # logging.error(selection)
     r = select_facts(selection, include_types=True)
-    # logging.info("----")
     query = []
     for row in r:
         if row[0] >= len(query):
-            # query.append([('source', source)])
-            # Should should not be auto added for subscription
             query.append([])
         query[row[0]].append((row[3], row[2]))
-    # logging.info(query)
-    # logging.info("----------")
     return select_facts(query)
-
-
-def measure1000(f):
-    start = timer()
-    for i in range(1000):
-        f()
-    end = timer()
-    print((end - start)*1000)
-
-
-def print_results(rows):
-    for row in rows:
-        logging.info(row)
-
-
-def send_subscription_results(source, subscription_id, results):
-    if len(results) > 0:
-        logging.info("WOULD SEND SUBSCRIPTION RESULTS TO {} ({})".format(source, subscription_id))
-        print_results(results)
-    else:
-        logging.info("No results for SUBSCRIPTION {} ({})".format(source, subscription_id))
-
-
-def update_all_subscriptions():
-    # Get all subscriptions
-    subscriptions = select_facts([[('variable','source'),('text','subscription'),('variable','subscription_id'),('postfix','')]])
-    logging.info("GOT SUBSCRIPTIONS:::::::::::::")
-    logging.info(subscriptions)
-    for row in subscriptions:
-        source = row[0]
-        subscription_id = row[1]
-        facts = get_facts_for_subscription(source, subscription_id)
-        send_subscription_results(source, subscription_id, facts)
-
 
 def claim_fact(fact, source):
     global next_fact_id
@@ -159,7 +118,7 @@ def retract_fact(query):
         delete_ids.append((id,))
     logging.debug(delete_ids)
     c.executemany('DELETE FROM facts WHERE id = ?', delete_ids)
-    print_results(datoms_to_be_deleted)
+    # print_results(datoms_to_be_deleted)
 
 
 # def foo():
