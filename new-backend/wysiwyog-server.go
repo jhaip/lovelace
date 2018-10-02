@@ -31,6 +31,16 @@ type SubscriptionData struct {
   Facts []string `json:"facts"`
 }
 
+type Subscription struct {
+  Source string
+  Id string
+  Query [][]Term
+}
+
+type Subscriptions struct {
+  Subscriptions []Subscription
+}
+
 // Grammar Start
 type Fact struct {
   FactTerms []*FactTerm `{ @@ }`
@@ -370,27 +380,35 @@ func get_facts_for_subscription(db *sql.DB, source string, subscription_id strin
   return results
 }
 
-func update_all_subscriptions(db *sql.DB, publisher *zmq.Socket) {
-  query_part := []Term{Term{"variable", "source"}, Term{"text", "subscription"}, Term{"variable", "subscription_id"}, Term{"postfix", ""}}
-  query := [][]Term{query_part}
-  // fmt.Println("UPDATE ALL SUBSCRIPTIONS::::::")
-  subscriptions := select_facts(db, query, false, false)
-  // fmt.Println(subscriptions)
-  for _, row := range subscriptions {
-    source := row[0]
-    subscription_id := row[1]
-		if len(row[1]) == 4 {
-			source = row[1]
-			subscription_id = row[0]
-		}
-    facts := get_facts_for_subscription(db, source, subscription_id)
-    // fmt.Printf("FACTS FOR SUBSCRIPTION %v %v", source, subscription_id)
-    // fmt.Println(facts)
-    send_results(publisher, source, subscription_id, facts)
+func update_all_subscriptions(db *sql.DB, publisher *zmq.Socket, subscriptions *Subscriptions) {
+  // fmt.Println("INSIDE update_all_subscriptions")
+  // fmt.Printf("len----- %v", len((*subscriptions).Subscriptions))
+  for _, subscription := range (*subscriptions).Subscriptions {
+    results := select_facts(db, subscription.Query, false, false)
+    send_results(publisher, subscription.Source, subscription.Id, results)
   }
+  return
+  // NOTE: OLD STUFF:
+  // query_part := []Term{Term{"variable", "source"}, Term{"text", "subscription"}, Term{"variable", "subscription_id"}, Term{"postfix", ""}}
+  // query := [][]Term{query_part}
+  // // fmt.Println("UPDATE ALL SUBSCRIPTIONS::::::")
+  // subscriptions := select_facts(db, query, false, false)
+  // // fmt.Println(subscriptions)
+  // for _, row := range subscriptions {
+  //   source := row[0]
+  //   subscription_id := row[1]
+	// 	if len(row[1]) == 4 {
+	// 		source = row[1]
+	// 		subscription_id = row[0]
+	// 	}
+  //   facts := get_facts_for_subscription(db, source, subscription_id)
+  //   // fmt.Printf("FACTS FOR SUBSCRIPTION %v %v", source, subscription_id)
+  //   // fmt.Println(facts)
+  //   send_results(publisher, source, subscription_id, facts)
+  // }
 }
 
-func claim(db *sql.DB, parser *participle.Parser, publisher *zmq.Socket, fact_string string, source string) {
+func claim(db *sql.DB, parser *participle.Parser, publisher *zmq.Socket, subscriptions *Subscriptions, fact_string string, source string) {
   start := time.Now()
   fact := parse_fact_string(parser, fact_string)
   parseTime := time.Since(start)
@@ -399,20 +417,28 @@ func claim(db *sql.DB, parser *participle.Parser, publisher *zmq.Socket, fact_st
   claimTime := time.Since(start2)
   // print_all(db)
   start3 := time.Now()
-  update_all_subscriptions(db, publisher)
+  update_all_subscriptions(db, publisher, subscriptions)
   updateSubscribersTime := time.Since(start3)
   fmt.Printf("...parse: %s \n", parseTime)
   fmt.Printf("....claim: %s \n", claimTime)
   fmt.Printf(".....update: %s \n", updateSubscribersTime)
+  fmt.Printf("subscription: %v \n", (*subscriptions).Subscriptions)
 }
 
-func subscribe(db *sql.DB, parser *participle.Parser, publisher *zmq.Socket, fact_strings []string, subscription_id string, source string) {
+func subscribe(db *sql.DB, parser *participle.Parser, publisher *zmq.Socket, subscriptions *Subscriptions, fact_strings []string, subscription_id string, source string) {
+  query := make([][]Term, 0)
   for i, fact_string := range fact_strings {
     // fmt.Println(subscription_id)
     msg := fmt.Sprintf("subscription \"%s\" %v %s", subscription_id, i, fact_string)
     // fmt.Println(msg)
-    claim(db, parser, publisher, msg, source)
+    claim(db, parser, publisher, subscriptions, msg, source)
+    fact := parse_fact_string(parser, fact_string)
+    query = append(query, fact)
   }
+  (*subscriptions).Subscriptions = append((*subscriptions).Subscriptions, Subscription{source, subscription_id, query})
+  // fmt.Println("ADDED SUBSCRIPTOIN!")
+  // fmt.Printf("len: %v", len((*subscriptions).Subscriptions))
+  update_all_subscriptions(db, publisher, subscriptions)
 }
 
 func main() {
@@ -426,6 +452,8 @@ func main() {
 	defer db.Close()
 
   init_db(db)
+
+  subscriptions := Subscriptions{}
 
   // fmt.Println("Connecting to hello world server...")
   publisher, _ := zmq.NewSocket(zmq.PUB)
@@ -453,7 +481,7 @@ func main() {
       send_results(publisher, source, val, make([][]string, 0))
     } else if event_type == "....CLAIM" {
       start := time.Now()
-      claim(db, parser, publisher, val, source)
+      claim(db, parser, publisher, &subscriptions, val, source)
       timeProcessing := time.Since(start)
       fmt.Printf("processing: %s \n", timeProcessing)
     // } else if event_type == "..RETRACT" {
@@ -464,7 +492,7 @@ func main() {
     } else if event_type == "SUBSCRIBE" {
       subscription_data := SubscriptionData{}
       json.Unmarshal([]byte(val), &subscription_data)
-      subscribe(db, parser, publisher, subscription_data.Facts, subscription_data.Id, source)
+      subscribe(db, parser, publisher, &subscriptions, subscription_data.Facts, subscription_data.Id, source)
     }
   }
 }
