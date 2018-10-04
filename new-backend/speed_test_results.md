@@ -45,6 +45,12 @@
 advantages for concurrency
 - Critical path meets budget but this needs to be scaled horizontally to 1000 concurrent paths
 
+# #8 Nanomsg, PAIR, tcp, N=100:
+19ms
+190 us per iteration
+- less than half the time to iterate for zmq pub/sub
+- could be PAIR, or it could be nanomsg
+
 -----
 
 budget
