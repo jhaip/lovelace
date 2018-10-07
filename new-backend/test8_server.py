@@ -4,7 +4,7 @@ from nanomsg import (
     Socket
 )
 
-SOCKET_ADDRESS = "tcp://127.0.0.1:5558"
+SOCKET_ADDRESS = "inproc://test"
 
 # with Socket(PAIR) as s1:
 #     with Socket(PAIR) as s2:
@@ -20,6 +20,7 @@ SOCKET_ADDRESS = "tcp://127.0.0.1:5558"
 
 s1 = Socket(PAIR)
 s1.bind(SOCKET_ADDRESS)
+print("BINDED")
 while True:
     # print("loop")
     recieved = s1.recv()

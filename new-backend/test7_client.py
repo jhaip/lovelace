@@ -14,14 +14,14 @@ pub_socket.connect("tcp://{0}:5555".format(rpc_url))
 
 sub_socket.setsockopt_string(zmq.SUBSCRIBE, "SUBSCRIBE")
 
-N = 100
+N = 10
 i = N
-K = 100
+K = 1000
 
 def send():
     pub_socket.send_string("....CLAIM5TEST", zmq.NOBLOCK)
-    for i in range(K):
-        pub_socket.send_string("....CLAIM6BAD", zmq.NOBLOCK)
+    # for i in range(K):
+    #     pub_socket.send_string("....CLAIM6BAD", zmq.NOBLOCK)
 
 time.sleep(1)
 

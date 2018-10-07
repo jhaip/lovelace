@@ -11,7 +11,7 @@ sub_socket.connect("tcp://{0}:5556".format(rpc_url))
 pub_socket = context.socket(zmq.PUB)
 pub_socket.connect("tcp://{0}:5555".format(rpc_url))
 
-sub_socket.setsockopt_string(zmq.SUBSCRIBE, "....CLAIM5TEST")
+sub_socket.setsockopt_string(zmq.SUBSCRIBE, "....CLAIM")
 
 while True:
     while True:

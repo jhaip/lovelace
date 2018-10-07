@@ -33,7 +33,7 @@
 
 # Full Golang, parse, sqlite, zmq, N=100:
 300ms
-3 ms (300 us) per iteration
+3 ms (3000 us) per iteration
 - put together query results: 429us - 800us
 
 # Full Golang, parse, sqlite, zmq, subscriber notification is 1 query, N=100:

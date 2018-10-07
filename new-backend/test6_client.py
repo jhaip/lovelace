@@ -2,6 +2,7 @@ import time
 import zmq
 import logging
 import sys
+import random
 
 logging.basicConfig(level=logging.INFO)
 
@@ -16,10 +17,10 @@ MY_ID = sys.argv[1]
 
 sub_socket.setsockopt_string(zmq.SUBSCRIBE, "SUBSCRIBE{}".format(MY_ID))
 
-N = 100
+N = 10
 i = N
 
-time.sleep(1)
+time.sleep(1+random.random() * 0.1)
 
 start = time.time()
 pub_socket.send_string("....CLAIM{}".format(MY_ID), zmq.NOBLOCK)
