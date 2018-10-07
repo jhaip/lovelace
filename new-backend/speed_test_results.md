@@ -51,6 +51,10 @@ advantages for concurrency
 - less than half the time to iterate for zmq pub/sub
 - could be PAIR, or it could be nanomsg
 
+# Full Golang, parse, sqlite (as file), goroutines, zmq, subscriber notification is 1 query, N=100:
+520ms
+5.2ms per iteration
+
 -----
 
 budget

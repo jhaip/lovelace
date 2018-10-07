@@ -379,31 +379,12 @@ func get_facts_for_subscription(db *sql.DB, source string, subscription_id strin
 }
 
 func update_all_subscriptions(db *sql.DB, publisher *zmq.Socket, subscriptions *Subscriptions) {
-  // fmt.Println("INSIDE update_all_subscriptions")
-  // fmt.Printf("len----- %v", len((*subscriptions).Subscriptions))
   for _, subscription := range (*subscriptions).Subscriptions {
+		fmt.Println("pre SELECTING %v", subscription.Query)
     results := select_facts(db, subscription.Query, false, false)
+		fmt.Println("DONE SELECTING")
     send_results(publisher, subscription.Source, subscription.Id, results)
   }
-  return
-  // NOTE: OLD STUFF:
-  // query_part := []Term{Term{"variable", "source"}, Term{"text", "subscription"}, Term{"variable", "subscription_id"}, Term{"postfix", ""}}
-  // query := [][]Term{query_part}
-  // // fmt.Println("UPDATE ALL SUBSCRIPTIONS::::::")
-  // subscriptions := select_facts(db, query, false, false)
-  // // fmt.Println(subscriptions)
-  // for _, row := range subscriptions {
-  //   source := row[0]
-  //   subscription_id := row[1]
-	// 	if len(row[1]) == 4 {
-	// 		source = row[1]
-	// 		subscription_id = row[0]
-	// 	}
-  //   facts := get_facts_for_subscription(db, source, subscription_id)
-  //   // fmt.Printf("FACTS FOR SUBSCRIPTION %v %v", source, subscription_id)
-  //   // fmt.Println(facts)
-  //   send_results(publisher, source, subscription_id, facts)
-  // }
 }
 
 func claim(db *sql.DB, parser *participle.Parser, publisher *zmq.Socket, subscriptions *Subscriptions, fact_string string, source string) {
@@ -441,6 +422,33 @@ func subscribe(db *sql.DB, parser *participle.Parser, publisher *zmq.Socket, sub
   update_all_subscriptions(db, publisher, subscriptions)
 }
 
+func subscribe_worker(subscription_messages <-chan string, claims chan<- []Term, subscriptions_notifications chan<- bool, parser *participle.Parser, publisher *zmq.Socket, subscriptions *Subscriptions) {
+	event_type_len := 9
+  source_len := 4
+	for msg := range subscription_messages {
+		fmt.Printf("SUBSCRIPTION SHOULD PARSE MESSAGE: %s\n", msg)
+		event_type := msg[0:event_type_len]
+    source := msg[event_type_len:(event_type_len + source_len)]
+    val := msg[(event_type_len + source_len):]
+		if event_type == "SUBSCRIBE" {
+			subscription_data := SubscriptionData{}
+			json.Unmarshal([]byte(val), &subscription_data)
+			query := make([][]Term, 0)
+		  for i, fact_string := range subscription_data.Facts {
+		    subscription_fact_msg := fmt.Sprintf("subscription \"%s\" %v %s", subscription_data.Id, i, fact_string)
+				subscription_fact := parse_fact_string(parser, subscription_fact_msg)
+				subscription_fact = append([]Term{Term{"source", source}}, subscription_fact...)
+				fmt.Printf("SUB FACTS %v\n", subscription_fact)
+				claims <- subscription_fact
+		    fact := parse_fact_string(parser, fact_string)
+		    query = append(query, fact)
+		  }
+		  (*subscriptions).Subscriptions = append((*subscriptions).Subscriptions, Subscription{source, subscription_data.Id, query})
+			subscriptions_notifications <- true // update_all_subscriptions(db, publisher, subscriptions)
+		}
+	}
+}
+
 func parser_worker(unparsed_messages <-chan string, claims chan<- []Term, parser *participle.Parser) {
 	event_type_len := 9
   source_len := 4
@@ -457,11 +465,23 @@ func parser_worker(unparsed_messages <-chan string, claims chan<- []Term, parser
 	}
 }
 
-func claim_worker(claims <-chan []Term, db *sql.DB) {
-	for claim := range claims {
+func claim_worker(claims <-chan []Term, subscriptions_notifications chan<- bool, db *sql.DB) {
+	for fact := range claims {
 		fmt.Printf("SHOULD CLAIM: %v\n", claim)
+		claim_fact(db, fact)
+		fmt.Println("claim done")
+	  subscriptions_notifications <- true // update_all_subscriptions(db, publisher, subscriptions)
 	}
 }
+
+func notify_subscribers_worker(subscriptions_notifications <-chan bool, db *sql.DB, publisher *zmq.Socket, subscriptions *Subscriptions) {
+	// TODO: passing in subscriptions is probably not safe because it can be written in the other goroutine
+	for range subscriptions_notifications {
+		update_all_subscriptions(db, publisher, subscriptions)
+	}
+}
+
+
 
 func main() {
   parser, err := participle.Build(&Fact{})
@@ -469,9 +489,13 @@ func main() {
   // parse_fact_string("#P5 #0 \"This \\\"is\\\" a test\" one \"two\" 0.5 2 1. .99999 1.23e8 $ $X % %Z")
   // repr.Println(fact, repr.Indent("  "), repr.OmitEmpty(true))
 
-  db, err := sql.Open("sqlite3", ":memory:")
+  // :memory:
+	// "file::memory:?mode=memory&cache=shared"
+  db, err := sql.Open("sqlite3", "file:memdb1?mode=memory&cache=shared")
 	checkErr(err)
 	defer db.Close()
+	db_readonly, err := sql.Open("sqlite3", "file:memdb1?mode=memory&cache=shared")
+	defer db_readonly.Close()
 
   init_db(db)
 
@@ -494,14 +518,17 @@ func main() {
   source_len := 4
 
 	unparsed_messages := make(chan string, 100)
+	subscription_messages := make(chan string, 100)
 	claims := make(chan []Term, 100)
+	subscriptions_notifications := make(chan bool, 100)
 
 	go parser_worker(unparsed_messages, claims, parser)
-	go claim_worker(claims, db)
+	go subscribe_worker(subscription_messages, claims, subscriptions_notifications, parser, publisher, &subscriptions)
+	go claim_worker(claims, subscriptions_notifications, db)
+	go notify_subscribers_worker(subscriptions_notifications, db_readonly, publisher, &subscriptions)
 
 	for {
 		msg, _ := subscriber.Recv(0)
-		unparsed_messages <- msg
 		// fmt.Printf("%s\n", msg)
     event_type := msg[0:event_type_len]
     source := msg[event_type_len:(event_type_len + source_len)]
@@ -509,19 +536,21 @@ func main() {
     if event_type == ".....PING" {
       send_results(publisher, source, val, make([][]string, 0))
     } else if event_type == "....CLAIM" {
-      start := time.Now()
-      claim(db, parser, publisher, &subscriptions, val, source)
-      timeProcessing := time.Since(start)
-      fmt.Printf("processing: %s \n", timeProcessing)
+			unparsed_messages <- msg
+      // start := time.Now()
+      // claim(db, parser, publisher, &subscriptions, val, source)
+      // timeProcessing := time.Since(start)
+      // fmt.Printf("processing: %s \n", timeProcessing)
     // } else if event_type == "..RETRACT" {
     //     retract(val)
     // } else if event_type == "...SELECT" {
     //     json_val = json.loads(val)
     //     select(json_val["facts"], json_val["id"], source)
     } else if event_type == "SUBSCRIBE" {
-      subscription_data := SubscriptionData{}
-      json.Unmarshal([]byte(val), &subscription_data)
-      subscribe(db, parser, publisher, &subscriptions, subscription_data.Facts, subscription_data.Id, source)
+			subscription_messages <- msg
+      // subscription_data := SubscriptionData{}
+      // json.Unmarshal([]byte(val), &subscription_data)
+      // subscribe(db, parser, publisher, &subscriptions, subscription_data.Facts, subscription_data.Id, source)
     }
   }
 }
