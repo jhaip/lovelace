@@ -12,7 +12,7 @@ def prehook():
     global start
     start = time.time()
     # claim("Bird has 5 toes")
-    claim("Man has 1000 toes")
+    # claim("Man has 1000 toes")
 
 def sub_callback(results):
     global i, N, start
@@ -25,10 +25,10 @@ def sub_callback(results):
         print("TIME: {} ms".format((end - start)*1000.0))
         print("AVG LOOP TIME: {} ms".format((end - start)*1000.0/N))
         sys.exit()
-    claim("Man has {} toes".format(i))
+    claim("Man {} has {} toes".format(MY_ID, i))
 
 subscriptions = [
-    (["$ $X has $Y toes"], sub_callback)
+    (["$ $X {} has $Y toes".format(MY_ID)], sub_callback)
 ]
 
 init(MY_ID, prehook, [], subscriptions)
