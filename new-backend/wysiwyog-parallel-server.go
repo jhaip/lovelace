@@ -540,13 +540,13 @@ func main() {
   // :memory:
 	// "file::memory:?mode=memory&cache=shared"
   // db, err := sql.Open("sqlite3", "file:memdb1?mode=memory&cache=shared&_busy_timeout=9999999")
-	db, err := sql.Open("sqlite3", "file::memory:?mode=rwc&cache=shared")
-	// db.SetMaxOpenConns(1)
+	db, err := sql.Open("sqlite3", "file:memdb1?mode=memory&cache=shared&_busy_timeout=9999999")
+	db.SetMaxOpenConns(1)
 	checkErr(err)
 	defer db.Close()
-	db_readonly, err := sql.Open("sqlite3", "file::memory:?mode=ro&cache=shared")
+	// db_readonly, err := sql.Open("sqlite3", "file::memory:?mode=ro&cache=shared")
 	// db_readonly.SetMaxOpenConns(1)
-	defer db_readonly.Close()
+	// defer db_readonly.Close()
 
   init_db(db)
 
@@ -578,7 +578,7 @@ func main() {
 	go parser_worker(unparsed_messages, claims, parser)
 	go subscribe_worker(subscription_messages, claims, subscriptions_notifications, parser, publisher, &subscriptions)
 	go claim_worker(claims, subscriptions_notifications, db)
-	go notify_subscribers_worker(notify_subscribers, subscriber_worker_finished, db_readonly, publisher, &subscriptions)
+	go notify_subscribers_worker(notify_subscribers, subscriber_worker_finished, db, publisher, &subscriptions)
 	go debounce_subscriber_worker(subscriptions_notifications, subscriber_worker_finished, notify_subscribers)
 
 	for {
