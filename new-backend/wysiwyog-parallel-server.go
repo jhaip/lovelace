@@ -15,6 +15,8 @@ import (
 )
 
 var next_fact_id int = 1
+var mutex = &sync.Mutex{}
+var subscriber_mutex = &sync.Mutex{}
 
 type Term struct {
 	Type string
@@ -391,15 +393,18 @@ func single_subscriber_update(db *sql.DB, publisher *zmq.Socket, subscription Su
 }
 
 func update_all_subscriptions(db *sql.DB, publisher *zmq.Socket, subscriptions Subscriptions) {
+	mutex.Lock()
 	var wg sync.WaitGroup
 	wg.Add(len(subscriptions.Subscriptions))
 	// TODO: there may be a race condition if the contents of subscriptions changes when running this func.
 	// How about just passing in a copy of the subscriptions
+
   for i, subscription := range subscriptions.Subscriptions {
 		go single_subscriber_update(db, publisher, subscription, &wg, i)
   }
 	// fmt.Println("WAITING FOR ALL THINGS TO END")
 	wg.Wait()
+	mutex.Unlock()
 	// fmt.Println("done")
 }
 
@@ -459,7 +464,9 @@ func subscribe_worker(subscription_messages <-chan string, claims chan<- []Term,
 		    fact := parse_fact_string(parser, fact_string)
 		    query = append(query, fact)
 		  }
+			subscriber_mutex.Lock()
 		  (*subscriptions).Subscriptions = append((*subscriptions).Subscriptions, Subscription{source, subscription_data.Id, query})
+			subscriber_mutex.Unlock()
 			subscriptions_notifications <- true // update_all_subscriptions(db, publisher, subscriptions)
 		}
 	}
@@ -484,7 +491,9 @@ func parser_worker(unparsed_messages <-chan string, claims chan<- []Term, parser
 func claim_worker(claims <-chan []Term, subscriptions_notifications chan<- bool, db *sql.DB) {
 	for fact := range claims {
 		fmt.Printf("SHOULD CLAIM: %v\n", claim)
+		mutex.Lock()
 		claim_fact(db, fact)
+		mutex.Unlock()
 		fmt.Println("claim done")
 	  subscriptions_notifications <- true // update_all_subscriptions(db, publisher, subscriptions)
 	}
@@ -495,7 +504,9 @@ func notify_subscribers_worker(notify_subscribers <-chan bool, subscriber_worker
 	for range notify_subscribers {
 		fmt.Println("inside notify_subscribers_worker loop")
 		start := time.Now()
+		subscriber_mutex.Lock()
 		update_all_subscriptions(db, publisher, *subscriptions)
+		subscriber_mutex.Unlock()
 		updateSubscribersTime := time.Since(start)
 		fmt.Printf("update all subscribers time: %s \n", updateSubscribersTime)
 		subscriber_worker_finished <- true
@@ -539,7 +550,7 @@ func main() {
   // :memory:
 	// "file::memory:?mode=memory&cache=shared"
   db, err := sql.Open("sqlite3", "file:memdb1?mode=memory&cache=shared&_busy_timeout=9999999")
-	db.SetMaxOpenConns(1)
+	// db.SetMaxOpenConns(1)
 	checkErr(err)
 	defer db.Close()
 	// db_readonly, err := sql.Open("sqlite3", "file:memdb1?mode=memory&cache=shared&_busy_timeout=9999999")
