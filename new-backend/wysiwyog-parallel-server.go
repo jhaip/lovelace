@@ -10,6 +10,7 @@ import (
   "github.com/alecthomas/participle"
   // "github.com/alecthomas/repr"
   "strconv"
+	"sync"
   "time"
 )
 
@@ -378,13 +379,28 @@ func get_facts_for_subscription(db *sql.DB, source string, subscription_id strin
   return results
 }
 
-func update_all_subscriptions(db *sql.DB, publisher *zmq.Socket, subscriptions *Subscriptions) {
-  for _, subscription := range (*subscriptions).Subscriptions {
-		fmt.Println("pre SELECTING %v", subscription.Query)
-    results := select_facts(db, subscription.Query, false, false)
-		fmt.Println("DONE SELECTING")
-    send_results(publisher, subscription.Source, subscription.Id, results)
+func single_subscriber_update(db *sql.DB, publisher *zmq.Socket, subscription Subscription, wg *sync.WaitGroup, i int) {
+	start := time.Now()
+	// fmt.Println("pre SELECTING %v", subscription.Query)
+	results := select_facts(db, subscription.Query, false, false)
+	// fmt.Println("DONE SELECTING")
+	send_results(publisher, subscription.Source, subscription.Id, results)
+	wg.Done()
+	duration := time.Since(start)
+	fmt.Printf("SINGLE SUBSCRIBER DONE %v -- %s\n", i, duration)
+}
+
+func update_all_subscriptions(db *sql.DB, publisher *zmq.Socket, subscriptions Subscriptions) {
+	var wg sync.WaitGroup
+	wg.Add(len(subscriptions.Subscriptions))
+	// TODO: there may be a race condition if the contents of subscriptions changes when running this func.
+	// How about just passing in a copy of the subscriptions
+  for i, subscription := range subscriptions.Subscriptions {
+		go single_subscriber_update(db, publisher, subscription, &wg, i)
   }
+	// fmt.Println("WAITING FOR ALL THINGS TO END")
+	wg.Wait()
+	// fmt.Println("done")
 }
 
 func claim(db *sql.DB, parser *participle.Parser, publisher *zmq.Socket, subscriptions *Subscriptions, fact_string string, source string) {
@@ -398,7 +414,7 @@ func claim(db *sql.DB, parser *participle.Parser, publisher *zmq.Socket, subscri
   claimTime := time.Since(start2)
   // print_all(db)
   start3 := time.Now()
-  update_all_subscriptions(db, publisher, subscriptions)
+  update_all_subscriptions(db, publisher, *subscriptions)
   updateSubscribersTime := time.Since(start3)
   fmt.Printf("...parse: %s \n", parseTime)
   fmt.Printf("....claim: %s \n", claimTime)
@@ -419,7 +435,7 @@ func subscribe(db *sql.DB, parser *participle.Parser, publisher *zmq.Socket, sub
   (*subscriptions).Subscriptions = append((*subscriptions).Subscriptions, Subscription{source, subscription_id, query})
   // fmt.Println("ADDED SUBSCRIPTOIN!")
   // fmt.Printf("len: %v", len((*subscriptions).Subscriptions))
-  update_all_subscriptions(db, publisher, subscriptions)
+  update_all_subscriptions(db, publisher, *subscriptions)
 }
 
 func subscribe_worker(subscription_messages <-chan string, claims chan<- []Term, subscriptions_notifications chan<- bool, parser *participle.Parser, publisher *zmq.Socket, subscriptions *Subscriptions) {
@@ -477,7 +493,11 @@ func claim_worker(claims <-chan []Term, subscriptions_notifications chan<- bool,
 func notify_subscribers_worker(notify_subscribers <-chan bool, subscriber_worker_finished chan<- bool, db *sql.DB, publisher *zmq.Socket, subscriptions *Subscriptions) {
 	// TODO: passing in subscriptions is probably not safe because it can be written in the other goroutine
 	for range notify_subscribers {
-		update_all_subscriptions(db, publisher, subscriptions)
+		fmt.Println("inside notify_subscribers_worker loop")
+		start := time.Now()
+		update_all_subscriptions(db, publisher, *subscriptions)
+		updateSubscribersTime := time.Since(start)
+		fmt.Printf("update all subscribers time: %s \n", updateSubscribersTime)
 		subscriber_worker_finished <- true
 	}
 }
@@ -489,6 +509,7 @@ func debounce_subscriber_worker(subscriptions_notifications <-chan bool, subscri
 		for range subscriptions_notifications {
 			if worker_is_free {
 				worker_is_free = false
+				fmt.Println("notifying subscriber worker")
 				notify_subscribers <- true
 			} else {
 				fmt.Println("(-) debouncing subscription notification becasue worker is busy")
@@ -549,8 +570,8 @@ func main() {
 	subscription_messages := make(chan string, 100)
 	claims := make(chan []Term, 100)
 	subscriptions_notifications := make(chan bool, 100)
-	subscriber_worker_finished := make(chan bool, 1)
-	notify_subscribers := make(chan bool, 1)
+	subscriber_worker_finished := make(chan bool, 99)
+	notify_subscribers := make(chan bool, 99)
 
 	go parser_worker(unparsed_messages, claims, parser)
 	go subscribe_worker(subscription_messages, claims, subscriptions_notifications, parser, publisher, &subscriptions)
