@@ -474,14 +474,40 @@ func claim_worker(claims <-chan []Term, subscriptions_notifications chan<- bool,
 	}
 }
 
-func notify_subscribers_worker(subscriptions_notifications <-chan bool, db *sql.DB, publisher *zmq.Socket, subscriptions *Subscriptions) {
+func notify_subscribers_worker(notify_subscribers <-chan bool, subscriber_worker_finished chan<- bool, db *sql.DB, publisher *zmq.Socket, subscriptions *Subscriptions) {
 	// TODO: passing in subscriptions is probably not safe because it can be written in the other goroutine
-	for range subscriptions_notifications {
+	for range notify_subscribers {
 		update_all_subscriptions(db, publisher, subscriptions)
+		subscriber_worker_finished <- true
 	}
 }
 
-
+func debounce_subscriber_worker(subscriptions_notifications <-chan bool, subscriber_worker_finished <-chan bool, notify_subscribers chan<- bool) {
+	claim_waiting := false
+	worker_is_free := true
+	go func() {
+		for range subscriptions_notifications {
+			if worker_is_free {
+				worker_is_free = false
+				notify_subscribers <- true
+			} else {
+				fmt.Println("(-) debouncing subscription notification becasue worker is busy")
+				claim_waiting = true
+			}
+		}
+	}()
+	go func() {
+		for range subscriber_worker_finished {
+			fmt.Println("subscriber_worker_finished")
+			worker_is_free = true
+			if claim_waiting {
+				fmt.Println("subscriber_worker_finished - running again to catch up to claims")
+				claim_waiting = false
+				notify_subscribers <- true
+			}
+		}
+	}()
+}
 
 func main() {
   parser, err := participle.Build(&Fact{})
@@ -523,11 +549,14 @@ func main() {
 	subscription_messages := make(chan string, 100)
 	claims := make(chan []Term, 100)
 	subscriptions_notifications := make(chan bool, 100)
+	subscriber_worker_finished := make(chan bool, 1)
+	notify_subscribers := make(chan bool, 1)
 
 	go parser_worker(unparsed_messages, claims, parser)
 	go subscribe_worker(subscription_messages, claims, subscriptions_notifications, parser, publisher, &subscriptions)
 	go claim_worker(claims, subscriptions_notifications, db)
-	go notify_subscribers_worker(subscriptions_notifications, db, publisher, &subscriptions)
+	go notify_subscribers_worker(notify_subscribers, subscriber_worker_finished, db, publisher, &subscriptions)
+	go debounce_subscriber_worker(subscriptions_notifications, subscriber_worker_finished, notify_subscribers)
 
 	for {
 		msg, _ := subscriber.Recv(0)
