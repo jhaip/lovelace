@@ -3,6 +3,7 @@ package main
 import (
   "fmt"
   "github.com/alecthomas/repr"
+  // "time"
 )
 
 type Term struct {
@@ -42,10 +43,14 @@ func terms_to_string(terms []Term) string {
   return str
 }
 
-func print_all_facts(facts []Fact) {
+func fact_to_string(fact Fact) string {
+  return terms_to_string(fact.Terms)
+}
+
+func print_all_facts(facts map[string]Fact) {
   fmt.Println("### Database of Facts ###")
   for _, fact := range facts {
-    fmt.Println(terms_to_string(fact.Terms))
+    fmt.Println(fact_to_string(fact))
   }
   fmt.Println("#########################")
 }
@@ -105,7 +110,7 @@ func term_match(A Term, B Term, env QueryResult) (bool, QueryResult) {
   return false, QueryResult{}
 }
 
-func collect_solutions(facts []Fact, query []Fact, env QueryResult) []QueryResult {
+func collect_solutions(facts map[string]Fact, query []Fact, env QueryResult) []QueryResult {
   if len(query) == 0 {
     return []QueryResult{env}
   }
@@ -120,67 +125,73 @@ func collect_solutions(facts []Fact, query []Fact, env QueryResult) []QueryResul
   return solutions
 }
 
-func select_facts(facts []Fact, query []Fact) []QueryResult {
+func select_facts(facts map[string]Fact, query []Fact) []QueryResult {
   empty_env := QueryResult{map[string]Term{}}
   return collect_solutions(facts, query, empty_env)
 }
 
 func main() {
-  facts := make([]Fact, 5)
-  facts[0] = Fact{[]Term{Term{"source", "1"}, Term{"text", "Man"}, Term{"integer", "5"}, Term{"text", "toes"}}}
-  facts[1] = Fact{[]Term{Term{"source", "1"}, Term{"text", "Snake"}, Term{"text", "no"}, Term{"text", "toes"}}}
-  facts[2] = Fact{[]Term{Term{"source", "1"}, Term{"text", "Snake"}, Term{"text", "is"}, Term{"text", "red"}}}
-  facts[3] = Fact{[]Term{Term{"source", "2"}, Term{"text", "Bird"}, Term{"integer", "3"}, Term{"text", "toes"}}}
-  facts[4] = Fact{[]Term{Term{"source", "2"}, Term{"text", "subscription"}, Term{"variable", "X"}, Term{"text", "is"}, Term{"postfix", "Y"}}}
+  factMap := make(map[string]Fact)
+  fact0 := Fact{[]Term{Term{"source", "1"}, Term{"text", "Man"}, Term{"integer", "5"}, Term{"text", "toes"}}}
+  fact1 := Fact{[]Term{Term{"source", "1"}, Term{"text", "Snake"}, Term{"text", "no"}, Term{"text", "toes"}}}
+  fact2 := Fact{[]Term{Term{"source", "1"}, Term{"text", "Snake"}, Term{"text", "is"}, Term{"text", "red"}}}
+  fact3 := Fact{[]Term{Term{"source", "2"}, Term{"text", "Bird"}, Term{"integer", "3"}, Term{"text", "toes"}}}
+  fact4 := Fact{[]Term{Term{"source", "2"}, Term{"text", "subscription"}, Term{"variable", "X"}, Term{"text", "is"}, Term{"postfix", "Y"}}}
+  factMap[fact_to_string(fact0)] = fact0
+  factMap[fact_to_string(fact1)] = fact1
+  factMap[fact_to_string(fact2)] = fact2
+  factMap[fact_to_string(fact3)] = fact3
+  factMap[fact_to_string(fact4)] = fact4
   query1 := make([]Fact, 1)
   query1[0] = Fact{[]Term{Term{"variable", ""}, Term{"variable", "X"}, Term{"variable", "Y"}, Term{"text", "toes"}}}
-  results1 := select_facts(facts, query1)
+  results1 := select_facts(factMap, query1)
   // fmt.Println(results1)
   fmt.Println("RESULTS 1 - several matches:\n")
   repr.Println(results1, repr.Indent("  "), repr.OmitEmpty(true))
 
   query2 := make([]Fact, 1)
   query2[0] = Fact{[]Term{Term{"source", "100"}, Term{"variable", "X"}, Term{"variable", "Y"}, Term{"text", "toes"}}}
-  results2 := select_facts(facts, query2)
+  results2 := select_facts(factMap, query2)
   fmt.Println("RESULTS 2 - no matches:\n")
   repr.Println(results2, repr.Indent("  "), repr.OmitEmpty(true))
 
   query3 := make([]Fact, 1)
   query3[0] = Fact{[]Term{Term{"source", "1"}, Term{"text", "Man"}, Term{"integer", "5"}, Term{"text", "toes"}}}
-  results3 := select_facts(facts, query3)
+  results3 := select_facts(factMap, query3)
   fmt.Println("RESULTS 3 - exact match:\n")
   repr.Println(results3, repr.Indent("  "), repr.OmitEmpty(true))
 
   query4 := make([]Fact, 2)
   query4[0] = Fact{[]Term{Term{"source", "1"}, Term{"variable", "X"}, Term{"variable", "Y"}, Term{"text", "toes"}}}
   query4[1] = Fact{[]Term{Term{"source", "1"}, Term{"variable", "X"}, Term{"text", "is"}, Term{"variable", "Z"}}}
-  results4 := select_facts(facts, query4)
+  results4 := select_facts(factMap, query4)
   fmt.Println("RESULTS 4 - multiple query:\n")
   repr.Println(results4, repr.Indent("  "), repr.OmitEmpty(true))
 
   query5 := make([]Fact, 1)
   query5[0] = Fact{[]Term{Term{"source", "1"}, Term{"postfix", "X"}}}
-  results5 := select_facts(facts, query5)
+  results5 := select_facts(factMap, query5)
   fmt.Println("RESULTS 5 - postfix with name:\n")
   repr.Println(results5, repr.Indent("  "), repr.OmitEmpty(true))
 
   query6 := make([]Fact, 1)
   query6[0] = Fact{[]Term{Term{"source", "1"}, Term{"text", "Man"}, Term{"postfix", ""}}}
-  results6 := select_facts(facts, query6)
+  results6 := select_facts(factMap, query6)
   fmt.Println("RESULTS 6 - wildcard postfix:\n")
   repr.Println(results6, repr.Indent("  "), repr.OmitEmpty(true))
 
   query7 := make([]Fact, 1)
   query7[0] = Fact{[]Term{Term{"variable", ""}, Term{"text", "subscription"}, Term{"postfix", "X"}}}
-  results7 := select_facts(facts, query7)
+  results7 := select_facts(factMap, query7)
   fmt.Println("RESULTS 7 - postfix with names and special types:\n")
   repr.Println(results7, repr.Indent("  "), repr.OmitEmpty(true))
 
-  print_all_facts(facts)
+  print_all_facts(factMap)
 
   // TODO: a better way to differentiate no results, vs results but without a name (for exact match)
   // TODO: handle claims
   // TODO: handle subscriptions
   // TODO: a way to detect if a claim will include a part of a subscription?
   // TODO: return in format compatible with rest of code
+  // TODO: return IDs of select results for use in retract
 }
