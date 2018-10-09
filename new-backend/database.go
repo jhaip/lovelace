@@ -34,13 +34,20 @@ func term_to_string(term Term) string {
 func terms_to_string(terms []Term) string {
   str := ""
   for i, term := range terms {
-    // TODO: may want to handle special types like variables or sources in a special way?
     if i > 0 {
       str += " "
     }
     str += term_to_string(term)
   }
   return str
+}
+
+func print_all_facts(facts []Fact) {
+  fmt.Println("### Database of Facts ###")
+  for _, fact := range facts {
+    fmt.Println(terms_to_string(fact.Terms))
+  }
+  fmt.Println("#########################")
 }
 
 func fact_match(A Fact, B Fact, env QueryResult) (bool, QueryResult) {
@@ -168,6 +175,8 @@ func main() {
   results7 := select_facts(facts, query7)
   fmt.Println("RESULTS 7 - postfix with names and special types:\n")
   repr.Println(results7, repr.Indent("  "), repr.OmitEmpty(true))
+
+  print_all_facts(facts)
 
   // TODO: a better way to differentiate no results, vs results but without a name (for exact match)
   // TODO: handle claims
