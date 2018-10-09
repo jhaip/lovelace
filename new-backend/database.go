@@ -1,7 +1,7 @@
 package main
 
 import (
-  // "fmt"
+  "fmt"
   "github.com/alecthomas/repr"
 )
 
@@ -92,5 +92,25 @@ func main() {
   query1[0] = Fact{[]Term{Term{"variable", ""}, Term{"variable", "X"}, Term{"variable", "Y"}, Term{"text", "toes"}}}
   results1 := select_facts(facts, query1)
   // fmt.Println(results1)
+  fmt.Println("RESULTS 1 - several matches:\n")
   repr.Println(results1, repr.Indent("  "), repr.OmitEmpty(true))
+
+  query2 := make([]Fact, 1)
+  query2[0] = Fact{[]Term{Term{"source", "100"}, Term{"variable", "X"}, Term{"variable", "Y"}, Term{"text", "toes"}}}
+  results2 := select_facts(facts, query2)
+  fmt.Println("RESULTS 2 - no matches:\n")
+  repr.Println(results2, repr.Indent("  "), repr.OmitEmpty(true))
+
+  query3 := make([]Fact, 1)
+  query3[0] = Fact{[]Term{Term{"source", "1"}, Term{"text", "Man"}, Term{"integer", "5"}, Term{"text", "toes"}}}
+  results3 := select_facts(facts, query3)
+  fmt.Println("RESULTS 3 - exact match:\n")
+  repr.Println(results3, repr.Indent("  "), repr.OmitEmpty(true))
+
+  // TODO: handle postfix
+  // TODO: a better way to differentiate no results, vs results but without a name (for exact match)
+  // TODO: handle claims
+  // TODO: handle subscriptions
+  // TODO: a way to detect if a claim will include a part of a subscription?
+  // TODO: test claims with multiple parts and reused variables
 }
