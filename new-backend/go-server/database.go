@@ -131,12 +131,25 @@ func select_facts(facts map[string]Fact, query []Fact) []QueryResult {
 	return collect_solutions(facts, query, empty_env)
 }
 
-func retract(facts *map[string]Fact, factQuery Fact) {
-	for factString, fact := range *facts {
-		did_match, _ := fact_match(factQuery, fact, QueryResult{})
-		if did_match {
-			delete(*facts, factString)
+func fact_has_variables_or_wildcards(fact Fact) bool {
+	for _, term := range fact.Terms {
+		if term.Type == "variable" || term.Type == "postfix" {
+			return true
 		}
+	}
+	return false
+}
+
+func retract(facts *map[string]Fact, factQuery Fact) {
+	if fact_has_variables_or_wildcards(factQuery) {
+		for factString, fact := range *facts {
+			did_match, _ := fact_match(factQuery, fact, QueryResult{})
+			if did_match {
+				delete(*facts, factString)
+			}
+		}
+	} else {
+		delete(*facts, fact_to_string(factQuery))
 	}
 }
 
