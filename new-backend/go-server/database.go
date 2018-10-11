@@ -140,6 +140,10 @@ func retract(facts *map[string]Fact, factQuery Fact) {
 	}
 }
 
+func claim(facts *map[string]Fact, fact Fact) {
+	(*facts)[fact_to_string(fact)] = fact
+}
+
 func main() {
 	factMap := make(map[string]Fact)
 	fact0 := Fact{[]Term{Term{"source", "1"}, Term{"text", "Man"}, Term{"integer", "5"}, Term{"text", "toes"}}}

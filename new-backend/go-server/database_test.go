@@ -87,3 +87,34 @@ func TestRetractExactMatch(t *testing.T) {
 		t.Error("Fact was not removed")
 	}
 }
+
+func TestRetractWithWilcard(t *testing.T) {
+	factMap := init_fact_map()
+	originalLen := len(factMap)
+	factQuery := Fact{[]Term{Term{"source", "1"}, Term{"text", "Man"}, Term{"variable", ""}, Term{"text", "toes"}}}
+	retract(&factMap, factQuery)
+	if len(factMap) != originalLen-1 {
+		t.Error("Fact was not removed")
+	}
+}
+
+func TestRetractAllFromSource(t *testing.T) {
+	factMap := init_fact_map()
+	originalLen := len(factMap)
+	factQuery := Fact{[]Term{Term{"source", "1"}, Term{"postfix", ""}}}
+	retract(&factMap, factQuery)
+	if len(factMap) != originalLen-3 {
+		t.Error("Fact was not removed")
+	}
+}
+
+func TestClaim(t *testing.T) {
+	factMap := init_fact_map()
+	originalLen := len(factMap)
+	fact := Fact{[]Term{Term{"source", "10"}, Term{"text", "Word"}, Term{"integer", "50"}}}
+	claim(&factMap, fact)
+	claim(&factMap, fact) // Redundant claim should have no effect
+	if len(factMap) != originalLen+1 {
+		t.Error("Fact was not removed")
+	}
+}
