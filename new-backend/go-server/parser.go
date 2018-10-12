@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/alecthomas/participle"
 )
@@ -45,11 +44,11 @@ type FactTerm struct {
 
 //
 
-func checkErr(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
-}
+// func checkErr(err error) {
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// }
 
 func make_parser() (*participle.Parser, error) {
 	return participle.Build(&ParsedFact{})

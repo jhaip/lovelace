@@ -2,15 +2,13 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/alecthomas/repr"
 	// "time"
 )
 
-type Term struct {
-	Type  string
-	Value string
-}
+// type Term struct {
+// 	Type  string
+// 	Value string
+// }
 
 type Fact struct {
 	Terms []Term
@@ -157,31 +155,14 @@ func claim(facts *map[string]Fact, fact Fact) {
 	(*facts)[fact_to_string(fact)] = fact
 }
 
-func main() {
+func make_fact_database() map[string]Fact {
 	factMap := make(map[string]Fact)
-	fact0 := Fact{[]Term{Term{"source", "1"}, Term{"text", "Man"}, Term{"integer", "5"}, Term{"text", "toes"}}}
-	fact1 := Fact{[]Term{Term{"source", "1"}, Term{"text", "Snake"}, Term{"text", "no"}, Term{"text", "toes"}}}
-	fact2 := Fact{[]Term{Term{"source", "1"}, Term{"text", "Snake"}, Term{"text", "is"}, Term{"text", "red"}}}
-	fact3 := Fact{[]Term{Term{"source", "2"}, Term{"text", "Bird"}, Term{"integer", "3"}, Term{"text", "toes"}}}
-	fact4 := Fact{[]Term{Term{"source", "2"}, Term{"text", "subscription"}, Term{"variable", "X"}, Term{"text", "is"}, Term{"postfix", "Y"}}}
-	factMap[fact_to_string(fact0)] = fact0
-	factMap[fact_to_string(fact1)] = fact1
-	factMap[fact_to_string(fact2)] = fact2
-	factMap[fact_to_string(fact3)] = fact3
-	factMap[fact_to_string(fact4)] = fact4
-	query1 := make([]Fact, 1)
-	query1[0] = Fact{[]Term{Term{"variable", ""}, Term{"variable", "X"}, Term{"variable", "Y"}, Term{"text", "toes"}}}
-	results1 := select_facts(factMap, query1)
-	// fmt.Println(results1)
-	fmt.Println("RESULTS 1 - several matches:")
-	repr.Println(results1, repr.Indent("  "), repr.OmitEmpty(true))
-
-	print_all_facts(factMap)
-
-	// TODO: a better way to differentiate no results, vs results but without a name (for exact match)
-	// TODO: handle claims
-	// TODO: handle subscriptions
-	// TODO: a way to detect if a claim will include a part of a subscription?
-	// TODO: return in format compatible with rest of code
-	// TODO: return IDs of select results for use in retract
+	return factMap
 }
+
+// TODO: a better way to differentiate no results, vs results but without a name (for exact match)
+// TODO: handle claims
+// TODO: handle subscriptions
+// TODO: a way to detect if a claim will include a part of a subscription?
+// TODO: return in format compatible with rest of code
+// TODO: return IDs of select results for use in retract

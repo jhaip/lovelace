@@ -7,7 +7,7 @@ import (
 )
 
 func init_fact_map() map[string]Fact {
-	factMap := make(map[string]Fact)
+	factMap := make_fact_database()
 	fact0 := Fact{[]Term{Term{"source", "1"}, Term{"text", "Man"}, Term{"integer", "5"}, Term{"text", "toes"}}}
 	fact1 := Fact{[]Term{Term{"source", "1"}, Term{"text", "Snake"}, Term{"text", "no"}, Term{"text", "toes"}}}
 	fact2 := Fact{[]Term{Term{"source", "1"}, Term{"text", "Snake"}, Term{"text", "is"}, Term{"text", "red"}}}
