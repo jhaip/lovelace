@@ -55,6 +55,11 @@ advantages for concurrency
 520ms
 5.2ms per iteration
 
+# Full Golang, parse, custom db, goroutines, zmq, subscriber notification is, N=100: 
+65ms
+0.65ms per iteration
+about +0.2ms from per golang ping pong
+
 -----
 
 budget
