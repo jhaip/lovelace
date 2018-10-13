@@ -13,6 +13,7 @@ import (
 
 	"sync"
 	"time"
+	// "github.com/pkg/profile"
 )
 
 var dbMutex sync.RWMutex
@@ -51,28 +52,30 @@ func checkErr(err error) {
 }
 
 func send_results(publisher *zmq.Socket, source string, id string, results [][]string) {
-	start := time.Now()
+	// start := time.Now()
 	results_json_str, err := json.Marshal(results)
 	checkErr(err)
 	msg := fmt.Sprintf("%s%s%s", source, id, string(results_json_str))
 	// fmt.Println("Sending ", msg)
 	zmqMutex.Lock()
 	publisher.Send(msg, zmq.DONTWAIT)
+	// fmt.Println(msg)
 	zmqMutex.Unlock()
-	timeToSendResults := time.Since(start)
-	fmt.Printf("time to send results: %s \n", timeToSendResults)
+	// timeToSendResults := time.Since(start)
+	// fmt.Printf("time to send results: %s \n", timeToSendResults)
 }
 
-func single_subscriber_update(db *map[string]Fact, publisher *zmq.Socket, subscription Subscription, wg *sync.WaitGroup, i int) {
+func single_subscriber_update(db map[string]Fact, publisher *zmq.Socket, subscription Subscription, wg *sync.WaitGroup, i int) {
 	start := time.Now()
 	// fmt.Println("pre SELECTING %v", subscription.Query)
 	query := make([]Fact, len(subscription.Query))
 	for i, fact_terms := range subscription.Query {
 		query[i] = Fact{fact_terms}
 	}
-	dbMutex.RLock()
-	results := select_facts(*db, query)
-	dbMutex.RUnlock()
+	// dbMutex.RLock()
+	results := select_facts(db, query)
+	// dbMutex.RUnlock()
+	selectDuration := time.Since(start)
 	results_as_str := [][]string{}
 	for _, result := range results {
 		result_as_str := []string{}
@@ -85,19 +88,34 @@ func single_subscriber_update(db *map[string]Fact, publisher *zmq.Socket, subscr
 	send_results(publisher, subscription.Source, subscription.Id, results_as_str)
 	wg.Done()
 	duration := time.Since(start)
-	fmt.Printf("SINGLE SUBSCRIBER DONE %v -- %s\n", i, duration)
+	fmt.Printf("SINGLE SUBSCRIBER DONE %v, select %v, send %v, total %s\n", i, selectDuration, duration-selectDuration, duration)
 }
 
 func update_all_subscriptions(db *map[string]Fact, publisher *zmq.Socket, subscriptions Subscriptions) {
+	dbMutex.RLock()
+	dbValue := make(map[string]Fact)
+	for k, v := range *db {
+		newTerms := make([]Term, len(v.Terms))
+		for i, t := range newTerms {
+			newTerms[i] = t
+		}
+		dbValue[k] = Fact{newTerms}
+	}
+	dbMutex.RUnlock()
 	var wg sync.WaitGroup
 	wg.Add(len(subscriptions.Subscriptions))
 	// TODO: there may be a race condition if the contents of subscriptions changes when running this func.
 	// How about just passing in a copy of the subscriptions
 	for i, subscription := range subscriptions.Subscriptions {
-		go single_subscriber_update(db, publisher, subscription, &wg, i)
+		go single_subscriber_update(dbValue, publisher, subscription, &wg, i)
 	}
+
 	// fmt.Println("WAITING FOR ALL THINGS TO END")
 	wg.Wait()
+	// dbMutex.RUnlock()
+	// dbMutex.RLock()
+	// print_all_facts(*db)
+	// dbMutex.RUnlock()
 	// fmt.Println("done")
 }
 
@@ -197,6 +215,7 @@ func debounce_subscriber_worker(subscriptions_notifications <-chan bool, subscri
 }
 
 func main() {
+	// defer profile.Start().Stop()
 	parser, err := make_parser()
 	checkErr(err)
 
@@ -207,10 +226,10 @@ func main() {
 	// fmt.Println("Connecting to hello world server...")
 	publisher, _ := zmq.NewSocket(zmq.PUB)
 	defer publisher.Close()
-	publisher.Connect("tcp://localhost:5555")
+	publisher.Bind("tcp://*:5555")
 	subscriber, _ := zmq.NewSocket(zmq.SUB)
 	defer subscriber.Close()
-	subscriber.Connect("tcp://localhost:5556")
+	subscriber.Bind("tcp://*:5556")
 	subscriber.SetSubscribe(".....PING")
 	subscriber.SetSubscribe("....CLAIM")
 	subscriber.SetSubscribe("...SELECT")
@@ -234,12 +253,17 @@ func main() {
 	go debounce_subscriber_worker(subscriptions_notifications, subscriber_worker_finished, notify_subscribers)
 
 	for {
+		// zmqMutex.Lock()
 		msg, _ := subscriber.Recv(0)
+		// zmqMutex.Unlock()
 		// fmt.Printf("%s\n", msg)
 		event_type := msg[0:event_type_len]
 		source := msg[event_type_len:(event_type_len + source_len)]
 		val := msg[(event_type_len + source_len):]
 		if event_type == ".....PING" {
+			fmt.Println("GOT PING!!!!!!!!!!!!!!!")
+			fmt.Println(source)
+			fmt.Println(val)
 			send_results(publisher, source, val, make([][]string, 0))
 		} else if event_type == "....CLAIM" {
 			unparsed_messages <- msg
@@ -255,5 +279,6 @@ func main() {
 		} else if event_type == "SUBSCRIBE" {
 			subscription_messages <- msg
 		}
+		time.Sleep(1.0 * time.Microsecond)
 	}
 }

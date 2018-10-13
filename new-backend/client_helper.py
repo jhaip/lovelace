@@ -10,9 +10,9 @@ logging.basicConfig(level=logging.INFO)
 context = zmq.Context()
 rpc_url = "localhost"
 sub_socket = context.socket(zmq.SUB)
-sub_socket.connect("tcp://{0}:5556".format(rpc_url))
+sub_socket.connect("tcp://{0}:5555".format(rpc_url))
 pub_socket = context.socket(zmq.PUB)
-pub_socket.connect("tcp://{0}:5555".format(rpc_url))
+pub_socket.connect("tcp://{0}:5556".format(rpc_url))
 
 MY_ID = 1
 MY_ID_STR = str(MY_ID).zfill(4)
