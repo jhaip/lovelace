@@ -6,7 +6,8 @@ let i = 0
 room.on(
     `$ $X ${myId} has $Y toes`,
     results => {
-        console.log("LOOP!")
+        console.log("results:")
+        console.log(results)
         i += 1;
         if (i >= N) {
             console.log("\n...DONE!")

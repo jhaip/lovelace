@@ -51,11 +51,9 @@ func checkErr(err error) {
 	}
 }
 
-func send_results(publisher *zmq.Socket, source string, id string, results [][]string) {
+func send_results(publisher *zmq.Socket, source string, id string, result string) {
 	// start := time.Now()
-	results_json_str, err := json.Marshal(results)
-	checkErr(err)
-	msg := fmt.Sprintf("%s%s%s", source, id, string(results_json_str))
+	msg := fmt.Sprintf("%s%s%s", source, id, string(result))
 	// fmt.Println("Sending ", msg)
 	zmqMutex.Lock()
 	publisher.Send(msg, zmq.DONTWAIT)
@@ -65,6 +63,24 @@ func send_results(publisher *zmq.Socket, source string, id string, results [][]s
 	// fmt.Printf("time to send results: %s \n", timeToSendResults)
 }
 
+func marshal_query_result(query_results []QueryResult) string {
+	encoded_results := make([]map[string][]string, 0)
+	for _, query_result := range query_results {
+		encoded_result := make(map[string][]string)
+		for variable_name, term := range query_result.Result {
+			encoded_result[variable_name] = []string{term.Type, term.Value}
+		}
+		encoded_results = append(encoded_results, encoded_result)
+	}
+	// fmt.Println(encoded_results)
+	marshalled_results, err := json.Marshal(encoded_results)
+	checkErr(err)
+	// fmt.Println("MARSHALLD RESULTS:")
+	// repr.Println(query_results, repr.Indent("  "), repr.OmitEmpty(true))
+	// fmt.Println(string(marshalled_results))
+	return string(marshalled_results)
+}
+
 func single_subscriber_update(db map[string]Fact, publisher *zmq.Socket, subscription Subscription, wg *sync.WaitGroup, i int) {
 	start := time.Now()
 	// fmt.Println("pre SELECTING %v", subscription.Query)
@@ -72,18 +88,13 @@ func single_subscriber_update(db map[string]Fact, publisher *zmq.Socket, subscri
 	for i, fact_terms := range subscription.Query {
 		query[i] = Fact{fact_terms}
 	}
+	// fmt.Println("QUERY:")
+	// repr.Println(query, repr.Indent("  "), repr.OmitEmpty(true))
 	// dbMutex.RLock()
 	results := select_facts(db, query)
 	// dbMutex.RUnlock()
 	selectDuration := time.Since(start)
-	results_as_str := [][]string{}
-	for _, result := range results {
-		result_as_str := []string{}
-		for _, result_term := range result.Result {
-			result_as_str = append(result_as_str, result_term.Value)
-		}
-		results_as_str = append(results_as_str, result_as_str)
-	}
+	results_as_str := marshal_query_result(results)
 	// fmt.Println("DONE SELECTING")
 	send_results(publisher, subscription.Source, subscription.Id, results_as_str)
 	wg.Done()
@@ -94,9 +105,9 @@ func single_subscriber_update(db map[string]Fact, publisher *zmq.Socket, subscri
 func update_all_subscriptions(db *map[string]Fact, publisher *zmq.Socket, subscriptions Subscriptions) {
 	dbMutex.RLock()
 	dbValue := make(map[string]Fact)
-	for k, v := range *db {
-		newTerms := make([]Term, len(v.Terms))
-		for i, t := range newTerms {
+	for k, fact := range *db {
+		newTerms := make([]Term, len(fact.Terms))
+		for i, t := range fact.Terms {
 			newTerms[i] = t
 		}
 		dbValue[k] = Fact{newTerms}
@@ -114,7 +125,8 @@ func update_all_subscriptions(db *map[string]Fact, publisher *zmq.Socket, subscr
 	wg.Wait()
 	// dbMutex.RUnlock()
 	// dbMutex.RLock()
-	// print_all_facts(*db)
+	// repr.Println(*db, repr.Indent("  "), repr.OmitEmpty(true))
+	// print_all_facts(dbValue)
 	// dbMutex.RUnlock()
 	// fmt.Println("done")
 }
@@ -164,11 +176,11 @@ func parser_worker(unparsed_messages <-chan string, claims chan<- []Term, parser
 
 func claim_worker(claims <-chan []Term, subscriptions_notifications chan<- bool, db *map[string]Fact) {
 	for fact_terms := range claims {
-		fmt.Printf("SHOULD CLAIM: %v\n", claim)
+		// fmt.Printf("SHOULD CLAIM: %v\n", claim)
 		dbMutex.Lock()
 		claim(db, Fact{fact_terms})
 		dbMutex.Unlock()
-		fmt.Println("claim done")
+		// fmt.Println("claim done")
 		subscriptions_notifications <- true // update_all_subscriptions(db, publisher, subscriptions)
 	}
 }
@@ -264,7 +276,7 @@ func main() {
 			fmt.Println("GOT PING!!!!!!!!!!!!!!!")
 			fmt.Println(source)
 			fmt.Println(val)
-			send_results(publisher, source, val, make([][]string, 0))
+			send_results(publisher, source, val, "")
 		} else if event_type == "....CLAIM" {
 			unparsed_messages <- msg
 			// start := time.Now()
