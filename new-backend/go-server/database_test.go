@@ -13,11 +13,13 @@ func init_fact_map() map[string]Fact {
 	fact2 := Fact{[]Term{Term{"source", "1"}, Term{"text", "Snake"}, Term{"text", "is"}, Term{"text", "red"}}}
 	fact3 := Fact{[]Term{Term{"source", "2"}, Term{"text", "Bird"}, Term{"integer", "3"}, Term{"text", "toes"}}}
 	fact4 := Fact{[]Term{Term{"source", "2"}, Term{"text", "subscription"}, Term{"variable", "X"}, Term{"text", "is"}, Term{"postfix", "Y"}}}
+	fact5 := Fact{[]Term{Term{"source", "0001"}, Term{"text", "man"}, Term{"integer", "1"}, Term{"text", "has"}, Term{"integer", "95"}, Term{"text", "toes"}}}
 	factMap[fact_to_string(fact0)] = fact0
 	factMap[fact_to_string(fact1)] = fact1
 	factMap[fact_to_string(fact2)] = fact2
 	factMap[fact_to_string(fact3)] = fact3
 	factMap[fact_to_string(fact4)] = fact4
+	factMap[fact_to_string(fact5)] = fact5
 	return factMap
 }
 
@@ -76,6 +78,14 @@ func TestQueryPostfixWithNamesAndSpecialTypes(t *testing.T) {
 	query7[0] = Fact{[]Term{Term{"variable", ""}, Term{"text", "subscription"}, Term{"postfix", "X"}}}
 	results7 := select_facts(factMap, query7)
 	repr.Println(results7, repr.Indent("  "), repr.OmitEmpty(true))
+}
+
+func TestQueryVariablesAndWildcards(t *testing.T) {
+	factMap := init_fact_map()
+	query2 := make([]Fact, 1)
+	query2[0] = Fact{[]Term{Term{"variable", ""}, Term{"variable", "X"}, Term{"integer", "1"}, Term{"text", "has"}, Term{"variable", "Y"}, Term{"text", "toes"}}}
+	results2 := select_facts(factMap, query2)
+	repr.Println(results2, repr.Indent("  "), repr.OmitEmpty(true))
 }
 
 func TestRetractExactMatch(t *testing.T) {
