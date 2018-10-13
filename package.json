@@ -36,6 +36,8 @@
     "please-upgrade-node": "^3.1.1",
     "prettier-standard": "^8.0.1",
     "request": "^2.88.0",
-    "serve-handler": "^3.3.0"
+    "serve-handler": "^3.3.0",
+    "uuid": "^3.3.2",
+    "zeromq": "^5.0.0"
   }
 }
