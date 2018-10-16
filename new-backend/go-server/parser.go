@@ -26,19 +26,21 @@ type Wildcard struct {
 
 type Number struct {
 	Number float64 `@Float`
+	// NegativeNumber float64 `"-"@Float`
 }
 
 type Integer struct {
 	Integer int `@Int`
+	// NegativeInteger int `"-"@Int`
 }
 
 type FactTerm struct {
 	Postfix  *Postfix  `@@ |`
 	Wildcard *Wildcard `@@ |`
 	Id       string    `"#"(@Ident|@Int) |`
-	String   string    `@String |`
 	Integer  *Integer  `@@ |`
 	Number   *Number   `@@ |`
+	String   string    `@String |`
 	Value    string    `@Ident`
 }
 
@@ -71,7 +73,14 @@ func parse_fact_string(parser *participle.Parser, fact_string string) []Term {
 			fact_terms = append(fact_terms, Term{"id", fact_term.Id})
 		}
 		if fact_term.Integer != nil {
-			fact_terms = append(fact_terms, Term{"integer", fmt.Sprintf("%v", (*fact_term.Integer).Integer)})
+			var val int
+			// if (*fact_term.Integer).NegativeInteger < 0 {
+			// 	val = (*fact_term.Integer).NegativeInteger
+			// } else {
+			// 	val = (*fact_term.Integer).Integer
+			// }
+			val = (*fact_term.Integer).Integer
+			fact_terms = append(fact_terms, Term{"integer", fmt.Sprintf("%v", val)})
 		}
 		if fact_term.Number != nil {
 			fact_terms = append(fact_terms, Term{"float", fmt.Sprintf("%f", (*fact_term.Number).Number)})

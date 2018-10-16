@@ -8,7 +8,7 @@ import (
 
 func TestParse(t *testing.T) {
 	parser, _ := make_parser()
-	terms := parse_fact_string(parser, "#P5 #0 \"This \\\"is\\\" a test\" one \"two\" 0.5 2 1. .99999 1.23e8 $ $X % %Z")
+	terms := parse_fact_string(parser, "#P5 #0 \"This \\\"is\\\" a test\" one \"two\" 0.5 2 -2 1. -1.0 .99999 1.23e8 $ $X % %Z")
 	repr.Println(terms, repr.Indent("  "), repr.OmitEmpty(true))
 	expected_terms := []Term{
 		Term{"id", "P5"},
@@ -18,7 +18,9 @@ func TestParse(t *testing.T) {
 		Term{"text", "two"},
 		Term{"float", "0.500000"},
 		Term{"integer", "2"},
+		Term{"integer", "-2"},
 		Term{"float", "1.000000"},
+		Term{"float", "-1.000000"},
 		Term{"float", "0.999990"},
 		Term{"float", "123000000.000000"},
 		Term{"variable", ""},
