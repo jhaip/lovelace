@@ -45,20 +45,38 @@ type Subscriptions struct {
 	Subscriptions []Subscription
 }
 
+type Notification struct {
+	Source string
+	Id     string
+	Result string
+}
+
 func checkErr(err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func send_results(publisher *zmq.Socket, source string, id string, result string) {
+func notification_worker(notifications <-chan Notification) {
 	// start := time.Now()
-	msg := fmt.Sprintf("%s%s%s", source, id, string(result))
-	// fmt.Println("Sending ", msg)
-	zmqMutex.Lock()
-	publisher.Send(msg, zmq.DONTWAIT)
-	// fmt.Println(msg)
-	zmqMutex.Unlock()
+	publisher, _ := zmq.NewSocket(zmq.PUB)
+	defer publisher.Close()
+	publisher.Bind("tcp://*:5555")
+
+	cache := make(map[string]string)
+
+	for notification := range notifications {
+		msg := fmt.Sprintf("%s%s%s", notification.Source, notification.Id, notification.Result)
+		cache_key := fmt.Sprintf("%s%s", notification.Source, notification.Id)
+		cache_value, cache_hit := cache[cache_key]
+		if cache_hit == false || cache_value != msg {
+			fmt.Printf("SENDING: \"%s\"\n", msg)
+			publisher.Send(msg, zmq.DONTWAIT)
+			cache[cache_key] = msg
+		} else {
+			fmt.Printf("SKIPPING BECAUSE DuPLICATE VALUE \"%s\"\n", cache_key)
+		}
+	}
 	// timeToSendResults := time.Since(start)
 	// fmt.Printf("time to send results: %s \n", timeToSendResults)
 }
@@ -81,7 +99,7 @@ func marshal_query_result(query_results []QueryResult) string {
 	return string(marshalled_results)
 }
 
-func single_subscriber_update(db map[string]Fact, publisher *zmq.Socket, subscription Subscription, wg *sync.WaitGroup, i int) {
+func single_subscriber_update(db map[string]Fact, notifications chan<- Notification, subscription Subscription, wg *sync.WaitGroup, i int) {
 	start := time.Now()
 	// fmt.Println("pre SELECTING %v", subscription.Query)
 	query := make([]Fact, len(subscription.Query))
@@ -96,13 +114,13 @@ func single_subscriber_update(db map[string]Fact, publisher *zmq.Socket, subscri
 	selectDuration := time.Since(start)
 	results_as_str := marshal_query_result(results)
 	// fmt.Println("DONE SELECTING")
-	send_results(publisher, subscription.Source, subscription.Id, results_as_str)
+	notifications <- Notification{subscription.Source, subscription.Id, results_as_str}
 	wg.Done()
 	duration := time.Since(start)
 	fmt.Printf("SINGLE SUBSCRIBER DONE %v, select %v, send %v, total %s\n", i, selectDuration, duration-selectDuration, duration)
 }
 
-func update_all_subscriptions(db *map[string]Fact, publisher *zmq.Socket, subscriptions Subscriptions) {
+func update_all_subscriptions(db *map[string]Fact, notifications chan<- Notification, subscriptions Subscriptions) {
 	dbMutex.RLock()
 	dbValue := make(map[string]Fact)
 	for k, fact := range *db {
@@ -118,7 +136,7 @@ func update_all_subscriptions(db *map[string]Fact, publisher *zmq.Socket, subscr
 	// TODO: there may be a race condition if the contents of subscriptions changes when running this func.
 	// How about just passing in a copy of the subscriptions
 	for i, subscription := range subscriptions.Subscriptions {
-		go single_subscriber_update(dbValue, publisher, subscription, &wg, i)
+		go single_subscriber_update(dbValue, notifications, subscription, &wg, i)
 	}
 
 	// fmt.Println("WAITING FOR ALL THINGS TO END")
@@ -131,7 +149,7 @@ func update_all_subscriptions(db *map[string]Fact, publisher *zmq.Socket, subscr
 	// fmt.Println("done")
 }
 
-func subscribe_worker(subscription_messages <-chan string, claims chan<- []Term, subscriptions_notifications chan<- bool, parser *participle.Parser, publisher *zmq.Socket, subscriptions *Subscriptions) {
+func subscribe_worker(subscription_messages <-chan string, claims chan<- []Term, subscriptions_notifications chan<- bool, parser *participle.Parser, subscriptions *Subscriptions) {
 	event_type_len := 9
 	source_len := 4
 	for msg := range subscription_messages {
@@ -153,7 +171,7 @@ func subscribe_worker(subscription_messages <-chan string, claims chan<- []Term,
 				query = append(query, fact)
 			}
 			(*subscriptions).Subscriptions = append((*subscriptions).Subscriptions, Subscription{source, subscription_data.Id, query})
-			subscriptions_notifications <- true // update_all_subscriptions(db, publisher, subscriptions)
+			subscriptions_notifications <- true
 		}
 	}
 }
@@ -181,17 +199,17 @@ func claim_worker(claims <-chan []Term, subscriptions_notifications chan<- bool,
 		claim(db, Fact{fact_terms})
 		dbMutex.Unlock()
 		// fmt.Println("claim done")
-		subscriptions_notifications <- true // update_all_subscriptions(db, publisher, subscriptions)
+		subscriptions_notifications <- true
 	}
 }
 
-func notify_subscribers_worker(notify_subscribers <-chan bool, subscriber_worker_finished chan<- bool, db *map[string]Fact, publisher *zmq.Socket, subscriptions *Subscriptions) {
+func notify_subscribers_worker(notify_subscribers <-chan bool, subscriber_worker_finished chan<- bool, db *map[string]Fact, notifications chan<- Notification, subscriptions *Subscriptions) {
 	// TODO: passing in subscriptions is probably not safe because it can be written in the other goroutine
 	// db_copy := *db
 	for range notify_subscribers {
 		fmt.Println("inside notify_subscribers_worker loop")
 		start := time.Now()
-		update_all_subscriptions(db, publisher, *subscriptions)
+		update_all_subscriptions(db, notifications, *subscriptions)
 		updateSubscribersTime := time.Since(start)
 		fmt.Printf("update all subscribers time: %s \n", updateSubscribersTime)
 		subscriber_worker_finished <- true
@@ -236,9 +254,6 @@ func main() {
 	subscriptions := Subscriptions{}
 
 	// fmt.Println("Connecting to hello world server...")
-	publisher, _ := zmq.NewSocket(zmq.PUB)
-	defer publisher.Close()
-	publisher.Bind("tcp://*:5555")
 	subscriber, _ := zmq.NewSocket(zmq.SUB)
 	defer subscriber.Close()
 	subscriber.Bind("tcp://*:5556")
@@ -257,17 +272,17 @@ func main() {
 	subscriptions_notifications := make(chan bool, 100)
 	subscriber_worker_finished := make(chan bool, 99)
 	notify_subscribers := make(chan bool, 99)
+	notifications := make(chan Notification, 1000)
 
 	go parser_worker(unparsed_messages, claims, parser)
-	go subscribe_worker(subscription_messages, claims, subscriptions_notifications, parser, publisher, &subscriptions)
+	go subscribe_worker(subscription_messages, claims, subscriptions_notifications, parser, &subscriptions)
 	go claim_worker(claims, subscriptions_notifications, &factDatabase)
-	go notify_subscribers_worker(notify_subscribers, subscriber_worker_finished, &factDatabase, publisher, &subscriptions)
+	go notify_subscribers_worker(notify_subscribers, subscriber_worker_finished, &factDatabase, notifications, &subscriptions)
 	go debounce_subscriber_worker(subscriptions_notifications, subscriber_worker_finished, notify_subscribers)
+	go notification_worker(notifications)
 
 	for {
-		// zmqMutex.Lock()
 		msg, _ := subscriber.Recv(0)
-		// zmqMutex.Unlock()
 		// fmt.Printf("%s\n", msg)
 		event_type := msg[0:event_type_len]
 		source := msg[event_type_len:(event_type_len + source_len)]
@@ -276,7 +291,7 @@ func main() {
 			fmt.Println("GOT PING!!!!!!!!!!!!!!!")
 			fmt.Println(source)
 			fmt.Println(val)
-			send_results(publisher, source, val, "")
+			notifications <- Notification{source, val, ""}
 		} else if event_type == "....CLAIM" {
 			unparsed_messages <- msg
 			// start := time.Now()
