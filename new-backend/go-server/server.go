@@ -57,11 +57,12 @@ func checkErr(err error) {
 	}
 }
 
-func notification_worker(notifications <-chan Notification) {
+func notification_worker(notifications <-chan Notification, retractions chan<- []Term) {
 	// start := time.Now()
 	publisher, _ := zmq.NewSocket(zmq.PUB)
 	defer publisher.Close()
 	publisher.Bind("tcp://*:5555")
+	NO_RESULTS_MESSAGE := "[]"
 
 	cache := make(map[string]string)
 
@@ -70,11 +71,20 @@ func notification_worker(notifications <-chan Notification) {
 		cache_key := fmt.Sprintf("%s%s", notification.Source, notification.Id)
 		cache_value, cache_hit := cache[cache_key]
 		if cache_hit == false || cache_value != msg {
-			fmt.Printf("SENDING: \"%s\"\n", msg)
-			publisher.Send(msg, zmq.DONTWAIT)
+			fmt.Printf("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& setting cache: %v = %v\n", cache_key, msg)
 			cache[cache_key] = msg
+
+			// Clear all claims by source + subscription ID
+			if cache_hit == true && cache_value[len(cache_value)-2:] != NO_RESULTS_MESSAGE {
+				// Clear all claims by source + subscription ID
+				retractions <- []Term{Term{"source", notification.Source}, Term{"postfix", ""}}
+			}
+			if notification.Result != NO_RESULTS_MESSAGE {
+				fmt.Printf("SENDING: \"%s\"\n", msg)
+				publisher.Send(msg, zmq.DONTWAIT)
+			}
 		} else {
-			fmt.Printf("SKIPPING BECAUSE DuPLICATE VALUE \"%s\"\n", cache_key)
+			fmt.Printf("SKIPPING BECAUSE DuPLICATE VALUE %v %v %v\n", cache_hit, cache_value, msg)
 		}
 	}
 	// timeToSendResults := time.Since(start)
@@ -110,11 +120,13 @@ func single_subscriber_update(db map[string]Fact, notifications chan<- Notificat
 	// repr.Println(query, repr.Indent("  "), repr.OmitEmpty(true))
 	// dbMutex.RLock()
 	results := select_facts(db, query)
+	fmt.Printf("GOT %v RESULTS", len(results))
 	// dbMutex.RUnlock()
 	selectDuration := time.Since(start)
 	results_as_str := marshal_query_result(results)
 	// fmt.Println("DONE SELECTING")
 	notifications <- Notification{subscription.Source, subscription.Id, results_as_str}
+	// print_all_facts(db)
 	wg.Done()
 	duration := time.Since(start)
 	fmt.Printf("SINGLE SUBSCRIBER DONE %v, select %v, send %v, total %s\n", i, selectDuration, duration-selectDuration, duration)
@@ -164,7 +176,7 @@ func subscribe_worker(subscription_messages <-chan string, claims chan<- []Term,
 			for i, fact_string := range subscription_data.Facts {
 				subscription_fact_msg := fmt.Sprintf("subscription \"%s\" %v %s", subscription_data.Id, i, fact_string)
 				subscription_fact := parse_fact_string(parser, subscription_fact_msg)
-				subscription_fact = append([]Term{Term{"source", source}}, subscription_fact...)
+				subscription_fact = append([]Term{Term{"text", "subscription"}, Term{"source", source}}, subscription_fact...)
 				fmt.Printf("SUB FACTS %v\n", subscription_fact)
 				claims <- subscription_fact
 				fact := parse_fact_string(parser, fact_string)
@@ -176,7 +188,7 @@ func subscribe_worker(subscription_messages <-chan string, claims chan<- []Term,
 	}
 }
 
-func parser_worker(unparsed_messages <-chan string, claims chan<- []Term, parser *participle.Parser) {
+func parser_worker(unparsed_messages <-chan string, claims chan<- []Term, retractions chan<- []Term, parser *participle.Parser) {
 	event_type_len := 9
 	source_len := 4
 	for msg := range unparsed_messages {
@@ -188,6 +200,10 @@ func parser_worker(unparsed_messages <-chan string, claims chan<- []Term, parser
 			fact := parse_fact_string(parser, val)
 			fact = append([]Term{Term{"source", source}}, fact...)
 			claims <- fact
+		} else if event_type == "..RETRACT" {
+			fmt.Println("GOT RETRACT xxxxxxxxx")
+			fact := parse_fact_string(parser, val)
+			retractions <- fact
 		}
 	}
 }
@@ -196,9 +212,25 @@ func claim_worker(claims <-chan []Term, subscriptions_notifications chan<- bool,
 	for fact_terms := range claims {
 		// fmt.Printf("SHOULD CLAIM: %v\n", claim)
 		dbMutex.Lock()
+		fmt.Println("CLAIMED NEW FACT:")
+		fmt.Println(fact_terms)
 		claim(db, Fact{fact_terms})
 		dbMutex.Unlock()
 		// fmt.Println("claim done")
+		subscriptions_notifications <- true
+	}
+}
+
+func retract_worker(retractions <-chan []Term, subscriptions_notifications chan<- bool, db *map[string]Fact) {
+	for fact_terms := range retractions {
+		dbMutex.Lock()
+		fmt.Println("RETRACTING!!!")
+		fmt.Println(fact_terms)
+		fmt.Println(len(*db))
+		retract(db, Fact{fact_terms})
+		fmt.Println(len(*db))
+		print_all_facts(*db)
+		dbMutex.Unlock()
 		subscriptions_notifications <- true
 	}
 }
@@ -269,17 +301,19 @@ func main() {
 	unparsed_messages := make(chan string, 100)
 	subscription_messages := make(chan string, 100)
 	claims := make(chan []Term, 100)
+	retractions := make(chan []Term, 100)
 	subscriptions_notifications := make(chan bool, 100)
 	subscriber_worker_finished := make(chan bool, 99)
 	notify_subscribers := make(chan bool, 99)
 	notifications := make(chan Notification, 1000)
 
-	go parser_worker(unparsed_messages, claims, parser)
+	go parser_worker(unparsed_messages, claims, retractions, parser)
 	go subscribe_worker(subscription_messages, claims, subscriptions_notifications, parser, &subscriptions)
 	go claim_worker(claims, subscriptions_notifications, &factDatabase)
+	go retract_worker(retractions, subscriptions_notifications, &factDatabase)
 	go notify_subscribers_worker(notify_subscribers, subscriber_worker_finished, &factDatabase, notifications, &subscriptions)
 	go debounce_subscriber_worker(subscriptions_notifications, subscriber_worker_finished, notify_subscribers)
-	go notification_worker(notifications)
+	go notification_worker(notifications, retractions)
 
 	for {
 		msg, _ := subscriber.Recv(0)
@@ -298,8 +332,9 @@ func main() {
 			// claim(db, parser, publisher, &subscriptions, val, source)
 			// timeProcessing := time.Since(start)
 			// fmt.Printf("processing: %s \n", timeProcessing)
-			// } else if event_type == "..RETRACT" {
-			//     retract(val)
+		} else if event_type == "..RETRACT" {
+			fmt.Println("GOT RETRACT preee xxxxxxxxx")
+			unparsed_messages <- msg
 			// } else if event_type == "...SELECT" {
 			//     json_val = json.loads(val)
 			//     select(json_val["facts"], json_val["id"], source)
