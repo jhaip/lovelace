@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/alecthomas/repr"
@@ -35,8 +36,16 @@ func TestQueryNoMatches(t *testing.T) {
 	factMap := init_fact_map()
 	query2 := make([]Fact, 1)
 	query2[0] = Fact{[]Term{Term{"source", "100"}, Term{"variable", "X"}, Term{"variable", "Y"}, Term{"text", "toes"}}}
-	results2 := select_facts(factMap, query2)
-	repr.Println(results2, repr.Indent("  "), repr.OmitEmpty(true))
+	results := select_facts(factMap, query2)
+	repr.Println(results, repr.Indent("  "), repr.OmitEmpty(true))
+	if len(results) != 0 {
+		t.Error("results should be empty slice")
+	}
+	results_as_str := marshal_query_result(results)
+	fmt.Println(results_as_str)
+	if results_as_str != "" {
+		t.Error("results should be \"\" as string")
+	}
 }
 
 func TestQueryExactMatch(t *testing.T) {
@@ -45,6 +54,14 @@ func TestQueryExactMatch(t *testing.T) {
 	query3[0] = Fact{[]Term{Term{"source", "1"}, Term{"text", "Man"}, Term{"integer", "5"}, Term{"text", "toes"}}}
 	results3 := select_facts(factMap, query3)
 	repr.Println(results3, repr.Indent("  "), repr.OmitEmpty(true))
+	if len(results3) != 1 {
+		t.Error("results should be empty slice")
+	}
+	if len(results3[0].Result) != 0 {
+		t.Error("result should be an empty map")
+	}
+	results_as_str := marshal_query_result(results3)
+	fmt.Println(results_as_str)
 }
 
 func TestQueryMultiplePartQuery(t *testing.T) {
