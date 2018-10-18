@@ -22,6 +22,9 @@ server_listening = False
 select_ids = {}
 subscription_ids = {}
 
+py_subscriptions = []
+py_prehook = None
+
 def claim(fact_string):
     pub_socket.send_string("....CLAIM{}{}".format(MY_ID_STR, fact_string), zmq.NOBLOCK)
 
@@ -79,8 +82,8 @@ def listen():
     # logging.info("loop")
     # time.sleep(0.01)
 
-def init(my_id, prehook=None, selects=[], subscriptions=[]):
-    global MY_ID, MY_ID_STR
+def init(my_id):
+    global MY_ID, MY_ID_STR, py_subscriptions, py_prehook
     MY_ID = my_id
     MY_ID_STR = str(MY_ID).zfill(4)
     sub_socket.setsockopt_string(zmq.SUBSCRIBE, MY_ID_STR)
@@ -91,15 +94,33 @@ def init(my_id, prehook=None, selects=[], subscriptions=[]):
     end = time.time()
     print("INIT TIME: {} ms".format((end - start)*1000.0))
     # time.sleep(0.2)
-    if prehook:
-        prehook()
-    for s in selects:
-        query = s[0]
-        callback = s[1]
-        select(query, callback)
-    for s in subscriptions:
+    if py_prehook:
+        py_prehook()
+    # for s in selects:
+    #     query = s[0]
+    #     callback = s[1]
+    #     select(query, callback)
+    for s in py_subscriptions:
         query = s[0]
         callback = s[1]
         subscribe(query, callback)
     while True:
         listen()
+
+
+def prehook(func):
+    global py_prehook
+    py_prehook = func
+    def function_wrapper(x):
+        func(x)
+    return function_wrapper
+
+
+def subscription(expr):
+    def subscription_decorator(func):
+        global py_subscriptions
+        py_subscriptions.append((expr, func))
+        def function_wrapper(x):    
+            func(x)
+        return function_wrapper
+    return subscription_decorator

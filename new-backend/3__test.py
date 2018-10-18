@@ -1,4 +1,4 @@
-from client_helper import init, claim, retract
+from client_helper import init, claim, retract, prehook, subscription
 import sys
 import time
 from threading import Timer
@@ -18,19 +18,16 @@ def test_calls():
     claim("Fox is out")
     time.sleep(1.0)
 
-def prehook():
+@prehook
+def my_prehook():
     claim("Fox is out")
     t = Timer(1.0, test_calls)
     t.start()
 
 
+@subscription(["$X Fox is out"])
 def sub_callback(results):
     print("sub CALLBACK!")
     print(results)
 
-
-subscriptions = [
-    (["$X Fox is out"], sub_callback)
-]
-
-init(MY_ID, prehook, [], subscriptions)
+init(MY_ID)
