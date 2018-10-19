@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 
 	"github.com/alecthomas/participle"
@@ -276,6 +277,21 @@ func debounce_subscriber_worker(subscriptions_notifications <-chan bool, subscri
 	}()
 }
 
+func debug_database_observer(db *map[string]Fact) {
+	for {
+		dbMutex.RLock()
+		dbAsSstring := []byte("\033[H\033[2J") // clear terminal output on MacOS
+		for fact_string, _ := range *db {
+			dbAsSstring = append(dbAsSstring, []byte(fact_string)...)
+			dbAsSstring = append(dbAsSstring, '\n')
+		}
+		dbMutex.RUnlock()
+		err := ioutil.WriteFile("./db_view.txt", dbAsSstring, 0644)
+		checkErr(err)
+		time.Sleep(1.0 * time.Second)
+	}
+}
+
 func main() {
 	// defer profile.Start().Stop()
 	parser, err := make_parser()
@@ -314,6 +330,7 @@ func main() {
 	go notify_subscribers_worker(notify_subscribers, subscriber_worker_finished, &factDatabase, notifications, &subscriptions)
 	go debounce_subscriber_worker(subscriptions_notifications, subscriber_worker_finished, notify_subscribers)
 	go notification_worker(notifications, retractions)
+	go debug_database_observer(&factDatabase)
 
 	for {
 		msg, _ := subscriber.Recv(0)
