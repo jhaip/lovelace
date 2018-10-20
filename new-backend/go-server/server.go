@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"sort"
 
 	"github.com/alecthomas/participle"
 	_ "github.com/mattn/go-sqlite3"
@@ -281,7 +282,12 @@ func debug_database_observer(db *map[string]Fact) {
 	for {
 		dbMutex.RLock()
 		dbAsSstring := []byte("\033[H\033[2J") // clear terminal output on MacOS
-		for fact_string, _ := range *db {
+		var keys []string
+		for k := range *db {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, fact_string := range keys {
 			dbAsSstring = append(dbAsSstring, []byte(fact_string)...)
 			dbAsSstring = append(dbAsSstring, '\n')
 		}
