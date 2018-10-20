@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	// "time"
 )
 
@@ -115,7 +116,13 @@ func collect_solutions(facts map[string]Fact, query []Fact, env QueryResult) []Q
 	}
 	first_query_fact := query[0]
 	solutions := make([]QueryResult, 0)
-	for _, fact := range facts {
+	var keys []string
+	for k := range facts {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		fact := facts[k]
 		did_match, new_env := fact_match(first_query_fact, fact, env)
 		if did_match {
 			solutions = append(solutions, collect_solutions(facts, query[1:], new_env)...)
