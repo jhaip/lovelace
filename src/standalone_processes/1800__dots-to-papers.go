@@ -1,22 +1,24 @@
 package main
 
 import (
-  zmq "github.com/pebbe/zmq4"
-  "os"
-  "log"
-  "time"
-  "encoding/json"
-  "fmt"
-  "math"
-  "strings"
-  "strconv"
-  "image/color"
-  "github.com/mattn/go-ciede2000"
-  "github.com/kokardy/listing"
+	"encoding/json"
+	"fmt"
+	"image/color"
+	"log"
+	"math"
+	"os"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/kokardy/listing"
+	"github.com/mattn/go-ciede2000"
+	zmq "github.com/pebbe/zmq4"
 )
 
-// const BASE_PATH = "/Users/jhaip/Code/lovelace/src/standalone_processes/"
-const BASE_PATH = "/home/jacob/lovelace/src/standalone_processes/"
+const BASE_PATH = "/Users/jhaip/Code/lovelace/src/standalone_processes/"
+
+// const BASE_PATH = "/home/jacob/lovelace/src/standalone_processes/"
 const LOG_PATH = BASE_PATH + "logs/1800__dots-to-papers.log"
 
 type Vec struct {
@@ -32,30 +34,30 @@ type Dot struct {
 }
 
 type Corner struct {
-	Corner Dot         `json:"corner"`
-  lines  [][]int     `json:"-"`
-	sides  [][]int     `json:"-"`
-	PaperId     int    `json:"paperId"`
-  CornerId     int   `json:"cornerId"`
-  ColorString string `json:"colorString"`
-  RawColorsList [][3]int `json:"rawColorsList"`
+	Corner        Dot      `json:"corner"`
+	lines         [][]int  `json:"-"`
+	sides         [][]int  `json:"-"`
+	PaperId       int      `json:"paperId"`
+	CornerId      int      `json:"cornerId"`
+	ColorString   string   `json:"colorString"`
+	RawColorsList [][3]int `json:"rawColorsList"`
 }
 
 type PaperCorner struct {
-  X int `json:"x"`
-	Y int `json:"y"`
-  CornerId     int
+	X        int `json:"x"`
+	Y        int `json:"y"`
+	CornerId int
 }
 
 type Paper struct {
-  Id        string        `json:"id"`
-  Corners   []PaperCorner `json:"corners"`
+	Id      string        `json:"id"`
+	Corners []PaperCorner `json:"corners"`
 }
 
 type P struct {
-  G [][]int
-  U []int
-  score float64
+	G     [][]int
+	U     []int
+	score float64
 }
 
 const CAM_WIDTH = 1920
@@ -63,119 +65,128 @@ const CAM_HEIGHT = 1080
 const dotSize = 12
 
 func main() {
-  /*** Set up logging ***/
-  f, err := os.OpenFile(LOG_PATH, os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
-  if err != nil {
-      log.Fatalf("error opening file: %v", err)
-  }
-  defer f.Close()
+	/*** Set up logging ***/
+	f, err := os.OpenFile(LOG_PATH, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+	defer f.Close()
 
-  log.SetOutput(f)
-  // log.Println("This is a test log entry")
-  /*** /end logging setup ***/
+	log.SetOutput(f)
+	// log.Println("This is a test log entry")
+	/*** /end logging setup ***/
 
-  log.Println("Connecting to hello world server...")
-  publisher, _ := zmq.NewSocket(zmq.PUB)
-  defer publisher.Close()
-  // publisher.SetSndhwm(1)
-  publisher.Connect("tcp://localhost:5555")
-  subscriber, _ := zmq.NewSocket(zmq.SUB)
-  defer subscriber.Close()
-  // subscriber.SetRcvhwm(1)  // subscription queue has only room for 1 message: latest dots
-  // Is this ^ actually working?
-  filter := "CLAIM[global/dots]"
-  subscriber.SetSubscribe(filter)
-  subscriber.Connect("tcp://localhost:5556")
-  count := 0
+	MY_ID := 1800
+	MY_ID_STR := fmt.Sprintf("%04d", MY_ID)
 
-  for {
-    start := time.Now()
+	log.Println("Connecting to hello world server...")
+	publisher, _ := zmq.NewSocket(zmq.PUB)
+	defer publisher.Close()
+	// publisher.SetSndhwm(1)
+	publisher.Connect("tcp://localhost:5556")
+	subscriber, _ := zmq.NewSocket(zmq.SUB)
+	defer subscriber.Close()
+	// subscriber.SetRcvhwm(1)  // subscription queue has only room for 1 message: latest dots
+	// Is this ^ actually working?
+	subscriber.SetSubscribe(MY_ID_STR)
+	subscriber.Connect("tcp://localhost:5555")
+	time.Sleep(1.0 * time.Second) // HACK: Wait for subscribers to connect
+	count := 0
 
-  	points := getDots(subscriber, start)  // getPoints()
+	dot_sub_id := "f47ac10b-58cc-0372-8567-0e02b2c3d479"
+	dot_sub_query := map[string]interface{}{"id": dot_sub_id, "facts": []string{"$source dots $x $y color $r $g $b"}}
+	dot_sub_query_msg, _ := json.Marshal(dot_sub_query)
+	dot_sub_msg := fmt.Sprintf("SUBSCRIBE%s%s", MY_ID_STR, dot_sub_query_msg)
+	publisher.Send(dot_sub_msg, 0)
 
-    timeGotDots := time.Since(start)
-  	// printDots(points)
-  	step1 := doStep1(points)
-  	// printDots(step1)
+	for {
+		start := time.Now()
 
-  	step2 := doStep2(step1)
-  	// printCorners(step2[:5])
-    // printJsonDots(step1)
-    // claimCorners(step2)
-  	step3 := doStep3(step1, step2)
-  	// printCorners(step3)
-  	step4 := doStep4CornersWithIds(step1, step3)
-    // claimCorners(publisher, step4)
-  	// printCorners(step4)
-    papers := getPapersFromCorners(step4)
-    log.Println(papers)
+		points := getDots(subscriber, MY_ID_STR, dot_sub_id, start) // getPoints()
 
-    timeProcessing := time.Since(start)
-    claimPapers(publisher, papers)
+		timeGotDots := time.Since(start)
+		// printDots(points)
+		step1 := doStep1(points)
+		// printDots(step1)
 
-    count += 1
-    // claimCounter(publisher, count)
+		step2 := doStep2(step1)
+		// printCorners(step2[:5])
+		// printJsonDots(step1)
+		// claimCorners(step2)
+		step3 := doStep3(step1, step2)
+		// printCorners(step3)
+		step4 := doStep4CornersWithIds(step1, step3)
+		// claimCorners(publisher, step4)
+		// printCorners(step4)
+		papers := getPapersFromCorners(step4)
+		log.Println(papers)
 
-    elapsed := time.Since(start)
-    log.Printf("get dots  : %s \n", timeGotDots)
-    log.Printf("processing: %s \n", timeProcessing)
-    log.Printf("total     : %s \n", elapsed)
+		timeProcessing := time.Since(start)
+		claimPapers(publisher, MY_ID_STR, papers)
 
-    // time.Sleep(10 * time.Millisecond)
-  }
+		count += 1
+		// claimCounter(publisher, count)
+
+		elapsed := time.Since(start)
+		log.Printf("get dots  : %s \n", timeGotDots)
+		log.Printf("processing: %s \n", timeProcessing)
+		log.Printf("total     : %s \n", elapsed)
+
+		// time.Sleep(10 * time.Millisecond)
+	}
 }
 
 func projectMissingCorner(orderedCorners []PaperCorner, missingCornerId int) PaperCorner {
-  cornerA := orderedCorners[(missingCornerId + 1) % 4]
-  cornerB := orderedCorners[(missingCornerId + 2) % 4]
-  cornerC := orderedCorners[(missingCornerId + 3) % 4]
-  return PaperCorner{
-    CornerId: missingCornerId,
-    X: cornerA.X + cornerC.X - cornerB.X,
-    Y: cornerA.Y + cornerC.Y - cornerB.Y,
-  }
+	cornerA := orderedCorners[(missingCornerId+1)%4]
+	cornerB := orderedCorners[(missingCornerId+2)%4]
+	cornerC := orderedCorners[(missingCornerId+3)%4]
+	return PaperCorner{
+		CornerId: missingCornerId,
+		X:        cornerA.X + cornerC.X - cornerB.X,
+		Y:        cornerA.Y + cornerC.Y - cornerB.Y,
+	}
 }
 
 func getPapersFromCorners(corners []Corner) []Paper {
-  papersMap := make(map[string][]PaperCorner)
-  for _, corner := range corners {
-    cornerIdStr := strconv.Itoa(corner.PaperId)
-    _, idInMap := papersMap[cornerIdStr]
-    cornerDotVec := PaperCorner{corner.Corner.X, corner.Corner.Y, corner.CornerId}
-    if idInMap {
-      papersMap[cornerIdStr] = append(papersMap[cornerIdStr], cornerDotVec)
-    } else {
-      papersMap[cornerIdStr] = []PaperCorner{cornerDotVec}
-    }
-  }
-  // log.Println(papersMap)
-  papers := make([]Paper, 0)
-  for id := range papersMap {
-    if len(papersMap[id]) < 3 {
-      continue
-    }
-    const TOP_LEFT = 0
-    const TOP_RIGHT = 1
-    const BOTTOM_RIGHT = 2
-    const BOTTOM_LEFT = 3
-    orderedCorners := make([]PaperCorner, 4)  // [tl, tr, br, bl]
-    for _, corner := range papersMap[id] {
-      orderedCorners[corner.CornerId] = corner
-    }
-    if len(papersMap[id]) == 3 {
-      // Identify the missing one then use the other three points to guess
-      // where the missing corner would be.
-      NIL_CORNER := PaperCorner{}
-      for i := 0; i < 4; i++ {
-          if orderedCorners[i] == NIL_CORNER {
-            orderedCorners[i] = projectMissingCorner(orderedCorners, i)
-          }
-      }
-      log.Println("FILLED IN A MISSING CORNER", id)
-    }
-    papers = append(papers, Paper{id, orderedCorners})
-  }
-  return papers
+	papersMap := make(map[string][]PaperCorner)
+	for _, corner := range corners {
+		cornerIdStr := strconv.Itoa(corner.PaperId)
+		_, idInMap := papersMap[cornerIdStr]
+		cornerDotVec := PaperCorner{corner.Corner.X, corner.Corner.Y, corner.CornerId}
+		if idInMap {
+			papersMap[cornerIdStr] = append(papersMap[cornerIdStr], cornerDotVec)
+		} else {
+			papersMap[cornerIdStr] = []PaperCorner{cornerDotVec}
+		}
+	}
+	// log.Println(papersMap)
+	papers := make([]Paper, 0)
+	for id := range papersMap {
+		if len(papersMap[id]) < 3 {
+			continue
+		}
+		const TOP_LEFT = 0
+		const TOP_RIGHT = 1
+		const BOTTOM_RIGHT = 2
+		const BOTTOM_LEFT = 3
+		orderedCorners := make([]PaperCorner, 4) // [tl, tr, br, bl]
+		for _, corner := range papersMap[id] {
+			orderedCorners[corner.CornerId] = corner
+		}
+		if len(papersMap[id]) == 3 {
+			// Identify the missing one then use the other three points to guess
+			// where the missing corner would be.
+			NIL_CORNER := PaperCorner{}
+			for i := 0; i < 4; i++ {
+				if orderedCorners[i] == NIL_CORNER {
+					orderedCorners[i] = projectMissingCorner(orderedCorners, i)
+				}
+			}
+			log.Println("FILLED IN A MISSING CORNER", id)
+		}
+		papers = append(papers, Paper{id, orderedCorners})
+	}
+	return papers
 }
 
 func printDots(data []Dot) {
@@ -193,11 +204,11 @@ func printCorners(data []Corner) {
 	}
 	log.Println(strings.Join(s, "\n"))
 
-  cornersAlmostStr, err := json.Marshal(data)
-  log.Println("Err?")
-  log.Println(err)
-  cornersStr := string(cornersAlmostStr)
-  log.Println(cornersStr)
+	cornersAlmostStr, err := json.Marshal(data)
+	log.Println("Err?")
+	log.Println(err)
+	cornersStr := string(cornersAlmostStr)
+	log.Println(cornersStr)
 }
 
 func distanceSquared(p1 Dot, p2 Dot) float64 {
@@ -321,158 +332,158 @@ func indexOf(word string, data []string) int {
 }
 
 func getColorDistance(a, b [3]int) float64 {
-  return math.Abs(float64(a[0]-b[0])) + math.Abs(float64(a[1]-b[1])) + math.Abs(float64(a[2]-b[2]))
-  // using CIEDE2000 color diff is 5x slower than RGB diff (almost 2ms for one corner)
-  // c1 := &color.RGBA{
-  //   uint8(a[0]),
-  //   uint8(a[1]),
-  //   uint8(a[2]),
-  //   255,
-  // }
-  // c2 := &color.RGBA{
-  //   uint8(b[0]),
-  //   uint8(b[1]),
-  //   uint8(b[2]),
-  //   255,
-  // }
-  // return ciede2000.Diff(c1, c2)
+	return math.Abs(float64(a[0]-b[0])) + math.Abs(float64(a[1]-b[1])) + math.Abs(float64(a[2]-b[2]))
+	// using CIEDE2000 color diff is 5x slower than RGB diff (almost 2ms for one corner)
+	// c1 := &color.RGBA{
+	//   uint8(a[0]),
+	//   uint8(a[1]),
+	//   uint8(a[2]),
+	//   255,
+	// }
+	// c2 := &color.RGBA{
+	//   uint8(b[0]),
+	//   uint8(b[1]),
+	//   uint8(b[2]),
+	//   255,
+	// }
+	// return ciede2000.Diff(c1, c2)
 }
 
 func identifyColorGroups(colors [][3]int, group P) string {
-  color_templates := listing.Permutations(
-    listing.IntReplacer([]int{0,1,2,3}), 4, false, 4,
-  )
-  // log.Println(color_templates)
+	color_templates := listing.Permutations(
+		listing.IntReplacer([]int{0, 1, 2, 3}), 4, false, 4,
+	)
+	// log.Println(color_templates)
 
-  calibration := [][3]int{[3]int{255, 0, 0}, [3]int{0, 255, 0}, [3]int{0, 0, 255}, [3]int{0, 0, 0}}
-  // calibration := make([][3]int, 4)
-  // calibration[0] = [3]int{190, 55, 49}  // red
-  // calibration[1] = [3]int{168, 164, 145}  // green
-  // calibration[2] = [3]int{148, 151, 190}  // blue
-  // calibration[3] = [3]int{113, 72, 96}  // dark
+	calibration := [][3]int{[3]int{255, 0, 0}, [3]int{0, 255, 0}, [3]int{0, 0, 255}, [3]int{0, 0, 0}}
+	// calibration := make([][3]int, 4)
+	// calibration[0] = [3]int{190, 55, 49}  // red
+	// calibration[1] = [3]int{168, 164, 145}  // green
+	// calibration[2] = [3]int{148, 151, 190}  // blue
+	// calibration[3] = [3]int{113, 72, 96}  // dark
 
-  minScore := -1.0
-  var bestMatch []int  // index = color, value = index of group in P that matches color
-  for rr := range color_templates {
-    r := rr.(listing.IntReplacer)
-    score := 0.0
-    score += getColorDistance(calibration[0], colors[group.G[r[0]][0]])
-    score += getColorDistance(calibration[1], colors[group.G[r[1]][0]])
-    score += getColorDistance(calibration[2], colors[group.G[r[2]][0]])
-    score += getColorDistance(calibration[3], colors[group.G[r[3]][0]])
-    // log.Println(r, score)
-    if minScore == -1 || score < minScore {
-      minScore = score
-      bestMatch = r
-    }
-  }
+	minScore := -1.0
+	var bestMatch []int // index = color, value = index of group in P that matches color
+	for rr := range color_templates {
+		r := rr.(listing.IntReplacer)
+		score := 0.0
+		score += getColorDistance(calibration[0], colors[group.G[r[0]][0]])
+		score += getColorDistance(calibration[1], colors[group.G[r[1]][0]])
+		score += getColorDistance(calibration[2], colors[group.G[r[2]][0]])
+		score += getColorDistance(calibration[3], colors[group.G[r[3]][0]])
+		// log.Println(r, score)
+		if minScore == -1 || score < minScore {
+			minScore = score
+			bestMatch = r
+		}
+	}
 
-  // log.Println("best match", bestMatch)
+	// log.Println("best match", bestMatch)
 
-  result := make([]string, 7)
-  for i, g := range bestMatch {
-    for _, k := range group.G[g] {
-      result[k] = strconv.Itoa(i)
-    }
-  }
-  // log.Println("Result", result)  // Something like "1222203"
+	result := make([]string, 7)
+	for i, g := range bestMatch {
+		for _, k := range group.G[g] {
+			result[k] = strconv.Itoa(i)
+		}
+	}
+	// log.Println("Result", result)  // Something like "1222203"
 
-  return strings.Join(result, "")
+	return strings.Join(result, "")
 }
 
 func getGetPaperIdFromColors2(colors [][3]int) (int, int, string) {
-  // color_combinations := combinations_as_list(7, 4)
-  color_combinations := listing.Combinations(
-    listing.IntReplacer([]int{0,1,2,3,4,5,6}), 4, false, 7,
-  )
-  // log.Println(color_combinations)
+	// color_combinations := combinations_as_list(7, 4)
+	color_combinations := listing.Combinations(
+		listing.IntReplacer([]int{0, 1, 2, 3, 4, 5, 6}), 4, false, 7,
+	)
+	// log.Println(color_combinations)
 
-  minScore := -1.0
-  var bestGroup P
-  for rr := range color_combinations {
-    r := rr.(listing.IntReplacer)
-    p := P{G: [][]int{[]int{r[0]}, []int{r[1]}, []int{r[2]}, []int{r[3]} }}
-    // Fill p.U with unused #s
-    for i := 0; i < 7; i += 1 {
-      if r[0] != i && r[1] != i && r[2] != i && r[3] != i {
-        p.U = append(p.U, i)
-      }
-    }
-    // pop of each element in p.U and add to closet colored group
-    for i := 0; i < 3; i += 1 {
-      u_color := colors[p.U[0]]
-      // add element to group closest in color
-      min_i := 0
-      min := getColorDistance(u_color, colors[r[0]])
-      for j := 1; j < 4; j += 1 {
-        d := getColorDistance(u_color, colors[r[j]])
-        if d < min {
-          min = d
-          min_i = j
-        }
-      }
-      p.G[min_i] = append(p.G[min_i], p.U[0])
-      p.U = p.U[1:]
-      p.score += min
-    }
+	minScore := -1.0
+	var bestGroup P
+	for rr := range color_combinations {
+		r := rr.(listing.IntReplacer)
+		p := P{G: [][]int{[]int{r[0]}, []int{r[1]}, []int{r[2]}, []int{r[3]}}}
+		// Fill p.U with unused #s
+		for i := 0; i < 7; i += 1 {
+			if r[0] != i && r[1] != i && r[2] != i && r[3] != i {
+				p.U = append(p.U, i)
+			}
+		}
+		// pop of each element in p.U and add to closet colored group
+		for i := 0; i < 3; i += 1 {
+			u_color := colors[p.U[0]]
+			// add element to group closest in color
+			min_i := 0
+			min := getColorDistance(u_color, colors[r[0]])
+			for j := 1; j < 4; j += 1 {
+				d := getColorDistance(u_color, colors[r[j]])
+				if d < min {
+					min = d
+					min_i = j
+				}
+			}
+			p.G[min_i] = append(p.G[min_i], p.U[0])
+			p.U = p.U[1:]
+			p.score += min
+		}
 
-    // log.Println(p)
+		// log.Println(p)
 
-    // Keep track of the grouping with the lowest score
-    if minScore == -1 || p.score < minScore {
-      minScore = p.score
-      bestGroup = p
-    }
-  }
+		// Keep track of the grouping with the lowest score
+		if minScore == -1 || p.score < minScore {
+			minScore = p.score
+			bestGroup = p
+		}
+	}
 
-  // log.Println("Best group", bestGroup)
-  colorString := identifyColorGroups(colors, bestGroup)
+	// log.Println("Best group", bestGroup)
+	colorString := identifyColorGroups(colors, bestGroup)
 
-  log.Printf("%v \n", colorString)
-  colors8400Index := indexOf(colorString, get8400())
-  if colors8400Index > 0 {
-    paperId := colors8400Index % (8400 / 4)
-    cornerId := colors8400Index / (8400 / 4)
-    return paperId, cornerId, colorString
-  }
+	log.Printf("%v \n", colorString)
+	colors8400Index := indexOf(colorString, get8400())
+	if colors8400Index > 0 {
+		paperId := colors8400Index % (8400 / 4)
+		cornerId := colors8400Index / (8400 / 4)
+		return paperId, cornerId, colorString
+	}
 	return -1, -1, colorString
 }
 
 func getGetPaperIdFromColors(colors [][3]int) (int, int, string) {
 	var colorString string
 
-  calibrationColors := make([][3]int, 4)
-  calibrationColors[0] = [3]int{170, 48, 31}  // red
-  calibrationColors[1] = [3]int{138, 131, 94}  // green
-  calibrationColors[2] = [3]int{112, 118, 150}  // blue
-  calibrationColors[3] = [3]int{52, 23, 21}  // dark
+	calibrationColors := make([][3]int, 4)
+	calibrationColors[0] = [3]int{170, 48, 31}   // red
+	calibrationColors[1] = [3]int{138, 131, 94}  // green
+	calibrationColors[2] = [3]int{112, 118, 150} // blue
+	calibrationColors[3] = [3]int{52, 23, 21}    // dark
 
-  // calibrationColors[0] = [3]int{202, 61, 79}  // red
-  // calibrationColors[1] = [3]int{162, 156, 118}  // green
-  // calibrationColors[2] = [3]int{126, 148, 191}  // blue
-  // calibrationColors[3] = [3]int{85, 58, 94}  // dark
+	// calibrationColors[0] = [3]int{202, 61, 79}  // red
+	// calibrationColors[1] = [3]int{162, 156, 118}  // green
+	// calibrationColors[2] = [3]int{126, 148, 191}  // blue
+	// calibrationColors[3] = [3]int{85, 58, 94}  // dark
 
-  // calibrationColors[0] = [3]int{204, 98, 107}  // red
-  // calibrationColors[1] = [3]int{200, 186, 167}  // green
-  // calibrationColors[2] = [3]int{176, 170, 198}  // blue
-  // calibrationColors[3] = [3]int{125, 91, 107}  // dark
+	// calibrationColors[0] = [3]int{204, 98, 107}  // red
+	// calibrationColors[1] = [3]int{200, 186, 167}  // green
+	// calibrationColors[2] = [3]int{176, 170, 198}  // blue
+	// calibrationColors[3] = [3]int{125, 91, 107}  // dark
 
 	for _, colorData := range colors {
 		minIndex := 0
 		minValue := 99999.0
 		for i, calibrationColorData := range calibrationColors {
 			c1 := &color.RGBA{
-        uint8(colorData[0]),
-        uint8(colorData[1]),
-        uint8(colorData[2]),
-        255,
-      }
+				uint8(colorData[0]),
+				uint8(colorData[1]),
+				uint8(colorData[2]),
+				255,
+			}
 			c2 := &color.RGBA{
-        uint8(calibrationColorData[0]),
-        uint8(calibrationColorData[1]),
-        uint8(calibrationColorData[2]),
-        255,
-      }
+				uint8(calibrationColorData[0]),
+				uint8(calibrationColorData[1]),
+				uint8(calibrationColorData[2]),
+				255,
+			}
 			value := ciede2000.Diff(c1, c2)
 			if i == 0 || value < minValue {
 				minIndex = i
@@ -481,13 +492,13 @@ func getGetPaperIdFromColors(colors [][3]int) (int, int, string) {
 		}
 		colorString += strconv.Itoa(minIndex)
 	}
-  log.Printf("%v \n", colorString)
-  colors8400Index := indexOf(colorString, get8400())
-  if colors8400Index > 0 {
-    paperId := colors8400Index % (8400 / 4)
-    cornerId := colors8400Index / (8400 / 4)
-    return paperId, cornerId, colorString
-  }
+	log.Printf("%v \n", colorString)
+	colors8400Index := indexOf(colorString, get8400())
+	if colors8400Index > 0 {
+		paperId := colors8400Index % (8400 / 4)
+		cornerId := colors8400Index / (8400 / 4)
+		return paperId, cornerId, colorString
+	}
 	return -1, -1, colorString
 }
 
@@ -507,12 +518,12 @@ func doStep4CornersWithIds(nodes []Dot, corners []Corner) []Corner {
 	results := make([]Corner, 0)
 	for _, corner := range corners {
 		newCorner := corner
-    rawColorsList := append(append(lineToColors(nodes, corner.sides[0], true), corner.Corner.Color), lineToColors(nodes, corner.sides[1], false)...)
-    paperId, cornerId, colorString := getGetPaperIdFromColors2(rawColorsList)
+		rawColorsList := append(append(lineToColors(nodes, corner.sides[0], true), corner.Corner.Color), lineToColors(nodes, corner.sides[1], false)...)
+		paperId, cornerId, colorString := getGetPaperIdFromColors2(rawColorsList)
 		newCorner.PaperId = paperId
-    newCorner.CornerId = cornerId
-    newCorner.ColorString = colorString
-    newCorner.RawColorsList = rawColorsList
+		newCorner.CornerId = cornerId
+		newCorner.ColorString = colorString
+		newCorner.RawColorsList = rawColorsList
 		results = append(results, newCorner)
 	}
 	return results
@@ -520,74 +531,115 @@ func doStep4CornersWithIds(nodes []Dot, corners []Corner) []Corner {
 
 // https://stackoverflow.com/questions/48798588/how-do-you-remove-the-first-character-of-a-string
 func trimLeftChars(s string, n int) string {
-    m := 0
-    for i := range s {
-        if m >= n {
-            return s[i:]
-        }
-        m++
-    }
-    return s[:0]
+	m := 0
+	for i := range s {
+		if m >= n {
+			return s[i:]
+		}
+		m++
+	}
+	return s[:0]
 }
 
-func getDots(subscriber *zmq.Socket, start time.Time) []Dot {
-  var reply string
-  nLoops := 0
-  for reply == "" {
-    for {
-      nLoops += 1
-      tmp_reply, err := subscriber.Recv(zmq.DONTWAIT)
-      if err != nil {
-        break
-      } else {
-        reply = tmp_reply
-      }
-    }
-    time.Sleep(1 * time.Millisecond)
-  }
-  timeGotDotsPre := time.Since(start)
-  log.Printf("get dots pre  : %s , %s\n", timeGotDotsPre, nLoops)
+func getDots(subscriber *zmq.Socket, MY_ID_STR string, dot_sub_id string, start time.Time) []Dot {
+	var reply string
+	nLoops := 0
+	dot_prefix := fmt.Sprintf("%s%s", MY_ID_STR, dot_sub_id)
+	for reply == "" || reply == dot_prefix+"[{}]" {
+		for {
+			nLoops += 1
+			tmp_reply, err := subscriber.Recv(zmq.DONTWAIT)
+			if err != nil {
+				break
+			} else {
+				reply = tmp_reply
+				fmt.Println("GOT REPLY:")
+				fmt.Println(reply)
+			}
+		}
+		time.Sleep(1 * time.Millisecond)
+	}
+	timeGotDotsPre := time.Since(start)
+	log.Printf("get dots pre  : %s , %s\n", timeGotDotsPre, nLoops)
 	// log.Println("Received ", reply)
-  // "CLAIM[global/dots]" = 18 characters to trim off from beginning of JSON
-  val := trimLeftChars(reply, 18)
-  res := make([]Dot, 0)
-	json.Unmarshal([]byte(val), &res)
-  return res
+	// "CLAIM[global/dots]" = 18 characters to trim off from beginning of JSON
+	val := trimLeftChars(reply, len(dot_prefix))
+	fmt.Println("GOT RESULT:")
+	fmt.Println(val)
+	json_val := make([]map[string][]string, 0)
+	/*
+		  type Dot struct {
+			X         int    `json:"x"`
+			Y         int    `json:"y"`
+			Color     [3]int `json:"color"`
+			Neighbors []int  `json:"-"`
+		}
+	*/
+	// TODO: parse val
+	json.Unmarshal([]byte(val), &json_val)
+	fmt.Println("GET JSON RESULT:")
+	fmt.Println(json_val)
+	res := make([]Dot, 0)
+	for _, json_result := range json_val {
+		x, _ := strconv.Atoi(json_result["x"][1])
+		y, _ := strconv.Atoi(json_result["y"][1])
+		r, _ := strconv.Atoi(json_result["r"][1])
+		g, _ := strconv.Atoi(json_result["g"][1])
+		b, _ := strconv.Atoi(json_result["b"][1])
+		res = append(res, Dot{x, y, [3]int{r, g, b}, make([]int, 0)})
+	}
+	return res
 }
 
-func claimPapers(publisher *zmq.Socket, papers []Paper) {
-  papersAlmostStr, _ := json.Marshal(papers)
-  papersStr := string(papersAlmostStr)
-  log.Println(papersStr)
-  msg := fmt.Sprintf("CLAIM[global/papers]%s", papersStr)
-  log.Println("Sending ", msg)
-  publisher.Send(msg, 0)
+func claimPapers(publisher *zmq.Socket, MY_ID_STR string, papers []Paper) {
+	// papersAlmostStr, _ := json.Marshal(papers)
+	// papersStr := string(papersAlmostStr)
+	// log.Println(papersStr)
+	/*
+		  type PaperCorner struct {
+			X        int `json:"x"`
+			Y        int `json:"y"`
+			CornerId int
+		}
+
+		type Paper struct {
+			Id      string        `json:"id"`
+			Corners []PaperCorner `json:"corners"`
+		}
+	*/
+
+	for _, paper := range papers {
+		papersStr := fmt.Sprintf("camera 1 sees paper %s at TL (%s, %s) TR (%s, %s) BR (%s, %s) BL (%s, %s) @ %s", paper.Id, paper.Corners[0].X, paper.Corners[0].Y, paper.Corners[1].X, paper.Corners[1].Y, paper.Corners[2].X, paper.Corners[2].Y, paper.Corners[3].X, paper.Corners[3].Y)
+		msg := fmt.Sprintf("....CLAIM%s%s", MY_ID_STR, papersStr)
+		log.Println("Sending ", msg)
+		publisher.Send(msg, 0)
+	}
 }
 
 func printJsonDots(dots []Dot) {
-  cornersAlmostStr, err := json.Marshal(dots)
-  log.Println("Err?")
-  log.Println(err)
-  cornersStr := string(cornersAlmostStr)
-  log.Println(cornersStr)
-  log.Println("---")
+	cornersAlmostStr, err := json.Marshal(dots)
+	log.Println("Err?")
+	log.Println(err)
+	cornersStr := string(cornersAlmostStr)
+	log.Println(cornersStr)
+	log.Println("---")
 }
 
 func claimCorners(publisher *zmq.Socket, corners []Corner) {
-  cornersAlmostStr, err := json.Marshal(corners)
-  log.Println("Err?")
-  log.Println(err)
-  cornersStr := string(cornersAlmostStr)
-  log.Println(cornersStr)
-  msg := fmt.Sprintf("CLAIM[global/corners]%s", cornersStr)
-  log.Println("Sending ", msg)
-  publisher.Send(msg, 0)
+	cornersAlmostStr, err := json.Marshal(corners)
+	log.Println("Err?")
+	log.Println(err)
+	cornersStr := string(cornersAlmostStr)
+	log.Println(cornersStr)
+	msg := fmt.Sprintf("CLAIM[global/corners]%s", cornersStr)
+	log.Println("Sending ", msg)
+	publisher.Send(msg, 0)
 }
 
 func claimCounter(publisher *zmq.Socket, count int) {
-  msg := fmt.Sprintf("CLAIM[global/dtpcount]%v", count)
-  log.Println("Sending ", msg)
-  publisher.Send(msg, 0)
+	msg := fmt.Sprintf("CLAIM[global/dtpcount]%v", count)
+	log.Println("Sending ", msg)
+	publisher.Send(msg, 0)
 }
 
 func getPoints() []Dot {
