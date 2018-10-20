@@ -609,7 +609,7 @@ func claimPapers(publisher *zmq.Socket, MY_ID_STR string, papers []Paper) {
 	*/
 
 	for _, paper := range papers {
-		papersStr := fmt.Sprintf("camera 1 sees paper %s at TL (%s, %s) TR (%s, %s) BR (%s, %s) BL (%s, %s) @ %s", paper.Id, paper.Corners[0].X, paper.Corners[0].Y, paper.Corners[1].X, paper.Corners[1].Y, paper.Corners[2].X, paper.Corners[2].Y, paper.Corners[3].X, paper.Corners[3].Y)
+		papersStr := fmt.Sprintf("camera 1 sees paper %s at TL %v %v TR %v %v BR %v %v BL %v %v at %v", paper.Id, paper.Corners[0].X, paper.Corners[0].Y, paper.Corners[1].X, paper.Corners[1].Y, paper.Corners[2].X, paper.Corners[2].Y, paper.Corners[3].X, paper.Corners[3].Y, 99)
 		msg := fmt.Sprintf("....CLAIM%s%s", MY_ID_STR, papersStr)
 		log.Println("Sending ", msg)
 		publisher.Send(msg, 0)
