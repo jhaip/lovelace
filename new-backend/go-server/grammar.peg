@@ -1,0 +1,95 @@
+{
+// Example usage: $ parser2 "3 + (2 - 5 * 12)"
+
+package main
+
+import (
+	"fmt"
+)
+
+func main() {
+    if len(os.Args) != 2 {
+        log.Fatal("Usage: parser2 'EXPR'")
+    }
+    fmt.Println("before")
+    fmt.Println(os.Args[1])
+    fmt.Println("^ was the input")
+    got, err := ParseReader("", strings.NewReader(os.Args[1]))
+    fmt.Println("after")
+    if err != nil {
+        fmt.Println("error")
+        log.Fatal(err)
+    }
+    fmt.Println("DONE!")
+    fmt.Println(got)
+}
+
+}
+
+FactOrPatterm ← vals:Term* EOF {
+    fmt.Println("FactOrPattern:")
+    fmt.Println(vals)
+    return vals, nil
+}
+
+Term ← val:( Id / Variable / Postfix / Value / Word / _ ) {
+    fmt.Println("TERM:")
+    fmt.Println(val)
+    return val, nil
+}
+
+Value ← val:( Number / String / Bool / Null ) {
+    fmt.Println("VALUE:")
+    fmt.Println(val)
+    return val, nil
+}
+
+Id ← '#' ( Integer / String )
+
+Variable ← '$' ( Integer / String / _ )
+
+Postfix ← '%' ( Integer / String / _ )
+
+Number ← '-'? Integer ( '.' DecimalDigit+ )? Exponent? {
+    // JSON numbers have the same syntax as Go's, and are parseable using
+    // strconv.
+    return strconv.ParseFloat(string(c.text), 64)
+}
+
+Integer ← '0' / NonZeroDecimalDigit DecimalDigit*
+
+Exponent ← 'e'i [+-]? DecimalDigit+
+
+Word ← ([a-zA-Z,()])+ {
+    // TODO: this could use some more work to be more general
+    fmt.Println("INside word")
+    return string(c.text), nil
+}
+
+String ← '"' ( !EscapedChar . / '\\' EscapeSequence )* '"' {
+    // TODO : the forward slash (solidus) is not a valid escape in Go, it will
+    // fail if there's one in the string
+    return strconv.Unquote(string(c.text))
+}
+
+EscapedChar ← [\x00-\x1f"\\]
+
+EscapeSequence ← SingleCharEscape / UnicodeEscape
+
+SingleCharEscape ← ["\\/bfnrt]
+
+UnicodeEscape ← 'u' HexDigit HexDigit HexDigit HexDigit
+
+DecimalDigit ← [0-9]
+
+NonZeroDecimalDigit ← [1-9]
+
+HexDigit ← [0-9a-f]i
+
+Bool ← "true" { return true, nil } / "false" { return false, nil }
+
+Null ← "null" { return nil, nil }
+
+_ "whitespace" ← [ \t\r\n]+
+
+EOF ← !.
