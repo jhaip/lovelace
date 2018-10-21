@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/alecthomas/repr"
 )
@@ -22,76 +24,72 @@ import (
 // }
 
 func TestParse2(t *testing.T) {
-	msg := "#1800 \"This \\\"is\\\" a test\" one \"two\" 0.5 2 $X $ % %Z"
+	msg := "#1800 \"This \\\"is\\\" a test\" one \"two\" (0.5, 2) @ $X $ % %Z true false null"
+	start := time.Now()
 	terms, err := ParseReader("", strings.NewReader(msg))
+	timeProcessing := time.Since(start)
+	fmt.Printf("processing: %s \n", timeProcessing)
 	if err != nil {
 		t.Error(err)
 	}
 	repr.Println(terms, repr.Indent("  "), repr.OmitEmpty(true))
-	// expected_terms := []Term{
-	// 	Term{"id", "P5"},
-	// 	Term{"id", "0"},
-	// 	Term{"text", "This \"is\" a test"},
-	// 	Term{"text", "one"},
-	// 	Term{"text", "two"},
-	// 	Term{"float", "0.500000"},
-	// 	Term{"integer", "2"},
-	// 	Term{"variable", ""},
-	// 	Term{"variable", "X"},
-	// 	Term{"postfix", ""},
-	// 	Term{"postfix", "Z"},
-	// }
-	// checkTerms(terms, expected_terms, t)
+	expected_terms := []Term{
+		Term{"id", "1800"},
+		Term{"text", "This \"is\" a test"},
+		Term{"text", "one"},
+		Term{"text", "two"},
+		Term{"text", "("},
+		Term{"float", "0.500000"},
+		Term{"text", ","},
+		Term{"float", "2.000000"},
+		Term{"text", ")"},
+		Term{"text", "@"},
+		Term{"variable", "X"},
+		Term{"variable", ""},
+		Term{"postfix", ""},
+		Term{"postfix", "Z"},
+		Term{"text", "true"},
+		Term{"text", "false"},
+		Term{"text", "null"},
+	}
+	checkTerms(terms.([]Term), expected_terms, t)
 }
 
-// func TestParseNumbers(t *testing.T) {
-// 	parser, _ := make_parser()
-// 	terms := parse_fact_string(parser, "0.5 2 -2 1. -1.0 .99999 1.23e8")
-// 	repr.Println(terms, repr.Indent("  "), repr.OmitEmpty(true))
-// 	expected_terms := []Term{
-// 		Term{"float", "0.500000"},
-// 		Term{"integer", "2"},
-// 		Term{"integer", "-2"},
-// 		Term{"float", "1.000000"},
-// 		Term{"float", "-1.000000"},
-// 		Term{"float", "0.999990"},
-// 		Term{"float", "123000000.000000"},
-// 	}
-// 	checkTerms(terms, expected_terms, t)
-// }
+func TestParse2Numbers(t *testing.T) {
+	msg := "0.5 2 -2 1.0 -1.0 0.99999 1.23e8"
+	raw_terms, err := ParseReader("", strings.NewReader(msg))
+	terms, _ := raw_terms.([]Term)
+	if err != nil {
+		t.Error(err)
+	}
+	repr.Println(terms, repr.Indent("  "), repr.OmitEmpty(true))
+	expected_terms := []Term{
+		Term{"float", "0.500000"},
+		Term{"float", "2.000000"},
+		Term{"float", "-2.000000"},
+		Term{"float", "1.000000"},
+		Term{"float", "-1.000000"},
+		Term{"float", "0.999990"},
+		Term{"float", "123000000.000000"},
+	}
+	checkTerms(terms, expected_terms, t)
+}
 
-// func TestParseVariables(t *testing.T) {
-// 	parser, _ := make_parser()
-// 	terms := parse_fact_string(parser, "$ $X $Y $ one1 $1")
-// 	repr.Println(terms, repr.Indent("  "), repr.OmitEmpty(true))
-// 	expected_terms := []Term{
-// 		Term{"variable", ""},
-// 		Term{"variable", "X"},
-// 		Term{"variable", "Y"},
-// 		Term{"variable", ""},
-// 		Term{"text", "one1"},
-// 		Term{"variable", "1"},
-// 	}
-// 	checkTerms(terms, expected_terms, t)
-// }
-
-// func TestParseWithNonWordCharacters(t *testing.T) {
-// 	parser, _ := make_parser()
-// 	terms := parse_fact_string(parser, "#1800 paper 39 at TL (3.0, 0.9) @ 123949583")
-// 	repr.Println(terms, repr.Indent("  "), repr.OmitEmpty(true))
-// 	expected_terms := []Term{
-// 		Term{"id", "1800"},
-// 		Term{"text", "paper"},
-// 		Term{"integer", "39"},
-// 		Term{"text", "at"},
-// 		Term{"text", "TL"},
-// 		Term{"text", "("},
-// 		Term{"float", "3.000000"},
-// 		Term{"text", ","},
-// 		Term{"float", "0.900000"},
-// 		Term{"text", ")"},
-// 		Term{"text", "@"},
-// 		Term{"integer", "123949583"},
-// 	}
-// 	checkTerms(terms, expected_terms, t)
-// }
+func TestParse2Variables(t *testing.T) {
+	msg := "$ $X $Y $ one $cat"
+	raw_terms, err := ParseReader("", strings.NewReader(msg))
+	terms, _ := raw_terms.([]Term)
+	if err != nil {
+		t.Error(err)
+	}
+	repr.Println(terms, repr.Indent("  "), repr.OmitEmpty(true))
+	expected_terms := []Term{
+		Term{"variable", ""},
+		Term{"variable", "X"},
+		Term{"variable", "Y"},
+		Term{"variable", ""},
+		Term{"text", "one"},
+		Term{"variable", "cat"},
+	}
+	checkTerms(terms, expected_terms, t)
+}
