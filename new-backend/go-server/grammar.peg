@@ -44,11 +44,11 @@ Value ← val:( Number / String / Bool / Null ) {
     return val, nil
 }
 
-Id ← '#' ( Integer / String )
+Id ← '#' ( Integer / Word )
 
-Variable ← '$' ( Integer / String / _ )
+Variable ← '$' ( Integer / Word )?
 
-Postfix ← '%' ( Integer / String / _ )
+Postfix ← '%' ( Integer / Word )?
 
 Number ← '-'? Integer ( '.' DecimalDigit+ )? Exponent? {
     // JSON numbers have the same syntax as Go's, and are parseable using
