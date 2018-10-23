@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/alecthomas/repr"
 )
@@ -22,7 +24,10 @@ func checkTerms(terms, expected_terms []Term, t *testing.T) {
 
 func TestParse(t *testing.T) {
 	parser, _ := make_parser()
+	start := time.Now()
 	terms := parse_fact_string(parser, "#P5 #0 \"This \\\"is\\\" a test\" one \"two\" 0.5 2$ $X % %Z")
+	timeProcessing := time.Since(start)
+	fmt.Printf("processing: %s \n", timeProcessing)
 	repr.Println(terms, repr.Indent("  "), repr.OmitEmpty(true))
 	expected_terms := []Term{
 		Term{"id", "P5"},

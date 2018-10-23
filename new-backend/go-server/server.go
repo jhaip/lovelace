@@ -7,7 +7,6 @@ import (
 	"log"
 	"sort"
 
-	"github.com/alecthomas/participle"
 	_ "github.com/mattn/go-sqlite3"
 	zmq "github.com/pebbe/zmq4"
 
@@ -163,7 +162,7 @@ func update_all_subscriptions(db *map[string]Fact, notifications chan<- Notifica
 	// fmt.Println("done")
 }
 
-func subscribe_worker(subscription_messages <-chan string, claims chan<- []Term, subscriptions_notifications chan<- bool, parser *participle.Parser, subscriptions *Subscriptions) {
+func subscribe_worker(subscription_messages <-chan string, claims chan<- []Term, subscriptions_notifications chan<- bool, subscriptions *Subscriptions) {
 	event_type_len := 9
 	source_len := 4
 	for msg := range subscription_messages {
@@ -177,11 +176,11 @@ func subscribe_worker(subscription_messages <-chan string, claims chan<- []Term,
 			query := make([][]Term, 0)
 			for i, fact_string := range subscription_data.Facts {
 				subscription_fact_msg := fmt.Sprintf("subscription \"%s\" %v %s", subscription_data.Id, i, fact_string)
-				subscription_fact := parse_fact_string(parser, subscription_fact_msg)
+				subscription_fact := parse_fact_string(subscription_fact_msg)
 				subscription_fact = append([]Term{Term{"text", "subscription"}, Term{"source", source}}, subscription_fact...)
 				fmt.Printf("SUB FACTS %v\n", subscription_fact)
 				claims <- subscription_fact
-				fact := parse_fact_string(parser, fact_string)
+				fact := parse_fact_string(fact_string)
 				query = append(query, fact)
 			}
 			(*subscriptions).Subscriptions = append((*subscriptions).Subscriptions, Subscription{source, subscription_data.Id, query})
@@ -190,7 +189,7 @@ func subscribe_worker(subscription_messages <-chan string, claims chan<- []Term,
 	}
 }
 
-func parser_worker(unparsed_messages <-chan string, claims chan<- []Term, retractions chan<- []Term, parser *participle.Parser) {
+func parser_worker(unparsed_messages <-chan string, claims chan<- []Term, retractions chan<- []Term) {
 	event_type_len := 9
 	source_len := 4
 	for msg := range unparsed_messages {
@@ -199,12 +198,12 @@ func parser_worker(unparsed_messages <-chan string, claims chan<- []Term, retrac
 		source := msg[event_type_len:(event_type_len + source_len)]
 		val := msg[(event_type_len + source_len):]
 		if event_type == "....CLAIM" {
-			fact := parse_fact_string(parser, val)
+			fact := parse_fact_string(val)
 			fact = append([]Term{Term{"source", source}}, fact...)
 			claims <- fact
 		} else if event_type == "..RETRACT" {
 			fmt.Println("GOT RETRACT xxxxxxxxx")
-			fact := parse_fact_string(parser, val)
+			fact := parse_fact_string(val)
 			retractions <- fact
 		}
 	}
@@ -300,8 +299,6 @@ func debug_database_observer(db *map[string]Fact) {
 
 func main() {
 	// defer profile.Start().Stop()
-	parser, err := make_parser()
-	checkErr(err)
 
 	factDatabase := make_fact_database()
 
@@ -329,8 +326,8 @@ func main() {
 	notify_subscribers := make(chan bool, 99)
 	notifications := make(chan Notification, 1000)
 
-	go parser_worker(unparsed_messages, claims, retractions, parser)
-	go subscribe_worker(subscription_messages, claims, subscriptions_notifications, parser, &subscriptions)
+	go parser_worker(unparsed_messages, claims, retractions)
+	go subscribe_worker(subscription_messages, claims, subscriptions_notifications, &subscriptions)
 	go claim_worker(claims, subscriptions_notifications, &factDatabase)
 	go retract_worker(retractions, subscriptions_notifications, &factDatabase)
 	go notify_subscribers_worker(notify_subscribers, subscriber_worker_finished, &factDatabase, notifications, &subscriptions)
