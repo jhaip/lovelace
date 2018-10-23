@@ -153,10 +153,10 @@ class ShowCapture(wx.Panel):
             self.dots = list(map(keypointMapFunc, keypoints))
             # print(self.dots)
             # self.M.claim("global", "dots", self.dots)
-            self.retract("$z dots $x $y color $a $b $c")
+            self.retract("$z dots $x $y color $a $b $c $t")
             for dot in self.dots:
-                self.claim("dots {} {} color {} {} {}".format(
-                    dot["x"], dot["y"], dot["color"][0], dot["color"][1], dot["color"][2]))
+                self.claim("dots {} {} color {} {} {} {}".format(
+                    dot["x"], dot["y"], dot["color"][0], dot["color"][1], dot["color"][2], int(time.time()*1000.0)))
 
             # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             # self.bmp.CopyFromBuffer(frame)

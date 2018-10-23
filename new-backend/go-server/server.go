@@ -58,6 +58,10 @@ func checkErr(err error) {
 	}
 }
 
+func makeTimestamp() int64 {
+	return time.Now().UnixNano() / int64(time.Millisecond)
+}
+
 func notification_worker(notifications <-chan Notification, retractions chan<- []Term) {
 	// start := time.Now()
 	publisher, _ := zmq.NewSocket(zmq.PUB)
@@ -81,8 +85,9 @@ func notification_worker(notifications <-chan Notification, retractions chan<- [
 				retractions <- []Term{Term{"source", notification.Source}, Term{"postfix", ""}}
 			}
 			if notification.Result != NO_RESULTS_MESSAGE {
-				fmt.Printf("SENDING: \"%s\"\n", msg)
-				publisher.Send(msg, zmq.DONTWAIT)
+				msgWithTime := fmt.Sprintf("%s%s%v%s", notification.Source, notification.Id, makeTimestamp(), notification.Result)
+				fmt.Printf("SENDING: \"%s\"\n", msgWithTime)
+				publisher.Send(msgWithTime, zmq.DONTWAIT)
 			}
 		} else {
 			fmt.Printf("SKIPPING BECAUSE DuPLICATE VALUE %v %v %v\n", cache_hit, cache_value, msg)

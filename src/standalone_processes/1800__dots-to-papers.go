@@ -94,7 +94,7 @@ func main() {
 	count := 0
 
 	dot_sub_id := "f47ac10b-58cc-0372-8567-0e02b2c3d479"
-	dot_sub_query := map[string]interface{}{"id": dot_sub_id, "facts": []string{"$source dots $x $y color $r $g $b"}}
+	dot_sub_query := map[string]interface{}{"id": dot_sub_id, "facts": []string{"$source dots $x $y color $r $g $b $t"}}
 	dot_sub_query_msg, _ := json.Marshal(dot_sub_query)
 	dot_sub_msg := fmt.Sprintf("SUBSCRIBE%s%s", MY_ID_STR, dot_sub_query_msg)
 	publisher.Send(dot_sub_msg, 0)
@@ -541,11 +541,15 @@ func trimLeftChars(s string, n int) string {
 	return s[:0]
 }
 
+func makeTimestamp() int64 {
+	return time.Now().UnixNano() / int64(time.Millisecond)
+}
+
 func getDots(subscriber *zmq.Socket, MY_ID_STR string, dot_sub_id string, start time.Time) []Dot {
 	var reply string
 	nLoops := 0
 	dot_prefix := fmt.Sprintf("%s%s", MY_ID_STR, dot_sub_id)
-	for reply == "" || reply == dot_prefix+"[{}]" {
+	for reply == "" || reply[len(reply)-4:] == "[{}]" {
 		for {
 			nLoops += 1
 			tmp_reply, err := subscriber.Recv(zmq.DONTWAIT)
@@ -553,8 +557,8 @@ func getDots(subscriber *zmq.Socket, MY_ID_STR string, dot_sub_id string, start 
 				break
 			} else {
 				reply = tmp_reply
-				fmt.Println("GOT REPLY:")
-				fmt.Println(reply)
+				// fmt.Println("GOT REPLY:")
+				// fmt.Println(reply)
 			}
 		}
 		time.Sleep(1 * time.Millisecond)
@@ -562,10 +566,17 @@ func getDots(subscriber *zmq.Socket, MY_ID_STR string, dot_sub_id string, start 
 	timeGotDotsPre := time.Since(start)
 	log.Printf("get dots pre  : %s , %s\n", timeGotDotsPre, nLoops)
 	// log.Println("Received ", reply)
-	// "CLAIM[global/dots]" = 18 characters to trim off from beginning of JSON
-	val := trimLeftChars(reply, len(dot_prefix))
-	fmt.Println("GOT RESULT:")
-	fmt.Println(val)
+	timeVal, err := strconv.ParseInt(reply[len(dot_prefix):len(dot_prefix)+13], 10, 64)
+	if err != nil {
+		panic(err)
+	}
+	// fmt.Println("time val")
+	// fmt.Println(timeVal)
+	timeDiff := makeTimestamp() - timeVal
+	fmt.Printf("time diff: %v ms\n", timeDiff)
+	val := trimLeftChars(reply, len(dot_prefix)+13)
+	// fmt.Println("GOT RESULT:")
+	// fmt.Println(val)
 	json_val := make([]map[string][]string, 0)
 	/*
 		  type Dot struct {
@@ -578,7 +589,11 @@ func getDots(subscriber *zmq.Socket, MY_ID_STR string, dot_sub_id string, start 
 	// TODO: parse val
 	json.Unmarshal([]byte(val), &json_val)
 	fmt.Println("GET JSON RESULT:")
-	fmt.Println(json_val)
+	// fmt.Println(json_val)
+	// fmt.Println(json_val[0])
+	claimTime, _ := strconv.ParseFloat(json_val[0]["t"][1], 64)
+	claimTimeDiff := makeTimestamp() - int64(claimTime)
+	fmt.Printf("claim time diff: %v ms\n", claimTimeDiff)
 	res := make([]Dot, 0)
 	for _, json_result := range json_val {
 		x, _ := strconv.Atoi(json_result["x"][1])
