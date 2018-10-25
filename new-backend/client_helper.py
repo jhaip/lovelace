@@ -28,6 +28,10 @@ py_prehook = None
 def claim(fact_string):
     pub_socket.send_string("....CLAIM{}{}".format(MY_ID_STR, fact_string), zmq.NOBLOCK)
 
+def batch(batch_claims):
+    pub_socket.send_string("....BATCH{}{}".format(
+        MY_ID_STR, json.dumps(batch_claims)), zmq.NOBLOCK)
+
 def retract(fact_string):
     pub_socket.send_string("..RETRACT{}{}".format(MY_ID_STR, fact_string), zmq.NOBLOCK)
 
