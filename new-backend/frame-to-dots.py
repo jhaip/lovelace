@@ -18,7 +18,7 @@ CAM_WIDTH = 1920
 CAM_HEIGHT = 1080
 
 class ShowCapture(wx.Panel):
-    def __init__(self, parent, capture, fps=4):
+    def __init__(self, parent, capture, fps=1):
         wx.Panel.__init__(self, parent)
 
         self.capture = capture
@@ -71,6 +71,11 @@ class ShowCapture(wx.Panel):
         print(fact_string)
         self.pub_socket.send_string("..RETRACT{}{}".format(
             MY_ID_STR, fact_string), zmq.NOBLOCK)
+    
+    def batch(self, batch_claims):
+        global MY_ID_STR
+        self.pub_socket.send_string("....BATCH{}{}".format(
+            MY_ID_STR, json.dumps(batch_claims)), zmq.NOBLOCK)
 
     def OnPaint(self, evt):
         dc = wx.BufferedPaintDC(self)
@@ -153,13 +158,28 @@ class ShowCapture(wx.Panel):
             self.dots = list(map(keypointMapFunc, keypoints))
             # print(self.dots)
             # self.M.claim("global", "dots", self.dots)
-            self.retract("$z dots $x $y color $a $b $c $t")
-            for dot in self.dots:
-                self.claim("dots {} {} color {} {} {} {}".format(
-                    dot["x"], dot["y"], dot["color"][0], dot["color"][1], dot["color"][2], int(time.time()*1000.0)))
 
-            # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            # self.bmp.CopyFromBuffer(frame)
+            
+            # self.retract("$z dots $x $y color $a $b $c $t")
+            # for dot in self.dots:
+            #     self.claim("dots {} {} color {} {} {} {}".format(
+            #         dot["x"], dot["y"], dot["color"][0], dot["color"][1], dot["color"][2], int(time.time()*1000.0)))
+            batch_claims = [{"type": "retract", "fact": [
+                            ["source", MY_ID_STR],
+                            ["postfix", ""]
+                            ]}]
+            for dot in self.dots:
+                batch_claims.append({"type": "claim", "fact": [
+                    ["source", MY_ID_STR], ["text", "dots"],
+                    ["float", str(dot["x"])], ["float", str(dot["y"])],
+                    ["text", "color"],
+                    ["float", str(dot["color"][0])], ["float", str(dot["color"][1])], ["float", str(dot["color"][1])],
+                    ["integer", str(int(time.time()*1000.0))]
+                ]})
+            self.batch(batch_claims)
+
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            self.bmp.CopyFromBuffer(frame)
             #
             # img = wx.Bitmap.ConvertToImage( self.bmp )
             # img_str = img.GetData()

@@ -60,6 +60,11 @@ type P struct {
 	score float64
 }
 
+type BatchMessage struct {
+	Type string     `json:"type"`
+	Fact [][]string `json:"fact"`
+}
+
 const CAM_WIDTH = 1920
 const CAM_HEIGHT = 1080
 const dotSize = 12
@@ -107,19 +112,24 @@ func main() {
 		timeGotDots := time.Since(start)
 		// printDots(points)
 		step1 := doStep1(points)
+		fmt.Println("step1", len(step1))
 		// printDots(step1)
 
 		step2 := doStep2(step1)
+		fmt.Println("step2", len(step2))
 		// printCorners(step2[:5])
 		// printJsonDots(step1)
 		// claimCorners(step2)
 		step3 := doStep3(step1, step2)
+		fmt.Println("step3", len(step3))
 		// printCorners(step3)
 		step4 := doStep4CornersWithIds(step1, step3)
+		fmt.Println("step4", len(step4))
 		// claimCorners(publisher, step4)
 		// printCorners(step4)
 		papers := getPapersFromCorners(step4)
-		log.Println(papers)
+		// log.Println(papers)
+		fmt.Println("papers", len(papers))
 
 		timeProcessing := time.Since(start)
 		claimPapers(publisher, MY_ID_STR, papers)
@@ -202,13 +212,13 @@ func printCorners(data []Corner) {
 	for i, d := range data {
 		s[i] = fmt.Sprintf("%v \t %v \t %v \t %v \t %v", d.Corner, d.lines, d.sides, d.PaperId, d.CornerId)
 	}
-	log.Println(strings.Join(s, "\n"))
+	fmt.Println(strings.Join(s, "\n"))
 
 	cornersAlmostStr, err := json.Marshal(data)
-	log.Println("Err?")
-	log.Println(err)
+	fmt.Println("Err?")
+	fmt.Println(err)
 	cornersStr := string(cornersAlmostStr)
-	log.Println(cornersStr)
+	fmt.Println(cornersStr)
 }
 
 func distanceSquared(p1 Dot, p2 Dot) float64 {
@@ -607,6 +617,8 @@ func getDots(subscriber *zmq.Socket, MY_ID_STR string, dot_sub_id string, start 
 }
 
 func claimPapers(publisher *zmq.Socket, MY_ID_STR string, papers []Paper) {
+	fmt.Println("CLAIM PAPERS -----")
+	fmt.Println(papers)
 	// papersAlmostStr, _ := json.Marshal(papers)
 	// papersStr := string(papersAlmostStr)
 	// log.Println(papersStr)
@@ -623,12 +635,48 @@ func claimPapers(publisher *zmq.Socket, MY_ID_STR string, papers []Paper) {
 		}
 	*/
 
+	// for _, paper := range papers {
+	// 	papersStr := fmt.Sprintf("camera 1 sees paper %s at TL %v %v TR %v %v BR %v %v BL %v %v at %v", paper.Id, paper.Corners[0].X, paper.Corners[0].Y, paper.Corners[1].X, paper.Corners[1].Y, paper.Corners[2].X, paper.Corners[2].Y, paper.Corners[3].X, paper.Corners[3].Y, 99)
+	// 	msg := fmt.Sprintf("....CLAIM%s%s", MY_ID_STR, papersStr)
+	// 	log.Println("Sending ", msg)
+	// 	publisher.Send(msg, 0)
+	// }
+
+	batch_claims := make([]BatchMessage, 0)
+	batch_claims = append(batch_claims, BatchMessage{"retract", [][]string{
+		[]string{"source", MY_ID_STR},
+		[]string{"postfix", ""},
+	}})
 	for _, paper := range papers {
-		papersStr := fmt.Sprintf("camera 1 sees paper %s at TL %v %v TR %v %v BR %v %v BL %v %v at %v", paper.Id, paper.Corners[0].X, paper.Corners[0].Y, paper.Corners[1].X, paper.Corners[1].Y, paper.Corners[2].X, paper.Corners[2].Y, paper.Corners[3].X, paper.Corners[3].Y, 99)
-		msg := fmt.Sprintf("....CLAIM%s%s", MY_ID_STR, papersStr)
-		log.Println("Sending ", msg)
-		publisher.Send(msg, 0)
+		batch_claims = append(batch_claims, BatchMessage{"claim", [][]string{
+			[]string{"source", MY_ID_STR},
+			[]string{"text", "camera"},
+			[]string{"integer", "1"},
+			[]string{"text", "sees"},
+			[]string{"text", "paper"},
+			[]string{"integer", paper.Id},
+			[]string{"text", "at"},
+			[]string{"text", "TL"},
+			[]string{"integer", strconv.Itoa(paper.Corners[0].X)},
+			[]string{"integer", strconv.Itoa(paper.Corners[0].Y)},
+			[]string{"text", "TR"},
+			[]string{"integer", strconv.Itoa(paper.Corners[1].X)},
+			[]string{"integer", strconv.Itoa(paper.Corners[1].Y)},
+			[]string{"text", "BR"},
+			[]string{"integer", strconv.Itoa(paper.Corners[2].X)},
+			[]string{"integer", strconv.Itoa(paper.Corners[2].Y)},
+			[]string{"text", "BL"},
+			[]string{"integer", strconv.Itoa(paper.Corners[3].X)},
+			[]string{"integer", strconv.Itoa(paper.Corners[3].Y)},
+			[]string{"text", "at"},
+			[]string{"integer", "99"},
+		}})
 	}
+	batch_claim_str, _ := json.Marshal(batch_claims)
+	msg := fmt.Sprintf("....BATCH%s%s", MY_ID_STR, batch_claim_str)
+	log.Println("Sending ", msg)
+	fmt.Println("Sending ", msg)
+	publisher.Send(msg, 0)
 }
 
 func printJsonDots(dots []Dot) {
