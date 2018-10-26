@@ -2,9 +2,14 @@ const fs = require('fs');
 const path = require('path');
 const zmq = require('zeromq');
 const uuidV4 = require('uuid/v4');
+const child_process = require("child_process");
 
 const randomId = () => 
     uuidV4();
+
+function sleep(millis) {
+    return new Promise(resolve => setTimeout(resolve, millis));
+}
 
 const stringToTerm = x => {
     if (isNaN(x) || x === "") {
@@ -69,8 +74,20 @@ function init(filename) {
     let server_listening = false
     let batched_calls = []
 
+    const waitForServerListening = () => {
+        return new Promise(async resolve => {
+            while (server_listening === false) {
+                publisher.send(`.....PING${MY_ID_STR}${init_ping_id}`)
+                // console.log("SEND PING!")
+                await sleep(500)
+            }
+            resolve();
+        });
+    }
+
     const room = {
-        subscribe: (...args) => {
+        subscribe: async (...args) => {
+            await waitForServerListening();
             const query_strings = args.slice(0, -1)
             const callback = args[args.length - 1]
             const subscription_id = randomId()
@@ -82,7 +99,8 @@ function init(filename) {
             subscription_ids[subscription_id] = callback
             publisher.send(`SUBSCRIBE${MY_ID_STR}${query_msg_str}`);
         },
-        on: (...args) => {
+        on: async (...args) => {
+            await waitForServerListening();
             const query_strings = args.slice(0, -1)
             const callback = args[args.length - 1]
             const subscription_id = randomId()
@@ -152,17 +170,19 @@ function init(filename) {
             callback(val)
         } else if (id in subscription_ids) {
             callback = subscription_ids[id]
+            room.retract(`#${MY_ID_STR} %`)
             callback(val)
+            room.flush()
         }
     });
 
-    setTimeout(() => {
-        publisher.send(`.....PING${MY_ID_STR}${init_ping_id}`)
-        console.log("SEND PING!")
-    }, 1000)
+    const run = async () => {
+        await waitForServerListening();
+        room.flush()
+    }
 
     return {
-        room, myId, scriptName, MY_ID_STR
+        room, myId, scriptName, MY_ID_STR, run
     }
 }
 
