@@ -250,7 +250,7 @@ func retract_worker(retractions <-chan []Term, subscriptions_notifications chan<
 		fmt.Println(len(*db))
 		retract(db, Fact{fact_terms})
 		fmt.Println(len(*db))
-		print_all_facts(*db)
+		// print_all_facts(*db)
 		dbMutex.Unlock()
 		subscriptions_notifications <- true
 		elapsed := time.Since(start)
@@ -324,7 +324,7 @@ func batch_worker(batch_messages <-chan string, claims chan<- []Term, retraction
 	event_type_len := 9
 	source_len := 4
 	for msg := range batch_messages {
-		fmt.Printf("SHOULD PARSE MESSAGE: %s\n", msg)
+		// fmt.Printf("SHOULD PARSE MESSAGE: %s\n", msg)
 		// event_type := msg[0:event_type_len]
 		// source := msg[event_type_len:(event_type_len + source_len)]
 		val := msg[(event_type_len + source_len):]
@@ -338,7 +338,7 @@ func batch_worker(batch_messages <-chan string, claims chan<- []Term, retraction
 		var batch_messages []BatchMessage
 		err := json.Unmarshal([]byte(val), &batch_messages)
 		checkErr(err)
-		fmt.Println(batch_messages)
+		// fmt.Println(batch_messages)
 		for _, batch_message := range batch_messages {
 			terms := make([]Term, len(batch_message.Fact))
 			for j, term := range batch_message.Fact {
@@ -350,7 +350,15 @@ func batch_worker(batch_messages <-chan string, claims chan<- []Term, retraction
 				claim(db, Fact{terms})
 				dbMutex.Unlock()
 			} else if batch_message.Type == "retract" {
-				retractions <- terms
+				// retractions <- terms
+				dbMutex.Lock()
+				// fmt.Println("RETRACTING!!!")
+				// fmt.Println(fact_terms)
+				// fmt.Println(len(*db))
+				retract(db, Fact{terms})
+				// fmt.Println(len(*db))
+				// print_all_facts(*db)
+				dbMutex.Unlock()
 			}
 		}
 		subscriptions_notifications <- true
