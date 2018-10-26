@@ -88,7 +88,7 @@ func notification_worker(notifications <-chan Notification, retractions chan<- [
 			// Clear all claims by source + subscription ID
 			if cache_hit == true && cache_value[len(cache_value)-2:] != NO_RESULTS_MESSAGE {
 				// Clear all claims by source + subscription ID
-				retractions <- []Term{Term{"source", notification.Source}, Term{"postfix", ""}}
+				// retractions <- []Term{Term{"source", notification.Source}, Term{"postfix", ""}}
 			}
 			if notification.Result != NO_RESULTS_MESSAGE {
 				msgWithTime := fmt.Sprintf("%s%s%v%s", notification.Source, notification.Id, makeTimestamp(), notification.Result)
@@ -352,8 +352,7 @@ func batch_worker(batch_messages <-chan string, claims chan<- []Term, retraction
 			} else if batch_message.Type == "retract" {
 				// retractions <- terms
 				dbMutex.Lock()
-				// fmt.Println("RETRACTING!!!")
-				// fmt.Println(fact_terms)
+				// fmt.Println(terms)
 				// fmt.Println(len(*db))
 				retract(db, Fact{terms})
 				// fmt.Println(len(*db))

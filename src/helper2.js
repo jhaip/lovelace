@@ -6,6 +6,44 @@ const uuidV4 = require('uuid/v4');
 const randomId = () => 
     uuidV4();
 
+const stringToTerm = x => {
+    if (isNaN(x) || x === "") {
+        if (x[0] === "#") {
+            return ["source", x.slice(1)]
+        }
+        if (x[0] === "$") {
+            return ["variable", x.slice(1)]
+        }
+        if (x[0] === "%") {
+            return ["postfix", x.slice(1)]
+        }
+        return ["text", x]
+    }
+    if (x.indexOf(".") === -1) {
+        return ["integer", (+x).toString()]
+    }
+    return ["float", (+x).toFixed(6)]
+}
+
+const fullyParseFact = q => {
+    const tokenizeString = s => s.trim().replace(/\)/g, ' ) ').replace(/\(/g, ' ( ').replace(/,/g, ' , ').split(/\s+/)
+    if (typeof q === "string") {
+        const q_tokens = tokenizeString(q)
+        return q_tokens.map(x => stringToTerm(x))
+    } else if (Array.isArray(q)) {
+        let terms = [];
+        for (var i = 0, len = q.length; i < len; i++) {
+            if (typeof q[i] === "string") {
+                const q_tokens = tokenizeString(q[i])
+                terms = terms.concat(q_tokens.map(x => stringToTerm(x)))
+            } else {
+                terms = terms.concat([q[i]])
+            }
+        }
+        return terms
+    }
+}
+
 function init(filename) {
     const scriptName = path.basename(filename);
     const scriptNameNoExtension = path.parse(scriptName).name;
@@ -29,6 +67,7 @@ function init(filename) {
     let select_ids = {}
     let subscription_ids = {}
     let server_listening = false
+    let batched_calls = []
 
     const room = {
         subscribe: (...args) => {
@@ -65,11 +104,31 @@ function init(filename) {
             select_ids[select_id] = callback
             publisher.send(`...SELECT${MY_ID_STR}${query_msg_str}`);
         },
-        assert: fact => {
-            publisher.send(`....CLAIM${MY_ID_STR}${fact}`);
+        assert: (fact, shouldFlush) => {
+            // TODO: need to push into an array specific to the subsciber, in case there are multiple subscribers in one client
+            batched_calls.push({"type": "claim", "fact": [["source", MY_ID_STR]].concat(fullyParseFact(fact))})
+            if (shouldFlush) {
+                room.flush()
+            }
+            // publisher.send(`....CLAIM${MY_ID_STR}${fact}`);
         },
-        retract: query => {
-            publisher.send(`..RETRACT${MY_ID_STR}${query}`);
+        retract: (query, shouldFlush) => {
+            // TODO: need to push into an array specific to the subsciber, in case there are multiple subscribers in one client
+            batched_calls.push({ "type": "retract", "fact": fullyParseFact(query) })
+            if (shouldFlush) {
+                room.flush()
+            }
+            // publisher.send(`..RETRACT${MY_ID_STR}${query}`);
+        },
+        flush: () => {
+            // TODO: need to push into an array specific to the subsciber, in case there are multiple subscribers in one client
+            room.batch(batched_calls);
+            batched_calls = [];
+        },
+        batch: batched_calls => {
+            console.log("SEINDING BATCH", batched_calls)
+            const fact_str = JSON.stringify(batched_calls)
+            publisher.send(`....BATCH${MY_ID_STR}${fact_str}`);
         }
     }
 
@@ -103,7 +162,7 @@ function init(filename) {
     }, 1000)
 
     return {
-        room, myId, scriptName
+        room, myId, scriptName, MY_ID_STR
     }
 }
 
