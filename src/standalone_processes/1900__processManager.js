@@ -29,7 +29,7 @@ function runPaper(name) {
       console.log('stdout', stdout);
     });
   const pid = child.pid;
-  room.assert(`#${myId}`, ["text", `"${name}"`], `has process id ${pid}`);
+  room.assert(["text", `${name}`], `has process id ${pid}`);
   console.error(pid);
 }
 
