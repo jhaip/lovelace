@@ -33,9 +33,9 @@ room.on(
         }
         sourceCodeNewlineCleaned = sourceCode.replace(/\n/g, '\\n')
         room.retract(`#${wisherId.id} wish a paper would be created in ${language} with source code $ @ ${time.value}`)
-        room.assert(["text", `"${shortFilename}"`], `has source code`, ["text", `"${sourceCodeNewlineCleaned}"`])
-        room.assert(["text", `"${shortFilename}"`], `has paper ID ${newId}`)
-        room.assert(`wish paper ${newId} at`, ["text", `"${shortFilename}"`], `would be printed`)
+        room.assert(["text", shortFilename], `has source code`, ["text", sourceCodeNewlineCleaned])
+        room.assert(["text", shortFilename], `has paper ID ${newId}`)
+        room.assert(`wish paper ${newId} at`, ["text", shortFilename], `would be printed`)
         room.flush();
       });
     })

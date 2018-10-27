@@ -20,7 +20,7 @@ function runPaper(name) {
     (error, stdout, stderr) => {
       // TODO: check if program should still be running
       // and start it again if so.
-      room.retract(`#${myId}`, ["text", `"${name}"`], `has process id $`);
+      room.retract(`#${myId}`, ["text", name], `has process id $`);
       console.log(`${name} callback`)
       if (error) {
         console.error('stderr', stderr);
@@ -29,14 +29,14 @@ function runPaper(name) {
       console.log('stdout', stdout);
     });
   const pid = child.pid;
-  room.assert(["text", `${name}`], `has process id ${pid}`);
+  room.assert(["text", name], `has process id ${pid}`);
   console.error(pid);
 }
 
 function stopPaper(name, pid) {
   console.error(`making ${name} with PID ${pid} NOT be running`)
   process.kill(pid, 'SIGTERM')
-  room.retract(`#${myId}`, ["text", `"${name}"`], `has process id $`);
+  room.retract(`#${myId}`, ["text", name], `has process id $`);
   const dyingPaperId = (name.split(".")[0]).split("__")[0]
   console.log("done STOPPING PID", pid, "with ID", dyingPaperId)
   room.retract(`#${dyingPaperId} %`)  // clean up the dead paper's facts
@@ -60,6 +60,7 @@ room.on(
   `$ wish $name would be running`,
   results => {
     console.error("$ wish $name would be running")
+    console.error(results)
     let shouldBeRunningNameToProcessIds = {};
     results.forEach(result => {
       const paperName = result.name;
@@ -77,6 +78,6 @@ room.on(
   }
 )
 
-room.assert(["text", `"${path.basename(__filename)}"`], `has process id ${process.pid}`);
+room.assert(["text", path.basename(__filename)], `has process id ${process.pid}`);
 
 run()

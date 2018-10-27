@@ -24,8 +24,8 @@ const readFile = readLogPath => {
     }
     console.log(`#${myId} "${shortFilename}" has paper ID ${paperId}`)
 
-    room.assert(`#${myId}`, ["text", `"${shortFilename}"`], `has source code`, ["text", `"${sourceCode}"`])
-    room.assert(`#${myId}`, ["text", `"${shortFilename}"`], `has paper ID ${paperId}`)
+    room.assert(`#${myId}`, ["text", shortFilename], `has source code`, ["text", sourceCode])
+    room.assert(`#${myId}`, ["text", shortFilename], `has paper ID ${paperId}`)
     run()
     console.log(`done with "${shortFilename}"`)
   } catch (e) {

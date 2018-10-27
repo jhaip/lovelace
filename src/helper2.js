@@ -145,6 +145,9 @@ function init(filename) {
             // console.log("SEINDING BATCH", batched_calls)
             const fact_str = JSON.stringify(batched_calls)
             publisher.send(`....BATCH${MY_ID_STR}${fact_str}`);
+        },
+        cleanup: () => {
+            room.retract(`#${MY_ID_STR} %`)
         }
     }
 
@@ -186,7 +189,7 @@ function init(filename) {
             callback(val)
         } else if (id in subscription_ids) {
             callback = subscription_ids[id]
-            room.retract(`#${MY_ID_STR} %`)
+            // room.cleanup()
             callback(parseResult(val))
             room.flush()
         }

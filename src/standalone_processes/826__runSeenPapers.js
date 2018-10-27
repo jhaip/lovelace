@@ -14,6 +14,9 @@ room.on(
 room.on(
   `$ camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time`,
   results => {
+    room.cleanup();
+    console.error("camera sees paper")
+    console.error(results)
     const visibleIDs = results.map(paper => String(paper.id))
     console.log("knownPapers", knownPapers)
     console.log("visibleIDs", visibleIDs)
@@ -24,10 +27,10 @@ room.on(
       const paperId = String(paper.paperId);
       if (visibleIDs.includes(paperId)) {
         console.error(`wish "${processName}" would be running`)
-        room.assert(`wish`, ["text", `"${processName}"`], `would be running`);
+        room.assert(`wish`, ["text", processName], `would be running`);
       } else if (!bootPapers.includes(paperId)) {
         console.error(`RETRACT: wish "${processName}" would be running`)
-        room.retract(`#${myId} wish`, ["text", `"${processName}"`], `would be running`);
+        room.retract(`#${myId} wish`, ["text", processName], `would be running`);
       }
     });
   }
@@ -38,7 +41,7 @@ room.on(
   results => {
     console.log("no papers, stopping all programs")
     knownPapers.forEach(paper => {
-      room.retract(`#${myId} wish`, ["text", `"${processName}"`], `would be running`);
+      room.retract(`#${myId} wish`, ["text", processName], `would be running`);
     });
   }
 )

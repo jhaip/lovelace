@@ -23,8 +23,8 @@ const child = execFile(
 
 /*** Start the programs that actually starts all boot programs ***/
 room.assert(`camera 99 sees paper 1900 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
-room.assert('wish "1900__processManager.js" would be running')
-room.assert('wish "826__runSeenPapers.js" would be running')
+room.assert('wish', ["text", "1900__processManager.js"], 'would be running')
+room.assert('wish', ["text", "826__runSeenPapers.js"], 'would be running')
 // room.assert('wish "390__initialProgramCode.js" would be running')
 
 /*** Initial boot values ***/

@@ -653,6 +653,7 @@ func claimPapers(publisher *zmq.Socket, MY_ID_STR string, papers []Paper) {
 		[]string{"source", MY_ID_STR},
 		[]string{"postfix", ""},
 	}})
+	// $ camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time
 	for _, paper := range papers {
 		batch_claims = append(batch_claims, BatchMessage{"claim", [][]string{
 			[]string{"source", MY_ID_STR},
@@ -663,18 +664,30 @@ func claimPapers(publisher *zmq.Socket, MY_ID_STR string, papers []Paper) {
 			[]string{"integer", paper.Id},
 			[]string{"text", "at"},
 			[]string{"text", "TL"},
+			[]string{"text", "("},
 			[]string{"integer", strconv.Itoa(paper.Corners[0].X)},
+			[]string{"text", ","},
 			[]string{"integer", strconv.Itoa(paper.Corners[0].Y)},
+			[]string{"text", ")"},
 			[]string{"text", "TR"},
+			[]string{"text", "("},
 			[]string{"integer", strconv.Itoa(paper.Corners[1].X)},
+			[]string{"text", ","},
 			[]string{"integer", strconv.Itoa(paper.Corners[1].Y)},
+			[]string{"text", ")"},
 			[]string{"text", "BR"},
+			[]string{"text", "("},
 			[]string{"integer", strconv.Itoa(paper.Corners[2].X)},
+			[]string{"text", ","},
 			[]string{"integer", strconv.Itoa(paper.Corners[2].Y)},
+			[]string{"text", ")"},
 			[]string{"text", "BL"},
+			[]string{"text", "("},
 			[]string{"integer", strconv.Itoa(paper.Corners[3].X)},
+			[]string{"text", ","},
 			[]string{"integer", strconv.Itoa(paper.Corners[3].Y)},
-			[]string{"text", "at"},
+			[]string{"text", ")"},
+			[]string{"text", "@"},
 			[]string{"integer", "99"},
 		}})
 	}
