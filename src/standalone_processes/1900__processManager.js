@@ -45,20 +45,21 @@ function stopPaper(name, pid) {
 let nameToProcessIdCache = {};
 
 room.on(
-  `#${myId} $name has process id $pid`,
+  `$ $name has process id $pid`,
   results => {
     nameToProcessIdCache = {};
     results.forEach(result => {
       nameToProcessIdCache[result.name] = result.pid;
     })
-    console.log("NEW name->PID map:")
-    console.log(nameToProcessIdCache);
+    console.error("NEW name->PID map:")
+    console.error(nameToProcessIdCache);
   }
 )
 
 room.on(
   `$ wish $name would be running`,
   results => {
+    console.error("$ wish $name would be running")
     let shouldBeRunningNameToProcessIds = {};
     results.forEach(result => {
       const paperName = result.name;
@@ -76,6 +77,6 @@ room.on(
   }
 )
 
-room.assert(`#${myId}`, ["text", `"${path.basename(__filename)}"`], `has process id ${process.pid}`);
+room.assert(["text", `"${path.basename(__filename)}"`], `has process id ${process.pid}`);
 
 run()
