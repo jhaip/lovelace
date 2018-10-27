@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path')
-const { room, myId, scriptName } = require('../helper2')(__filename);
+const { room, myId, scriptName, run } = require('../helper2')(__filename);
 
 const readFile = readLogPath => {
   try {
