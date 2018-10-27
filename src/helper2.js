@@ -142,7 +142,7 @@ function init(filename) {
             batched_calls = [];
         },
         batch: batched_calls => {
-            console.log("SEINDING BATCH", batched_calls)
+            // console.log("SEINDING BATCH", batched_calls)
             const fact_str = JSON.stringify(batched_calls)
             publisher.send(`....BATCH${MY_ID_STR}${fact_str}`);
         }
