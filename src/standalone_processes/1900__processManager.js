@@ -42,8 +42,6 @@ function stopPaper(name, pid) {
   room.retract(`#${dyingPaperId} %`)  // clean up the dead paper's facts
 }
 
-room.assert(`#${myId}`, ["text", `"${path.basename(__filename)}"`], `has process id ${process.pid}`);
-
 let nameToProcessIdCache = {};
 
 room.on(
@@ -77,5 +75,7 @@ room.on(
     }
   }
 )
+
+room.assert(`#${myId}`, ["text", `"${path.basename(__filename)}"`], `has process id ${process.pid}`);
 
 run()
