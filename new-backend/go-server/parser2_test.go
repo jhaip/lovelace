@@ -9,22 +9,22 @@ import (
 	"github.com/alecthomas/repr"
 )
 
-// func checkTerms(terms, expected_terms []Term, t *testing.T) {
-// 	if len(terms) != len(expected_terms) {
-// 		t.Error("Wrong number of terms")
-// 	}
-// 	for i, term := range terms {
-// 		if term.Type != expected_terms[i].Type {
-// 			t.Error("Wrong term type for term ", i, "-- expected", expected_terms[i].Type, expected_terms[i].Value, "!=", term.Type, term.Value)
-// 		}
-// 		if term.Value != expected_terms[i].Value {
-// 			t.Error("Wrong term value for term ", i, "-- expected", expected_terms[i].Type, expected_terms[i].Value, "!=", term.Type, term.Value)
-// 		}
-// 	}
-// }
+func checkTerms(terms, expected_terms []Term, t *testing.T) {
+	if len(terms) != len(expected_terms) {
+		t.Error("Wrong number of terms")
+	}
+	for i, term := range terms {
+		if term.Type != expected_terms[i].Type {
+			t.Error("Wrong term type for term ", i, "-- expected", expected_terms[i].Type, expected_terms[i].Value, "!=", term.Type, term.Value)
+		}
+		if term.Value != expected_terms[i].Value {
+			t.Error("Wrong term value for term ", i, "-- expected", expected_terms[i].Type, expected_terms[i].Value, "!=", term.Type, term.Value)
+		}
+	}
+}
 
 func TestParse2(t *testing.T) {
-	msg := "#1800 \"This \\\"is\\\" a test\" one \"two\" (0.5, 2) @ $X $ % %Z true false null"
+	msg := "#1800 \"This \\\"is\\\" a test\" one \"two\" (0.5, 2) @ $X $x2 $ % %Z true false null"
 	start := time.Now()
 	terms, err := ParseReader("", strings.NewReader(msg))
 	timeProcessing := time.Since(start)
@@ -45,6 +45,7 @@ func TestParse2(t *testing.T) {
 		Term{"text", ")"},
 		Term{"text", "@"},
 		Term{"variable", "X"},
+		Term{"variable", "x2"},
 		Term{"variable", ""},
 		Term{"postfix", ""},
 		Term{"postfix", "Z"},

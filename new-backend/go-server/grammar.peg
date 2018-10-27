@@ -105,8 +105,7 @@ Integer ← '0' / NonZeroDecimalDigit DecimalDigit*
 
 Exponent ← 'e'i [+-]? DecimalDigit+
 
-Word ← ([a-zA-Z,()@])+ {
-    // TODO: this could use some more work to be more general
+Word ← ([,()@] / [a-zA-Z]+ [a-zA-Z0-9]*) {
     fmt.Println("INside word")
     return string(c.text), nil
 }
