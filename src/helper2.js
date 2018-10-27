@@ -122,21 +122,22 @@ function init(filename) {
             select_ids[select_id] = callback
             publisher.send(`...SELECT${MY_ID_STR}${query_msg_str}`);
         },
-        assert: (fact, shouldFlush) => {
+        assert: (fact, sendImmediately) => {
             // TODO: need to push into an array specific to the subsciber, in case there are multiple subscribers in one client
-            batched_calls.push({"type": "claim", "fact": [["source", MY_ID_STR]].concat(fullyParseFact(fact))})
-            if (shouldFlush) {
-                room.flush()
+            if (sendImmediately) {
+                publisher.send(`....CLAIM${MY_ID_STR}${fact}`);
+            } else {
+                batched_calls.push({ "type": "claim", "fact": [["source", MY_ID_STR]].concat(fullyParseFact(fact)) })
             }
-            // publisher.send(`....CLAIM${MY_ID_STR}${fact}`);
         },
-        retract: (query, shouldFlush) => {
+        retract: (query, sendImmediately) => {
             // TODO: need to push into an array specific to the subsciber, in case there are multiple subscribers in one client
-            batched_calls.push({ "type": "retract", "fact": fullyParseFact(query) })
-            if (shouldFlush) {
-                room.flush()
+            if (sendImmediately) {
+                publisher.send(`..RETRACT${MY_ID_STR}${query}`);
+            } else {
+                batched_calls.push({ "type": "retract", "fact": fullyParseFact(query) })
             }
-            // publisher.send(`..RETRACT${MY_ID_STR}${query}`);
+            
         },
         flush: () => {
             // TODO: need to push into an array specific to the subsciber, in case there are multiple subscribers in one client
@@ -150,15 +151,33 @@ function init(filename) {
         }
     }
 
+    const parseResult = result_str => {
+        return JSON.parse(result_str).map(result => {
+            let newResult = {}
+            for (let key in result) {
+                // result[key] = ["type", "value"]
+                // for legacy reasons, we just want the value
+                const value_type = result[key][0]
+                if (value_type === "integer" || value_type === "float") {
+                    newResult[key] = +result[key][1]    
+                } else {
+                    newResult[key] = result[key][1]
+                }
+            }
+            return newResult
+        })
+    }
+
     subscriber.on('message', (request) => {
         console.log("GOT MESSAGE")
         const msg = request.toString();
         console.log(msg)
         const source_len = 4
         const SUBSCRIPTION_ID_LEN = (randomId()).length
+        const SERVER_SEND_TIME_LEN = 13
         const id = msg.slice(source_len, source_len + SUBSCRIPTION_ID_LEN)
         console.log(`ID: ${id} == ${init_ping_id}`)
-        const val = msg.slice(source_len + SUBSCRIPTION_ID_LEN)
+        const val = msg.slice(source_len + SUBSCRIPTION_ID_LEN + SERVER_SEND_TIME_LEN)
         if (id == init_ping_id) {
             server_listening = true
             console.log("SERVER LISTENING!!")
@@ -171,7 +190,7 @@ function init(filename) {
         } else if (id in subscription_ids) {
             callback = subscription_ids[id]
             room.retract(`#${MY_ID_STR} %`)
-            callback(val)
+            callback(parseResult(val))
             room.flush()
         }
     });
