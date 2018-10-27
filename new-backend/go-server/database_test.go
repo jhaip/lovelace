@@ -15,12 +15,14 @@ func init_fact_map() map[string]Fact {
 	fact3 := Fact{[]Term{Term{"source", "2"}, Term{"text", "Bird"}, Term{"integer", "3"}, Term{"text", "toes"}}}
 	fact4 := Fact{[]Term{Term{"source", "2"}, Term{"text", "subscription"}, Term{"variable", "X"}, Term{"text", "is"}, Term{"postfix", "Y"}}}
 	fact5 := Fact{[]Term{Term{"source", "0001"}, Term{"text", "man"}, Term{"integer", "1"}, Term{"text", "has"}, Term{"integer", "95"}, Term{"text", "toes"}}}
+	fact6 := Fact{[]Term{Term{"source", "0000"}, Term{"text", "wish"}, Term{"text", "826__runSeenPapers.js"}, Term{"text", "would"}, Term{"text", "be"}, Term{"text", "running"}}}
 	factMap[fact_to_string(fact0)] = fact0
 	factMap[fact_to_string(fact1)] = fact1
 	factMap[fact_to_string(fact2)] = fact2
 	factMap[fact_to_string(fact3)] = fact3
 	factMap[fact_to_string(fact4)] = fact4
 	factMap[fact_to_string(fact5)] = fact5
+	factMap[fact_to_string(fact6)] = fact6
 	return factMap
 }
 
@@ -59,6 +61,19 @@ func TestQueryExactMatch(t *testing.T) {
 	}
 	if len(results3[0].Result) != 0 {
 		t.Error("result should be an empty map")
+	}
+	results_as_str := marshal_query_result(results3)
+	fmt.Println(results_as_str)
+}
+
+func TestQuery3(t *testing.T) {
+	factMap := init_fact_map()
+	query3 := make([]Fact, 1)
+	query3[0] = Fact{[]Term{Term{"variable", ""}, Term{"text", "wish"}, Term{"variable", "name"}, Term{"text", "would"}, Term{"text", "be"}, Term{"text", "running"}}}
+	results3 := select_facts(factMap, query3)
+	repr.Println(results3, repr.Indent("  "), repr.OmitEmpty(true))
+	if len(results3) != 1 {
+		t.Error("results should be empty slice")
 	}
 	results_as_str := marshal_query_result(results3)
 	fmt.Println(results_as_str)
