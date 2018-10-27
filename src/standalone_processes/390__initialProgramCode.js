@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path')
-const { room, myId, scriptName } = require('../helper')(__filename);
+const { room, myId, scriptName } = require('../helper2')(__filename);
 
 const readFile = readLogPath => {
   try {
@@ -24,8 +24,9 @@ const readFile = readLogPath => {
     }
     console.log(`#${myId} "${shortFilename}" has paper ID ${paperId}`)
 
-    room.assert(`#${myId} "${shortFilename}" has source code "${sourceCode}"`)
-    room.assert(`#${myId} "${shortFilename}" has paper ID ${paperId}`)
+    room.assert(`#${myId}`, ["text", `"${shortFilename}"`], `has source code`, ["text", `"${sourceCode}"`])
+    room.assert(`#${myId}`, ["text", `"${shortFilename}"`], `has paper ID ${paperId}`)
+    run()
     console.log(`done with "${shortFilename}"`)
   } catch (e) {
     console.error("readLogPath", readLogPath)

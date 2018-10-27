@@ -122,22 +122,19 @@ function init(filename) {
             select_ids[select_id] = callback
             publisher.send(`...SELECT${MY_ID_STR}${query_msg_str}`);
         },
-        assert: (fact, sendImmediately) => {
-            // TODO: need to push into an array specific to the subsciber, in case there are multiple subscribers in one client
-            if (sendImmediately) {
-                publisher.send(`....CLAIM${MY_ID_STR}${fact}`);
-            } else {
-                batched_calls.push({ "type": "claim", "fact": [["source", MY_ID_STR]].concat(fullyParseFact(fact)) })
-            }
+        assertNow: (fact) => {
+            publisher.send(`....CLAIM${MY_ID_STR}${fact}`);
         },
-        retract: (query, sendImmediately) => {
+        assert: (...args) => {
             // TODO: need to push into an array specific to the subsciber, in case there are multiple subscribers in one client
-            if (sendImmediately) {
-                publisher.send(`..RETRACT${MY_ID_STR}${query}`);
-            } else {
-                batched_calls.push({ "type": "retract", "fact": fullyParseFact(query) })
-            }
-            
+            batched_calls.push({ "type": "claim", "fact": [["source", MY_ID_STR]].concat(fullyParseFact(args)) })
+        },
+        retractNow: (query) => {
+            publisher.send(`..RETRACT${MY_ID_STR}${query}`);
+        },
+        retract: (...args) => {
+            // TODO: need to push into an array specific to the subsciber, in case there are multiple subscribers in one client
+            batched_calls.push({ "type": "retract", "fact": fullyParseFact(args) })
         },
         flush: () => {
             // TODO: need to push into an array specific to the subsciber, in case there are multiple subscribers in one client
