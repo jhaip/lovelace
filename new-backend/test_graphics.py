@@ -10,6 +10,12 @@ def my_prehook():
     # "$ camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time"
     claims = []
     paper_drawing_target_id = "1234"
+    paper_width = "400.000000"
+    paper_height = "400.000000"
+    claims.append({"type": "retract", "fact": [
+        ["source", MY_ID_STR],
+        ["postfix", ""],
+    ]})
     claims.append({"type": "claim", "fact": [
                     ["source", MY_ID_STR],
                     ["text", "camera"],
@@ -26,21 +32,21 @@ def my_prehook():
                     ["text", ")"],
                     ["text", "TR"],
                     ["text", "("],
-                    ["float", "1000.000000"],
+                    ["float", paper_width],
                     ["text", ","],
                     ["float", "0.000000"],
                     ["text", ")"],
                     ["text", "BR"],
                     ["text", "("],
-                    ["float", "1000.000000"],
+                    ["float", paper_width],
                     ["text", ","],
-                    ["float", "800.000000"],
+                    ["float", paper_height],
                     ["text", ")"],
                     ["text", "BL"],
                     ["text", "("],
                     ["float", "0.000000"],
                     ["text", ","],
-                    ["float", "800.000000"],
+                    ["float", paper_height],
                     ["text", ")"],
                     ["text", "@"],
                     ["integer", "999"]]})
