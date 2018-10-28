@@ -10,8 +10,8 @@ room.subscribe(
     console.log("ASSERTIONS:")
     console.log(assertions);
     const visibleIDs = assertions.map(paper => String(paper.id))
-    room.retract(`#${myId} draw a (255, 255, 1) line from ($, $) to ($, $)`)
-    room.retract(`#${myId} draw text $ at ($, $)`)
+    // room.retract(`#${myId} draw a (255, 255, 1) line from ($, $) to ($, $)`)
+    // room.retract(`#${myId} draw centered label $ at ($, $)`)
     assertions.forEach(p => {
       W = 1920.0;
       H = 1080.0;

@@ -104,31 +104,9 @@ def my_prehook():
     claims.append({"type": "claim", "fact": [
         ["source", paper_drawing_target_id],
         ["text", "draw"],
-        ["text", "label"],
-        ["text", "Hello World label"],
-        ["text", "at"],
-        ["text", "("],
-        ["float", "20.000000"],
-        ["text", ","],
-        ["float", "20.000000"],
-        ["text", ")"]]})
-    claims.append({"type": "claim", "fact": [
-        ["source", paper_drawing_target_id],
-        ["text", "draw"],
         ["text", "centered"],
         ["text", "label"],
         ["text", "Hello World centered label"],
-        ["text", "at"],
-        ["text", "("],
-        ["float", "20.000000"],
-        ["text", ","],
-        ["float", "20.000000"],
-        ["text", ")"]]})
-    claims.append({"type": "claim", "fact": [
-        ["source", paper_drawing_target_id],
-        ["text", "draw"],
-        ["text", "text"],
-        ["text", "Hello World text"],
         ["text", "at"],
         ["text", "("],
         ["float", "20.000000"],
@@ -145,7 +123,7 @@ def my_prehook():
         ["text", "("],
         ["float", "20.000000"],
         ["text", ","],
-        ["float", "20.000000"],
+        ["float", "500.000000"],
         ["text", ")"]]})
     batch(claims)
 

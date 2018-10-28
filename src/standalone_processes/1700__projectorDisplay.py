@@ -18,12 +18,13 @@ CAM_HEIGHT = 1080
 
 papers = []
 projector_calibration = None
+centered_labels = {}
 texts = {}
 lines = {}
 draw_wishes = {}
 
 def update_draw_wishes():
-    global texts, lines, draw_wishes
+    global texts, lines, centered_labels, draw_wishes
     draw_wishes = {}
     for source in lines:
         if source not in draw_wishes:
@@ -35,6 +36,11 @@ def update_draw_wishes():
             draw_wishes[source] = {}
             draw_wishes[source][source] = []
         draw_wishes[source][source] += texts[source]
+    for source in centered_labels:
+        if source not in draw_wishes:
+            draw_wishes[source] = {}
+            draw_wishes[source][source] = []
+        draw_wishes[source][source] += centered_labels[source]
 
 def mapPaperResultToLegacyDataFormat(result):
     return {
@@ -87,9 +93,28 @@ def sub_callback_line(results):
     update_draw_wishes()
 
 
-@subscription(["$source draw label $text at ($x, $y)"])
 @subscription(["$source draw $centered label $text at ($x, $y)"])
-@subscription(["$source draw text $text at ($x, $y)"])
+def sub_callback_centered_labels(results):
+    global centered_labels
+    logging.info("sub_callback_centered_labels")
+    logging.info(results)
+    centered_labels = {}
+    for v in results:
+        source = int(v["source"])
+        if source not in centered_labels:
+            centered_labels[source] = []
+        centered_labels[source].append({
+            "type": "text",
+            "options": {
+                "text": v["text"],
+                "x": v["x"],
+                "y": v["y"]
+            }
+        })
+    logging.info(centered_labels)
+    update_draw_wishes()
+
+
 @subscription(["$source draw $size text $text at ($x, $y)"])
 def sub_callback_text(results):
     global texts
@@ -110,7 +135,6 @@ def sub_callback_text(results):
         })
     logging.info(texts)
     update_draw_wishes()
-
 
 class Example(wx.Frame):
     ID_TIMER = 1
