@@ -15,9 +15,11 @@ room.on(
         }
         room.assert(`Man ${(myId * 1.0).toFixed(6)} has ${i} toes`)
         room.assert(`Man ${(myId * 1.0).toFixed(6)} has ${i} toes`)
+        room.assert(`Hello`, ["text", "world"], "$")
     }
 )
 
 room.assert(`Man ${(myId * 1.0).toFixed(6)} has 0 toes`)
+room.assert(`Hello`, ["text", "world"], "$")
 
 run();
