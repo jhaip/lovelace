@@ -5,7 +5,9 @@ const { room, myId, scriptName, run } = require('../helper2')(__filename);
 const readFile = readLogPath => {
   try {
     sourceCodeData = fs.readFileSync(readLogPath, 'utf8');
-    sourceCode = sourceCodeData.replace(/\n/g, '\\n').replace(/"/g, String.fromCharCode(9787))
+    sourceCode = sourceCodeData
+      // .replace(/\n/g, '\\n')
+      .replace(/"/g, String.fromCharCode(9787))
     // console.log(`"${readLogPath}" has source code "${sourceCode}"`)
 
     const shortFilename = path.basename(readLogPath);
