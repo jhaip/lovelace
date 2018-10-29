@@ -4,6 +4,7 @@ import logging
 import json
 import uuid
 import random
+import os
 import sys
 
 logging.basicConfig(level=logging.INFO)
@@ -15,8 +16,8 @@ sub_socket.connect("tcp://{0}:5555".format(rpc_url))
 pub_socket = context.socket(zmq.PUB)
 pub_socket.connect("tcp://{0}:5556".format(rpc_url))
 
-MY_ID = sys.argv[1]
-MY_ID_STR = str(MY_ID).zfill(4)
+MY_ID = None
+MY_ID_STR = None
 SUBSCRIPTION_ID_LEN = len(str(uuid.uuid4()))
 init_ping_id = str(uuid.uuid4())
 server_listening = False
@@ -25,6 +26,10 @@ subscription_ids = {}
 
 py_subscriptions = []
 py_prehook = None
+
+def get_my_id_str():
+    global MY_ID_STR
+    return MY_ID_STR
 
 
 def claim(fact_string):
@@ -115,10 +120,19 @@ def listen():
     # time.sleep(0.01)
 
 
-def init(my_id, skipListening=False):
+def init(root_filename, skipListening=False):
     global MY_ID, MY_ID_STR, py_subscriptions, py_prehook
-    MY_ID = my_id
+    scriptName = os.path.basename(root_filename)
+    scriptNameNoExtension = os.path.splitext(scriptName)[0]
+    fileDir = os.path.dirname(os.path.realpath(root_filename))
+    logPath = os.path.join(fileDir, 'logs/' + scriptNameNoExtension + '.log')
+    logging.basicConfig(filename=logPath, level=logging.INFO)
+    MY_ID = (scriptName.split(".")[0]).split("__")[0]
     MY_ID_STR = str(MY_ID).zfill(4)
+    print("INSIDE INIT:")
+    print(MY_ID)
+    print(MY_ID_STR)
+    print("-")
     sub_socket.setsockopt_string(zmq.SUBSCRIBE, MY_ID_STR)
     start = time.time()
     while not server_listening:
