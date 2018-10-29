@@ -1,7 +1,7 @@
 const { room, myId } = require('../helper2')(__filename);
 
 let fontSize = 48; // 32;
-let fontHeight = fontSize / 1080.0;
+let fontHeight = fontSize;  // / 1080.0;
 let lineHeight = 1.3 * fontHeight;
 const origin = [0.0001 + 0.1, 0.1 + 0.0001 + lineHeight]
 let charWidth = fontHeight * 0.38;
@@ -83,7 +83,7 @@ const getCursorIndex = () => {
 const render = () => {
   correctCursorPosition();
   correctWindowPosition();
-  room.cleanup();
+  // room.cleanup();
   let lines = ["Point at something!"]
   if (currentTargetName) {
     lines = currentSourceCode.replace(new RegExp(String.fromCharCode(34), 'g'), String.fromCharCode(9787)).split("\n")
@@ -94,15 +94,55 @@ const render = () => {
   console.log("editor height", editorHeightCharacters);
   lines.slice(windowPosition[1], windowPosition[1] + editorHeightCharacters).forEach((lineRaw, i) => {
     const line = lineRaw.substring(0, editorWidthCharacters);
-    room.assert(`#${myId} draw "${fontSize}pt" text "${line}" at (${origin[0]}, ${origin[1] + i * lineHeight}) on paper ${myId}`)
+    // room.assert(`draw`, ["text", `${fontSize}pt`], `text`, ["text", "Hello"], `at (${origin[0]}, ${origin[1] + i * lineHeight})`)
+    // console.log(`draw`, ["text", `${fontSize}pt`], `text`, ["text", `${line}`], `at (${origin[0]}, ${origin[1] + i * lineHeight})`)
+    room.assert(
+      ["text", "draw"],
+      ["text", "16pt"],
+      ["text", "text"],
+      ["text", line],
+      ["text", "at"],
+      ["text", "("],
+      ["float", (origin[0]).toFixed(6)],
+      ["text", ","],
+      ["float", (origin[1] + i * lineHeight).toFixed(6)],
+      ["text", ")"]
+    )
   });
+  // room.assert(
+  //   `draw a ${cursorColor} line from ` +
+  //   `(${origin[0] + cursorPosition[0] * charWidth}, ${origin[1] + (cursorPosition[1] - windowPosition[1]) * lineHeight})` +
+  //   ` to ` +
+  //   `(${origin[0] + cursorPosition[0] * charWidth}, ${origin[1] + (cursorPosition[1] - windowPosition[1]) * lineHeight - fontHeight})`
+  // );
   room.assert(
-    `#${myId} draw a ${cursorColor} line from ` +
-    `(${origin[0] + cursorPosition[0] * charWidth}, ${origin[1] + (cursorPosition[1] - windowPosition[1]) * lineHeight})` +
-    ` to ` +
-    `(${origin[0] + cursorPosition[0] * charWidth}, ${origin[1] + (cursorPosition[1] - windowPosition[1]) * lineHeight - fontHeight})` +
-    ` on paper ${myId}`
-  );
+    ["text", "draw"],
+    ["text", "a"],
+    ["text", "("],
+    ["integer", "255"],
+    ["text", ","],
+    ["integer", "255"],
+    ["text", ","],
+    ["integer", "255"],
+    ["text", ")"],
+    ["text", "line"],
+    ["text", "from"],
+    ["text", "("],
+    ["float", "0.100100"],
+    // ["float", (origin[0] + cursorPosition[0] * charWidth).toFixed(6)],
+    ["text", ","],
+    ["float", "62.500100"],
+    // ["float", (origin[1] + (cursorPosition[1] - windowPosition[1]) * lineHeight).toFixed(6)],
+    ["text", ")"],
+    ["text", "to"],
+    ["text", "("],
+    ["float", "0.100100"],
+    // ["float", (origin[0] + cursorPosition[0] * charWidth).toFixed(6)],
+    ["text", ","],
+    ["float", "14.500100"],
+    // ["float", (origin[1] + (cursorPosition[1] - windowPosition[1]) * lineHeight - fontHeight).toFixed(6)],
+    ["text", ")"])
+  console.log("done rendering")
 }
 
 console.error("HEllo from text editor")
@@ -110,25 +150,10 @@ console.error("my id")
 console.error(myId)
 
 room.subscribe(
-  `$ paper ${String(myId)} is pointing at paper $targetId`,
-  results => {
-    console.error("got stuff 1")
-  }
-);
-
-room.subscribe(
-  `$ paper "${String(myId)}" is pointing at paper $targetId`,
-  `$ $targetName has paper ID $targetId`,
-  results => {
-    console.error("got stuff 2")
-  }
-);
-
-room.subscribe(
-  `$ paper "${String(myId)}" is pointing at paper $targetId`,
+  `$ paper ${myId} is pointing at paper $targetId`,
   `$ $targetName has paper ID $targetId`,
   `$ $targetName has source code $sourceCode`,
-  // `$ paper "${String(myId)}" has width $myWidth height $myHeight angle $ at ($, $)`,
+  // `$ paper ${myId} has width $myWidth height $myHeight angle $ at ($, $)`,
   results => {
   // ({assertions, retractions}) => {
     console.error("got stuff")
