@@ -1,6 +1,7 @@
 import time
-from helper import *
-init(__file__)
+import logging
+import math
+from helper2 import init, claim, retract, prehook, subscription, batch, get_my_id_str
 
 def get_paper_center(c):
     x = (c[0]["x"] + c[1]["x"] + c[2]["x"] + c[3]["x"]) * 0.25
@@ -68,29 +69,40 @@ def get_paper_you_point_at(papers, you_id, WISKER_LENGTH):
                 return paper["id"]
     return None
 
-#####
-
-while True:
-    result = select('camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time')
-    if not result:
-        continue
+@subscription(["$ camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time"])
+def sub_callback_papers(results):
     papers = list(map(lambda p: ({
-        "id": p["id"]["value"],
+        "id": p["id"],
         "corners": [
-            {"x": p["x1"]["value"], "y": p["y1"]["value"]},
-            {"x": p["x2"]["value"], "y": p["y2"]["value"]},
-            {"x": p["x3"]["value"], "y": p["y3"]["value"]},
-            {"x": p["x4"]["value"], "y": p["y4"]["value"]}
+            {"x": p["x1"], "y": p["y1"]},
+            {"x": p["x2"], "y": p["y2"]},
+            {"x": p["x3"], "y": p["y3"]},
+            {"x": p["x4"], "y": p["y4"]}
         ]
-    }), result))
+    }), results))
     logging.info("--")
 
     WISKER_LENGTH = 150
-    retract("paper $ is pointing at paper $")
+    claims = []
+    claims.append({"type": "retract", "fact": [
+        ["source", get_my_id_str()],
+        ["postfix", ""],
+    ]})
     for paper in papers:
-        other_paper = get_paper_you_point_at(papers, paper["id"], WISKER_LENGTH)
+        other_paper = get_paper_you_point_at(
+            papers, paper["id"], WISKER_LENGTH)
         logging.info("{} pointing at {}".format(paper["id"], other_paper))
         if other_paper is not None:
-            say("paper {} is pointing at paper {}".format(paper["id"], other_paper))
+            claims.append({"type": "claim", "fact": [
+                ["source", get_my_id_str()],
+                ["text", "paper"],
+                ["integer", str(paper["id"])],
+                ["text", "is"],
+                ["text", "pointing"],
+                ["text", "at"],
+                ["text", "paper"],
+                ["integer", str(other_paper)],
+            ]})
+    batch(claims)
 
-    time.sleep(1)
+init(__file__)
