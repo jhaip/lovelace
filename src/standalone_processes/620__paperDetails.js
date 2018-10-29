@@ -37,7 +37,7 @@ console.error("starting ---")
 
 room.on(
   `$ camera $cameraId has projector calibration TL ($PCx1, $PCy1) TR ($PCx2, $PCy2) BR ($PCx3, $PCy3) BL ($PCx4, $PCy4) @ $`,
-  `$ camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $`,
+  `$ camera $ sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $`,
   results => {
     results.forEach(data => {
       console.error("GOT SOME DATA!!")
