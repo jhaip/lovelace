@@ -16,6 +16,10 @@ def my_prehook():
         ["source", MY_ID_STR],
         ["postfix", ""],
     ]})
+    claims.append({"type": "retract", "fact": [
+        ["source", paper_drawing_target_id],
+        ["postfix", ""],
+    ]})
     claims.append({"type": "claim", "fact": [
                     ["source", MY_ID_STR],
                     ["text", "camera"],
@@ -50,6 +54,40 @@ def my_prehook():
                     ["text", ")"],
                     ["text", "@"],
                     ["integer", "999"]]})
+    claims.append({"type": "claim", "fact": [
+        ["source", MY_ID_STR],
+        ["text", "camera"],
+        ["integer", "1"],
+        ["text", "sees"],
+        ["text", "paper"],
+        ["integer", "9876"],
+        ["text", "at"],
+        ["text", "TL"],
+        ["text", "("],
+        ["float", "0.000000"],
+        ["text", ","],
+        ["float", "500.000000"],
+        ["text", ")"],
+        ["text", "TR"],
+        ["text", "("],
+        ["float", paper_width],
+        ["text", ","],
+        ["float", "500.000000"],
+        ["text", ")"],
+        ["text", "BR"],
+        ["text", "("],
+        ["float", paper_width],
+        ["text", ","],
+        ["float", "1000.000000"],
+        ["text", ")"],
+        ["text", "BL"],
+        ["text", "("],
+        ["float", "0.000000"],
+        ["text", ","],
+        ["float", "1000.000000"],
+        ["text", ")"],
+        ["text", "@"],
+        ["integer", "999"]]})
     # claims.append({"type": "claim", "fact": [
     #     ["source", MY_ID_STR],
     #     ["text", "camera"],
