@@ -41,7 +41,7 @@ func TestParse2(t *testing.T) {
 		Term{"text", "("},
 		Term{"float", "0.500000"},
 		Term{"text", ","},
-		Term{"float", "2.000000"},
+		Term{"integer", "2"},
 		Term{"text", ")"},
 		Term{"text", "@"},
 		Term{"variable", "X"},
@@ -66,8 +66,8 @@ func TestParse2Numbers(t *testing.T) {
 	repr.Println(terms, repr.Indent("  "), repr.OmitEmpty(true))
 	expected_terms := []Term{
 		Term{"float", "0.500000"},
-		Term{"float", "2.000000"},
-		Term{"float", "-2.000000"},
+		Term{"integer", "2"},
+		Term{"integer", "-2"},
 		Term{"float", "1.000000"},
 		Term{"float", "-1.000000"},
 		Term{"float", "0.999990"},

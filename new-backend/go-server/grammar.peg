@@ -6,6 +6,7 @@ package main
 import (
 	"fmt"
     "strconv"
+    "strings"
 )
 
 // func main() {
@@ -75,9 +76,13 @@ Term ← val:( Id / Variable / Postfix / Value / Word / _ ) {
 Value ← val:( Number / String / Bool / Null ) {
     fmt.Println("VALUE:")
     fmt.Println(val)
-    valAsFloat, isNumber := val.(float64)
-    if isNumber {
+    valAsFloat, isFloat := val.(float64)
+    if isFloat {
         return Term{"float", strconv.FormatFloat(valAsFloat, 'f', 6, 64)}, nil
+    }
+    valAsInt, isInt := val.(int)
+    if isInt {
+        return Term{"integer", strconv.Itoa(valAsInt)}, nil
     }
     valAsString, _ := val.(string)
     return Term{"text", valAsString}, nil
@@ -98,8 +103,11 @@ Postfix ← '%' ( Integer / Word )? {
 Number ← '-'? Integer ( '.' DecimalDigit+ )? Exponent? {
     // JSON numbers have the same syntax as Go's, and are parseable using
     // strconv.
-    // TODO: parse integer and float differently!
-    return strconv.ParseFloat(string(c.text), 64)
+    if (strings.Contains(string(c.text), ".")) {
+        return strconv.ParseFloat(string(c.text), 64)
+    } else {
+        return strconv.Atoi(string(c.text))
+    }
 }
 
 Integer ← '0' / NonZeroDecimalDigit DecimalDigit*
