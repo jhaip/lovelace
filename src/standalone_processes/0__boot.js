@@ -81,5 +81,55 @@ const cleanSourceCode = sourceCode.replace(/\n/g, '\\n').replace(/"/g, String.fr
 // room.assert(`camera 99 sees paper 1013 at TL (100, 100) TR (1200, 100) BR (1200, 800) BL (100, 800) @ 1`)
 // room.assert(`paper 1013 is pointing at paper 472`)  // comment out if pointingAt.py is running
 // room.assert(`wish paper 498 at "498__printingManager.py" would be printed`)
+room.assert(`camera 99 sees paper 472 at TL (0, 0) TR (400, 0) BR (400, 400) BL (0, 400) @ 1`)
+room.assert(`camera 99 sees paper 1013 at TL (0, 500) TR (400, 500) BR (400, 900) BL (0, 900) @ 1`)
+// room.assertForOtherSource('472', `draw a (255, 255, 255) line from (0, 0) to (400, 400)`)
+// room.assertForOtherSource('1013', `draw a (255, 255, 255) line from (0, 0) to (400, 400)`)
+room.assertForOtherSource('0472', [
+["text", "draw"],
+["text", "a"],
+["text", "("],
+["integer", "255"],
+["text", ","],
+["integer", "255"],
+["text", ","],
+["integer", "255"],
+["text", ")"],
+["text", "line"],
+["text", "from"],
+["text", "("],
+["float", "0.000000"],
+["text", ","],
+["float", "0.000000"],
+["text", ")"],
+["text", "to"],
+["text", "("],
+["float", "400.000000"],
+["text", ","],
+["float", "400.000000"],
+["text", ")"]])
+room.assertForOtherSource('1013', [
+  ["text", "draw"],
+  ["text", "a"],
+  ["text", "("],
+  ["integer", "255"],
+  ["text", ","],
+  ["integer", "255"],
+  ["text", ","],
+  ["integer", "255"],
+  ["text", ")"],
+  ["text", "line"],
+  ["text", "from"],
+  ["text", "("],
+  ["float", "0.000000"],
+  ["text", ","],
+  ["float", "0.000000"],
+  ["text", ")"],
+  ["text", "to"],
+  ["text", "("],
+  ["float", "400.000000"],
+  ["text", ","],
+  ["float", "400.000000"],
+  ["text", ")"]])
 
 run();

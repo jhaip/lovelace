@@ -12,6 +12,9 @@ function sleep(millis) {
 }
 
 const stringToTerm = x => {
+    if (x[0] === `"`) {
+        return ["text", x.slice(1, -1)]
+    }
     if (isNaN(x) || x === "") {
         if (x[0] === "#") {
             return ["source", x.slice(1)]
@@ -95,7 +98,10 @@ function init(filename) {
                 "id": subscription_id,
                 "facts": query_strings
             }
+            console.log("query_msg:")
+            console.log(query_msg)
             const query_msg_str = JSON.stringify(query_msg)
+            console.log(query_msg_str)
             subscription_ids[subscription_id] = callback
             publisher.send(`SUBSCRIBE${MY_ID_STR}${query_msg_str}`);
         },
@@ -124,6 +130,10 @@ function init(filename) {
         },
         assertNow: (fact) => {
             publisher.send(`....CLAIM${MY_ID_STR}${fact}`);
+        },
+        assertForOtherSource: (otherSource, fact) => {
+            console.error("assertForOtherSource")
+            batched_calls.push({ "type": "claim", "fact": [["source", otherSource]].concat(fullyParseFact(fact)) })
         },
         assert: (...args) => {
             // TODO: need to push into an array specific to the subsciber, in case there are multiple subscribers in one client

@@ -98,6 +98,7 @@ Postfix ← '%' ( Integer / Word )? {
 Number ← '-'? Integer ( '.' DecimalDigit+ )? Exponent? {
     // JSON numbers have the same syntax as Go's, and are parseable using
     // strconv.
+    // TODO: parse integer and float differently!
     return strconv.ParseFloat(string(c.text), 64)
 }
 

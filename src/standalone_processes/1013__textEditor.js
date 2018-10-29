@@ -1,4 +1,4 @@
-const { room, myId } = require('../helper')(__filename);
+const { room, myId } = require('../helper2')(__filename);
 
 let fontSize = 48; // 32;
 let fontHeight = fontSize / 1080.0;
@@ -83,8 +83,7 @@ const getCursorIndex = () => {
 const render = () => {
   correctCursorPosition();
   correctWindowPosition();
-  room.retract(`#${myId} draw $ text $ at ($, $) on paper ${myId}`)
-  room.retract(`#${myId} draw a ${cursorColor} line from ($, $) to ($, $) on paper ${myId}`)
+  room.cleanup();
   let lines = ["Point at something!"]
   if (currentTargetName) {
     lines = currentSourceCode.replace(new RegExp(String.fromCharCode(34), 'g'), String.fromCharCode(9787)).split("\n")
@@ -107,30 +106,45 @@ const render = () => {
 }
 
 console.error("HEllo from text editor")
+console.error("my id")
+console.error(myId)
 
 room.subscribe(
-  `$ paper ${myId} is pointing at paper $targetId`,
+  `$ paper ${String(myId)} is pointing at paper $targetId`,
+  results => {
+    console.error("got stuff 1")
+  }
+);
+
+room.subscribe(
+  `$ paper "${String(myId)}" is pointing at paper $targetId`,
+  `$ $targetName has paper ID $targetId`,
+  results => {
+    console.error("got stuff 2")
+  }
+);
+
+room.subscribe(
+  `$ paper "${String(myId)}" is pointing at paper $targetId`,
   `$ $targetName has paper ID $targetId`,
   `$ $targetName has source code $sourceCode`,
-  `$ paper ${myId} has width $myWidth height $myHeight angle $ at ($, $)`,
-  ({assertions, retractions}) => {
+  // `$ paper "${String(myId)}" has width $myWidth height $myHeight angle $ at ($, $)`,
+  results => {
+  // ({assertions, retractions}) => {
     console.error("got stuff")
-    console.error(assertions)
-    console.error(retractions)
-    if (false && retractions.length > 0) {
-      room.assert(`#${myId} draw "${fontSize}pt" text "Point at something!" at (${origin[0]}, ${origin[1]}) on paper ${myId}`)
-      currentTargetName = undefined;
-      currentSourceCode = "";
-      cursorPosition = [0, 0];
-      render();
-    }
-    assertions.forEach(({targetId, targetName, sourceCode, myWidth, myHeight}) => {
+    console.error(results)
+    // room.assert(`#${myId} draw "${fontSize}pt" text "Point at something!" at (${origin[0]}, ${origin[1]}) on paper ${myId}`)
+    // currentTargetName = undefined;
+    // currentSourceCode = "";
+    // cursorPosition = [0, 0];
+    // render();
+    results.forEach(({targetId, targetName, sourceCode, myWidth, myHeight}) => {
       if (currentTargetName !== targetName) {
         currentTargetName = targetName;
         currentSourceCode = sourceCode;
       }
-      curentWidth = myWidth;
-      currentHeight = myHeight;
+      curentWidth = 1000; // myWidth;
+      currentHeight = 800; // myHeight;
       render();
     })
   }
@@ -138,43 +152,47 @@ room.subscribe(
 
 room.on(
   `$ keyboard $ typed key $key @ $`,
-  ({ key }) => {
-    console.log("key", key);
-    insertChar(key);
+  results => {
+    results.forEach(({ key }) => {
+      console.log("key", key);
+      insertChar(key);  
+    })
   }
 )
 
 room.on(
   `$ keyboard $ typed special key $specialKey @ $`,
-  ({ specialKey }) => {
-    console.log("special key", specialKey);
-    const special_key_map = {
-      "enter": "\n",
-      "space": " ",
-      "tab": "\t",
-      "doublequote": String.fromCharCode(34)
-    }
-    if (!!special_key_map[specialKey]) {
-      insertChar(special_key_map[specialKey])
-    } else if (specialKey === "up") {
-      cursorPosition[1] -= 1;
-      render();
-    } else if (specialKey === "right") {
-      cursorPosition[0] += 1;
-      render();
-    } else if (specialKey === "down") {
-      cursorPosition[1] += 1;
-      render();
-    } else if (specialKey === "left") {
-      cursorPosition[0] -= 1;
-      render();
-    } else if (specialKey === "backspace") {
-      deleteChar();
-    } else if (specialKey === "C-p") {
-      const language = currentTargetName.split(".")[1];
-      const cleanSourceCode = currentSourceCode.replace(/\n/g, '\\n').replace(/"/g, String.fromCharCode(9787))
-      const millis = (new Date()).getTime()
-      room.assert(`#${myId} wish a paper would be created in "${language}" with source code "${cleanSourceCode}" @ ${millis}`);
-    }
+  results => {
+    results.forEach(({ specialKey }) => {
+      console.log("special key", specialKey);
+      const special_key_map = {
+        "enter": "\n",
+        "space": " ",
+        "tab": "\t",
+        "doublequote": String.fromCharCode(34)
+      }
+      if (!!special_key_map[specialKey]) {
+        insertChar(special_key_map[specialKey])
+      } else if (specialKey === "up") {
+        cursorPosition[1] -= 1;
+        render();
+      } else if (specialKey === "right") {
+        cursorPosition[0] += 1;
+        render();
+      } else if (specialKey === "down") {
+        cursorPosition[1] += 1;
+        render();
+      } else if (specialKey === "left") {
+        cursorPosition[0] -= 1;
+        render();
+      } else if (specialKey === "backspace") {
+        deleteChar();
+      } else if (specialKey === "C-p") {
+        const language = currentTargetName.split(".")[1];
+        const cleanSourceCode = currentSourceCode.replace(/\n/g, '\\n').replace(/"/g, String.fromCharCode(9787))
+        const millis = (new Date()).getTime()
+        room.assert(`#${myId} wish a paper would be created in "${language}" with source code "${cleanSourceCode}" @ ${millis}`);
+      }
+    });
   }
 )

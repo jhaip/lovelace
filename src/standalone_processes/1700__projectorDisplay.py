@@ -79,7 +79,7 @@ def sub_callback_line(results):
     global lines
     logging.info("sub_callback_line")
     logging.info(results)
-    lines = {}
+    # lines = {}
     for v in results:
         source = int(v["source"])
         if source not in lines:
@@ -198,10 +198,10 @@ class Example(wx.Frame):
         # print(1000*(end - start), "ms", 1.0/(end - start), "fps")
 
     def OnPaint(self, e):
-        global draw_wishes, papers
+        global draw_wishes, papers, lines
         now = time.time()
-        if self.lastPaint:
-            print(1.0/(now - self.lastPaint), "fps for paint")
+        # if self.lastPaint:
+        #     print(1.0/(now - self.lastPaint), "fps for paint")
         self.lastPaint = time.time()
 
         dc = wx.BufferedPaintDC(self)
@@ -226,6 +226,9 @@ class Example(wx.Frame):
                         paper_draw_wishes[target] = []
                     paper_draw_wishes[target].extend(target_commands)
         logging.error("PAPER DRAW WISHES:")
+        logging.error(lines)
+        logging.error(draw_wishes)
+        logging.error("---draw wishes")
         logging.error(paper_draw_wishes)
 
         for i, target in enumerate(paper_draw_wishes):
@@ -243,7 +246,7 @@ class Example(wx.Frame):
                         gc, paper, paper_draw_wishes.get(paper["id"]))
 
         end = time.time()
-        print(1000*(end - now), "ms", 1.0/(end - now), "fps to do paint stuff")
+        # print(1000*(end - now), "ms", 1.0/(end - now), "fps to do paint stuff")
 
     def dist(self, p1, p2):
         return math.sqrt((p1["x"] - p2["x"])**2 + (p1["y"] - p2["y"])**2)
@@ -372,6 +375,8 @@ class Example(wx.Frame):
                     print(command)
 
     def draw_paper(self, gc, paper, draw_commands):
+        if not draw_commands or len(draw_commands) == 0:
+            return
         tl = None
         tr = None
         bl = None
