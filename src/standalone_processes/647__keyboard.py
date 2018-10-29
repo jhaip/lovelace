@@ -1,11 +1,13 @@
+import time
+import logging
 from pynput import keyboard
-from helper import *
-init(__file__)
+from helper2 import init, claim, retract, prehook, subscription, batch, get_my_id_str
+init(__file__, skipListening=True)
 
 is_ctrl_pressed = False
 
-retract("keyboard {} typed key $ @ $".format(MY_ID))
-retract("keyboard {} typed special key $ @ $".format(MY_ID))
+retract("keyboard {} typed key $ @ $".format(get_my_id_str()))
+retract("keyboard {} typed special key $ @ $".format(get_my_id_str()))
 
 def map_special_key(key):
     m = {}
@@ -27,13 +29,38 @@ def map_special_key(key):
 
 def add_key(key, special_key):
     timestamp = int(time.time()*1000.0)
-    retract("keyboard {} typed key $ @ $".format(MY_ID))
-    retract("keyboard {} typed special key $ @ $".format(MY_ID))
+    claims = []
+    claims.append({"type": "retract", "fact": [
+        ["source", get_my_id_str()],
+        ["postfix", ""],
+    ]})
     if special_key:
         special_key = map_special_key(special_key)
-        say("keyboard {} typed special key \"{}\" @ {}".format(MY_ID, special_key, timestamp))
+        # say("keyboard {} typed special key \"{}\" @ {}".format(MY_ID, special_key, timestamp))
+        claims.append({"type": "claim", "fact": [
+            ["source", get_my_id_str()],
+            ["text", "keyboard"],
+            ["text", get_my_id_str()],
+            ["text", "typed"],
+            ["text", "special"],
+            ["text", "key"],
+            ["text", str(special_key)],
+            ["text", "@"],
+            ["integer", str(timestamp)],
+        ]})
     else:
-        say("keyboard {} typed key \"{}\" @ {}".format(MY_ID, key, timestamp))
+        # say("keyboard {} typed key \"{}\" @ {}".format(MY_ID, key, timestamp))
+        claims.append({"type": "claim", "fact": [
+            ["source", get_my_id_str()],
+            ["text", "keyboard"],
+            ["text", get_my_id_str()],
+            ["text", "typed"],
+            ["text", "key"],
+            ["text", str(key)],
+            ["text", "@"],
+            ["integer", str(timestamp)],
+        ]})
+    batch(claims)
 
 def add_ctrl_key_combo(key):
     add_key(None, "C-{0}".format(key))

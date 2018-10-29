@@ -132,6 +132,7 @@ def init(root_filename, skipListening=False):
     print("INSIDE INIT:")
     print(MY_ID)
     print(MY_ID_STR)
+    print(logPath)
     print("-")
     sub_socket.setsockopt_string(zmq.SUBSCRIBE, MY_ID_STR)
     start = time.time()
