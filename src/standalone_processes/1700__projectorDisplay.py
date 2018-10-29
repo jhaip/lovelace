@@ -8,10 +8,6 @@ import math
 import json
 import zmq
 import sys
-MY_ID = sys.argv[1]
-print(MY_ID)
-
-logging.basicConfig(level=logging.INFO)
 
 CAM_WIDTH = 1920
 CAM_HEIGHT = 1080
@@ -429,7 +425,7 @@ class Example(wx.Frame):
 
 
 if __name__ == '__main__':
-    init(MY_ID, skipListening=True)
+    init(__file__, skipListening=True)
     app = wx.App()
     Example(None, 'Line')
     app.MainLoop()
