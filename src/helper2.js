@@ -118,7 +118,10 @@ function init(filename) {
             subscription_ids[subscription_id] = callback
             publisher.send(`SUBSCRIBE${MY_ID_STR}${query_msg_str}`);
         },
-        select: query_strings => {
+        select: async (...args) => {
+            await waitForServerListening();
+            const query_strings = args.slice(0, -1)
+            const callback = args[args.length - 1]
             const select_id = randomId()
             const query_msg = {
                 "id": select_id,
