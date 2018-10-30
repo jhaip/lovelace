@@ -308,15 +308,28 @@ func debug_database_observer(db *map[string]Fact) {
 		dbAsSstring := []byte("\033[H\033[2J") // clear terminal output on MacOS
 		dbAsBase64Strings := ""
 		var keys []string
-		for k := range *db {
+		dbCopy := make(map[string]Fact)
+		for k, fact := range *db {
 			keys = append(keys, k)
+			dbCopy[k] = fact
 		}
 		dbMutex.RUnlock()
 		sort.Strings(keys)
 		for _, fact_string := range keys {
 			dbAsSstring = append(dbAsSstring, []byte(fact_string)...)
 			dbAsSstring = append(dbAsSstring, '\n')
-			dbAsBase64Strings += b64.StdEncoding.EncodeToString([]byte(fact_string)) + "\n"
+			dbAsBase64Strings += "["
+			for i, term := range dbCopy[fact_string].Terms {
+				if i > 0 {
+					dbAsBase64Strings += ","
+				}
+				if term.Type == "text" {
+					dbAsBase64Strings += fmt.Sprintf("[\"%s\", \"%s\"]", term.Type, b64.StdEncoding.EncodeToString([]byte(term.Value)))
+				} else {
+					dbAsBase64Strings += fmt.Sprintf("[\"%s\", \"%v\"]", term.Type, term.Value)
+				}
+			}
+			dbAsBase64Strings += "]\n"
 		}
 		err := ioutil.WriteFile("./db_view.txt", dbAsSstring, 0644)
 		checkErr(err)

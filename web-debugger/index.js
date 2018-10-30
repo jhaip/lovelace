@@ -6,27 +6,43 @@ function b64DecodeUnicode(str) {
 }
 
 $.get("http://localhost:3000/db", function (data) {
-    console.log(data)
-    var decodedData = data.map(b64DecodeUnicode)
+    // console.log(data)
+    const lastValSlice = data.slice(-1)
+    if (lastValSlice.length === 1 && lastValSlice[0] == "") {
+        data = data.slice(0, -1)
+    }
+    // console.log(data)
+    var decodedData = data.map(function (datum) {
+        // console.log(datum);
+        const parsedDatum = JSON.parse(datum).map(function (d) {
+            if (d[0] === "text") {
+                return [d[0], b64DecodeUnicode(d[1])]
+            }
+            return d;
+        });
+        return parsedDatum;
+    })
+    // console.log(decodedData)
+    // var decodedData = data.map(b64DecodeUnicode)
     var dataJoinedBySource = {}
     decodedData.forEach(function (data) {
-        var firstWord = data.split(" ")[0];
+        var firstWord = data[0][1]; // value of the first datum
         if (!(firstWord in dataJoinedBySource)) {
             dataJoinedBySource[firstWord] = []    
         }
         dataJoinedBySource[firstWord].push(data)
     })
-    console.log(decodedData)
-    var decodedDataHTML = decodedData.map(function (data) {
-        return `<li>${data}</li>`
-    }).join('\n');
+    // console.log(decodedData)
 
-    var decodedDataHTML2 = ""
+    var decodedDataHTML = ""
     Object.keys(dataJoinedBySource).forEach(function (source) {
-        decodedDataHTML2 += `<h4>${source}</h4>`
-        decodedDataHTML2 += dataJoinedBySource[source].map(function (data) {
-            return `<li>${data}</li>`
+        decodedDataHTML += `<h4>${source}</h4>`
+        decodedDataHTML += dataJoinedBySource[source].map(function (data) {
+            const innerContents = data.map(function (d) {
+                return `<div class="val-type val-type--${d[0]}">${d[1]}</div>`
+            }).join("")
+            return `<li>${innerContents}</li>`
         }).join('\n');
     })
-    $(".results").html(decodedDataHTML2);
+    $(".results").html(decodedDataHTML);
 });
