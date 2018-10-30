@@ -14,7 +14,9 @@ import (
 
 	"sync"
 	"time"
+
 	// "github.com/pkg/profile"
+	b64 "encoding/base64"
 )
 
 var dbMutex sync.RWMutex
@@ -304,18 +306,22 @@ func debug_database_observer(db *map[string]Fact) {
 	for {
 		dbMutex.RLock()
 		dbAsSstring := []byte("\033[H\033[2J") // clear terminal output on MacOS
+		dbAsBase64Strings := ""
 		var keys []string
 		for k := range *db {
 			keys = append(keys, k)
 		}
+		dbMutex.RUnlock()
 		sort.Strings(keys)
 		for _, fact_string := range keys {
 			dbAsSstring = append(dbAsSstring, []byte(fact_string)...)
 			dbAsSstring = append(dbAsSstring, '\n')
+			dbAsBase64Strings += b64.StdEncoding.EncodeToString([]byte(fact_string)) + "\n"
 		}
-		dbMutex.RUnlock()
 		err := ioutil.WriteFile("./db_view.txt", dbAsSstring, 0644)
 		checkErr(err)
+		err2 := ioutil.WriteFile("./db_view_base64.txt", []byte(dbAsBase64Strings), 0644)
+		checkErr(err2)
 		time.Sleep(1.0 * time.Second)
 	}
 }
