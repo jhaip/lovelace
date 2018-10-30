@@ -40,10 +40,21 @@
             white-space: nowrap;
             text-overflow: ellipsis;
         }
+        .long-poll-button {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            padding: 1rem;
+            background-color: grey;
+        }
+        .long-poll-button--active {
+            background-color: greenyellow;
+        }
     </style>
 </head>
 
 <body>
+    <div class="long-poll-button long-poll-button--active">Poll</div>
     <ol class="results short-values"></ol>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
     <script src="index.js"></script>
