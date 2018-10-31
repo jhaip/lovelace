@@ -424,6 +424,14 @@ func main() {
 	go debug_database_observer(&factDatabase)
 	go batch_worker(batch_messages, claims, retractions, subscriptions_notifications, &factDatabase)
 
+	go func() {
+		for {
+			fmt.Println("kick it!")
+			subscriptions_notifications <- true
+			time.Sleep(1.0 * time.Second)
+		}
+	}()
+
 	for {
 		msg, _ := subscriber.Recv(0)
 		// fmt.Printf("%s\n", msg)
