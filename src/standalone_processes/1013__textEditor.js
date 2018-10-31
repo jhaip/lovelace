@@ -83,7 +83,7 @@ const getCursorIndex = () => {
 const render = () => {
   correctCursorPosition();
   correctWindowPosition();
-  // room.cleanup();
+  room.cleanup();
   let lines = ["Point at something!"]
   if (currentTargetName) {
     lines = currentSourceCode.replace(new RegExp(String.fromCharCode(34), 'g'), String.fromCharCode(9787)).split("\n")
@@ -176,7 +176,7 @@ room.subscribe(
 )
 
 room.on(
-  `$ keyboard $ typed key $key @ $`,
+  `$ keyboard $ typed key $key @ $t`,
   results => {
     results.forEach(({ key }) => {
       console.log("key", key);
@@ -186,7 +186,7 @@ room.on(
 )
 
 room.on(
-  `$ keyboard $ typed special key $specialKey @ $`,
+  `$ keyboard $ typed special key $specialKey @ $t`,
   results => {
     results.forEach(({ specialKey }) => {
       console.log("special key", specialKey);
