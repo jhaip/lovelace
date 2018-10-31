@@ -12,7 +12,7 @@
             margin-right: 0.4rem;
             font-family: monospace;
         }
-        .val-type--source {
+        .val-type--id {
             background-color: rgb(255, 208, 0);
         }
         .val-type--integer {
@@ -40,21 +40,42 @@
             white-space: nowrap;
             text-overflow: ellipsis;
         }
-        .long-poll-button {
+        .navbar {
             position: fixed;
-            top: 1rem;
-            left: 1rem;
-            padding: 1rem;
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-wrap: nowrap;
+            height: 1.5rem;
+            width: 100vw;
+        }
+        .long-poll-button {
+            height: 100%;
+            padding: 0.5rem;
             background-color: grey;
+            cursor: pointer;
         }
         .long-poll-button--active {
             background-color: greenyellow;
+        }
+        .select-input {
+            background-color: #EEE;
+            height: 100%;
+            font-family: monospace;
+            flex-grow: 1;
+            margin: 0;
+            padding: 0.5rem;
+            border: none;
+            font-weight: bold;
         }
     </style>
 </head>
 
 <body>
-    <div class="long-poll-button long-poll-button--active">Poll</div>
+    <div class="navbar">
+        <div class="long-poll-button long-poll-button--active">Poll</div>
+        <input class="select-input" />
+    </div>
     <ol class="results short-values"></ol>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
     <script src="index.js"></script>

@@ -85,7 +85,7 @@ def sub_callback_papers(results):
     WISKER_LENGTH = 150
     claims = []
     claims.append({"type": "retract", "fact": [
-        ["source", get_my_id_str()],
+        ["id", get_my_id_str()],
         ["postfix", ""],
     ]})
     for paper in papers:
@@ -94,7 +94,7 @@ def sub_callback_papers(results):
         logging.info("{} pointing at {}".format(paper["id"], other_paper))
         if other_paper is not None:
             claims.append({"type": "claim", "fact": [
-                ["source", get_my_id_str()],
+                ["id", get_my_id_str()],
                 ["text", "paper"],
                 ["integer", str(paper["id"])],
                 ["text", "is"],

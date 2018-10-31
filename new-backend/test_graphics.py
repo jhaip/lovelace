@@ -13,15 +13,15 @@ def my_prehook():
     paper_width = "400.000000"
     paper_height = "400.000000"
     claims.append({"type": "retract", "fact": [
-        ["source", MY_ID_STR],
+        ["id", MY_ID_STR],
         ["postfix", ""],
     ]})
     claims.append({"type": "retract", "fact": [
-        ["source", paper_drawing_target_id],
+        ["id", paper_drawing_target_id],
         ["postfix", ""],
     ]})
     claims.append({"type": "claim", "fact": [
-                    ["source", MY_ID_STR],
+                    ["id", MY_ID_STR],
                     ["text", "camera"],
                     ["integer", "1"],
                     ["text", "sees"],
@@ -55,7 +55,7 @@ def my_prehook():
                     ["text", "@"],
                     ["integer", "999"]]})
     claims.append({"type": "claim", "fact": [
-        ["source", MY_ID_STR],
+        ["id", MY_ID_STR],
         ["text", "camera"],
         ["integer", "1"],
         ["text", "sees"],
@@ -89,7 +89,7 @@ def my_prehook():
         ["text", "@"],
         ["integer", "999"]]})
     # claims.append({"type": "claim", "fact": [
-    #     ["source", MY_ID_STR],
+    #     ["id", MY_ID_STR],
     #     ["text", "camera"],
     #     ["integer", "1"],
     #     ["text", "has"],
@@ -122,7 +122,7 @@ def my_prehook():
     #     ["text", "@"],
     #     ["integer", "999"]]})
     claims.append({"type": "claim", "fact": [
-        ["source", paper_drawing_target_id],
+        ["id", paper_drawing_target_id],
         ["text", "draw"],
         ["text", "a"],
         ["text", "("],
@@ -146,7 +146,7 @@ def my_prehook():
         ["float", "800.000000"],
         ["text", ")"]]})
     claims.append({"type": "claim", "fact": [
-        ["source", paper_drawing_target_id],
+        ["id", paper_drawing_target_id],
         ["text", "draw"],
         ["text", "centered"],
         ["text", "label"],
@@ -158,7 +158,7 @@ def my_prehook():
         ["float", "20.000000"],
         ["text", ")"]]})
     claims.append({"type": "claim", "fact": [
-        ["source", paper_drawing_target_id],
+        ["id", paper_drawing_target_id],
         ["text", "draw"],
         ["text", "16pt"],
         ["text", "text"],

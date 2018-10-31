@@ -90,7 +90,7 @@ func notification_worker(notifications <-chan Notification, retractions chan<- [
 			// Clear all claims by source + subscription ID
 			if cache_hit == true && cache_value[len(cache_value)-2:] != NO_RESULTS_MESSAGE {
 				// Clear all claims by source + subscription ID
-				// retractions <- []Term{Term{"source", notification.Source}, Term{"postfix", ""}}
+				// retractions <- []Term{Term{"id", notification.Source}, Term{"postfix", ""}}
 			}
 			if notification.Result != NO_RESULTS_MESSAGE {
 				msgWithTime := fmt.Sprintf("%s%s%v%s", notification.Source, notification.Id, makeTimestamp(), notification.Result)
@@ -192,7 +192,7 @@ func subscribe_worker(subscription_messages <-chan string, claims chan<- []Term,
 			for i, fact_string := range subscription_data.Facts {
 				subscription_fact_msg := fmt.Sprintf("subscription \"%s\" %v %s", subscription_data.Id, i, fact_string)
 				subscription_fact := parse_fact_string(subscription_fact_msg)
-				subscription_fact = append([]Term{Term{"text", "subscription"}, Term{"source", source}}, subscription_fact...)
+				subscription_fact = append([]Term{Term{"text", "subscription"}, Term{"id", source}}, subscription_fact...)
 				fmt.Printf("SUB FACTS %v\n", subscription_fact)
 				claims <- subscription_fact
 				fact := parse_fact_string(fact_string)
@@ -215,7 +215,7 @@ func parser_worker(unparsed_messages <-chan string, claims chan<- []Term, retrac
 		val := msg[(event_type_len + source_len):]
 		if event_type == "....CLAIM" {
 			fact := parse_fact_string(val)
-			fact = append([]Term{Term{"source", source}}, fact...)
+			fact = append([]Term{Term{"id", source}}, fact...)
 			claims <- fact
 		} else if event_type == "..RETRACT" {
 			fmt.Println("GOT RETRACT xxxxxxxxx")

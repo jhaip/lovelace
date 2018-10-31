@@ -12,13 +12,16 @@ import (
 func checkTerms(terms, expected_terms []Term, t *testing.T) {
 	if len(terms) != len(expected_terms) {
 		t.Error("Wrong number of terms")
+		return
 	}
 	for i, term := range terms {
 		if term.Type != expected_terms[i].Type {
 			t.Error("Wrong term type for term ", i, "-- expected", expected_terms[i].Type, expected_terms[i].Value, "!=", term.Type, term.Value)
+			return
 		}
 		if term.Value != expected_terms[i].Value {
 			t.Error("Wrong term value for term ", i, "-- expected", expected_terms[i].Type, expected_terms[i].Value, "!=", term.Type, term.Value)
+			return
 		}
 	}
 }
@@ -91,6 +94,45 @@ func TestParse2Variables(t *testing.T) {
 		Term{"variable", ""},
 		Term{"text", "one"},
 		Term{"variable", "cat"},
+	}
+	checkTerms(terms, expected_terms, t)
+}
+
+func TestParseRandom1(t *testing.T) {
+	msg := "#1013 draw $size text $ at ($x, $y)"
+	raw_terms, err := ParseReader("", strings.NewReader(msg))
+	terms, _ := raw_terms.([]Term)
+	if err != nil {
+		t.Error(err)
+	}
+	repr.Println(terms, repr.Indent("  "), repr.OmitEmpty(true))
+	expected_terms := []Term{
+		Term{"id", "1013"},
+		Term{"text", "draw"},
+		Term{"variable", "size"},
+		Term{"text", "text"},
+		Term{"variable", ""},
+		Term{"text", "at"},
+		Term{"text", "("},
+		Term{"variable", "x"},
+		Term{"text", ","},
+		Term{"variable", "y"},
+		Term{"text", ")"},
+	}
+	checkTerms(terms, expected_terms, t)
+}
+
+func TestParseSourceWithLeadingZeros(t *testing.T) {
+	msg := "#0200 hello"
+	raw_terms, err := ParseReader("", strings.NewReader(msg))
+	terms, _ := raw_terms.([]Term)
+	if err != nil {
+		t.Error(err)
+	}
+	repr.Println(terms, repr.Indent("  "), repr.OmitEmpty(true))
+	expected_terms := []Term{
+		Term{"id", "0200"},
+		Term{"text", "hello"},
 	}
 	checkTerms(terms, expected_terms, t)
 }

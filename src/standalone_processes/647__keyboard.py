@@ -31,14 +31,14 @@ def add_key(key, special_key):
     timestamp = int(time.time()*1000.0)
     claims = []
     claims.append({"type": "retract", "fact": [
-        ["source", get_my_id_str()],
+        ["id", get_my_id_str()],
         ["postfix", ""],
     ]})
     if special_key:
         special_key = map_special_key(special_key)
         # say("keyboard {} typed special key \"{}\" @ {}".format(MY_ID, special_key, timestamp))
         claims.append({"type": "claim", "fact": [
-            ["source", get_my_id_str()],
+            ["id", get_my_id_str()],
             ["text", "keyboard"],
             ["text", get_my_id_str()],
             ["text", "typed"],
@@ -51,7 +51,7 @@ def add_key(key, special_key):
     else:
         # say("keyboard {} typed key \"{}\" @ {}".format(MY_ID, key, timestamp))
         claims.append({"type": "claim", "fact": [
-            ["source", get_my_id_str()],
+            ["id", get_my_id_str()],
             ["text", "keyboard"],
             ["text", get_my_id_str()],
             ["text", "typed"],

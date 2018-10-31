@@ -17,7 +17,7 @@ const stringToTerm = x => {
     }
     if (isNaN(x) || x === "") {
         if (x[0] === "#") {
-            return ["source", x.slice(1)]
+            return ["id", x.slice(1)]
         }
         if (x[0] === "$") {
             return ["variable", x.slice(1)]
@@ -106,7 +106,9 @@ function init(filename) {
             publisher.send(`SUBSCRIBE${MY_ID_STR}${query_msg_str}`);
         },
         on: async (...args) => {
+            console.log("pre wait for server")
             await waitForServerListening();
+            console.log("post wait for server")
             const query_strings = args.slice(0, -1)
             const callback = args[args.length - 1]
             const subscription_id = randomId()
@@ -117,6 +119,7 @@ function init(filename) {
             const query_msg_str = JSON.stringify(query_msg)
             subscription_ids[subscription_id] = callback
             publisher.send(`SUBSCRIBE${MY_ID_STR}${query_msg_str}`);
+            console.log("send ON listen")
         },
         select: async (...args) => {
             await waitForServerListening();
@@ -130,17 +133,18 @@ function init(filename) {
             const query_msg_str = JSON.stringify(query_msg)
             select_ids[select_id] = callback
             publisher.send(`...SELECT${MY_ID_STR}${query_msg_str}`);
+            console.log("SEND!")
         },
         assertNow: (fact) => {
             publisher.send(`....CLAIM${MY_ID_STR}${fact}`);
         },
         assertForOtherSource: (otherSource, fact) => {
             console.error("assertForOtherSource")
-            batched_calls.push({ "type": "claim", "fact": [["source", otherSource]].concat(fullyParseFact(fact)) })
+            batched_calls.push({ "type": "claim", "fact": [["id", otherSource]].concat(fullyParseFact(fact)) })
         },
         assert: (...args) => {
             // TODO: need to push into an array specific to the subsciber, in case there are multiple subscribers in one client
-            batched_calls.push({ "type": "claim", "fact": [["source", MY_ID_STR]].concat(fullyParseFact(args)) })
+            batched_calls.push({ "type": "claim", "fact": [["id", MY_ID_STR]].concat(fullyParseFact(args)) })
         },
         retractNow: (query) => {
             publisher.send(`..RETRACT${MY_ID_STR}${query}`);
@@ -203,8 +207,14 @@ function init(filename) {
         } else if (id in subscription_ids) {
             callback = subscription_ids[id]
             // room.cleanup()
-            callback(parseResult(val))
+            console.log("found match")
+            const r = parseResult(val)
+            console.log(r)
+            callback(r)
+            console.log("flushing")
             room.flush()
+        } else {
+            console.log("unknown subscription ID...")
         }
     });
 

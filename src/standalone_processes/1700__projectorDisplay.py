@@ -81,7 +81,7 @@ def sub_callback_line(results):
     logging.info(results)
     # lines = {}
     for v in results:
-        source = int(v["source"])
+        source = int(v["id"])
         if source not in lines:
             lines[source] = []
         lines[source].append({"type": "line", "options": [v["x"], v["y"], v["xx"], v["yy"]]})
@@ -96,7 +96,7 @@ def sub_callback_centered_labels(results):
     logging.info(results)
     centered_labels = {}
     for v in results:
-        source = int(v["source"])
+        source = int(v["id"])
         if source not in centered_labels:
             centered_labels[source] = []
         centered_labels[source].append({
@@ -118,7 +118,7 @@ def sub_callback_text(results):
     logging.info(results)
     texts = {}
     for v in results:
-        source = int(v["source"])
+        source = int(v["id"])
         if source not in texts:
             texts[source] = []
         texts[source].append({

@@ -165,12 +165,12 @@ class ShowCapture(wx.Panel):
             #     self.claim("dots {} {} color {} {} {} {}".format(
             #         dot["x"], dot["y"], dot["color"][0], dot["color"][1], dot["color"][2], int(time.time()*1000.0)))
             batch_claims = [{"type": "retract", "fact": [
-                            ["source", MY_ID_STR],
+                            ["id", MY_ID_STR],
                             ["postfix", ""]
                             ]}]
             for dot in self.dots:
                 batch_claims.append({"type": "claim", "fact": [
-                    ["source", MY_ID_STR], ["text", "dots"],
+                    ["id", MY_ID_STR], ["text", "dots"],
                     ["float", str(dot["x"])], ["float", str(dot["y"])],
                     ["text", "color"],
                     ["float", str(dot["color"][0])], ["float", str(dot["color"][1])], ["float", str(dot["color"][1])],

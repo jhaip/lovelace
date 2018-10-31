@@ -650,13 +650,13 @@ func claimPapers(publisher *zmq.Socket, MY_ID_STR string, papers []Paper) {
 
 	batch_claims := make([]BatchMessage, 0)
 	batch_claims = append(batch_claims, BatchMessage{"retract", [][]string{
-		[]string{"source", MY_ID_STR},
+		[]string{"id", MY_ID_STR},
 		[]string{"postfix", ""},
 	}})
 	// $ camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time
 	for _, paper := range papers {
 		batch_claims = append(batch_claims, BatchMessage{"claim", [][]string{
-			[]string{"source", MY_ID_STR},
+			[]string{"id", MY_ID_STR},
 			[]string{"text", "camera"},
 			[]string{"integer", "1"},
 			[]string{"text", "sees"},

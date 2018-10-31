@@ -21,7 +21,7 @@ type QueryResult struct {
 
 func term_to_string(term Term) string {
 	switch term.Type {
-	case "source":
+	case "id":
 		return "#" + term.Value
 	case "variable":
 		return "$" + term.Value

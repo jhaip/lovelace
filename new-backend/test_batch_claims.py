@@ -59,7 +59,7 @@ def my_prehook2():
     claims = []
     for i in range(N):
         claims.append({"type": "claim", "fact": [
-                      ["source", MY_ID_STR], ["text", "dots"], ["float", "1036.000000"], ["float", "1036.000000"], ["text", "color"], ["float", "77.000000"], ["float", "77.000000"], ["float", "77.000000"], ["integer", str(i)]]})
+                      ["id", MY_ID_STR], ["text", "dots"], ["float", "1036.000000"], ["float", "1036.000000"], ["text", "color"], ["float", "77.000000"], ["float", "77.000000"], ["float", "77.000000"], ["integer", str(i)]]})
     batch(claims)
 
 
