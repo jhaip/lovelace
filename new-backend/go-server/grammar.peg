@@ -88,7 +88,7 @@ Value ← val:( Number / String / Bool / Null ) {
     return Term{"text", valAsString}, nil
 }
 
-Id ← '#' ( Integer / Word ) {
+Id ← '#' ( [a-zA-Z0-9]+ ) {
     return Term{"id", string(c.text[1:])}, nil
 }
 
