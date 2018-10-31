@@ -21,6 +21,7 @@ app.get('/db', (req, res) => {
 
 app.post('/select', (req, res) => {
     const query_strings = req.body.query;
+    let didSendRes = false;
     if (!query_strings) {
         res.status(400).send('Missing query')
     }
@@ -35,7 +36,17 @@ app.post('/select', (req, res) => {
             room.cleanup();
             room.flush();
             console.log("sending results:")
-            res.send(results);
+            if (!didSendRes) {
+                // this is a race condition.
+                // didSendRes could have been sent to true after the conditional above
+                try {
+                    didSendRes = true;
+                    res.send(results)
+                } catch (err) {
+                    console.error("sending timeout response failed...")
+                    console.error(err);
+                }
+            }
         }
     )
     // if no results are returned within 5 seconds, return []
@@ -43,7 +54,17 @@ app.post('/select', (req, res) => {
     setTimeout(() => {
         room.cleanup();
         room.flush();
-        res.status(200).send([])
+        if (!didSendRes) {
+            // this is a race condition.
+            // didSendRes could have been sent to true after the conditional above
+            try {
+                didSendRes = true;
+                res.status(200).send([])
+            } catch(err) {
+                console.error("sending timeout response failed...")
+                console.error(err);
+            }
+        }
     }, 5000);
 })
 
