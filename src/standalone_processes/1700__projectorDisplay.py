@@ -74,7 +74,7 @@ def sub_callback_calibration(results):
     projector_calibration = list(map(map_projector_calibration_to_legacy_data_format, results))
     logging.info(projector_calibration)
 
-@subscription(["$source draw a ($r, $g, $b) line from ($x, $y) to ($xx, $yy)"])
+@subscription(["$id draw a ($r, $g, $b) line from ($x, $y) to ($xx, $yy)"])
 def sub_callback_line(results):
     global lines
     logging.info("sub_callback_line")
@@ -89,7 +89,7 @@ def sub_callback_line(results):
     update_draw_wishes()
 
 
-@subscription(["$source draw $centered label $text at ($x, $y)"])
+@subscription(["$id draw $centered label $text at ($x, $y)"])
 def sub_callback_centered_labels(results):
     global centered_labels
     logging.info("sub_callback_centered_labels")
@@ -111,7 +111,7 @@ def sub_callback_centered_labels(results):
     update_draw_wishes()
 
 
-@subscription(["$source draw $size text $text at ($x, $y)"])
+@subscription(["$id draw $size text $text at ($x, $y)"])
 def sub_callback_text(results):
     global texts
     logging.info("sub_callback_text")
@@ -431,6 +431,9 @@ class Example(wx.Frame):
 
 if __name__ == '__main__':
     init(__file__, skipListening=True)
+    # while True:
+    #     listen()
+    #     time.sleep(1.0)
     app = wx.App()
     Example(None, 'Line')
     app.MainLoop()
