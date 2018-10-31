@@ -128,19 +128,19 @@ const render = () => {
     ["text", "line"],
     ["text", "from"],
     ["text", "("],
-    ["float", "0.100100"],
-    // ["float", (origin[0] + cursorPosition[0] * charWidth).toFixed(6)],
+    // ["float", "0.100100"],
+    ["float", (origin[0] + cursorPosition[0] * charWidth).toFixed(6)],
     ["text", ","],
-    ["float", "62.500100"],
-    // ["float", (origin[1] + (cursorPosition[1] - windowPosition[1]) * lineHeight).toFixed(6)],
+    // ["float", "62.500100"],
+    ["float", (origin[1] + (cursorPosition[1] - windowPosition[1]) * lineHeight).toFixed(6)],
     ["text", ")"],
     ["text", "to"],
     ["text", "("],
-    ["float", "0.100100"],
-    // ["float", (origin[0] + cursorPosition[0] * charWidth).toFixed(6)],
+    // ["float", "0.100100"],
+    ["float", (origin[0] + cursorPosition[0] * charWidth).toFixed(6)],
     ["text", ","],
-    ["float", "14.500100"],
-    // ["float", (origin[1] + (cursorPosition[1] - windowPosition[1]) * lineHeight - fontHeight).toFixed(6)],
+    // ["float", "14.500100"],
+    ["float", (origin[1] + (cursorPosition[1] - windowPosition[1]) * lineHeight - fontHeight).toFixed(6)],
     ["text", ")"])
   console.log("done rendering")
 }
@@ -153,7 +153,7 @@ room.subscribe(
   `$ paper ${myId} is pointing at paper $targetId`,
   `$ $targetName has paper ID $targetId`,
   `$ $targetName has source code $sourceCode`,
-  // `$ paper ${myId} has width $myWidth height $myHeight angle $ at ($, $)`,
+  `$ paper ${myId} has width $myWidth height $myHeight angle $ at ( $ , $ )`,
   results => {
   // ({assertions, retractions}) => {
     console.error("got stuff")
@@ -168,8 +168,8 @@ room.subscribe(
         currentTargetName = targetName;
         currentSourceCode = sourceCode;
       }
-      curentWidth = 1000; // myWidth;
-      currentHeight = 800; // myHeight;
+      curentWidth = myWidth;
+      currentHeight = myHeight;
       render();
     })
   }

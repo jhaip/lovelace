@@ -34,7 +34,7 @@ const stringToTerm = x => {
 }
 
 const fullyParseFact = q => {
-    const tokenizeString = s => s.trim().replace(/\)/g, ' ) ').replace(/\(/g, ' ( ').replace(/,/g, ' , ').split(/\s+/)
+    const tokenizeString = s => s.trim().replace(/\)/g, ' ) ').replace(/\(/g, ' ( ').replace(/,/g, ' , ').trim().split(/\s+/)
     if (typeof q === "string") {
         const q_tokens = tokenizeString(q)
         return q_tokens.map(x => stringToTerm(x))
