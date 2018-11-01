@@ -1,10 +1,10 @@
 const { room, myId } = require('../helper2')(__filename);
 
-let fontSize = 48; // 32;
+let fontSize = 13; // 32;
 let fontHeight = fontSize;  // / 1080.0;
 let lineHeight = 1.3 * fontHeight;
 const origin = [0.0001 + 0.1, 0.1 + 0.0001 + lineHeight]
-let charWidth = fontHeight * 0.38;
+let charWidth = fontHeight * 0.6;
 const cursorColor = `(255, 128, 2)`
 let cursorPosition = [0, 0]
 let currentWidth = 1;

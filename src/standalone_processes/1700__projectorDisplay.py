@@ -79,7 +79,7 @@ def sub_callback_line(results):
     global lines
     logging.info("sub_callback_line")
     logging.info(results)
-    # lines = {}
+    lines = {}
     for v in results:
         source = int(v["id"])
         if source not in lines:
@@ -121,6 +121,10 @@ def sub_callback_text(results):
         source = int(v["id"])
         if source not in texts:
             texts[source] = []
+            texts[source].append({
+                "type": "fontsize",
+                "options": int(v["size"].replace('pt', ''))
+            })
         texts[source].append({
             "type": "text",
             "options": {
