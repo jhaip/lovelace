@@ -1,9 +1,10 @@
 const { room, myId } = require('../helper2')(__filename);
 
-let fontSize = 13; // 32;
+let fontSize = 12; // 32;
 let fontHeight = fontSize;  // / 1080.0;
 let lineHeight = 1.3 * fontHeight;
-const origin = [0.0001 + 0.1, 0.1 + 0.0001 + lineHeight]
+// const origin = [0.0001 + 0.1, 0.1 + 0.0001 + lineHeight]
+const origin = [0, 0]
 let charWidth = fontHeight * 0.6;
 const cursorColor = `(255, 128, 2)`
 let cursorPosition = [0, 0]
@@ -94,11 +95,9 @@ const render = () => {
   console.log("editor height", editorHeightCharacters);
   lines.slice(windowPosition[1], windowPosition[1] + editorHeightCharacters).forEach((lineRaw, i) => {
     const line = lineRaw.substring(0, editorWidthCharacters);
-    // room.assert(`draw`, ["text", `${fontSize}pt`], `text`, ["text", "Hello"], `at (${origin[0]}, ${origin[1] + i * lineHeight})`)
-    // console.log(`draw`, ["text", `${fontSize}pt`], `text`, ["text", `${line}`], `at (${origin[0]}, ${origin[1] + i * lineHeight})`)
     room.assert(
       ["text", "draw"],
-      ["text", "16pt"],
+      ["text", `${fontSize}pt`],
       ["text", "text"],
       ["text", line],
       ["text", "at"],
@@ -109,39 +108,11 @@ const render = () => {
       ["text", ")"]
     )
   });
-  // room.assert(
-  //   `draw a ${cursorColor} line from ` +
-  //   `(${origin[0] + cursorPosition[0] * charWidth}, ${origin[1] + (cursorPosition[1] - windowPosition[1]) * lineHeight})` +
-  //   ` to ` +
-  //   `(${origin[0] + cursorPosition[0] * charWidth}, ${origin[1] + (cursorPosition[1] - windowPosition[1]) * lineHeight - fontHeight})`
-  // );
-  room.assert(
-    ["text", "draw"],
-    ["text", "a"],
-    ["text", "("],
-    ["integer", "255"],
-    ["text", ","],
-    ["integer", "255"],
-    ["text", ","],
-    ["integer", "255"],
-    ["text", ")"],
-    ["text", "line"],
-    ["text", "from"],
-    ["text", "("],
-    // ["float", "0.100100"],
-    ["float", (origin[0] + cursorPosition[0] * charWidth).toFixed(6)],
-    ["text", ","],
-    // ["float", "62.500100"],
-    ["float", (origin[1] + (cursorPosition[1] - windowPosition[1]) * lineHeight).toFixed(6)],
-    ["text", ")"],
-    ["text", "to"],
-    ["text", "("],
-    // ["float", "0.100100"],
-    ["float", (origin[0] + cursorPosition[0] * charWidth).toFixed(6)],
-    ["text", ","],
-    // ["float", "14.500100"],
-    ["float", (origin[1] + (cursorPosition[1] - windowPosition[1]) * lineHeight - fontHeight).toFixed(6)],
-    ["text", ")"])
+  const x1 = (origin[0] + cursorPosition[0] * charWidth).toFixed(6)
+  const y1 = (origin[1] + (cursorPosition[1] - windowPosition[1]) * lineHeight).toFixed(6)
+  const x2 = (origin[0] + cursorPosition[0] * charWidth).toFixed(6)
+  const y2 = (origin[1] + (cursorPosition[1] - windowPosition[1]) * lineHeight + fontHeight).toFixed(6)
+  room.assert(`draw a ${cursorColor} line from (${x1}, ${y1}) to (${x2}, ${y2})`)
   console.log("done rendering")
 }
 
