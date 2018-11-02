@@ -91,7 +91,7 @@ const render = () => {
     console.error(lines)
   }
   editorWidthCharacters = 1000;
-  editorHeightCharacters = Math.floor(currentHeight / (fontSize * 1.3 * 0.7123));
+  editorHeightCharacters = Math.floor(currentHeight / lineHeight);
   console.log("editor height", editorHeightCharacters);
   lines.slice(windowPosition[1], windowPosition[1] + editorHeightCharacters).forEach((lineRaw, i) => {
     const line = lineRaw.substring(0, editorWidthCharacters);

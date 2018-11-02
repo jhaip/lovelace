@@ -22,6 +22,7 @@ draw_wishes = {}
 def update_draw_wishes():
     global texts, lines, centered_labels, draw_wishes
     draw_wishes = {}
+    # draw_wishes[source][target]
     for source in lines:
         if source not in draw_wishes:
             draw_wishes[source] = {}
