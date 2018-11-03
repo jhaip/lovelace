@@ -45,8 +45,6 @@ func parse_fact_string(fact_string string) []Term {
 }
 
 FactOrPatterm ← vals:Term* EOF {
-    fmt.Println("FactOrPattern:")
-    fmt.Println(vals)
     res := make([]Term, 0)
     for _, val := range vals.([]interface{}) {
         if val != nil {
@@ -57,8 +55,6 @@ FactOrPatterm ← vals:Term* EOF {
 }
 
 Term ← val:( Id / Variable / Postfix / Value / Word / _ ) {
-    fmt.Println("TERM:")
-    fmt.Println(val)
     valAsTerm, alreadyTerm := val.(Term)
     if alreadyTerm {
         if valAsTerm.Type == "whitespace" {
@@ -66,16 +62,12 @@ Term ← val:( Id / Variable / Postfix / Value / Word / _ ) {
         }
         return valAsTerm, nil
     }
-    fmt.Println("NOT TERM:")
-    fmt.Println(val)
     // return val, nil
     valAsString, _ := val.(string)
     return Term{"text", valAsString}, nil
 }
 
 Value ← val:( Number / String / Bool / Null ) {
-    fmt.Println("VALUE:")
-    fmt.Println(val)
     valAsFloat, isFloat := val.(float64)
     if isFloat {
         return Term{"float", strconv.FormatFloat(valAsFloat, 'f', 6, 64)}, nil
@@ -115,7 +107,6 @@ Integer ← '0' / NonZeroDecimalDigit DecimalDigit*
 Exponent ← 'e'i [+-]? DecimalDigit+
 
 Word ← ([,()@] / [a-zA-Z]+ [a-zA-Z0-9]*) {
-    fmt.Println("INside word")
     return string(c.text), nil
 }
 
