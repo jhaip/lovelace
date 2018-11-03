@@ -4,19 +4,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"sort"
 
 	_ "github.com/mattn/go-sqlite3"
 	zmq "github.com/pebbe/zmq4"
-
-	// "github.com/alecthomas/repr"
 
 	"sync"
 	"time"
 
 	// "github.com/pkg/profile"
 	b64 "encoding/base64"
+
+	"go.uber.org/zap"
 )
 
 var dbMutex sync.RWMutex
@@ -61,7 +60,8 @@ type BatchMessage struct {
 
 func checkErr(err error) {
 	if err != nil {
-		log.Fatal(err)
+		// log.Fatal(err)
+		zap.L().Fatal("FATAL ERROR", zap.Error(err))
 	}
 }
 
@@ -70,12 +70,10 @@ func makeTimestamp() int64 {
 }
 
 func notification_worker(notifications <-chan Notification, retractions chan<- []Term) {
-	// start := time.Now()
 	publisher, _ := zmq.NewSocket(zmq.PUB)
 	defer publisher.Close()
 	publisher.Bind("tcp://*:5555")
 	NO_RESULTS_MESSAGE := "[]"
-
 	cache := make(map[string]string)
 
 	for notification := range notifications {
@@ -84,27 +82,15 @@ func notification_worker(notifications <-chan Notification, retractions chan<- [
 		cache_key := fmt.Sprintf("%s%s", notification.Source, notification.Id)
 		cache_value, cache_hit := cache[cache_key]
 		if cache_hit == false || cache_value != msg {
-			// fmt.Printf("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& setting cache: %v = %v\n", cache_key, msg)
 			cache[cache_key] = msg
-
-			// Clear all claims by source + subscription ID
-			if cache_hit == true && cache_value[len(cache_value)-2:] != NO_RESULTS_MESSAGE {
-				// Clear all claims by source + subscription ID
-				// retractions <- []Term{Term{"id", notification.Source}, Term{"postfix", ""}}
-			}
 			if notification.Result != NO_RESULTS_MESSAGE {
 				msgWithTime := fmt.Sprintf("%s%s%v%s", notification.Source, notification.Id, makeTimestamp(), notification.Result)
-				// fmt.Printf("SENDING: \"%s\"\n", msgWithTime)
 				publisher.Send(msgWithTime, zmq.DONTWAIT)
 			}
-			// } else {
-			// 	fmt.Printf("SKIPPING BECAUSE DuPLICATE VALUE %v %v %v\n", cache_hit, cache_value, msg)
 		}
 		timeToSendResults := time.Since(start)
-		fmt.Printf("______send: %s \n", timeToSendResults)
+		zap.L().Debug("send notification", zap.Duration("timeToSendResults", timeToSendResults))
 	}
-	// timeToSendResults := time.Since(start)
-	// fmt.Printf("time to send results: %s \n", timeToSendResults)
 }
 
 func marshal_query_result(query_results []QueryResult) string {
@@ -116,36 +102,28 @@ func marshal_query_result(query_results []QueryResult) string {
 		}
 		encoded_results = append(encoded_results, encoded_result)
 	}
-	// fmt.Println(encoded_results)
 	marshalled_results, err := json.Marshal(encoded_results)
 	checkErr(err)
-	// fmt.Println("MARSHALLD RESULTS:")
-	// repr.Println(query_results, repr.Indent("  "), repr.OmitEmpty(true))
-	// fmt.Println(string(marshalled_results))
 	return string(marshalled_results)
 }
 
 func single_subscriber_update(db map[string]Fact, notifications chan<- Notification, subscription Subscription, wg *sync.WaitGroup, i int) {
 	start := time.Now()
-	// fmt.Println("pre SELECTING %v", subscription.Query)
 	query := make([]Fact, len(subscription.Query))
 	for i, fact_terms := range subscription.Query {
 		query[i] = Fact{fact_terms}
 	}
-	// fmt.Println("QUERY:")
-	// repr.Println(query, repr.Indent("  "), repr.OmitEmpty(true))
-	// dbMutex.RLock()
 	results := select_facts(db, query)
-	fmt.Printf("GOT %v RESULTS", len(results))
-	// dbMutex.RUnlock()
 	selectDuration := time.Since(start)
 	results_as_str := marshal_query_result(results)
-	// fmt.Println("DONE SELECTING")
 	notifications <- Notification{subscription.Source, subscription.Id, results_as_str}
-	// print_all_facts(db)
 	wg.Done()
 	duration := time.Since(start)
-	fmt.Printf("SINGLE SUBSCRIBER DONE %v, select %v, send %v, total %s\n", i, selectDuration, duration-selectDuration, duration)
+	zap.L().Debug("SINGLE SUBSCRIBER DONE",
+		zap.Int("sub_index", i),
+		zap.Duration("select", selectDuration),
+		zap.Duration("send", duration-selectDuration),
+		zap.Duration("total", duration))
 }
 
 func update_all_subscriptions(db *map[string]Fact, notifications chan<- Notification, subscriptions Subscriptions) {
@@ -166,22 +144,14 @@ func update_all_subscriptions(db *map[string]Fact, notifications chan<- Notifica
 	for i, subscription := range subscriptions.Subscriptions {
 		go single_subscriber_update(dbValue, notifications, subscription, &wg, i)
 	}
-
-	// fmt.Println("WAITING FOR ALL THINGS TO END")
 	wg.Wait()
-	// dbMutex.RUnlock()
-	// dbMutex.RLock()
-	// repr.Println(*db, repr.Indent("  "), repr.OmitEmpty(true))
-	// print_all_facts(dbValue)
-	// dbMutex.RUnlock()
-	// fmt.Println("done")
 }
 
 func subscribe_worker(subscription_messages <-chan string, claims chan<- []Term, subscriptions_notifications chan<- bool, subscriptions *Subscriptions) {
 	event_type_len := 9
 	source_len := 4
 	for msg := range subscription_messages {
-		fmt.Printf("SUBSCRIPTION SHOULD PARSE MESSAGE: %s\n", msg)
+		zap.L().Debug("SUBSCRIPTION SHOULD PARSE MESSAGE", zap.String("msg", msg))
 		event_type := msg[0:event_type_len]
 		source := msg[event_type_len:(event_type_len + source_len)]
 		val := msg[(event_type_len + source_len):]
@@ -193,9 +163,8 @@ func subscribe_worker(subscription_messages <-chan string, claims chan<- []Term,
 				subscription_fact_msg := fmt.Sprintf("subscription \"%s\" %v %s", subscription_data.Id, i, fact_string)
 				subscription_fact := parse_fact_string(subscription_fact_msg)
 				subscription_fact = append([]Term{Term{"text", "subscription"}, Term{"id", source}}, subscription_fact...)
-				fmt.Printf("SUB FACTS %v\n", subscription_fact)
 				claims <- subscription_fact
-				fact := parse_fact_string(fact_string)
+				fact := parse_fact_string(fact_string) // AVOID DOUBLE PARSING!, this work was already done above
 				query = append(query, fact)
 			}
 			(*subscriptions).Subscriptions = append((*subscriptions).Subscriptions, Subscription{source, subscription_data.Id, query})
@@ -209,7 +178,7 @@ func parser_worker(unparsed_messages <-chan string, claims chan<- []Term, retrac
 	source_len := 4
 	for msg := range unparsed_messages {
 		start := time.Now()
-		fmt.Printf("SHOULD PARSE MESSAGE: %s\n", msg)
+		zap.L().Debug("PARSE MESSAGE", zap.String("msg", msg))
 		event_type := msg[0:event_type_len]
 		source := msg[event_type_len:(event_type_len + source_len)]
 		val := msg[(event_type_len + source_len):]
@@ -218,18 +187,16 @@ func parser_worker(unparsed_messages <-chan string, claims chan<- []Term, retrac
 			fact = append([]Term{Term{"id", source}}, fact...)
 			claims <- fact
 		} else if event_type == "..RETRACT" {
-			fmt.Println("GOT RETRACT xxxxxxxxx")
 			fact := parse_fact_string(val)
 			retractions <- fact
 		}
 		elapsed := time.Since(start)
-		log.Printf("______parse: %s \n", elapsed)
+		zap.L().Debug("parse time", zap.Duration("duration", elapsed))
 	}
 }
 
 func claim_worker(claims <-chan []Term, subscriptions_notifications chan<- bool, db *map[string]Fact) {
 	for fact_terms := range claims {
-		// fmt.Printf("SHOULD CLAIM: %v\n", claim)
 		start := time.Now()
 		dbMutex.Lock()
 		fmt.Println("CLAIMED NEW FACT:")
@@ -237,8 +204,7 @@ func claim_worker(claims <-chan []Term, subscriptions_notifications chan<- bool,
 		claim(db, Fact{fact_terms})
 		dbMutex.Unlock()
 		elapsed := time.Since(start)
-		log.Printf("______ claim down: %s \n", elapsed)
-		// fmt.Println("claim done")
+		zap.L().Debug("claim time", zap.Duration("duration", elapsed))
 		subscriptions_notifications <- true
 	}
 }
@@ -247,29 +213,22 @@ func retract_worker(retractions <-chan []Term, subscriptions_notifications chan<
 	for fact_terms := range retractions {
 		start := time.Now()
 		dbMutex.Lock()
-		fmt.Println("RETRACTING!!!")
-		fmt.Println(fact_terms)
-		fmt.Println(len(*db))
 		retract(db, Fact{fact_terms})
-		fmt.Println(len(*db))
 		// print_all_facts(*db)
 		dbMutex.Unlock()
 		subscriptions_notifications <- true
 		elapsed := time.Since(start)
-		log.Printf("______retract: %s \n", elapsed)
+		zap.L().Debug("retract time", zap.Duration("duration", elapsed))
 	}
 }
 
 func notify_subscribers_worker(notify_subscribers <-chan bool, subscriber_worker_finished chan<- bool, db *map[string]Fact, notifications chan<- Notification, subscriptions *Subscriptions) {
 	// TODO: passing in subscriptions is probably not safe because it can be written in the other goroutine
-	// db_copy := *db
 	for range notify_subscribers {
-		fmt.Println("inside notify_subscribers_worker loop")
 		start := time.Now()
 		update_all_subscriptions(db, notifications, *subscriptions)
 		updateSubscribersTime := time.Since(start)
-		fmt.Printf("update all subscribers time: %s \n", updateSubscribersTime)
-		log.Printf("______notify-subscribers: %s \n", updateSubscribersTime)
+		zap.L().Debug("notify subscribers time", zap.Duration("duration", updateSubscribersTime))
 		subscriber_worker_finished <- true
 	}
 }
@@ -277,24 +236,25 @@ func notify_subscribers_worker(notify_subscribers <-chan bool, subscriber_worker
 func debounce_subscriber_worker(subscriptions_notifications <-chan bool, subscriber_worker_finished <-chan bool, notify_subscribers chan<- bool) {
 	claim_waiting := false
 	worker_is_free := true
+	// TODO: don't use "worker_is_free", but have the notify_subscibers drain the channel?
 	go func() {
 		for range subscriptions_notifications {
 			if worker_is_free {
 				worker_is_free = false
-				fmt.Println("notifying subscriber worker")
+				zap.L().Debug("notifying subscriber worker")
 				notify_subscribers <- true
 			} else {
-				fmt.Println("(-) debouncing subscription notification becasue worker is busy")
+				zap.L().Debug("debouncing subscription notification becasue worker is busy")
 				claim_waiting = true
 			}
 		}
 	}()
 	go func() {
 		for range subscriber_worker_finished {
-			fmt.Println("subscriber_worker_finished")
+			zap.L().Debug("subscriber_worker_finished")
 			worker_is_free = true
 			if claim_waiting {
-				fmt.Println("subscriber_worker_finished - running again to catch up to claims")
+				zap.L().Debug("subscriber_worker_finished - running again to catch up to claims")
 				claim_waiting = false
 				notify_subscribers <- true
 			}
@@ -343,21 +303,12 @@ func batch_worker(batch_messages <-chan string, claims chan<- []Term, retraction
 	event_type_len := 9
 	source_len := 4
 	for msg := range batch_messages {
-		// fmt.Printf("SHOULD PARSE MESSAGE: %s\n", msg)
 		// event_type := msg[0:event_type_len]
 		// source := msg[event_type_len:(event_type_len + source_len)]
 		val := msg[(event_type_len + source_len):]
-		// [["CLAIM", [["TEXT", "Hello"], ["INTEGER", "5"]]], ["RETRACT", [["VARIABLE", ""], ["INTEGER", "5"]]]]
-		/*
-			type BatchMessage struct {
-				Type string     `json:"type"`
-				Fact [][]string `json:"fact"`
-			}
-		*/
 		var batch_messages []BatchMessage
 		err := json.Unmarshal([]byte(val), &batch_messages)
 		checkErr(err)
-		// fmt.Println(batch_messages)
 		for _, batch_message := range batch_messages {
 			terms := make([]Term, len(batch_message.Fact))
 			for j, term := range batch_message.Fact {
@@ -371,11 +322,7 @@ func batch_worker(batch_messages <-chan string, claims chan<- []Term, retraction
 			} else if batch_message.Type == "retract" {
 				// retractions <- terms
 				dbMutex.Lock()
-				// fmt.Println(terms)
-				// fmt.Println(len(*db))
 				retract(db, Fact{terms})
-				// fmt.Println(len(*db))
-				// print_all_facts(*db)
 				dbMutex.Unlock()
 			}
 		}
@@ -383,14 +330,25 @@ func batch_worker(batch_messages <-chan string, claims chan<- []Term, retraction
 	}
 }
 
+func NewLogger() (*zap.Logger, error) {
+	// cfg := zap.NewProductionConfig()
+	cfg := zap.NewDevelopmentConfig()
+	cfg.OutputPaths = []string{
+		"/Users/jhaip/Code/lovelace/new-backend/go-server/server.log",
+	}
+	return cfg.Build()
+}
+
 func main() {
 	// defer profile.Start().Stop()
+	logger, _ := NewLogger() // zap.NewDevelopment() // NewLogger()
+	zap.ReplaceGlobals(logger)
 
 	factDatabase := make_fact_database()
 
 	subscriptions := Subscriptions{}
 
-	// fmt.Println("Connecting to hello world server...")
+	zap.L().Info("Connecting to ZMQ")
 	subscriber, _ := zmq.NewSocket(zmq.SUB)
 	defer subscriber.Close()
 	subscriber.Bind("tcp://*:5556")
@@ -424,33 +382,26 @@ func main() {
 	go debug_database_observer(&factDatabase)
 	go batch_worker(batch_messages, claims, retractions, subscriptions_notifications, &factDatabase)
 
-	go func() {
-		for {
-			fmt.Println("kick it!")
-			subscriptions_notifications <- true
-			time.Sleep(1.0 * time.Second)
-		}
-	}()
+	// go func() {
+	// 	for {
+	// 		fmt.Println("kick it!")
+	// 		subscriptions_notifications <- true
+	// 		time.Sleep(1.0 * time.Second)
+	// 	}
+	// }()
 
+	zap.L().Info("listening...")
 	for {
 		msg, _ := subscriber.Recv(0)
-		// fmt.Printf("%s\n", msg)
 		event_type := msg[0:event_type_len]
 		source := msg[event_type_len:(event_type_len + source_len)]
 		val := msg[(event_type_len + source_len):]
 		if event_type == ".....PING" {
-			fmt.Println("GOT PING!!!!!!!!!!!!!!!")
-			fmt.Println(source)
-			fmt.Println(val)
+			zap.L().Debug("got PING", zap.String("source", source), zap.String("value", val))
 			notifications <- Notification{source, val, ""}
 		} else if event_type == "....CLAIM" {
 			unparsed_messages <- msg
-			// start := time.Now()
-			// claim(db, parser, publisher, &subscriptions, val, source)
-			// timeProcessing := time.Since(start)
-			// fmt.Printf("processing: %s \n", timeProcessing)
 		} else if event_type == "..RETRACT" {
-			fmt.Println("GOT RETRACT preee xxxxxxxxx")
 			unparsed_messages <- msg
 			// } else if event_type == "...SELECT" {
 			//     json_val = json.loads(val)
