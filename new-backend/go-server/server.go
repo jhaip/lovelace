@@ -199,8 +199,6 @@ func claim_worker(claims <-chan []Term, subscriptions_notifications chan<- bool,
 	for fact_terms := range claims {
 		start := time.Now()
 		dbMutex.Lock()
-		fmt.Println("CLAIMED NEW FACT:")
-		fmt.Println(fact_terms)
 		claim(db, Fact{fact_terms})
 		dbMutex.Unlock()
 		elapsed := time.Since(start)
