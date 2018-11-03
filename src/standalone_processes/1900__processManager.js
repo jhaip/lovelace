@@ -1,7 +1,7 @@
 const execFile = require('child_process').execFile;
 const process = require('process');
 const path = require('path');
-const { room, myId, scriptName, run } = require('../helper2')(__filename);
+const { room, myId, scriptName, run, MY_ID_STR } = require('../helper2')(__filename);
 
 function runPaper(name) {
   console.error(`making ${name} be running!`)
@@ -20,7 +20,10 @@ function runPaper(name) {
     (error, stdout, stderr) => {
       // TODO: check if program should still be running
       // and start it again if so.
-      room.retract(`#${myId}`, ["text", name], `has process id $`);
+      console.error("program died:")
+      console.error(name);
+      console.error([["id", MY_ID_STR], ["text", name], `has process id $`])
+      room.retract(["id", MY_ID_STR], ["text", name], `has process id $`);
       console.log(`${name} callback`)
       if (error) {
         console.error('stderr', stderr);
