@@ -49,11 +49,13 @@ room.assert(`camera 99 sees paper 1459 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2
 // Dots to papers
 room.assert(`camera 99 sees paper 1800 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Print paper
-room.assert(`camera 99 sees paper 1382 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// room.assert(`camera 99 sees paper 1382 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Process Manager
 room.assert(`camera 99 sees paper 1900 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Persist Projector Calibration
 room.assert(`camera 99 sees paper 989 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// Debug web viewer
+room.assert(`camera 99 sees paper 10 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 //
 /* TODO:
 - keyboard.py
@@ -81,56 +83,56 @@ const cleanSourceCode = sourceCode.replace(/\n/g, '\\n').replace(/"/g, String.fr
 // room.assert(`camera 99 sees paper 1013 at TL (100, 100) TR (1200, 100) BR (1200, 800) BL (100, 800) @ 1`)
 // room.assert(`paper 1013 is pointing at paper 472`)  // comment out if pointingAt.py is running
 // room.assert(`wish paper 498 at "498__printingManager.py" would be printed`)
-room.assert(`camera 99 sees paper 620 at TL (0, 0) TR (400, 0) BR (400, 200) BL (0, 200) @ 1`)
-room.assert(`camera 99 sees paper 472 at TL (0, 0) TR (1920, 0) BR (1920, 1080) BL (0, 1080) @ 1`)
-room.assert(`camera 99 sees paper 1013 at TL (0, 300) TR (400, 300) BR (400, 600) BL (0, 600) @ 1`)
+// room.assert(`camera 99 sees paper 620 at TL (0, 0) TR (400, 0) BR (400, 200) BL (0, 200) @ 1`)
+// room.assert(`camera 99 sees paper 472 at TL (0, 0) TR (1920, 0) BR (1920, 1080) BL (0, 1080) @ 1`)
+// room.assert(`camera 99 sees paper 1013 at TL (0, 300) TR (400, 230) BR (430, 580) BL (30, 630) @ 1`)
 // room.assertForOtherSource('472', `draw a (255, 255, 255) line from (0, 0) to (400, 400)`)
 // room.assertForOtherSource('1013', `draw a (255, 255, 255) line from (0, 0) to (400, 400)`)
-room.assertForOtherSource('0472', [
-["text", "draw"],
-["text", "a"],
-["text", "("],
-["integer", "255"],
-["text", ","],
-["integer", "255"],
-["text", ","],
-["integer", "255"],
-["text", ")"],
-["text", "line"],
-["text", "from"],
-["text", "("],
-["float", "0.000000"],
-["text", ","],
-["float", "0.000000"],
-["text", ")"],
-["text", "to"],
-["text", "("],
-["float", "400.000000"],
-["text", ","],
-["float", "400.000000"],
-["text", ")"]])
-room.assertForOtherSource('1013', [
-  ["text", "draw"],
-  ["text", "a"],
-  ["text", "("],
-  ["integer", "255"],
-  ["text", ","],
-  ["integer", "255"],
-  ["text", ","],
-  ["integer", "255"],
-  ["text", ")"],
-  ["text", "line"],
-  ["text", "from"],
-  ["text", "("],
-  ["float", "0.000000"],
-  ["text", ","],
-  ["float", "0.000000"],
-  ["text", ")"],
-  ["text", "to"],
-  ["text", "("],
-  ["float", "400.000000"],
-  ["text", ","],
-  ["float", "400.000000"],
-  ["text", ")"]])
+// room.assertForOtherSource('0472', [
+// ["text", "draw"],
+// ["text", "a"],
+// ["text", "("],
+// ["integer", "255"],
+// ["text", ","],
+// ["integer", "255"],
+// ["text", ","],
+// ["integer", "255"],
+// ["text", ")"],
+// ["text", "line"],
+// ["text", "from"],
+// ["text", "("],
+// ["float", "0.000000"],
+// ["text", ","],
+// ["float", "0.000000"],
+// ["text", ")"],
+// ["text", "to"],
+// ["text", "("],
+// ["float", "400.000000"],
+// ["text", ","],
+// ["float", "400.000000"],
+// ["text", ")"]])
+// room.assertForOtherSource('1013', [
+//   ["text", "draw"],
+//   ["text", "a"],
+//   ["text", "("],
+//   ["integer", "255"],
+//   ["text", ","],
+//   ["integer", "255"],
+//   ["text", ","],
+//   ["integer", "255"],
+//   ["text", ")"],
+//   ["text", "line"],
+//   ["text", "from"],
+//   ["text", "("],
+//   ["float", "0.000000"],
+//   ["text", ","],
+//   ["float", "0.000000"],
+//   ["text", ")"],
+//   ["text", "to"],
+//   ["text", "("],
+//   ["float", "400.000000"],
+//   ["text", ","],
+//   ["float", "400.000000"],
+//   ["text", ")"]])
 
 run();
