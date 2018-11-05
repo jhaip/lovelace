@@ -21,6 +21,8 @@ import (
 var dbMutex sync.RWMutex
 var zmqMutex sync.Mutex
 
+const MeasurementDuration = 5.0 * time.Second
+
 type Term struct {
 	Type  string
 	Value string
@@ -58,6 +60,17 @@ type BatchMessage struct {
 	Fact [][]string `json:"fact"`
 }
 
+type LatencyMeasurer struct {
+	lastMeasuredTime    time.Time
+	count               int64
+	lastDbLockWaitTime  time.Time
+	dbLockWaitTime      time.Duration
+	lastActionTime      time.Time
+	actionTime          time.Duration
+	lastMessageWaitTime time.Time
+	messageWaitTime     time.Duration
+}
+
 func checkErr(err error) {
 	if err != nil {
 		// log.Fatal(err)
@@ -69,14 +82,64 @@ func makeTimestamp() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
 }
 
+func makeLatencyMeasurer() LatencyMeasurer {
+	return LatencyMeasurer{time.Now(), 0, time.Time{}, 0, time.Time{}, 0, time.Time{}, 0}
+}
+
+func preLatencyMeasurePart(subsystemName string, latencyMeasurer LatencyMeasurer) LatencyMeasurer {
+	if subsystemName == "db" {
+		latencyMeasurer.lastDbLockWaitTime = time.Now()
+	} else if subsystemName == "action" {
+		latencyMeasurer.lastActionTime = time.Now()
+	} else if subsystemName == "messageWait" {
+		latencyMeasurer.lastMessageWaitTime = time.Now()
+	}
+	return latencyMeasurer
+}
+
+func postLatencyMeasurePart(subsystemName string, latencyMeasurer LatencyMeasurer) LatencyMeasurer {
+	if subsystemName == "db" {
+		latencyMeasurer.dbLockWaitTime += time.Since(latencyMeasurer.lastDbLockWaitTime)
+	} else if subsystemName == "action" {
+		latencyMeasurer.actionTime += time.Since(latencyMeasurer.lastActionTime)
+	} else if subsystemName == "messageWait" {
+		latencyMeasurer.messageWaitTime += time.Since(latencyMeasurer.lastMessageWaitTime)
+	}
+	return latencyMeasurer
+}
+
+func updateLatencyMeasurer(latencyMeasurer LatencyMeasurer, actionsDone int64, subsystemName string) LatencyMeasurer {
+	var count int64
+	count = latencyMeasurer.count + actionsDone
+	if time.Since(latencyMeasurer.lastMeasuredTime) > MeasurementDuration {
+		zap.L().Debug(subsystemName,
+			zap.Duration("latency",
+				time.Duration(int64(time.Since(latencyMeasurer.lastMeasuredTime))/count)),
+			zap.Int64("count", count),
+			zap.Duration("dbLockWaitTime",
+				time.Duration(int64(latencyMeasurer.dbLockWaitTime)/count)),
+			zap.Duration("actionTime",
+				time.Duration(int64(latencyMeasurer.actionTime)/count)),
+			zap.Duration("messageWaitTime",
+				time.Duration(int64(latencyMeasurer.messageWaitTime)/count)),
+		)
+		return makeLatencyMeasurer()
+	}
+	latencyMeasurer.count = count
+	return latencyMeasurer
+}
+
 func notification_worker(notifications <-chan Notification, retractions chan<- []Term) {
 	publisher, _ := zmq.NewSocket(zmq.PUB)
 	defer publisher.Close()
 	publisher.Bind("tcp://*:5555")
 	NO_RESULTS_MESSAGE := "[]"
 	cache := make(map[string]string)
-
+	latencyMeasurer := makeLatencyMeasurer()
+	latencyMeasurer = preLatencyMeasurePart("messageWait", latencyMeasurer)
 	for notification := range notifications {
+		latencyMeasurer = postLatencyMeasurePart("messageWait", latencyMeasurer)
+		latencyMeasurer = preLatencyMeasurePart("action", latencyMeasurer)
 		start := time.Now()
 		msg := fmt.Sprintf("%s%s%s", notification.Source, notification.Id, notification.Result)
 		cache_key := fmt.Sprintf("%s%s", notification.Source, notification.Id)
@@ -90,6 +153,9 @@ func notification_worker(notifications <-chan Notification, retractions chan<- [
 		}
 		timeToSendResults := time.Since(start)
 		zap.L().Debug("send notification", zap.Duration("timeToSendResults", timeToSendResults))
+		latencyMeasurer = postLatencyMeasurePart("action", latencyMeasurer)
+		latencyMeasurer = updateLatencyMeasurer(latencyMeasurer, 1, "latency - send notification")
+		latencyMeasurer = preLatencyMeasurePart("messageWait", latencyMeasurer)
 	}
 }
 
@@ -121,12 +187,14 @@ func single_subscriber_update(db map[string]Fact, notifications chan<- Notificat
 	duration := time.Since(start)
 	zap.L().Debug("SINGLE SUBSCRIBER DONE",
 		zap.Int("sub_index", i),
+		zap.String("source", subscription.Source),
 		zap.Duration("select", selectDuration),
 		zap.Duration("send", duration-selectDuration),
 		zap.Duration("total", duration))
 }
 
-func update_all_subscriptions(db *map[string]Fact, notifications chan<- Notification, subscriptions Subscriptions) {
+func update_all_subscriptions(db *map[string]Fact, notifications chan<- Notification, subscriptions Subscriptions, latencyMeasurer LatencyMeasurer) LatencyMeasurer {
+	latencyMeasurer = preLatencyMeasurePart("db", latencyMeasurer)
 	dbMutex.RLock()
 	dbValue := make(map[string]Fact)
 	for k, fact := range *db {
@@ -136,15 +204,21 @@ func update_all_subscriptions(db *map[string]Fact, notifications chan<- Notifica
 		}
 		dbValue[k] = Fact{newTerms}
 	}
+	latencyMeasurer = postLatencyMeasurePart("db", latencyMeasurer)
 	dbMutex.RUnlock()
+	latencyMeasurer = preLatencyMeasurePart("action", latencyMeasurer)
 	var wg sync.WaitGroup
 	wg.Add(len(subscriptions.Subscriptions))
+	zap.L().Debug("SINGLE SUBSCRIBER -- begin")
 	// TODO: there may be a race condition if the contents of subscriptions changes when running this func.
 	// How about just passing in a copy of the subscriptions
 	for i, subscription := range subscriptions.Subscriptions {
 		go single_subscriber_update(dbValue, notifications, subscription, &wg, i)
 	}
 	wg.Wait()
+	zap.L().Debug("SINGLE SUBSCRIBER -- end")
+	latencyMeasurer = postLatencyMeasurePart("action", latencyMeasurer)
+	return latencyMeasurer
 }
 
 func subscribe_worker(subscription_messages <-chan string, claims chan<- []Term, subscriptions_notifications chan<- bool, subscriptions *Subscriptions) {
@@ -222,12 +296,17 @@ func retract_worker(retractions <-chan []Term, subscriptions_notifications chan<
 
 func notify_subscribers_worker(notify_subscribers <-chan bool, subscriber_worker_finished chan<- bool, db *map[string]Fact, notifications chan<- Notification, subscriptions *Subscriptions) {
 	// TODO: passing in subscriptions is probably not safe because it can be written in the other goroutine
+	latencyMeasurer := makeLatencyMeasurer()
+	latencyMeasurer = preLatencyMeasurePart("messageWait", latencyMeasurer)
 	for range notify_subscribers {
+		latencyMeasurer = postLatencyMeasurePart("messageWait", latencyMeasurer)
 		start := time.Now()
-		update_all_subscriptions(db, notifications, *subscriptions)
+		latencyMeasurer = update_all_subscriptions(db, notifications, *subscriptions, latencyMeasurer)
 		updateSubscribersTime := time.Since(start)
 		zap.L().Debug("notify subscribers time", zap.Duration("duration", updateSubscribersTime))
 		subscriber_worker_finished <- true
+		latencyMeasurer = updateLatencyMeasurer(latencyMeasurer, 1, "latency - notify subscribers")
+		latencyMeasurer = preLatencyMeasurePart("messageWait", latencyMeasurer)
 	}
 }
 
@@ -300,7 +379,10 @@ func debug_database_observer(db *map[string]Fact) {
 func batch_worker(batch_messages <-chan string, claims chan<- []Term, retractions chan<- []Term, subscriptions_notifications chan<- bool, db *map[string]Fact) {
 	event_type_len := 9
 	source_len := 4
+	latencyMeasurer := makeLatencyMeasurer()
+	latencyMeasurer = preLatencyMeasurePart("messageWait", latencyMeasurer)
 	for msg := range batch_messages {
+		latencyMeasurer = postLatencyMeasurePart("messageWait", latencyMeasurer)
 		// event_type := msg[0:event_type_len]
 		// source := msg[event_type_len:(event_type_len + source_len)]
 		val := msg[(event_type_len + source_len):]
@@ -314,17 +396,27 @@ func batch_worker(batch_messages <-chan string, claims chan<- []Term, retraction
 			}
 			if batch_message.Type == "claim" {
 				// claims <- terms
+				latencyMeasurer = preLatencyMeasurePart("db", latencyMeasurer)
 				dbMutex.Lock()
+				latencyMeasurer = postLatencyMeasurePart("db", latencyMeasurer)
+				latencyMeasurer = preLatencyMeasurePart("action", latencyMeasurer)
 				claim(db, Fact{terms})
+				latencyMeasurer = postLatencyMeasurePart("action", latencyMeasurer)
 				dbMutex.Unlock()
 			} else if batch_message.Type == "retract" {
 				// retractions <- terms
+				latencyMeasurer = preLatencyMeasurePart("db", latencyMeasurer)
 				dbMutex.Lock()
+				latencyMeasurer = postLatencyMeasurePart("db", latencyMeasurer)
+				latencyMeasurer = preLatencyMeasurePart("action", latencyMeasurer)
 				retract(db, Fact{terms})
+				latencyMeasurer = postLatencyMeasurePart("action", latencyMeasurer)
 				dbMutex.Unlock()
 			}
 		}
 		subscriptions_notifications <- true
+		latencyMeasurer = updateLatencyMeasurer(latencyMeasurer, 1, "latency - batch")
+		latencyMeasurer = preLatencyMeasurePart("messageWait", latencyMeasurer)
 	}
 }
 
