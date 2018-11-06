@@ -65,17 +65,17 @@ func getCombinedKeyNames(a []string, b []string) ([]string, []string, bool) {
 			atLeastOneOverlap = true
 		} else {
 			res = append(res, y)
-			addedVariables = append(res, y)
+			addedVariables = append(addedVariables, y)
 		}
 	}
 	if len(res) == len(a) {
 		return res, addedVariables, false
 	}
 	sort.Strings(res)
-	if len(a) == 1 && strings.HasPrefix(a[0], "__") {
+	if len(a) == 1 && strings.HasPrefix(a[0], "*query") {
 		return res, addedVariables, true
 	}
-	if len(b) == 1 && strings.HasPrefix(b[0], "__") {
+	if len(b) == 1 && strings.HasPrefix(b[0], "*query") {
 		return res, addedVariables, true
 	}
 	return res, addedVariables, atLeastOneOverlap
@@ -85,7 +85,7 @@ func makeSubscriber(source string, id string, query [][]Term) Subscription2 {
 	subscriber := Subscription2{make(map[int][]SubscriptionUpdateOptions), make(map[string]Node)}
 	originalSubscriberNodeKeys := make([]string, 0)
 	for i, queryPart := range query {
-		queryPartVariableNames := append([]string{"__" + strconv.Itoa(i)}, getVariableTermNames(queryPart)...)
+		queryPartVariableNames := append([]string{"*query" + strconv.Itoa(i)}, getVariableTermNames(queryPart)...)
 		variableTermKey := getVariableTermKey(queryPartVariableNames)
 		subscriber.nodes[variableTermKey] = Node{queryPartVariableNames, make([]NodeValue, 0)}
 		originalSubscriberNodeKeys = append(originalSubscriberNodeKeys, variableTermKey)
@@ -102,7 +102,7 @@ func makeSubscriber(source string, id string, query [][]Term) Subscription2 {
 				subscriber.queryPartToUpdate[i] = append(subscriber.queryPartToUpdate[i],
 					SubscriptionUpdateOptions{
 						originalSubscriberNodeKey,
-						originalSubscriberNodeKey2,
+						variableTermKey,
 						addedVariables})
 			}
 		}
