@@ -17,8 +17,7 @@ type NodeValue struct {
 }
 
 type Node struct {
-	variables   []string
-	resultCache []NodeValue
+	variableCache map[string][]NodeValue
 }
 
 type SubscriptionUpdateOptions struct {
@@ -28,9 +27,9 @@ type SubscriptionUpdateOptions struct {
 }
 
 type Subscription2 struct {
+	query             [][]Term
 	queryPartToUpdate map[int][]SubscriptionUpdateOptions
-	// nodes             []Node
-	nodes map[string]Node
+	nodes             map[string]Node
 }
 
 func getVariableTermNames(terms []Term) []string {
@@ -81,24 +80,43 @@ func getCombinedKeyNames(a []string, b []string) ([]string, []string, bool) {
 	return res, addedVariables, atLeastOneOverlap
 }
 
+func makeNodeFromVariableNames(variableNames []string) Node {
+	variableCache := make(map[string][]NodeValue)
+	for _, variableName := range variableNames {
+		variableCache[variableName] = make([]NodeValue, 0)
+	}
+	return Node{variableCache}
+}
+
+func getVariableNamesFromNode(node Node) []string {
+	keys := make([]string, len(node.variableCache))
+	i := 0
+	for k := range node.variableCache {
+		keys[i] = k
+		i++
+	}
+	sort.Strings(keys)
+	return keys
+}
+
 func makeSubscriber(source string, id string, query [][]Term) Subscription2 {
-	subscriber := Subscription2{make(map[int][]SubscriptionUpdateOptions), make(map[string]Node)}
+	subscriber := Subscription2{query, make(map[int][]SubscriptionUpdateOptions), make(map[string]Node)}
 	originalSubscriberNodeKeys := make([]string, 0)
 	for i, queryPart := range query {
 		queryPartVariableNames := append([]string{"*query" + strconv.Itoa(i)}, getVariableTermNames(queryPart)...)
 		variableTermKey := getVariableTermKey(queryPartVariableNames)
-		subscriber.nodes[variableTermKey] = Node{queryPartVariableNames, make([]NodeValue, 0)}
+		subscriber.nodes[variableTermKey] = makeNodeFromVariableNames(queryPartVariableNames)
 		originalSubscriberNodeKeys = append(originalSubscriberNodeKeys, variableTermKey)
 		subscriber.queryPartToUpdate[i] = make([]SubscriptionUpdateOptions, 0)
 	}
 	for _, originalSubscriberNodeKey := range originalSubscriberNodeKeys {
 		for i, originalSubscriberNodeKey2 := range originalSubscriberNodeKeys {
 			combinedKeys, addedVariables, matched := getCombinedKeyNames(
-				subscriber.nodes[originalSubscriberNodeKey].variables,
-				subscriber.nodes[originalSubscriberNodeKey2].variables)
+				getVariableNamesFromNode(subscriber.nodes[originalSubscriberNodeKey]),
+				getVariableNamesFromNode(subscriber.nodes[originalSubscriberNodeKey2]))
 			if matched {
 				variableTermKey := getVariableTermKey(combinedKeys)
-				subscriber.nodes[variableTermKey] = Node{combinedKeys, make([]NodeValue, 0)}
+				subscriber.nodes[variableTermKey] = makeNodeFromVariableNames(combinedKeys)
 				subscriber.queryPartToUpdate[i] = append(subscriber.queryPartToUpdate[i],
 					SubscriptionUpdateOptions{
 						originalSubscriberNodeKey,
@@ -108,6 +126,61 @@ func makeSubscriber(source string, id string, query [][]Term) Subscription2 {
 		}
 	}
 	return subscriber
+}
+
+func populateFirstLayerFromMatchResults(queryPartIndex int, matchResults QueryResult, sub Subscription2) Subscription2 {
+	matchResultsSlice := make([]Term, 0)
+	for _, matchResultTerm := range matchResults.Result {
+		matchResultsSlice = append(matchResultsSlice, matchResultTerm)
+	}
+	queryPartVariableNames := append(
+		[]string{"*query" + strconv.Itoa(queryPartIndex)},
+		getVariableTermNames(matchResultsSlice)...)
+	variableTermKey := getVariableTermKey(queryPartVariableNames)
+	variableCache := make(map[string][]NodeValue)
+	for variableName, matchResultTerm := range matchResults.Result {
+		variableCache[variableName] = append(
+			sub.nodes[variableTermKey].variableCache[variableName],
+			NodeValue{[]Term{matchResultTerm}, []string{strconv.Itoa(queryPartIndex)}},
+		)
+	}
+	sub.nodes[variableTermKey] = Node{variableCache}
+	return sub
+}
+
+func addQueryResultToWholeVariableCache(queryPartIndex int, subscriptionUpdateOptions SubscriptionUpdateOptions, matchResults QueryResult, sub Subscription2) Subscription2 {
+	newSourceNode := sub.nodes[subscriptionUpdateOptions.sourceNodeKey]
+	for _, variableName := range subscriptionUpdateOptions.variablesToAdd {
+		for _, oldCacheNodeValues := range newSourceNode.variableCache {
+			newSourceNode.variableCache[variableName] = make([]NodeValue, len(oldCacheNodeValues))
+			for i, oldCacheNodeValue := range oldCacheNodeValues {
+				newSourceNode.variableCache[variableName][i] = NodeValue{
+					[]Term{matchResults.Result[variableName]},
+					append(oldCacheNodeValue.sources, strconv.Itoa(queryPartIndex)),
+				}
+			}
+			// Intentionally break.  The for loop was only used to get the length of any arbitary map []NodeValue
+			break
+		}
+	}
+	newDestNode := sub.nodes[subscriptionUpdateOptions.destNodeKey]
+	for variableName, nodeValues := range newSourceNode.variableCache {
+		newDestNode.variableCache[variableName] = append(newDestNode.variableCache[variableName], nodeValues...)
+	}
+	sub.nodes[subscriptionUpdateOptions.destNodeKey] = newDestNode
+	return sub
+}
+
+func subscriberClaimUpdate(sub Subscription2, claim []Term) {
+	for i, query_part := range sub.query {
+		match, matchResults := fact_match(Fact{query_part}, Fact{claim}, QueryResult{})
+		if match {
+			sub = populateFirstLayerFromMatchResults(i, matchResults, sub)
+			for _, subscriptionUpdateOptions := range sub.queryPartToUpdate[i] {
+				sub = addQueryResultToWholeVariableCache(i, subscriptionUpdateOptions, matchResults, sub)
+			}
+		}
+	}
 }
 
 func subscriber(batch_messages <-chan string) {

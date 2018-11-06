@@ -23,9 +23,9 @@ func TestMakeSubscriber1(t *testing.T) {
 		t.Error("Wrong number of nodes ", len(subscription.nodes))
 	}
 	expected_nodes := make(map[string]Node)
-	expected_nodes["*query0 A B"] = Node{[]string{"*query0", "A", "B"}, make([]NodeValue, 0)}
-	expected_nodes["*query1 B C"] = Node{[]string{"*query1", "B", "C"}, make([]NodeValue, 0)}
-	expected_nodes["*query0 *query1 A B C"] = Node{[]string{"*query0", "*query1", "A", "B", "C"}, make([]NodeValue, 0)}
+	expected_nodes["*query0 A B"] = makeNodeFromVariableNames([]string{"*query0", "A", "B"})
+	expected_nodes["*query1 B C"] = makeNodeFromVariableNames([]string{"*query1", "B", "C"})
+	expected_nodes["*query0 *query1 A B C"] = makeNodeFromVariableNames([]string{"*query0", "*query1", "A", "B", "C"})
 	if !reflect.DeepEqual(subscription.nodes, expected_nodes) {
 		t.Error("Contents of nodes is wrong", subscription.nodes)
 	}
@@ -58,7 +58,7 @@ func TestMakeSubscriberOnePart(t *testing.T) {
 		t.Error("Wrong number of nodes ", len(subscription.nodes))
 	}
 	expected_nodes := make(map[string]Node)
-	expected_nodes["*query0 A B"] = Node{[]string{"*query0", "A", "B"}, make([]NodeValue, 0)}
+	expected_nodes["*query0 A B"] = makeNodeFromVariableNames([]string{"*query0", "A", "B"})
 	if !reflect.DeepEqual(subscription.nodes, expected_nodes) {
 		t.Error("Contents of nodes is wrong", subscription.nodes)
 	}
@@ -84,7 +84,7 @@ func TestMakeSubscriberOnePartNoVariables(t *testing.T) {
 		t.Error("Wrong number of nodes ", len(subscription.nodes))
 	}
 	expected_nodes := make(map[string]Node)
-	expected_nodes["*query0"] = Node{[]string{"*query0"}, make([]NodeValue, 0)}
+	expected_nodes["*query0"] = makeNodeFromVariableNames([]string{"*query0"})
 	if !reflect.DeepEqual(subscription.nodes, expected_nodes) {
 		t.Error("Contents of nodes is wrong", subscription.nodes)
 	}
@@ -115,9 +115,9 @@ func TestMakeSubscriberTwoPartsNoVariables(t *testing.T) {
 		t.Error("Wrong number of nodes ", len(subscription.nodes))
 	}
 	expected_nodes := make(map[string]Node)
-	expected_nodes["*query0"] = Node{[]string{"*query0"}, make([]NodeValue, 0)}
-	expected_nodes["*query1"] = Node{[]string{"*query1"}, make([]NodeValue, 0)}
-	expected_nodes["*query0 *query1"] = Node{[]string{"*query0", "*query1"}, make([]NodeValue, 0)}
+	expected_nodes["*query0"] = makeNodeFromVariableNames([]string{"*query0"})
+	expected_nodes["*query1"] = makeNodeFromVariableNames([]string{"*query1"})
+	expected_nodes["*query0 *query1"] = makeNodeFromVariableNames([]string{"*query0", "*query1"})
 	if !reflect.DeepEqual(subscription.nodes, expected_nodes) {
 		t.Error("Contents of nodes is wrong", subscription.nodes)
 	}
