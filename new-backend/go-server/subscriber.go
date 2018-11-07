@@ -172,6 +172,13 @@ func copyNode(node Node) Node {
 	return Node{variableCache}
 }
 
+func getLengthOfNodeVariableCache(node Node) int {
+	for _, sourceVariableCache := range node.variableCache {
+		return len(sourceVariableCache)
+	}
+	return 0
+}
+
 func addQueryResultToWholeVariableCache(queryPartIndex int, subscriptionUpdateOptions SubscriptionUpdateOptions, matchResults QueryResult, sub Subscription2, claim []Term) Subscription2 {
 	newSourceNode := copyNode(sub.nodes[subscriptionUpdateOptions.sourceNodeKey])
 	thingsToAddToDestinationNode := make(map[string][]NodeValue)
@@ -180,11 +187,7 @@ func addQueryResultToWholeVariableCache(queryPartIndex int, subscriptionUpdateOp
 		thingsToAddToDestinationNode[destVariableName] = make([]NodeValue, 0)
 	}
 
-	lengthOfSourceCache := 0
-	for _, sourceVariableCache := range newSourceNode.variableCache {
-		lengthOfSourceCache = len(sourceVariableCache)
-		break
-	}
+	lengthOfSourceCache := getLengthOfNodeVariableCache(newSourceNode)
 
 	for i := 0; i < lengthOfSourceCache; i++ {
 		elementAtOffsetHasNoOverlapOrMatchingOverlap := true
@@ -233,68 +236,6 @@ func addQueryResultToWholeVariableCache(queryPartIndex int, subscriptionUpdateOp
 		}
 	}
 
-	// for sourceVariableName, sourceVariableCache := range newSourceNode.variableCache {
-	// 	// if the source and the matchResult have the same variable,
-	// 	// the variable values must match for the source+matchResult to be added ot the destination
-	// 	sourceVariableCacheHasNoOverlapOrMatchingOverlap := true
-	// 	for _, sourceVariableCacheValue := range sourceVariableCache {
-	// 		_, matchResultsHasSourceVariable := matchResults.Result[sourceVariableName]
-	// 		if matchResultsHasSourceVariable {
-	// 			if matchResults.Result[sourceVariableName].Type != sourceVariableCacheValue.terms[0].Type ||
-	// 				matchResults.Result[sourceVariableName].Value != sourceVariableCacheValue.terms[0].Value {
-	// 				sourceVariableCacheHasNoOverlapOrMatchingOverlap = false
-	// 				break
-	// 			}
-	// 		}
-	// 	}
-	// 	if !sourceVariableCacheHasNoOverlapOrMatchingOverlap {
-	// 		continue
-	// 	}
-	// 	for _, variableName := range subscriptionUpdateOptions.variablesToAdd {
-	// 		_, variableAlreadyAdded := newSourceNode.variableCache[variableName]
-	// 		if !variableAlreadyAdded {
-	// 			newSourceNode.variableCache[variableName] = make([]NodeValue, 0)
-	// 		}
-	// 		if strings.HasPrefix(variableName, "*query") {
-	// 			newSourceNode.variableCache[variableName] = append(
-	// 				newSourceNode.variableCache[variableName],
-	// 				NodeValue{
-	// 					claim,
-	// 					append(sourceVariableCacheValue.sources, strconv.Itoa(queryPartIndex)),
-	// 				},
-	// 			)
-	// 		} else {
-	// 			newSourceNode.variableCache[variableName] = append(
-	// 				newSourceNode.variableCache[variableName],
-	// 				NodeValue{
-	// 					[]Term{matchResults.Result[variableName]},
-	// 					append(sourceVariableCacheValue.sources, strconv.Itoa(queryPartIndex)),
-	// 				},
-	// 			)
-	// 		}
-	// 	}
-	// }
-
-	// for _, variableName := range subscriptionUpdateOptions.variablesToAdd {
-	// 	for _, oldCacheNodeValues := range newSourceNode.variableCache {
-	// 		newSourceNode.variableCache[variableName] = make([]NodeValue, len(oldCacheNodeValues))
-	// 		for i, oldCacheNodeValue := range oldCacheNodeValues {
-	// 			if strings.HasPrefix(variableName, "*query") {
-	// 				newSourceNode.variableCache[variableName][i] = NodeValue{
-	// 					claim,
-	// 					append(oldCacheNodeValue.sources, strconv.Itoa(queryPartIndex)),
-	// 				}
-	// 			} else {
-	// 				newSourceNode.variableCache[variableName][i] = NodeValue{
-	// 					[]Term{matchResults.Result[variableName]},
-	// 					append(oldCacheNodeValue.sources, strconv.Itoa(queryPartIndex)),
-	// 				}
-	// 			}
-	// 		}
-	// 		// Intentionally break.  The for loop was only used to get the length of any arbitary map []NodeValue
-	// 		break
-	// 	}
-	// }
 	newDestNode := copyNode(sub.nodes[subscriptionUpdateOptions.destNodeKey])
 	for variableName, nodeValues := range thingsToAddToDestinationNode {
 		newDestNode.variableCache[variableName] = append(newDestNode.variableCache[variableName], nodeValues...)
