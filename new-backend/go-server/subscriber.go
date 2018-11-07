@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -128,14 +129,21 @@ func makeSubscriber(source string, id string, query [][]Term) Subscription2 {
 	return subscriber
 }
 
-func populateFirstLayerFromMatchResults(queryPartIndex int, matchResults QueryResult, sub Subscription2) Subscription2 {
-	matchResultsSlice := make([]Term, 0)
-	for _, matchResultTerm := range matchResults.Result {
-		matchResultsSlice = append(matchResultsSlice, matchResultTerm)
+func populateFirstLayerFromMatchResults(queryPartIndex int, matchResults QueryResult, sub Subscription2, claim []Term) Subscription2 {
+	fmt.Println("MATCH RESULTS:")
+	fmt.Println(matchResults)
+	fmt.Println(matchResults.Result)
+	fmt.Println("--")
+	matchResultVariableNames := make([]string, 0)
+	for variableName, _ := range matchResults.Result {
+		matchResultVariableNames = append(matchResultVariableNames, variableName)
 	}
+	fmt.Println("----")
+	querySourceVariableName := "*query" + strconv.Itoa(queryPartIndex)
 	queryPartVariableNames := append(
-		[]string{"*query" + strconv.Itoa(queryPartIndex)},
-		getVariableTermNames(matchResultsSlice)...)
+		[]string{querySourceVariableName},
+		matchResultVariableNames...)
+	sort.Strings(queryPartVariableNames)
 	variableTermKey := getVariableTermKey(queryPartVariableNames)
 	variableCache := make(map[string][]NodeValue)
 	for variableName, matchResultTerm := range matchResults.Result {
@@ -144,26 +152,49 @@ func populateFirstLayerFromMatchResults(queryPartIndex int, matchResults QueryRe
 			NodeValue{[]Term{matchResultTerm}, []string{strconv.Itoa(queryPartIndex)}},
 		)
 	}
+	variableCache[querySourceVariableName] = append(
+		sub.nodes[variableTermKey].variableCache[querySourceVariableName],
+		NodeValue{claim, []string{strconv.Itoa(queryPartIndex)}},
+	)
 	sub.nodes[variableTermKey] = Node{variableCache}
 	return sub
 }
 
-func addQueryResultToWholeVariableCache(queryPartIndex int, subscriptionUpdateOptions SubscriptionUpdateOptions, matchResults QueryResult, sub Subscription2) Subscription2 {
-	newSourceNode := sub.nodes[subscriptionUpdateOptions.sourceNodeKey]
+func copyNode(node Node) Node {
+	variableCache := make(map[string][]NodeValue)
+	for k, v := range node.variableCache {
+		nodeValues := make([]NodeValue, len(v))
+		for i, nodeValue := range v {
+			nodeValues[i] = nodeValue
+		}
+		variableCache[k] = nodeValues
+	}
+	return Node{variableCache}
+}
+
+func addQueryResultToWholeVariableCache(queryPartIndex int, subscriptionUpdateOptions SubscriptionUpdateOptions, matchResults QueryResult, sub Subscription2, claim []Term) Subscription2 {
+	newSourceNode := copyNode(sub.nodes[subscriptionUpdateOptions.sourceNodeKey])
 	for _, variableName := range subscriptionUpdateOptions.variablesToAdd {
 		for _, oldCacheNodeValues := range newSourceNode.variableCache {
 			newSourceNode.variableCache[variableName] = make([]NodeValue, len(oldCacheNodeValues))
 			for i, oldCacheNodeValue := range oldCacheNodeValues {
-				newSourceNode.variableCache[variableName][i] = NodeValue{
-					[]Term{matchResults.Result[variableName]},
-					append(oldCacheNodeValue.sources, strconv.Itoa(queryPartIndex)),
+				if strings.HasPrefix(variableName, "*query") {
+					newSourceNode.variableCache[variableName][i] = NodeValue{
+						claim,
+						append(oldCacheNodeValue.sources, strconv.Itoa(queryPartIndex)),
+					}
+				} else {
+					newSourceNode.variableCache[variableName][i] = NodeValue{
+						[]Term{matchResults.Result[variableName]},
+						append(oldCacheNodeValue.sources, strconv.Itoa(queryPartIndex)),
+					}
 				}
 			}
 			// Intentionally break.  The for loop was only used to get the length of any arbitary map []NodeValue
 			break
 		}
 	}
-	newDestNode := sub.nodes[subscriptionUpdateOptions.destNodeKey]
+	newDestNode := copyNode(sub.nodes[subscriptionUpdateOptions.destNodeKey])
 	for variableName, nodeValues := range newSourceNode.variableCache {
 		newDestNode.variableCache[variableName] = append(newDestNode.variableCache[variableName], nodeValues...)
 	}
@@ -171,16 +202,17 @@ func addQueryResultToWholeVariableCache(queryPartIndex int, subscriptionUpdateOp
 	return sub
 }
 
-func subscriberClaimUpdate(sub Subscription2, claim []Term) {
+func subscriberClaimUpdate(sub Subscription2, claim []Term) Subscription2 {
 	for i, query_part := range sub.query {
 		match, matchResults := fact_match(Fact{query_part}, Fact{claim}, QueryResult{})
 		if match {
-			sub = populateFirstLayerFromMatchResults(i, matchResults, sub)
+			sub = populateFirstLayerFromMatchResults(i, matchResults, sub, claim)
 			for _, subscriptionUpdateOptions := range sub.queryPartToUpdate[i] {
-				sub = addQueryResultToWholeVariableCache(i, subscriptionUpdateOptions, matchResults, sub)
+				sub = addQueryResultToWholeVariableCache(i, subscriptionUpdateOptions, matchResults, sub, claim)
 			}
 		}
 	}
+	return sub
 }
 
 func subscriber(batch_messages <-chan string) {

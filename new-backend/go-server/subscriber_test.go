@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+
+	"github.com/alecthomas/repr"
 )
 
 func TestMakeSubscriber1(t *testing.T) {
@@ -43,7 +45,22 @@ func TestMakeSubscriber1(t *testing.T) {
 	if !reflect.DeepEqual(subscription.queryPartToUpdate[1], expected_queryPartToUpdate1) {
 		t.Error("subscription.queryPartToUpdate[1] does not match")
 	}
-	fmt.Println(subscription)
+	repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
+
+	claim := []Term{Term{"text", "Sun"}, Term{"text", "is"}, Term{"text", "yellow"}}
+	subscription = subscriberClaimUpdate(subscription, claim)
+
+	repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
+
+	claim2 := []Term{Term{"text", "yellow"}, Term{"text", "has"}, Term{"integer", "3"}}
+	subscription = subscriberClaimUpdate(subscription, claim2)
+
+	repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
+
+	claim3 := []Term{Term{"text", "yellow"}, Term{"text", "has"}, Term{"text", "feelings"}}
+	subscription = subscriberClaimUpdate(subscription, claim3)
+
+	repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
 }
 
 func TestMakeSubscriberOnePart(t *testing.T) {
@@ -69,7 +86,12 @@ func TestMakeSubscriberOnePart(t *testing.T) {
 	if !reflect.DeepEqual(subscription.queryPartToUpdate[0], expected_queryPartToUpdate0) {
 		t.Error("subscription.queryPartToUpdate[0] does not match")
 	}
-	fmt.Println(subscription)
+	repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
+
+	claim := []Term{Term{"text", "Sun"}, Term{"text", "is"}, Term{"text", "yellow"}}
+	subscription = subscriberClaimUpdate(subscription, claim)
+
+	repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
 }
 
 func TestMakeSubscriberOnePartNoVariables(t *testing.T) {
