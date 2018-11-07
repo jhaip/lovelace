@@ -65,6 +65,11 @@ func TestMakeSubscriber1(t *testing.T) {
 	subscription = subscriberClaimUpdate(subscription, claim4)
 
 	repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
+
+	retract1 := []Term{Term{"variable", ""}, Term{"text", "is"}, Term{"text", "yellow"}}
+	subscription = subscriberRetractUpdate(subscription, retract1)
+
+	repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
 }
 
 func TestMakeSubscriberOnePart(t *testing.T) {
@@ -98,8 +103,20 @@ func TestMakeSubscriberOnePart(t *testing.T) {
 	repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
 
 	// claim does not match
-	claim2 := []Term{Term{"text", "Sun"}, Term{"text", "BLAH"}, Term{"text", "yellow"}}
+	claim2 := []Term{Term{"text", "Sun"}, Term{"text", "BAD"}, Term{"text", "yellow"}}
 	subscription = subscriberClaimUpdate(subscription, claim2)
+
+	repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
+
+	// $ is BAD does not match any previous claim, so this should do nothing
+	retract1 := []Term{Term{"variable", ""}, Term{"text", "is"}, Term{"text", "BAD"}}
+	subscription = subscriberRetractUpdate(subscription, retract1)
+
+	repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
+
+	// $ is yellow matches a previous claim "Sun is yellow" so that claim should be removed
+	retract2 := []Term{Term{"variable", ""}, Term{"text", "is"}, Term{"text", "yellow"}}
+	subscription = subscriberRetractUpdate(subscription, retract2)
 
 	repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
 }

@@ -257,6 +257,38 @@ func subscriberClaimUpdate(sub Subscription2, claim []Term) Subscription2 {
 	return sub
 }
 
+func subscriberRetractUpdate(sub Subscription2, query []Term) Subscription2 {
+	for nodeKey, node := range sub.nodes {
+		lengthOfNodeCache := getLengthOfNodeVariableCache(node)
+		updatedNode := Node{make(map[string][]NodeValue)}
+		for variableName, _ := range node.variableCache {
+			updatedNode.variableCache[variableName] = make([]NodeValue, 0)
+		}
+		for i := 0; i < lengthOfNodeCache; i++ {
+			cacheRowIsOk := true
+			for variableName, variableCache := range node.variableCache {
+				if strings.HasPrefix(variableName, "*query") {
+					match, _ := fact_match(Fact{query}, Fact{variableCache[i].terms}, QueryResult{})
+					if match {
+						cacheRowIsOk = false
+						break
+					}
+				}
+			}
+			if cacheRowIsOk {
+				for variableName, variableCache := range node.variableCache {
+					updatedNode.variableCache[variableName] = append(
+						updatedNode.variableCache[variableName],
+						variableCache[i],
+					)
+				}
+			}
+		}
+		sub.nodes[nodeKey] = updatedNode
+	}
+	return sub
+}
+
 func subscriber(batch_messages <-chan string) {
 
 }
