@@ -174,28 +174,129 @@ func copyNode(node Node) Node {
 
 func addQueryResultToWholeVariableCache(queryPartIndex int, subscriptionUpdateOptions SubscriptionUpdateOptions, matchResults QueryResult, sub Subscription2, claim []Term) Subscription2 {
 	newSourceNode := copyNode(sub.nodes[subscriptionUpdateOptions.sourceNodeKey])
-	for _, variableName := range subscriptionUpdateOptions.variablesToAdd {
-		for _, oldCacheNodeValues := range newSourceNode.variableCache {
-			newSourceNode.variableCache[variableName] = make([]NodeValue, len(oldCacheNodeValues))
-			for i, oldCacheNodeValue := range oldCacheNodeValues {
-				if strings.HasPrefix(variableName, "*query") {
-					newSourceNode.variableCache[variableName][i] = NodeValue{
-						claim,
-						append(oldCacheNodeValue.sources, strconv.Itoa(queryPartIndex)),
-					}
-				} else {
-					newSourceNode.variableCache[variableName][i] = NodeValue{
-						[]Term{matchResults.Result[variableName]},
-						append(oldCacheNodeValue.sources, strconv.Itoa(queryPartIndex)),
-					}
+	thingsToAddToDestinationNode := make(map[string][]NodeValue)
+
+	for destVariableName, _ := range sub.nodes[subscriptionUpdateOptions.destNodeKey].variableCache {
+		thingsToAddToDestinationNode[destVariableName] = make([]NodeValue, 0)
+	}
+
+	lengthOfSourceCache := 0
+	for _, sourceVariableCache := range newSourceNode.variableCache {
+		lengthOfSourceCache = len(sourceVariableCache)
+		break
+	}
+
+	for i := 0; i < lengthOfSourceCache; i++ {
+		elementAtOffsetHasNoOverlapOrMatchingOverlap := true
+		for sourceVariableName, sourceVariableCache := range newSourceNode.variableCache {
+			_, matchResultsHasSourceVariable := matchResults.Result[sourceVariableName]
+			if matchResultsHasSourceVariable {
+				if matchResults.Result[sourceVariableName].Type != sourceVariableCache[i].terms[0].Type ||
+					matchResults.Result[sourceVariableName].Value != sourceVariableCache[i].terms[0].Value {
+					elementAtOffsetHasNoOverlapOrMatchingOverlap = false
+					break
 				}
 			}
-			// Intentionally break.  The for loop was only used to get the length of any arbitary map []NodeValue
-			break
+		}
+		if elementAtOffsetHasNoOverlapOrMatchingOverlap {
+			// Build the new thing to copy to the destination node
+			// 1. Copy the variables from the source node
+			for sourceVariableName, sourceVariableCache := range newSourceNode.variableCache {
+				thingsToAddToDestinationNode[sourceVariableName] = append(
+					thingsToAddToDestinationNode[sourceVariableName],
+					sourceVariableCache[i],
+				)
+			}
+			// 2. Add in the new variables from the matchResult
+			for _, variableName := range subscriptionUpdateOptions.variablesToAdd {
+				if strings.HasPrefix(variableName, "*query") {
+					thingsToAddToDestinationNode[variableName] = append(
+						thingsToAddToDestinationNode[variableName],
+						NodeValue{
+							claim,
+							make([]string, 0), // this may be wrong
+						},
+					)
+				} else {
+					thingsToAddToDestinationNode[variableName] = append(
+						thingsToAddToDestinationNode[variableName],
+						NodeValue{
+							[]Term{matchResults.Result[variableName]},
+							// append(sourceVariableCacheValue.sources, strconv.Itoa(queryPartIndex)),
+							make([]string, 0), // this may be wrong
+						},
+					)
+				}
+			}
+		} else {
+			fmt.Println("elementAtOffsetHasNoOverlapOrMatchingOverlap is FALSE!")
 		}
 	}
+
+	// for sourceVariableName, sourceVariableCache := range newSourceNode.variableCache {
+	// 	// if the source and the matchResult have the same variable,
+	// 	// the variable values must match for the source+matchResult to be added ot the destination
+	// 	sourceVariableCacheHasNoOverlapOrMatchingOverlap := true
+	// 	for _, sourceVariableCacheValue := range sourceVariableCache {
+	// 		_, matchResultsHasSourceVariable := matchResults.Result[sourceVariableName]
+	// 		if matchResultsHasSourceVariable {
+	// 			if matchResults.Result[sourceVariableName].Type != sourceVariableCacheValue.terms[0].Type ||
+	// 				matchResults.Result[sourceVariableName].Value != sourceVariableCacheValue.terms[0].Value {
+	// 				sourceVariableCacheHasNoOverlapOrMatchingOverlap = false
+	// 				break
+	// 			}
+	// 		}
+	// 	}
+	// 	if !sourceVariableCacheHasNoOverlapOrMatchingOverlap {
+	// 		continue
+	// 	}
+	// 	for _, variableName := range subscriptionUpdateOptions.variablesToAdd {
+	// 		_, variableAlreadyAdded := newSourceNode.variableCache[variableName]
+	// 		if !variableAlreadyAdded {
+	// 			newSourceNode.variableCache[variableName] = make([]NodeValue, 0)
+	// 		}
+	// 		if strings.HasPrefix(variableName, "*query") {
+	// 			newSourceNode.variableCache[variableName] = append(
+	// 				newSourceNode.variableCache[variableName],
+	// 				NodeValue{
+	// 					claim,
+	// 					append(sourceVariableCacheValue.sources, strconv.Itoa(queryPartIndex)),
+	// 				},
+	// 			)
+	// 		} else {
+	// 			newSourceNode.variableCache[variableName] = append(
+	// 				newSourceNode.variableCache[variableName],
+	// 				NodeValue{
+	// 					[]Term{matchResults.Result[variableName]},
+	// 					append(sourceVariableCacheValue.sources, strconv.Itoa(queryPartIndex)),
+	// 				},
+	// 			)
+	// 		}
+	// 	}
+	// }
+
+	// for _, variableName := range subscriptionUpdateOptions.variablesToAdd {
+	// 	for _, oldCacheNodeValues := range newSourceNode.variableCache {
+	// 		newSourceNode.variableCache[variableName] = make([]NodeValue, len(oldCacheNodeValues))
+	// 		for i, oldCacheNodeValue := range oldCacheNodeValues {
+	// 			if strings.HasPrefix(variableName, "*query") {
+	// 				newSourceNode.variableCache[variableName][i] = NodeValue{
+	// 					claim,
+	// 					append(oldCacheNodeValue.sources, strconv.Itoa(queryPartIndex)),
+	// 				}
+	// 			} else {
+	// 				newSourceNode.variableCache[variableName][i] = NodeValue{
+	// 					[]Term{matchResults.Result[variableName]},
+	// 					append(oldCacheNodeValue.sources, strconv.Itoa(queryPartIndex)),
+	// 				}
+	// 			}
+	// 		}
+	// 		// Intentionally break.  The for loop was only used to get the length of any arbitary map []NodeValue
+	// 		break
+	// 	}
+	// }
 	newDestNode := copyNode(sub.nodes[subscriptionUpdateOptions.destNodeKey])
-	for variableName, nodeValues := range newSourceNode.variableCache {
+	for variableName, nodeValues := range thingsToAddToDestinationNode {
 		newDestNode.variableCache[variableName] = append(newDestNode.variableCache[variableName], nodeValues...)
 	}
 	sub.nodes[subscriptionUpdateOptions.destNodeKey] = newDestNode

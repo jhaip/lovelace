@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -61,6 +60,11 @@ func TestMakeSubscriber1(t *testing.T) {
 	subscription = subscriberClaimUpdate(subscription, claim3)
 
 	repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
+
+	claim4 := []Term{Term{"text", "Sky"}, Term{"text", "is"}, Term{"text", "blue"}}
+	subscription = subscriberClaimUpdate(subscription, claim4)
+
+	repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
 }
 
 func TestMakeSubscriberOnePart(t *testing.T) {
@@ -92,6 +96,12 @@ func TestMakeSubscriberOnePart(t *testing.T) {
 	subscription = subscriberClaimUpdate(subscription, claim)
 
 	repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
+
+	// claim does not match
+	claim2 := []Term{Term{"text", "Sun"}, Term{"text", "BLAH"}, Term{"text", "yellow"}}
+	subscription = subscriberClaimUpdate(subscription, claim2)
+
+	repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
 }
 
 func TestMakeSubscriberOnePartNoVariables(t *testing.T) {
@@ -117,7 +127,12 @@ func TestMakeSubscriberOnePartNoVariables(t *testing.T) {
 	if !reflect.DeepEqual(subscription.queryPartToUpdate[0], expected_queryPartToUpdate0) {
 		t.Error("subscription.queryPartToUpdate[0] does not match")
 	}
-	fmt.Println(subscription)
+	repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
+
+	claim := []Term{Term{"text", "Sun"}, Term{"text", "is"}, Term{"text", "yellow"}}
+	subscription = subscriberClaimUpdate(subscription, claim)
+
+	repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
 }
 
 func TestMakeSubscriberTwoPartsNoVariables(t *testing.T) {
@@ -157,5 +172,13 @@ func TestMakeSubscriberTwoPartsNoVariables(t *testing.T) {
 	if !reflect.DeepEqual(subscription.queryPartToUpdate[1], expected_queryPartToUpdate1) {
 		t.Error("subscription.queryPartToUpdate[1] does not match")
 	}
-	fmt.Println(subscription)
+	repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
+
+	claim := []Term{Term{"text", "Sun"}, Term{"text", "is"}, Term{"text", "yellow"}}
+	subscription = subscriberClaimUpdate(subscription, claim)
+
+	claim2 := []Term{Term{"text", "Earth"}, Term{"text", "is"}, Term{"text", "green"}}
+	subscription = subscriberClaimUpdate(subscription, claim2)
+
+	repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
 }
