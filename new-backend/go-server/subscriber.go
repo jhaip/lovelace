@@ -281,6 +281,21 @@ func subscriberRetractUpdate(sub Subscription2, query []Term) Subscription2 {
 	return sub
 }
 
+func subscriberBatchUpdate(sub Subscription2, batch_messages []BatchMessage) Subscription2 {
+	for _, batch_message := range batch_messages {
+		terms := make([]Term, len(batch_message.Fact))
+		for j, term := range batch_message.Fact {
+			terms[j] = Term{term[0], term[1]}
+		}
+		if batch_message.Type == "claim" {
+			sub = subscriberClaimUpdate(sub, terms)
+		} else if batch_message.Type == "retract" {
+			sub = subscriberRetractUpdate(sub, terms)
+		}
+	}
+	return sub
+}
+
 func subscriber(batch_messages <-chan string) {
 
 }
