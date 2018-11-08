@@ -44,16 +44,54 @@ func TestMakeSubscriber1(t *testing.T) {
 	if !reflect.DeepEqual(subscription.queryPartToUpdate[1], expected_queryPartToUpdate1) {
 		t.Error("subscription.queryPartToUpdate[1] does not match")
 	}
-	repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
-
+	// repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
 	claim := []Term{Term{"text", "Sun"}, Term{"text", "is"}, Term{"text", "yellow"}}
 	subscription = subscriberClaimUpdate(subscription, claim)
 
-	repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
+	expected_nodes["*query0 A B"].variableCache["*query0"] = []NodeValue{
+		NodeValue{claim, []string{"0"}},
+	}
+	expected_nodes["*query0 A B"].variableCache["A"] = []NodeValue{
+		NodeValue{[]Term{Term{"text", "Sun"}}, []string{"0"}},
+	}
+	expected_nodes["*query0 A B"].variableCache["B"] = []NodeValue{
+		NodeValue{[]Term{Term{"text", "yellow"}}, []string{"0"}},
+	}
+	if !reflect.DeepEqual(subscription.nodes, expected_nodes) {
+		t.Error("Contents of nodes is wrong", subscription.nodes)
+	}
 
+	// repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
 	claim2 := []Term{Term{"text", "yellow"}, Term{"text", "has"}, Term{"integer", "3"}}
 	subscription = subscriberClaimUpdate(subscription, claim2)
 
+	expected_nodes["*query1 B C"].variableCache["*query1"] = []NodeValue{
+		NodeValue{claim2, []string{"1"}},
+	}
+	expected_nodes["*query1 B C"].variableCache["B"] = []NodeValue{
+		NodeValue{[]Term{Term{"text", "yellow"}}, []string{"1"}},
+	}
+	expected_nodes["*query1 B C"].variableCache["C"] = []NodeValue{
+		NodeValue{[]Term{Term{"integer", "3"}}, []string{"1"}},
+	}
+	expected_nodes["*query0 *query1 A B C"].variableCache["*query0"] = []NodeValue{
+		NodeValue{claim, []string{"0"}},
+	}
+	expected_nodes["*query0 *query1 A B C"].variableCache["*query1"] = []NodeValue{
+		NodeValue{claim2, []string{"1"}},
+	}
+	expected_nodes["*query0 *query1 A B C"].variableCache["A"] = []NodeValue{
+		NodeValue{[]Term{Term{"text", "Sun"}}, []string{"0"}},
+	}
+	expected_nodes["*query0 *query1 A B C"].variableCache["B"] = []NodeValue{
+		NodeValue{[]Term{Term{"text", "yellow"}}, []string{"1"}},
+	}
+	expected_nodes["*query0 *query1 A B C"].variableCache["C"] = []NodeValue{
+		NodeValue{[]Term{Term{"integer", "3"}}, []string{"1"}},
+	}
+	if !reflect.DeepEqual(subscription.nodes, expected_nodes) {
+		t.Error("Contents of nodes is wrong", subscription.nodes)
+	}
 	repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
 
 	claim3 := []Term{Term{"text", "yellow"}, Term{"text", "has"}, Term{"text", "feelings"}}
