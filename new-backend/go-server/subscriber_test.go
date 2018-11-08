@@ -20,6 +20,10 @@ func TestMakeSubscriber1(t *testing.T) {
 	}
 	query := [][]Term{query_part1, query_part2}
 	subscription := makeSubscriber("mySource", "0001", query)
+
+	// repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
+	// return
+
 	if len(subscription.nodes) != 3 {
 		t.Error("Wrong number of nodes ", len(subscription.nodes))
 	}
@@ -44,9 +48,15 @@ func TestMakeSubscriber1(t *testing.T) {
 	if !reflect.DeepEqual(subscription.queryPartToUpdate[1], expected_queryPartToUpdate1) {
 		t.Error("subscription.queryPartToUpdate[1] does not match")
 	}
+
+	updatedSubscriberOutput := false
+
 	// repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
 	claim := []Term{Term{"text", "Sun"}, Term{"text", "is"}, Term{"text", "yellow"}}
-	subscription = subscriberClaimUpdate(subscription, claim)
+	subscription, updatedSubscriberOutput = subscriberClaimUpdate(subscription, claim)
+	if updatedSubscriberOutput != false {
+		t.Error("Flag for updated subscriber output is wrong!", updatedSubscriberOutput)
+	}
 
 	expected_nodes["*query0 A B"].variableCache["*query0"] = []NodeValue{NodeValue{claim}}
 	expected_nodes["*query0 A B"].variableCache["A"] = []NodeValue{NodeValue{[]Term{Term{"text", "Sun"}}}}
@@ -57,7 +67,10 @@ func TestMakeSubscriber1(t *testing.T) {
 
 	// repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
 	claim2 := []Term{Term{"text", "yellow"}, Term{"text", "has"}, Term{"integer", "3"}}
-	subscription = subscriberClaimUpdate(subscription, claim2)
+	subscription, updatedSubscriberOutput = subscriberClaimUpdate(subscription, claim2)
+	if updatedSubscriberOutput != true {
+		t.Error("Flag for updated subscriber output is wrong!", updatedSubscriberOutput)
+	}
 
 	expected_nodes["*query1 B C"].variableCache["*query1"] = []NodeValue{NodeValue{claim2}}
 	expected_nodes["*query1 B C"].variableCache["B"] = []NodeValue{NodeValue{[]Term{Term{"text", "yellow"}}}}
@@ -73,7 +86,10 @@ func TestMakeSubscriber1(t *testing.T) {
 	// repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
 
 	claim3 := []Term{Term{"text", "yellow"}, Term{"text", "has"}, Term{"text", "feelings"}}
-	subscription = subscriberClaimUpdate(subscription, claim3)
+	subscription, updatedSubscriberOutput = subscriberClaimUpdate(subscription, claim3)
+	if updatedSubscriberOutput != true {
+		t.Error("Flag for updated subscriber output is wrong!", updatedSubscriberOutput)
+	}
 
 	expected_nodes["*query1 B C"].variableCache["*query1"] = []NodeValue{
 		NodeValue{claim2},
@@ -114,7 +130,10 @@ func TestMakeSubscriber1(t *testing.T) {
 	// repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
 
 	claim4 := []Term{Term{"text", "Sky"}, Term{"text", "is"}, Term{"text", "blue"}}
-	subscription = subscriberClaimUpdate(subscription, claim4)
+	subscription, updatedSubscriberOutput = subscriberClaimUpdate(subscription, claim4)
+	if updatedSubscriberOutput != false {
+		t.Error("Flag for updated subscriber output is wrong!", updatedSubscriberOutput)
+	}
 
 	expected_nodes["*query0 A B"].variableCache["*query0"] = []NodeValue{
 		NodeValue{claim},
@@ -135,7 +154,10 @@ func TestMakeSubscriber1(t *testing.T) {
 	// repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
 
 	retract1 := []Term{Term{"variable", ""}, Term{"text", "is"}, Term{"text", "yellow"}}
-	subscription = subscriberRetractUpdate(subscription, retract1)
+	subscription, updatedSubscriberOutput = subscriberRetractUpdate(subscription, retract1)
+	if updatedSubscriberOutput != true {
+		t.Error("Flag for updated subscriber output is wrong!", updatedSubscriberOutput)
+	}
 
 	expected_nodes["*query0 A B"].variableCache["*query0"] = []NodeValue{NodeValue{claim4}}
 	expected_nodes["*query0 A B"].variableCache["A"] = []NodeValue{NodeValue{[]Term{Term{"text", "Sky"}}}}
@@ -173,8 +195,13 @@ func TestMakeSubscriberOnePart(t *testing.T) {
 	}
 	// repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
 
+	updatedSubscriberOutput := false
+
 	claim := []Term{Term{"text", "Sun"}, Term{"text", "is"}, Term{"text", "yellow"}}
-	subscription = subscriberClaimUpdate(subscription, claim)
+	subscription, updatedSubscriberOutput = subscriberClaimUpdate(subscription, claim)
+	if updatedSubscriberOutput != true {
+		t.Error("Flag for updated subscriber output is wrong!", updatedSubscriberOutput)
+	}
 
 	expected_nodes["*query0 A B"].variableCache["*query0"] = []NodeValue{NodeValue{claim}}
 	expected_nodes["*query0 A B"].variableCache["A"] = []NodeValue{NodeValue{[]Term{Term{"text", "Sun"}}}}
@@ -187,7 +214,10 @@ func TestMakeSubscriberOnePart(t *testing.T) {
 
 	// claim does not match
 	claim2 := []Term{Term{"text", "Sun"}, Term{"text", "BAD"}, Term{"text", "yellow"}}
-	subscription = subscriberClaimUpdate(subscription, claim2)
+	subscription, updatedSubscriberOutput = subscriberClaimUpdate(subscription, claim2)
+	if updatedSubscriberOutput != false {
+		t.Error("Flag for updated subscriber output is wrong!", updatedSubscriberOutput)
+	}
 
 	if !reflect.DeepEqual(subscription.nodes, expected_nodes) {
 		t.Error("Contents of nodes is wrong", subscription.nodes)
@@ -197,7 +227,10 @@ func TestMakeSubscriberOnePart(t *testing.T) {
 
 	// $ is BAD does not match any previous claim, so this should do nothing
 	retract1 := []Term{Term{"variable", ""}, Term{"text", "is"}, Term{"text", "BAD"}}
-	subscription = subscriberRetractUpdate(subscription, retract1)
+	subscription, updatedSubscriberOutput = subscriberRetractUpdate(subscription, retract1)
+	if updatedSubscriberOutput != false {
+		t.Error("Flag for updated subscriber output is wrong!", updatedSubscriberOutput)
+	}
 
 	if !reflect.DeepEqual(subscription.nodes, expected_nodes) {
 		t.Error("Contents of nodes is wrong", subscription.nodes)
@@ -207,7 +240,10 @@ func TestMakeSubscriberOnePart(t *testing.T) {
 
 	// $ is yellow matches a previous claim "Sun is yellow" so that claim should be removed
 	retract2 := []Term{Term{"variable", ""}, Term{"text", "is"}, Term{"text", "yellow"}}
-	subscription = subscriberRetractUpdate(subscription, retract2)
+	subscription, updatedSubscriberOutput = subscriberRetractUpdate(subscription, retract2)
+	if updatedSubscriberOutput != true {
+		t.Error("Flag for updated subscriber output is wrong!", updatedSubscriberOutput)
+	}
 
 	expected_nodes["*query0 A B"] = makeNodeFromVariableNames([]string{"*query0", "A", "B"})
 	if !reflect.DeepEqual(subscription.nodes, expected_nodes) {
@@ -241,8 +277,13 @@ func TestMakeSubscriberOnePartNoVariables(t *testing.T) {
 		t.Error("subscription.queryPartToUpdate[0] does not match")
 	}
 
+	updatedSubscriberOutput := false
+
 	claim := []Term{Term{"text", "Sun"}, Term{"text", "is"}, Term{"text", "yellow"}}
-	subscription = subscriberClaimUpdate(subscription, claim)
+	subscription, updatedSubscriberOutput = subscriberClaimUpdate(subscription, claim)
+	if updatedSubscriberOutput != true {
+		t.Error("Flag for updated subscriber output is wrong!", updatedSubscriberOutput)
+	}
 
 	expected_nodes["*query0"].variableCache["*query0"] = []NodeValue{NodeValue{claim}}
 	if !reflect.DeepEqual(subscription.nodes, expected_nodes) {
@@ -250,7 +291,10 @@ func TestMakeSubscriberOnePartNoVariables(t *testing.T) {
 	}
 
 	retract1 := []Term{Term{"postfix", ""}}
-	subscription = subscriberRetractUpdate(subscription, retract1)
+	subscription, updatedSubscriberOutput = subscriberRetractUpdate(subscription, retract1)
+	if updatedSubscriberOutput != true {
+		t.Error("Flag for updated subscriber output is wrong!", updatedSubscriberOutput)
+	}
 
 	expected_nodes["*query0"] = makeNodeFromVariableNames([]string{"*query0"})
 	if !reflect.DeepEqual(subscription.nodes, expected_nodes) {
@@ -297,8 +341,13 @@ func TestMakeSubscriberTwoPartsNoVariables(t *testing.T) {
 	}
 	// repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
 
+	updatedSubscriberOutput := false
+
 	claim := []Term{Term{"text", "Sun"}, Term{"text", "is"}, Term{"text", "yellow"}}
-	subscription = subscriberClaimUpdate(subscription, claim)
+	subscription, updatedSubscriberOutput = subscriberClaimUpdate(subscription, claim)
+	if updatedSubscriberOutput != false {
+		t.Error("Flag for updated subscriber output is wrong!", updatedSubscriberOutput)
+	}
 
 	expected_nodes["*query0"].variableCache["*query0"] = []NodeValue{NodeValue{claim}}
 	if !reflect.DeepEqual(subscription.nodes, expected_nodes) {
@@ -306,7 +355,10 @@ func TestMakeSubscriberTwoPartsNoVariables(t *testing.T) {
 	}
 
 	claim2 := []Term{Term{"text", "Earth"}, Term{"text", "is"}, Term{"text", "green"}}
-	subscription = subscriberClaimUpdate(subscription, claim2)
+	subscription, updatedSubscriberOutput = subscriberClaimUpdate(subscription, claim2)
+	if updatedSubscriberOutput != true {
+		t.Error("Flag for updated subscriber output is wrong!", updatedSubscriberOutput)
+	}
 
 	expected_nodes["*query1"].variableCache["*query1"] = []NodeValue{NodeValue{claim2}}
 	expected_nodes["*query0 *query1"].variableCache["*query0"] = []NodeValue{NodeValue{claim}}
@@ -316,7 +368,10 @@ func TestMakeSubscriberTwoPartsNoVariables(t *testing.T) {
 	}
 
 	retract1 := []Term{Term{"variable", ""}, Term{"text", "is"}, Term{"text", "yellow"}}
-	subscription = subscriberRetractUpdate(subscription, retract1)
+	subscription, updatedSubscriberOutput = subscriberRetractUpdate(subscription, retract1)
+	if updatedSubscriberOutput != true {
+		t.Error("Flag for updated subscriber output is wrong!", updatedSubscriberOutput)
+	}
 
 	expected_nodes["*query0"] = makeNodeFromVariableNames([]string{"*query0"})
 	expected_nodes["*query0 *query1"] = makeNodeFromVariableNames([]string{"*query0", "*query1"})
@@ -325,7 +380,10 @@ func TestMakeSubscriberTwoPartsNoVariables(t *testing.T) {
 	}
 
 	retract2 := []Term{Term{"text", "Earth"}, Term{"text", "is"}, Term{"text", "green"}}
-	subscription = subscriberRetractUpdate(subscription, retract2)
+	subscription, updatedSubscriberOutput = subscriberRetractUpdate(subscription, retract2)
+	if updatedSubscriberOutput != true {
+		t.Error("Flag for updated subscriber output is wrong!", updatedSubscriberOutput)
+	}
 
 	expected_nodes["*query0"] = makeNodeFromVariableNames([]string{"*query0"})
 	expected_nodes["*query1"] = makeNodeFromVariableNames([]string{"*query1"})
@@ -359,10 +417,15 @@ func TestSubscriberBatchSimple1(t *testing.T) {
 		t.Error("subscription.queryPartToUpdate[0] does not match")
 	}
 
+	updatedSubscriberOutput := false
+
 	batch_update := []BatchMessage{
 		BatchMessage{"claim", [][]string{[]string{"text", "Sun"}, []string{"text", "is"}, []string{"text", "yellow"}}},
 	}
-	subscription = subscriberBatchUpdate(subscription, batch_update)
+	subscription, updatedSubscriberOutput = subscriberBatchUpdate(subscription, batch_update)
+	if updatedSubscriberOutput != true {
+		t.Error("Flag for updated subscriber output is wrong!", updatedSubscriberOutput)
+	}
 
 	claim := []Term{Term{"text", "Sun"}, Term{"text", "is"}, Term{"text", "yellow"}}
 	expected_nodes["*query0 A B"].variableCache["*query0"] = []NodeValue{NodeValue{claim}}
@@ -378,7 +441,10 @@ func TestSubscriberBatchSimple1(t *testing.T) {
 		BatchMessage{"claim", [][]string{[]string{"text", "Sun"}, []string{"text", "BAD"}, []string{"text", "yellow"}}},
 		BatchMessage{"retract", [][]string{[]string{"variable", ""}, []string{"text", "is"}, []string{"text", "BAD"}}},
 	}
-	subscription = subscriberBatchUpdate(subscription, batch_update2)
+	subscription, updatedSubscriberOutput = subscriberBatchUpdate(subscription, batch_update2)
+	if updatedSubscriberOutput != false {
+		t.Error("Flag for updated subscriber output is wrong!", updatedSubscriberOutput)
+	}
 	if !reflect.DeepEqual(subscription.nodes, expected_nodes) {
 		t.Error("Contents of nodes is wrong", subscription.nodes)
 	}
@@ -387,7 +453,10 @@ func TestSubscriberBatchSimple1(t *testing.T) {
 	batch_update3 := []BatchMessage{
 		BatchMessage{"retract", [][]string{[]string{"variable", ""}, []string{"text", "is"}, []string{"text", "yellow"}}},
 	}
-	subscription = subscriberBatchUpdate(subscription, batch_update3)
+	subscription, updatedSubscriberOutput = subscriberBatchUpdate(subscription, batch_update3)
+	if updatedSubscriberOutput != true {
+		t.Error("Flag for updated subscriber output is wrong!", updatedSubscriberOutput)
+	}
 	expected_nodes["*query0 A B"] = makeNodeFromVariableNames([]string{"*query0", "A", "B"})
 	if !reflect.DeepEqual(subscription.nodes, expected_nodes) {
 		t.Error("Contents of nodes is wrong", subscription.nodes)
@@ -418,6 +487,8 @@ func TestSubscriberBatchBigClaimAndRetract(t *testing.T) {
 		t.Error("subscription.queryPartToUpdate[0] does not match")
 	}
 
+	updatedSubscriberOutput := false
+
 	batch_update := []BatchMessage{
 		BatchMessage{"claim", [][]string{[]string{"text", "Sun"}, []string{"text", "is"}, []string{"text", "yellow"}}},
 		BatchMessage{"claim", [][]string{[]string{"text", "Sky"}, []string{"text", "is"}, []string{"text", "blue"}}},
@@ -426,7 +497,10 @@ func TestSubscriberBatchBigClaimAndRetract(t *testing.T) {
 		BatchMessage{"claim", [][]string{[]string{"text", "Moon"}, []string{"text", "BAD"}, []string{"text", "black"}}},
 		BatchMessage{"claim", [][]string{[]string{"text", "Moon"}, []string{"text", "is"}, []string{"text", "grey"}, []string{"text", "colored"}}},
 	}
-	subscription = subscriberBatchUpdate(subscription, batch_update)
+	subscription, updatedSubscriberOutput = subscriberBatchUpdate(subscription, batch_update)
+	if updatedSubscriberOutput != true {
+		t.Error("Flag for updated subscriber output is wrong!", updatedSubscriberOutput)
+	}
 
 	expected_nodes["*query0 A B"].variableCache["*query0"] = []NodeValue{
 		NodeValue{[]Term{Term{"text", "Sun"}, Term{"text", "is"}, Term{"text", "yellow"}}},
@@ -453,7 +527,10 @@ func TestSubscriberBatchBigClaimAndRetract(t *testing.T) {
 	batch_update2 := []BatchMessage{
 		BatchMessage{"retract", [][]string{[]string{"text", "Sky"}, []string{"text", "is"}, []string{"text", "black"}}},
 	}
-	subscription = subscriberBatchUpdate(subscription, batch_update2)
+	subscription, updatedSubscriberOutput = subscriberBatchUpdate(subscription, batch_update2)
+	if updatedSubscriberOutput != true {
+		t.Error("Flag for updated subscriber output is wrong!", updatedSubscriberOutput)
+	}
 	expected_nodes["*query0 A B"].variableCache["*query0"] = []NodeValue{
 		NodeValue{[]Term{Term{"text", "Sun"}, Term{"text", "is"}, Term{"text", "yellow"}}},
 		NodeValue{[]Term{Term{"text", "Sky"}, Term{"text", "is"}, Term{"text", "blue"}}},
@@ -476,7 +553,10 @@ func TestSubscriberBatchBigClaimAndRetract(t *testing.T) {
 	batch_update3 := []BatchMessage{
 		BatchMessage{"retract", [][]string{[]string{"postfix", "X"}}},
 	}
-	subscription = subscriberBatchUpdate(subscription, batch_update3)
+	subscription, updatedSubscriberOutput = subscriberBatchUpdate(subscription, batch_update3)
+	if updatedSubscriberOutput != true {
+		t.Error("Flag for updated subscriber output is wrong!", updatedSubscriberOutput)
+	}
 	expected_nodes["*query0 A B"] = makeNodeFromVariableNames([]string{"*query0", "A", "B"})
 	if !reflect.DeepEqual(subscription.nodes, expected_nodes) {
 		t.Error("Contents of nodes is wrong", subscription.nodes)

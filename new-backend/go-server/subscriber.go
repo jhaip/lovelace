@@ -27,9 +27,11 @@ type SubscriptionUpdateOptions struct {
 }
 
 type Subscription2 struct {
-	query             [][]Term
-	queryPartToUpdate map[int][]SubscriptionUpdateOptions
-	nodes             map[string]Node
+	query                   [][]Term
+	queryPartToUpdate       map[int][]SubscriptionUpdateOptions
+	nodes                   map[string]Node
+	outputVariables         []string
+	outputVariablesNodesKey string
 }
 
 func getVariableTermNames(terms []Term) []string {
@@ -100,10 +102,14 @@ func getVariableNamesFromNode(node Node) []string {
 }
 
 func makeSubscriber(source string, id string, query [][]Term) Subscription2 {
-	subscriber := Subscription2{query, make(map[int][]SubscriptionUpdateOptions), make(map[string]Node)}
+	subscriber := Subscription2{query, make(map[int][]SubscriptionUpdateOptions), make(map[string]Node), make([]string, 0), ""}
 	originalSubscriberNodeKeys := make([]string, 0)
+	outputVariablesMap := make(map[string]bool)
 	for i, queryPart := range query {
 		queryPartVariableNames := append([]string{"*query" + strconv.Itoa(i)}, getVariableTermNames(queryPart)...)
+		for _, queryPartVariableName := range queryPartVariableNames {
+			outputVariablesMap[queryPartVariableName] = true
+		}
 		variableTermKey := getVariableTermKey(queryPartVariableNames)
 		subscriber.nodes[variableTermKey] = makeNodeFromVariableNames(queryPartVariableNames)
 		originalSubscriberNodeKeys = append(originalSubscriberNodeKeys, variableTermKey)
@@ -125,10 +131,15 @@ func makeSubscriber(source string, id string, query [][]Term) Subscription2 {
 			}
 		}
 	}
+	for outputVariable, _ := range outputVariablesMap {
+		subscriber.outputVariables = append(subscriber.outputVariables, outputVariable)
+	}
+	sort.Strings(subscriber.outputVariables)
+	subscriber.outputVariablesNodesKey = getVariableTermKey(subscriber.outputVariables)
 	return subscriber
 }
 
-func populateFirstLayerFromMatchResults(queryPartIndex int, matchResults QueryResult, sub Subscription2, claim []Term) Subscription2 {
+func populateFirstLayerFromMatchResults(queryPartIndex int, matchResults QueryResult, sub Subscription2, claim []Term) (Subscription2, bool) {
 	fmt.Println("MATCH RESULTS:")
 	fmt.Println(matchResults)
 	fmt.Println(matchResults.Result)
@@ -156,7 +167,8 @@ func populateFirstLayerFromMatchResults(queryPartIndex int, matchResults QueryRe
 		NodeValue{claim},
 	)
 	sub.nodes[variableTermKey] = Node{variableCache}
-	return sub
+	updatedSubscriberOutput := (variableTermKey == sub.outputVariablesNodesKey)
+	return sub, updatedSubscriberOutput
 }
 
 func copyNode(node Node) Node {
@@ -178,7 +190,7 @@ func getLengthOfNodeVariableCache(node Node) int {
 	return 0
 }
 
-func addQueryResultToWholeVariableCache(queryPartIndex int, subscriptionUpdateOptions SubscriptionUpdateOptions, matchResults QueryResult, sub Subscription2, claim []Term) Subscription2 {
+func addQueryResultToWholeVariableCache(queryPartIndex int, subscriptionUpdateOptions SubscriptionUpdateOptions, matchResults QueryResult, sub Subscription2, claim []Term) (Subscription2, bool) {
 	newSourceNode := copyNode(sub.nodes[subscriptionUpdateOptions.sourceNodeKey])
 	thingsToAddToDestinationNode := make(map[string][]NodeValue)
 
@@ -229,27 +241,41 @@ func addQueryResultToWholeVariableCache(queryPartIndex int, subscriptionUpdateOp
 	}
 
 	newDestNode := copyNode(sub.nodes[subscriptionUpdateOptions.destNodeKey])
+	thingsToAddToDestinationNodeWasntEmpty := false
 	for variableName, nodeValues := range thingsToAddToDestinationNode {
+		if len(nodeValues) > 0 {
+			thingsToAddToDestinationNodeWasntEmpty = true
+		}
 		newDestNode.variableCache[variableName] = append(newDestNode.variableCache[variableName], nodeValues...)
 	}
 	sub.nodes[subscriptionUpdateOptions.destNodeKey] = newDestNode
-	return sub
+	updatedSubscriberOutput := (subscriptionUpdateOptions.destNodeKey == sub.outputVariablesNodesKey && thingsToAddToDestinationNodeWasntEmpty)
+	return sub, updatedSubscriberOutput
 }
 
-func subscriberClaimUpdate(sub Subscription2, claim []Term) Subscription2 {
+func subscriberClaimUpdate(sub Subscription2, claim []Term) (Subscription2, bool) {
+	updatedSubscriberOutput := false
 	for i, query_part := range sub.query {
+		queryPartUpdatedSubscriberOutput := false
 		match, matchResults := fact_match(Fact{query_part}, Fact{claim}, QueryResult{})
 		if match {
-			sub = populateFirstLayerFromMatchResults(i, matchResults, sub, claim)
+			sub, queryPartUpdatedSubscriberOutput = populateFirstLayerFromMatchResults(i, matchResults, sub, claim)
+			if queryPartUpdatedSubscriberOutput {
+				updatedSubscriberOutput = true
+			}
 			for _, subscriptionUpdateOptions := range sub.queryPartToUpdate[i] {
-				sub = addQueryResultToWholeVariableCache(i, subscriptionUpdateOptions, matchResults, sub, claim)
+				sub, queryPartUpdatedSubscriberOutput = addQueryResultToWholeVariableCache(i, subscriptionUpdateOptions, matchResults, sub, claim)
+				if queryPartUpdatedSubscriberOutput {
+					updatedSubscriberOutput = true
+				}
 			}
 		}
 	}
-	return sub
+	return sub, updatedSubscriberOutput
 }
 
-func subscriberRetractUpdate(sub Subscription2, query []Term) Subscription2 {
+func subscriberRetractUpdate(sub Subscription2, query []Term) (Subscription2, bool) {
+	updatedSubscriberOutput := false
 	for nodeKey, node := range sub.nodes {
 		lengthOfNodeCache := getLengthOfNodeVariableCache(node)
 		updatedNode := Node{make(map[string][]NodeValue)}
@@ -263,6 +289,7 @@ func subscriberRetractUpdate(sub Subscription2, query []Term) Subscription2 {
 					match, _ := fact_match(Fact{query}, Fact{variableCache[i].terms}, QueryResult{})
 					if match {
 						cacheRowIsOk = false
+						updatedSubscriberOutput = true
 						break
 					}
 				}
@@ -276,24 +303,30 @@ func subscriberRetractUpdate(sub Subscription2, query []Term) Subscription2 {
 				}
 			}
 		}
+
 		sub.nodes[nodeKey] = updatedNode
 	}
-	return sub
+	return sub, updatedSubscriberOutput
 }
 
-func subscriberBatchUpdate(sub Subscription2, batch_messages []BatchMessage) Subscription2 {
+func subscriberBatchUpdate(sub Subscription2, batch_messages []BatchMessage) (Subscription2, bool) {
+	updatedSubscriberOutput := false
 	for _, batch_message := range batch_messages {
 		terms := make([]Term, len(batch_message.Fact))
 		for j, term := range batch_message.Fact {
 			terms[j] = Term{term[0], term[1]}
 		}
+		batchMessageUpdatedSubscriberOutput := false
 		if batch_message.Type == "claim" {
-			sub = subscriberClaimUpdate(sub, terms)
+			sub, batchMessageUpdatedSubscriberOutput = subscriberClaimUpdate(sub, terms)
 		} else if batch_message.Type == "retract" {
-			sub = subscriberRetractUpdate(sub, terms)
+			sub, batchMessageUpdatedSubscriberOutput = subscriberRetractUpdate(sub, terms)
+		}
+		if batchMessageUpdatedSubscriberOutput {
+			updatedSubscriberOutput = true
 		}
 	}
-	return sub
+	return sub, updatedSubscriberOutput
 }
 
 func subscriber(batch_messages <-chan string) {
