@@ -48,15 +48,9 @@ func TestMakeSubscriber1(t *testing.T) {
 	claim := []Term{Term{"text", "Sun"}, Term{"text", "is"}, Term{"text", "yellow"}}
 	subscription = subscriberClaimUpdate(subscription, claim)
 
-	expected_nodes["*query0 A B"].variableCache["*query0"] = []NodeValue{
-		NodeValue{claim, []string{"0"}},
-	}
-	expected_nodes["*query0 A B"].variableCache["A"] = []NodeValue{
-		NodeValue{[]Term{Term{"text", "Sun"}}, []string{"0"}},
-	}
-	expected_nodes["*query0 A B"].variableCache["B"] = []NodeValue{
-		NodeValue{[]Term{Term{"text", "yellow"}}, []string{"0"}},
-	}
+	expected_nodes["*query0 A B"].variableCache["*query0"] = []NodeValue{NodeValue{claim}}
+	expected_nodes["*query0 A B"].variableCache["A"] = []NodeValue{NodeValue{[]Term{Term{"text", "Sun"}}}}
+	expected_nodes["*query0 A B"].variableCache["B"] = []NodeValue{NodeValue{[]Term{Term{"text", "yellow"}}}}
 	if !reflect.DeepEqual(subscription.nodes, expected_nodes) {
 		t.Error("Contents of nodes is wrong", subscription.nodes)
 	}
@@ -65,30 +59,14 @@ func TestMakeSubscriber1(t *testing.T) {
 	claim2 := []Term{Term{"text", "yellow"}, Term{"text", "has"}, Term{"integer", "3"}}
 	subscription = subscriberClaimUpdate(subscription, claim2)
 
-	expected_nodes["*query1 B C"].variableCache["*query1"] = []NodeValue{
-		NodeValue{claim2, []string{"1"}},
-	}
-	expected_nodes["*query1 B C"].variableCache["B"] = []NodeValue{
-		NodeValue{[]Term{Term{"text", "yellow"}}, []string{"1"}},
-	}
-	expected_nodes["*query1 B C"].variableCache["C"] = []NodeValue{
-		NodeValue{[]Term{Term{"integer", "3"}}, []string{"1"}},
-	}
-	expected_nodes["*query0 *query1 A B C"].variableCache["*query0"] = []NodeValue{
-		NodeValue{claim, []string{"0"}},
-	}
-	expected_nodes["*query0 *query1 A B C"].variableCache["*query1"] = []NodeValue{
-		NodeValue{claim2, []string{"1"}},
-	}
-	expected_nodes["*query0 *query1 A B C"].variableCache["A"] = []NodeValue{
-		NodeValue{[]Term{Term{"text", "Sun"}}, []string{"0"}},
-	}
-	expected_nodes["*query0 *query1 A B C"].variableCache["B"] = []NodeValue{
-		NodeValue{[]Term{Term{"text", "yellow"}}, []string{"1"}},
-	}
-	expected_nodes["*query0 *query1 A B C"].variableCache["C"] = []NodeValue{
-		NodeValue{[]Term{Term{"integer", "3"}}, []string{"1"}},
-	}
+	expected_nodes["*query1 B C"].variableCache["*query1"] = []NodeValue{NodeValue{claim2}}
+	expected_nodes["*query1 B C"].variableCache["B"] = []NodeValue{NodeValue{[]Term{Term{"text", "yellow"}}}}
+	expected_nodes["*query1 B C"].variableCache["C"] = []NodeValue{NodeValue{[]Term{Term{"integer", "3"}}}}
+	expected_nodes["*query0 *query1 A B C"].variableCache["*query0"] = []NodeValue{NodeValue{claim}}
+	expected_nodes["*query0 *query1 A B C"].variableCache["*query1"] = []NodeValue{NodeValue{claim2}}
+	expected_nodes["*query0 *query1 A B C"].variableCache["A"] = []NodeValue{NodeValue{[]Term{Term{"text", "Sun"}}}}
+	expected_nodes["*query0 *query1 A B C"].variableCache["B"] = []NodeValue{NodeValue{[]Term{Term{"text", "yellow"}}}}
+	expected_nodes["*query0 *query1 A B C"].variableCache["C"] = []NodeValue{NodeValue{[]Term{Term{"integer", "3"}}}}
 	if !reflect.DeepEqual(subscription.nodes, expected_nodes) {
 		t.Error("Contents of nodes is wrong", subscription.nodes)
 	}

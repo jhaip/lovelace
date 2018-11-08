@@ -13,8 +13,7 @@ and sends notifications
 */
 
 type NodeValue struct {
-	terms   []Term
-	sources []string
+	terms []Term
 }
 
 type Node struct {
@@ -149,12 +148,12 @@ func populateFirstLayerFromMatchResults(queryPartIndex int, matchResults QueryRe
 	for variableName, matchResultTerm := range matchResults.Result {
 		variableCache[variableName] = append(
 			sub.nodes[variableTermKey].variableCache[variableName],
-			NodeValue{[]Term{matchResultTerm}, []string{strconv.Itoa(queryPartIndex)}},
+			NodeValue{[]Term{matchResultTerm}},
 		)
 	}
 	variableCache[querySourceVariableName] = append(
 		sub.nodes[variableTermKey].variableCache[querySourceVariableName],
-		NodeValue{claim, []string{strconv.Itoa(queryPartIndex)}},
+		NodeValue{claim},
 	)
 	sub.nodes[variableTermKey] = Node{variableCache}
 	return sub
@@ -215,19 +214,12 @@ func addQueryResultToWholeVariableCache(queryPartIndex int, subscriptionUpdateOp
 				if strings.HasPrefix(variableName, "*query") {
 					thingsToAddToDestinationNode[variableName] = append(
 						thingsToAddToDestinationNode[variableName],
-						NodeValue{
-							claim,
-							make([]string, 0), // this may be wrong
-						},
+						NodeValue{claim},
 					)
 				} else {
 					thingsToAddToDestinationNode[variableName] = append(
 						thingsToAddToDestinationNode[variableName],
-						NodeValue{
-							[]Term{matchResults.Result[variableName]},
-							// append(sourceVariableCacheValue.sources, strconv.Itoa(queryPartIndex)),
-							make([]string, 0), // this may be wrong
-						},
+						NodeValue{[]Term{matchResults.Result[variableName]}},
 					)
 				}
 			}
