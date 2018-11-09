@@ -113,29 +113,31 @@ func main() {
 	for {
 		start := time.Now()
 
+		log.Println("waiting for dots")
 		points := getDots(subscriber, MY_ID_STR, dot_sub_id, start) // getPoints()
+		log.Println("got dots")
 
 		timeGotDots := time.Since(start)
 		// printDots(points)
 		step1 := doStep1(points)
-		fmt.Println("step1", len(step1))
+		log.Println("step1", len(step1))
 		// printDots(step1)
 
 		step2 := doStep2(step1)
-		fmt.Println("step2", len(step2))
+		log.Println("step2", len(step2))
 		// printCorners(step2[:5])
 		// printJsonDots(step1)
 		// claimCorners(step2)
 		step3 := doStep3(step1, step2)
-		fmt.Println("step3", len(step3))
+		log.Println("step3", len(step3))
 		// printCorners(step3)
 		step4 := doStep4CornersWithIds(step1, step3, dotCodes8400)
-		fmt.Println("step4", len(step4))
+		log.Println("step4", len(step4))
 		// claimCorners(publisher, step4)
 		// printCorners(step4)
 		papers := getPapersFromCorners(step4)
 		// log.Println(papers)
-		fmt.Println("papers", len(papers))
+		log.Println("papers", len(papers))
 
 		timeProcessing := time.Since(start)
 		claimPapers(publisher, MY_ID_STR, papers)
@@ -149,6 +151,7 @@ func main() {
 		log.Printf("total     : %s \n", elapsed)
 
 		// time.Sleep(10 * time.Millisecond)
+		fmt.Println("done with loop")
 	}
 }
 
@@ -566,24 +569,36 @@ func getDots(subscriber *zmq.Socket, MY_ID_STR string, dot_sub_id string, start 
 	nLoops := 0
 	dot_prefix := fmt.Sprintf("%s%s", MY_ID_STR, dot_sub_id)
 	for reply == "" || reply[len(reply)-4:] == "[{}]" {
+		log.Println("pre loop")
 		for {
 			nLoops += 1
-			tmp_reply, err := subscriber.Recv(zmq.DONTWAIT)
+			// tmp_reply, err := subscriber.Recv(zmq.DONTWAIT)
+			log.Println("pre loop inner")
+			tmp_reply, err := subscriber.Recv(0)
 			if err != nil {
+				log.Println("get dots error:")
+				log.Println(err)
 				break
 			} else {
+				log.Println("tmp reply:")
+				// log.Println(tmp_reply)
 				reply = tmp_reply
+				break
 				// fmt.Println("GOT REPLY:")
 				// fmt.Println(reply)
 			}
+			break
 		}
 		time.Sleep(1 * time.Millisecond)
+		log.Println("end of loop")
 	}
 	timeGotDotsPre := time.Since(start)
 	log.Printf("get dots pre  : %s , %s\n", timeGotDotsPre, nLoops)
 	// log.Println("Received ", reply)
 	timeVal, err := strconv.ParseInt(reply[len(dot_prefix):len(dot_prefix)+13], 10, 64)
 	if err != nil {
+		log.Println("ERROR PARSING in getDots")
+		log.Println(err)
 		panic(err)
 	}
 	// fmt.Println("time val")
@@ -604,12 +619,12 @@ func getDots(subscriber *zmq.Socket, MY_ID_STR string, dot_sub_id string, start 
 	*/
 	// TODO: parse val
 	json.Unmarshal([]byte(val), &json_val)
-	fmt.Println("GET JSON RESULT:")
+	log.Println("GET JSON RESULT:")
 	// fmt.Println(json_val)
 	// fmt.Println(json_val[0])
 	claimTime, _ := strconv.ParseFloat(json_val[0]["t"][1], 64)
 	claimTimeDiff := makeTimestamp() - int64(claimTime)
-	fmt.Printf("claim time diff: %v ms\n", claimTimeDiff)
+	log.Printf("claim time diff: %v ms\n", claimTimeDiff)
 	res := make([]Dot, 0)
 	for _, json_result := range json_val {
 		x, _ := strconv.Atoi(json_result["x"][1])
@@ -691,11 +706,26 @@ func claimPapers(publisher *zmq.Socket, MY_ID_STR string, papers []Paper) {
 			[]string{"integer", "99"},
 		}})
 	}
+	batch_claims = append(batch_claims, BatchMessage{"claim", [][]string{
+		[]string{"id", MY_ID_STR},
+		[]string{"text", "dotsToPapers"},
+		[]string{"text", "update"},
+		[]string{"text", time.Now().String()},
+	}})
 	batch_claim_str, _ := json.Marshal(batch_claims)
 	msg := fmt.Sprintf("....BATCH%s%s", MY_ID_STR, batch_claim_str)
 	log.Println("Sending ", msg)
 	fmt.Println("Sending ", msg)
-	publisher.Send(msg, 0)
+	s, err := publisher.Send(msg, 0)
+	time.Sleep(1.0 * time.Millisecond)
+	// s, err := publisher.Send(msg, zmq.DONTWAIT)
+	if err != nil {
+		log.Println("ERROR!")
+		log.Println(err)
+		// panic(err)
+	}
+	log.Println("post send message!")
+	log.Println(s)
 }
 
 func printJsonDots(dots []Dot) {
