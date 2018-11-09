@@ -1,0 +1,642 @@
+fatal error: concurrent map iteration and map write
+
+goroutine 167 [running]:
+runtime.throw(0x44a8694, 0x26)
+	/usr/local/opt/go/libexec/src/runtime/panic.go:616 +0x81 fp=0xc422c94ad8 sp=0xc422c94ab8 pc=0x402b9b1
+runtime.mapiternext(0xc422c94c50)
+	/usr/local/opt/go/libexec/src/runtime/hashmap.go:747 +0x55c fp=0xc422c94b68 sp=0xc422c94ad8 pc=0x400af4c
+main.warmSubscriberCache(0xc4201bdc39, 0x4, 0xc420186300, 0x24, 0xc42208c520, 0x1, 0x1, 0xc42244a0c0, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:124 +0x2c8 fp=0xc422c94cc0 sp=0xc422c94b68 pc=0x42be998
+main.startSubscriber(0xc4201bdc39, 0x4, 0xc420186300, 0x24, 0xc42208c520, 0x1, 0x1, 0xc42244a0c0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:142 +0x100 fp=0xc422c94f90 sp=0xc422c94cc0 pc=0x42bebc0
+runtime.goexit()
+	/usr/local/opt/go/libexec/src/runtime/asm_amd64.s:2361 +0x1 fp=0xc422c94f98 sp=0xc422c94f90 pc=0x4056ba1
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 1 [syscall]:
+github.com/pebbe/zmq4._C2func_zmq_msg_recv(0xc422086080, 0x5808200, 0x0, 0x0, 0x0, 0x0)
+	_cgo_gotypes.go:423 +0x55
+github.com/pebbe/zmq4.(*Socket).RecvBytes.func1(0xc422086080, 0x5808200, 0xc400000000, 0x0, 0xc42002c1a0, 0xc4221b4c80)
+	/Users/jhaip/Code/go/src/github.com/pebbe/zmq4/zmq4.go:964 +0x68
+github.com/pebbe/zmq4.(*Socket).RecvBytes(0xc42008cff0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0)
+	/Users/jhaip/Code/go/src/github.com/pebbe/zmq4/zmq4.go:964 +0x1a7
+github.com/pebbe/zmq4.(*Socket).Recv(0xc42008cff0, 0x0, 0xc4221ba0e0, 0x68, 0x0, 0x0)
+	/Users/jhaip/Code/go/src/github.com/pebbe/zmq4/zmq4.go:945 +0x39
+main.main()
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:500 +0x57e
+
+goroutine 19 [chan receive, 10 minutes]:
+main.parser_worker(0xc4200be300, 0xc4200be3c0, 0xc4200be420)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:265 +0xa2
+created by main.main
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:480 +0x37f
+
+goroutine 20 [chan receive]:
+main.subscribe_worker(0xc4200be360, 0xc4200be3c0, 0xc420132000, 0xc42010c4e0, 0xc4200be480, 0xc4200a8040)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:234 +0x68
+created by main.main
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:481 +0x3df
+
+goroutine 21 [chan receive, 10 minutes]:
+main.notify_subscribers_worker(0xc4201321a0, 0xc4201320d0, 0xc4200a8040, 0xc4200be480, 0xc42010c4e0)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:313 +0x23f
+created by main.main
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:484 +0x435
+
+goroutine 23 [chan receive]:
+main.notification_worker(0xc4200be480, 0xc4200be420)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:141 +0x358
+created by main.main
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:486 +0x4a0
+
+goroutine 24 [runnable]:
+main.debug_database_observer(0xc4200a8040)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:373 +0x5c5
+created by main.main
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:487 +0x4c5
+
+goroutine 25 [runnable]:
+main.preLatencyMeasurePart(0x449d68f, 0x2, 0xbef16584846bf176, 0x906013b132, 0x4696a20, 0x1f, 0xbef1658514700dfb, 0x90e74c57de, 0x4696a20, 0x234cc, ...)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:90 +0x164
+main.batch_worker(0xc4200be4e0, 0xc4200be3c0, 0xc4200be420, 0xc420132000, 0xc4200a8040, 0xc42010c4e0)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:411 +0x4e2
+created by main.main
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:488 +0x528
+
+goroutine 34 [chan receive, 10 minutes]:
+main.debounce_subscriber_worker.func1(0xc420132000, 0xc420140001, 0xc4201321a0, 0xc420140000)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:330 +0x39
+created by main.debounce_subscriber_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:329 +0x93
+
+goroutine 35 [chan receive, 10 minutes]:
+main.debounce_subscriber_worker.func2(0xc4201320d0, 0xc420140001, 0xc420140000, 0xc4201321a0)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:342 +0x39
+created by main.debounce_subscriber_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:341 +0xd3
+
+goroutine 13 [chan receive]:
+main.startSubscriber(0xc4220e80e9, 0x4, 0xc4202a4510, 0x24, 0xc422047300, 0x1, 0x1, 0xc420143020, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 89 [chan receive]:
+main.startSubscriber(0xc4201bd3f9, 0x4, 0xc4202b8780, 0x24, 0xc4222a9780, 0x1, 0x1, 0xc423814000, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 27 [chan receive]:
+main.startSubscriber(0xc420214079, 0x4, 0xc4202b9b30, 0x24, 0xc4202e2ba0, 0x1, 0x1, 0xc420152540, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 28 [chan receive]:
+main.startSubscriber(0xc420214159, 0x4, 0xc4202b9b90, 0x24, 0xc420200280, 0x1, 0x1, 0xc4201525a0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 51 [chan receive]:
+main.startSubscriber(0xc420214239, 0x4, 0xc4202a4270, 0x24, 0xc4201c6d20, 0x1, 0x1, 0xc420142240, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 52 [chan receive]:
+main.startSubscriber(0xc4201bc0b9, 0x4, 0xc4202a4300, 0x24, 0xc422046240, 0x1, 0x1, 0xc4201422a0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 53 [chan receive]:
+main.startSubscriber(0xc420214319, 0x4, 0xc4202a4360, 0x24, 0xc42206c120, 0x1, 0x1, 0xc420142300, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 29 [chan receive]:
+main.startSubscriber(0xc4201bc169, 0x4, 0xc42009c1b0, 0x24, 0xc420201740, 0x1, 0x1, 0xc420152180, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 5 [chan receive]:
+main.startSubscriber(0xc420080189, 0x4, 0xc4202a40c0, 0x24, 0xc4220ef620, 0x1, 0x1, 0xc420142060, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 6 [chan receive]:
+main.startSubscriber(0xc4201241e9, 0x4, 0xc4202a4120, 0x24, 0xc42024a100, 0x1, 0x1, 0xc4201420c0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 7 [chan receive]:
+main.startSubscriber(0xc4201be249, 0x4, 0xc4202a4390, 0x24, 0xc4201ea300, 0x2, 0x2, 0xc4201424e0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 8 [chan receive]:
+main.startSubscriber(0xc420020189, 0x4, 0xc4202a4840, 0x24, 0xc4201a81a0, 0x1, 0x1, 0xc420142ae0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 9 [chan receive]:
+main.startSubscriber(0xc4202bc109, 0x4, 0xc4202a48a0, 0x24, 0xc420190240, 0x1, 0x1, 0xc420142b40, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 30 [chan receive]:
+main.startSubscriber(0xc4201bc219, 0x4, 0xc42001e1e0, 0x24, 0xc420200480, 0x1, 0x1, 0xc42217e9c0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 31 [chan receive]:
+main.startSubscriber(0xc420020249, 0x4, 0xc42001e240, 0x24, 0xc4201a9940, 0x1, 0x1, 0xc42217ea20, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 32 [chan receive]:
+main.startSubscriber(0xc422024099, 0x4, 0xc42001e2a0, 0x24, 0xc42204e020, 0x1, 0x1, 0xc42217ea80, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 33 [chan receive]:
+main.startSubscriber(0xc4200d0189, 0x4, 0xc42001e300, 0x24, 0xc4222a8940, 0x1, 0x1, 0xc4220b8b40, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 66 [chan receive]:
+main.startSubscriber(0xc4202140e9, 0x4, 0xc420186000, 0x24, 0xc4202013e0, 0x1, 0x1, 0xc4220b8ba0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 11 [chan receive]:
+main.startSubscriber(0xc4202141c9, 0x4, 0xc4201295c0, 0x24, 0xc420190100, 0x1, 0x1, 0xc42224a000, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 41 [chan receive]:
+main.startSubscriber(0xc4201bc2c9, 0x4, 0xc420128000, 0x24, 0xc4202ec2a0, 0x1, 0x1, 0xc4200be2a0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 67 [chan receive]:
+main.startSubscriber(0xc4220e8079, 0x4, 0xc42001e090, 0x24, 0xc42203cd00, 0x1, 0x1, 0xc4200be540, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 12 [chan receive]:
+main.startSubscriber(0xc4201bc379, 0x4, 0xc4202a4480, 0x24, 0xc4220e1f00, 0x1, 0x1, 0xc420142fc0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 179 [chan receive]:
+main.startSubscriber(0xc4201bda29, 0x4, 0xc4222d29f0, 0x24, 0xc4220e6220, 0x1, 0x1, 0xc422370000, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 82 [chan receive]:
+main.startSubscriber(0xc4201bcbb9, 0x4, 0xc42001e480, 0x24, 0xc4201e4b80, 0x1, 0x1, 0xc4220b8de0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 178 [chan receive]:
+main.startSubscriber(0xc420214cb9, 0x4, 0xc4202a4ae0, 0x24, 0xc420250480, 0x1, 0x1, 0xc422190060, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 83 [chan receive]:
+main.startSubscriber(0xc420214699, 0x4, 0xc42001e630, 0x24, 0xc420250660, 0x1, 0x1, 0xc4220b8e40, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 15 [chan receive]:
+main.startSubscriber(0xc4202143f9, 0x4, 0xc42009c4e0, 0x24, 0xc4220742e0, 0x1, 0x1, 0xc4201dc0c0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 55 [chan receive]:
+main.startSubscriber(0xc4201bc429, 0x4, 0xc4202b8150, 0x24, 0xc4201ecf20, 0x1, 0x1, 0xc42012a000, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 56 [chan receive]:
+main.startSubscriber(0xc4220e8159, 0x4, 0xc4202b8480, 0x24, 0xc42206d8c0, 0x1, 0x1, 0xc42012a060, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 14 [chan receive]:
+main.startSubscriber(0xc4201bc639, 0x4, 0xc42009c420, 0x24, 0xc4222a8f00, 0x1, 0x1, 0xc4201dc060, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 73 [chan receive]:
+main.startSubscriber(0xc4201bc4d9, 0x4, 0xc42009c210, 0x24, 0xc4202ec840, 0x1, 0x1, 0xc420198000, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 57 [chan receive]:
+main.startSubscriber(0xc420214389, 0x4, 0xc42001e4b0, 0x24, 0xc42204ef00, 0x1, 0x1, 0xc4201421e0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 74 [chan receive]:
+main.startSubscriber(0xc4201bc589, 0x4, 0xc42009c2d0, 0x24, 0xc42206d940, 0x1, 0x1, 0xc4221900c0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 58 [chan receive]:
+main.startSubscriber(0xc4202142a9, 0x4, 0xc4202b83c0, 0x24, 0xc42203cf20, 0x1, 0x1, 0xc4202c0000, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 76 [chan receive]:
+main.startSubscriber(0xc4201bc6e9, 0x4, 0xc420128480, 0x24, 0xc4220e0840, 0x1, 0x1, 0xc42233a8a0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 77 [chan receive]:
+main.startSubscriber(0xc420214469, 0x4, 0xc4201284e0, 0x24, 0xc42206b220, 0x1, 0x1, 0xc42233a960, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 59 [chan receive]:
+main.startSubscriber(0xc4201bc799, 0x4, 0xc42001e510, 0x24, 0xc42024bf60, 0x1, 0x1, 0xc420076000, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 60 [chan receive]:
+main.startSubscriber(0xc4202144d9, 0x4, 0xc42001e5a0, 0x24, 0xc42204f0c0, 0x1, 0x1, 0xc420076120, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 44 [chan receive]:
+main.startSubscriber(0xc4201bc849, 0x4, 0xc42009c3c0, 0x24, 0xc4222a9660, 0x1, 0x1, 0xc4222f6f00, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 45 [chan receive]:
+main.startSubscriber(0xc4220e81c9, 0x4, 0xc42009c510, 0x24, 0xc42024ba40, 0x1, 0x1, 0xc4222f6f60, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 61 [chan receive]:
+main.startSubscriber(0xc4201bc8f9, 0x4, 0xc4221ac060, 0x24, 0xc4201e4800, 0x1, 0x1, 0xc42217e0c0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 62 [chan receive]:
+main.startSubscriber(0xc420214549, 0x4, 0xc4221ac1b0, 0x24, 0xc4220e1280, 0x1, 0x1, 0xc42217e120, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 123 [chan receive]:
+main.startSubscriber(0xc420214a89, 0x4, 0xc4202b8b70, 0x24, 0xc42027e5e0, 0x1, 0x1, 0xc422320000, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 79 [chan receive]:
+main.startSubscriber(0xc4201bc9a9, 0x4, 0xc42009c540, 0x24, 0xc420190ae0, 0x1, 0x1, 0xc422364f60, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 80 [chan receive]:
+main.startSubscriber(0xc4220e8239, 0x4, 0xc42009c720, 0x24, 0xc4201c6d40, 0x1, 0x1, 0xc422364fc0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 46 [chan receive]:
+main.startSubscriber(0xc4201bca59, 0x4, 0xc4202a4540, 0x24, 0xc4201800a0, 0x1, 0x1, 0xc42217f560, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 47 [chan receive]:
+main.startSubscriber(0xc4202145b9, 0x4, 0xc4202a4600, 0x24, 0xc420190ea0, 0x1, 0x1, 0xc42217f5c0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 48 [chan receive]:
+main.startSubscriber(0xc4201bcb09, 0x4, 0xc4221ac030, 0x24, 0xc42206ad80, 0x1, 0x1, 0xc422370060, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 63 [chan receive]:
+main.startSubscriber(0xc420214629, 0x4, 0xc4221ac270, 0x24, 0xc42024aa00, 0x1, 0x1, 0xc420142000, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 90 [chan receive]:
+main.startSubscriber(0xc4201bd4a9, 0x4, 0xc42001e660, 0x24, 0xc42203dc20, 0x1, 0x1, 0xc421fdc060, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 98 [chan receive]:
+main.startSubscriber(0xc4201bcc69, 0x4, 0xc42009c630, 0x24, 0xc422075720, 0x1, 0x1, 0xc42233a000, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 114 [chan receive]:
+main.startSubscriber(0xc4220e8319, 0x4, 0xc4221ac2a0, 0x24, 0xc42000de00, 0x1, 0x1, 0xc422236000, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 99 [chan receive]:
+main.startSubscriber(0xc4201bcd19, 0x4, 0xc42009c8a0, 0x24, 0xc42017db80, 0x1, 0x1, 0xc420152120, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 65 [chan receive]:
+main.startSubscriber(0xc4220e83f9, 0x4, 0xc42009cd20, 0x24, 0xc422249d60, 0x1, 0x1, 0xc4238c2360, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 130 [chan receive]:
+main.startSubscriber(0xc4201bcdc9, 0x4, 0xc4202b84b0, 0x24, 0xc422158240, 0x1, 0x1, 0xc4201536e0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 131 [chan receive]:
+main.startSubscriber(0xc420214709, 0x4, 0xc4202b8720, 0x24, 0xc42017e480, 0x1, 0x1, 0xc420076180, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 115 [chan receive]:
+main.startSubscriber(0xc4201bce79, 0x4, 0xc4202a4180, 0x24, 0xc42019cba0, 0x1, 0x1, 0xc4222f6060, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 132 [chan receive]:
+main.startSubscriber(0xc4220e8469, 0x4, 0xc4201860c0, 0x24, 0xc4220e0900, 0x1, 0x1, 0xc4222100c0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 100 [chan receive]:
+main.startSubscriber(0xc4201bcf29, 0x4, 0xc4221ac420, 0x24, 0xc4201978a0, 0x1, 0x1, 0xc42233b800, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 101 [chan receive]:
+main.startSubscriber(0xc420214779, 0x4, 0xc4221acb40, 0x24, 0xc42024b140, 0x1, 0x1, 0xc422365740, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 102 [chan receive]:
+main.startSubscriber(0xc4201bcfd9, 0x4, 0xc4221ac150, 0x24, 0xc42206a0a0, 0x1, 0x1, 0xc4202c0060, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 103 [chan receive]:
+main.startSubscriber(0xc4220e82a9, 0x4, 0xc4221ac5d0, 0x24, 0xc42027f6a0, 0x1, 0x1, 0xc4202c00c0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 133 [chan receive]:
+main.startSubscriber(0xc4201bd1e9, 0x4, 0xc4202a4660, 0x24, 0xc422074aa0, 0x1, 0x1, 0xc4238de5a0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 104 [chan receive]:
+main.startSubscriber(0xc4201bd089, 0x4, 0xc4221ac720, 0x24, 0xc42206d4c0, 0x1, 0x1, 0xc422468060, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 105 [chan receive]:
+main.startSubscriber(0xc4220e84d9, 0x4, 0xc4221ac780, 0x24, 0xc4201a97a0, 0x1, 0x1, 0xc4224680c0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 87 [chan receive]:
+main.startSubscriber(0xc420214939, 0x4, 0xc4202b8930, 0x24, 0xc4220e1320, 0x1, 0x1, 0xc42244a060, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 117 [chan receive]:
+main.startSubscriber(0xc4201bd139, 0x4, 0xc420186120, 0x24, 0xc42239db80, 0x1, 0x1, 0xc422236060, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 118 [chan receive]:
+main.startSubscriber(0xc4202147e9, 0x4, 0xc420186210, 0x24, 0xc42208c4c0, 0x1, 0x1, 0xc4222360c0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 134 [chan receive]:
+main.startSubscriber(0xc420214859, 0x4, 0xc42001e600, 0x24, 0xc42000cf40, 0x1, 0x1, 0xc4238de600, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 119 [chan receive]:
+main.startSubscriber(0xc4201bd299, 0x4, 0xc42009c810, 0x24, 0xc42203ce40, 0x1, 0x1, 0xc422364000, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 120 [chan receive]:
+main.startSubscriber(0xc4202148c9, 0x4, 0xc42009cba0, 0x24, 0xc4202e3d00, 0x1, 0x1, 0xc422364060, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 108 [chan receive]:
+main.startSubscriber(0xc4201bd349, 0x4, 0xc4202b88a0, 0x24, 0xc42239da20, 0x1, 0x1, 0xc42244a000, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 141 [chan receive]:
+main.startSubscriber(0xc4201bd559, 0x4, 0xc4202b89c0, 0x24, 0xc4201a9a00, 0x1, 0x1, 0xc4238c2060, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 110 [chan receive]:
+main.startSubscriber(0xc420214a19, 0x4, 0xc4221acc90, 0x24, 0xc420181aa0, 0x1, 0x1, 0xc421fdc0c0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 142 [chan receive]:
+main.startSubscriber(0xc4201bd769, 0x4, 0xc42009ca80, 0x24, 0xc42206cf40, 0x1, 0x1, 0xc4202c0ea0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 139 [chan receive]:
+main.startSubscriber(0xc4202149a9, 0x4, 0xc4202a4780, 0x24, 0xc420200e00, 0x1, 0x1, 0xc423814060, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 146 [chan receive]:
+main.startSubscriber(0xc4201bd819, 0x4, 0xc42001e9f0, 0x24, 0xc420191960, 0x1, 0x1, 0xc420142ea0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 111 [chan receive]:
+main.startSubscriber(0xc4201bd609, 0x4, 0xc4221ac7b0, 0x24, 0xc422248cc0, 0x1, 0x1, 0xc422468000, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 112 [chan receive]:
+main.startSubscriber(0xc420214af9, 0x4, 0xc4221ac870, 0x24, 0xc42017d700, 0x1, 0x1, 0xc422468120, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 97 [chan receive]:
+main.startSubscriber(0xc4201bd979, 0x4, 0xc4202a47b0, 0x24, 0xc420196920, 0x1, 0x1, 0xc422190000, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 125 [chan receive]:
+main.startSubscriber(0xc4201bd6b9, 0x4, 0xc4202b8bd0, 0x24, 0xc42206b8e0, 0x1, 0x1, 0xc4224681e0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 126 [chan receive]:
+main.startSubscriber(0xc420214b69, 0x4, 0xc42001f020, 0x24, 0xc4202e3ea0, 0x1, 0x1, 0xc4220b8ae0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 143 [chan receive]:
+main.startSubscriber(0xc420214bd9, 0x4, 0xc42009cc30, 0x24, 0xc4220ef3e0, 0x1, 0x1, 0xc4202c0f00, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 147 [chan receive]:
+main.startSubscriber(0xc4220e8549, 0x4, 0xc42001f230, 0x24, 0xc42000cba0, 0x1, 0x1, 0xc420077aa0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 128 [chan receive]:
+main.startSubscriber(0xc4201bd8c9, 0x4, 0xc4201863c0, 0x24, 0xc42027f760, 0x1, 0x1, 0xc422348000, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 129 [chan receive]:
+main.startSubscriber(0xc420214c49, 0x4, 0xc4201865a0, 0x24, 0xc422047ea0, 0x1, 0x1, 0xc422348060, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 180 [chan receive]:
+main.startSubscriber(0xc420215039, 0x4, 0xc4202a4a80, 0x24, 0xc4202ecea0, 0x1, 0x1, 0xc4223700c0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 148 [chan receive]:
+main.startSubscriber(0xc4201bdad9, 0x4, 0xc42001eba0, 0x24, 0xc4201d8120, 0x1, 0x1, 0xc420198060, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 149 [chan receive]:
+main.startSubscriber(0xc4220e85b9, 0x4, 0xc4222d2030, 0x24, 0xc420197ea0, 0x1, 0x1, 0xc4201980c0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 196 [chan receive]:
+main.startSubscriber(0xc4221840b9, 0x4, 0xc4222d2120, 0x24, 0xc42204f940, 0x1, 0x1, 0xc421fa1080, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 197 [chan receive]:
+main.startSubscriber(0xc4220e8629, 0x4, 0xc42009d8c0, 0x24, 0xc4201965a0, 0x1, 0x1, 0xc421fa10e0, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 150 [chan receive]:
+main.startSubscriber(0xc4201bdb89, 0x4, 0xc4202b8c30, 0x24, 0xc422312b80, 0x1, 0x1, 0xc4229f8000, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 151 [chan receive]:
+main.startSubscriber(0xc4221ba079, 0x4, 0xc4202b8d80, 0x24, 0xc4222cf0a0, 0x1, 0x1, 0xc4229f8060, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+
+goroutine 168 [chan receive]:
+main.startSubscriber(0xc4221ba0e9, 0x4, 0xc420186570, 0x24, 0xc42204f220, 0x1, 0x1, 0xc42244a120, 0xc4200be480, 0xc42008cf90)
+	/Users/jhaip/Code/lovelace/new-backend/go-server/subscriber.go:144 +0x339
+created by main.subscribe_worker
+	/Users/jhaip/Code/lovelace/new-backend/go-server/server.go:256 +0x923
+exit status 2
