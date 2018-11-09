@@ -207,11 +207,11 @@ function init(filename) {
         } else if (id in subscription_ids) {
             callback = subscription_ids[id]
             // room.cleanup()
-            console.log("found match")
+            // console.log("found match")
             const r = parseResult(val)
-            console.log(r)
+            // console.log(r)
             callback(r)
-            console.log("flushing")
+            // console.log("flushing")
             room.flush()
         } else {
             console.log("unknown subscription ID...")

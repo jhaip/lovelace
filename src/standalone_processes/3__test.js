@@ -14,14 +14,19 @@ room.on(
 
 setTimeout(() => {
     room.assert(`Fox is out`)
+    room.flush()
     setTimeout(() => {
         room.assert(`Fox is out`)
+        room.flush()
         setTimeout(() => {
             room.retract(`$X Fox is out`)
+            room.flush()
             setTimeout(() => {
                 room.assert(`Fox is out`)
+                room.flush()
                 setTimeout(() => {
                     room.assert(`Fox is out`)
+                    room.flush()
                 }, 1000);
             }, 1000);
         }, 1000);
