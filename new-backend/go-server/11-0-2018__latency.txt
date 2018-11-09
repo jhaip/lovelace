@@ -1,0 +1,23 @@
+2018-11-03T15:10:41.276-0400	DEBUG	go-server/server.go:115	latency - batch	{"latency": "539.773865ms", "count": 11, "dbLockWaitTime": "4.554µs", "actionTime": "197.464µs", "messageWaitTime": "538.135787ms"}
+2018-11-03T15:10:46.290-0400	DEBUG	go-server/server.go:115	latency - batch	{"latency": "179.06931ms", "count": 28, "dbLockWaitTime": "81.709µs", "actionTime": "275.614µs", "messageWaitTime": "177.360362ms"}
+2018-11-03T15:10:51.303-0400	DEBUG	go-server/server.go:115	latency - batch	{"latency": "238.709262ms", "count": 21, "dbLockWaitTime": "3.683µs", "actionTime": "387.332µs", "messageWaitTime": "235.544811ms"}
+2018-11-03T15:10:56.306-0400	DEBUG	go-server/server.go:115	latency - batch	{"latency": "238.193338ms", "count": 21, "dbLockWaitTime": "20.803µs", "actionTime": "446.752µs", "messageWaitTime": "236.125994ms"}
+2018-11-03T15:11:01.329-0400	DEBUG	go-server/server.go:115	latency - batch	{"latency": "295.489202ms", "count": 17, "dbLockWaitTime": "4.354µs", "actionTime": "216.58µs", "messageWaitTime": "292.88686ms"}
+2018-11-03T15:11:06.366-0400	DEBUG	go-server/server.go:115	latency - batch	{"latency": "179.870911ms", "count": 28, "dbLockWaitTime": "3.164µs", "actionTime": "347.928µs", "messageWaitTime": "177.687228ms"}
+
+
+2018-11-03T15:10:41.281-0400	DEBUG	go-server/server.go:115	latency - notify subscribers	{"latency": "539.451209ms", "count": 11, "dbLockWaitTime": "535.817µs", "actionTime": "7.168459ms", "messageWaitTime": "531.677576ms"}
+2018-11-03T15:10:46.325-0400	DEBUG	go-server/server.go:115	latency - notify subscribers	{"latency": "186.828895ms", "count": 27, "dbLockWaitTime": "706.578µs", "actionTime": "12.968193ms", "messageWaitTime": "172.738381ms"}
+2018-11-03T15:10:51.327-0400	DEBUG	go-server/server.go:115	latency - notify subscribers	{"latency": "294.192714ms", "count": 17, "dbLockWaitTime": "805.267µs", "actionTime": "20.23041ms", "messageWaitTime": "272.88181ms"}
+2018-11-03T15:10:56.329-0400	DEBUG	go-server/server.go:115	latency - notify subscribers	{"latency": "238.180224ms", "count": 21, "dbLockWaitTime": "576.992µs", "actionTime": "17.140888ms", "messageWaitTime": "220.353696ms"}
+2018-11-03T15:11:01.341-0400	DEBUG	go-server/server.go:115	latency - notify subscribers	{"latency": "263.795057ms", "count": 19, "dbLockWaitTime": "680.845µs", "actionTime": "14.241127ms", "messageWaitTime": "248.717482ms"}
+2018-11-03T15:11:06.343-0400	DEBUG	go-server/server.go:115	latency - notify subscribers	{"latency": "217.45677ms", "count": 23, "dbLockWaitTime": "467.129µs", "actionTime": "14.606892ms", "messageWaitTime": "202.22756ms"}
+
+
+2018-11-03T15:10:41.277-0400	DEBUG	go-server/server.go:115	latency - send notification	{"latency": "38.512577ms", "count": 154, "dbLockWaitTime": "0s", "actionTime": "161.811µs", "messageWaitTime": "38.350301ms"}
+2018-11-03T15:10:46.291-0400	DEBUG	go-server/server.go:115	latency - send notification	{"latency": "12.053019ms", "count": 416, "dbLockWaitTime": "0s", "actionTime": "361.244µs", "messageWaitTime": "11.689416ms"}
+2018-11-03T15:10:51.304-0400	DEBUG	go-server/server.go:115	latency - send notification	{"latency": "18.429271ms", "count": 272, "dbLockWaitTime": "0s", "actionTime": "559.226µs", "messageWaitTime": "17.86948ms"}
+2018-11-03T15:10:56.307-0400	DEBUG	go-server/server.go:115	latency - send notification	{"latency": "13.592729ms", "count": 368, "dbLockWaitTime": "0s", "actionTime": "278.2µs", "messageWaitTime": "13.312433ms"}
+2018-11-03T15:11:01.307-0400	DEBUG	go-server/server.go:115	latency - send notification	{"latency": "14.621662ms", "count": 342, "dbLockWaitTime": "0s", "actionTime": "255.049µs", "messageWaitTime": "14.365962ms"}
+2018-11-03T15:11:06.308-0400	DEBUG	go-server/server.go:115	latency - send notification	{"latency": "10.28863ms", "count": 486, "dbLockWaitTime": "0s", "actionTime": "176.488µs", "messageWaitTime": "10.111623ms"}
+2018-11-03T15:11:11.335-0400	DEBUG	go-server/server.go:115	latency - send notification	{"latency": "9.895317ms", "count": 508, "dbLockWaitTime": "0s", "actionTime": "177.488µs", "messageWaitTime": "9.717268ms"}
