@@ -33,6 +33,7 @@ room.on(
         room.retract(`#${myId} wish`, ["text", processName], `would be running`);
       }
     });
+    room.assert(`runSeenPapers update ${(new Date()).toISOString()}`)
   }
 )
 

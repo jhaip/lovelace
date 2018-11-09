@@ -1,6 +1,7 @@
 import time
 import logging
 import math
+import datetime
 from helper2 import init, claim, retract, prehook, subscription, batch, get_my_id_str
 
 def get_paper_center(c):
@@ -103,6 +104,12 @@ def sub_callback_papers(results):
                 ["text", "paper"],
                 ["integer", str(other_paper)],
             ]})
+    claims.append({"type": "claim", "fact": [
+        ["id", get_my_id_str()],
+        ["text", "pointingAt"],
+        ["text", "update"],
+        ["text", str(datetime.datetime.now())],
+    ]})
     batch(claims)
 
 init(__file__)

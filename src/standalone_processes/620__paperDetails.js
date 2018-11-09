@@ -75,5 +75,6 @@ room.on(
         );
       }
     })
+    room.assert(`paperDetails update ${(new Date()).toISOString()}`)
   }
 )
