@@ -19,7 +19,7 @@ func TestMakeSubscriber1(t *testing.T) {
 		Term{"variable", "C"},
 	}
 	query := [][]Term{query_part1, query_part2}
-	subscription := makeSubscriber("mySource", "0001", query)
+	subscription := makeSubscriber(query)
 
 	// repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
 	// return
@@ -177,7 +177,7 @@ func TestMakeSubscriberOnePart(t *testing.T) {
 		Term{"variable", "B"},
 	}
 	query := [][]Term{query_part1}
-	subscription := makeSubscriber("mySource", "0001", query)
+	subscription := makeSubscriber(query)
 	if len(subscription.nodes) != 1 {
 		t.Error("Wrong number of nodes ", len(subscription.nodes))
 	}
@@ -260,7 +260,7 @@ func TestMakeSubscriberOnePartNoVariables(t *testing.T) {
 		Term{"text", "yellow"},
 	}
 	query := [][]Term{query_part1}
-	subscription := makeSubscriber("mySource", "0001", query)
+	subscription := makeSubscriber(query)
 	if len(subscription.nodes) != 1 {
 		t.Error("Wrong number of nodes ", len(subscription.nodes))
 	}
@@ -314,7 +314,7 @@ func TestMakeSubscriberTwoPartsNoVariables(t *testing.T) {
 		Term{"text", "green"},
 	}
 	query := [][]Term{query_part1, query_part2}
-	subscription := makeSubscriber("mySource", "0001", query)
+	subscription := makeSubscriber(query)
 	if len(subscription.nodes) != 3 {
 		t.Error("Wrong number of nodes ", len(subscription.nodes))
 	}
@@ -400,7 +400,7 @@ func TestSubscriberBatchSimple1(t *testing.T) {
 		Term{"variable", "B"},
 	}
 	query := [][]Term{query_part1}
-	subscription := makeSubscriber("mySource", "0001", query)
+	subscription := makeSubscriber(query)
 	if len(subscription.nodes) != 1 {
 		t.Error("Wrong number of nodes ", len(subscription.nodes))
 	}
@@ -470,7 +470,7 @@ func TestSubscriberBatchBigClaimAndRetract(t *testing.T) {
 		Term{"variable", "B"},
 	}
 	query := [][]Term{query_part1}
-	subscription := makeSubscriber("mySource", "0001", query)
+	subscription := makeSubscriber(query)
 	if len(subscription.nodes) != 1 {
 		t.Error("Wrong number of nodes ", len(subscription.nodes))
 	}

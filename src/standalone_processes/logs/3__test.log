@@ -1,0 +1,31 @@
+pre wait for server
+GOT MESSAGE
+0003862e803c-bb4c-4248-b6d7-86075b0caf881541732120149
+ID: 862e803c-bb4c-4248-b6d7-86075b0caf88 == 862e803c-bb4c-4248-b6d7-86075b0caf88
+SERVER LISTENING!!
+post wait for server
+send ON listen
+GOT MESSAGE
+0003d9358d17-5ce0-46a0-a988-5eeb664b8cd01541732122155[{"X":["id","0003"]}]
+ID: d9358d17-5ce0-46a0-a988-5eeb664b8cd0 == 862e803c-bb4c-4248-b6d7-86075b0caf88
+results:
+[ { X: [32m'0003'[39m } ]
+Fox is out!
+GOT MESSAGE
+0003d9358d17-5ce0-46a0-a988-5eeb664b8cd01541732123159[{"X":["id","0003"]},{"X":["id","0003"]}]
+ID: d9358d17-5ce0-46a0-a988-5eeb664b8cd0 == 862e803c-bb4c-4248-b6d7-86075b0caf88
+results:
+[ { X: [32m'0003'[39m }, { X: [32m'0003'[39m } ]
+Fox is out!
+GOT MESSAGE
+0003d9358d17-5ce0-46a0-a988-5eeb664b8cd01541732125164[{"X":["id","0003"]}]
+ID: d9358d17-5ce0-46a0-a988-5eeb664b8cd0 == 862e803c-bb4c-4248-b6d7-86075b0caf88
+results:
+[ { X: [32m'0003'[39m } ]
+Fox is out!
+GOT MESSAGE
+0003d9358d17-5ce0-46a0-a988-5eeb664b8cd01541732126168[{"X":["id","0003"]},{"X":["id","0003"]}]
+ID: d9358d17-5ce0-46a0-a988-5eeb664b8cd0 == 862e803c-bb4c-4248-b6d7-86075b0caf88
+results:
+[ { X: [32m'0003'[39m }, { X: [32m'0003'[39m } ]
+Fox is out!

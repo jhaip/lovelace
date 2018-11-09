@@ -40,9 +40,10 @@ type SubscriptionData struct {
 }
 
 type Subscription struct {
-	Source string
-	Id     string
-	Query  [][]Term
+	Source         string
+	Id             string
+	Query          [][]Term
+	batch_messages chan []BatchMessage
 }
 
 type Subscriptions struct {
@@ -221,7 +222,7 @@ func update_all_subscriptions(db *map[string]Fact, notifications chan<- Notifica
 	return latencyMeasurer
 }
 
-func subscribe_worker(subscription_messages <-chan string, claims chan<- []Term, subscriptions_notifications chan<- bool, subscriptions *Subscriptions) {
+func subscribe_worker(subscription_messages <-chan string, claims chan<- []Term, subscriptions_notifications chan<- bool, subscriptions *Subscriptions, notifications chan<- Notification) {
 	event_type_len := 9
 	source_len := 4
 	for msg := range subscription_messages {
@@ -241,8 +242,13 @@ func subscribe_worker(subscription_messages <-chan string, claims chan<- []Term,
 				fact := parse_fact_string(fact_string) // AVOID DOUBLE PARSING!, this work was already done above
 				query = append(query, fact)
 			}
-			(*subscriptions).Subscriptions = append((*subscriptions).Subscriptions, Subscription{source, subscription_data.Id, query})
-			subscriptions_notifications <- true
+			newSubscription := Subscription{source, subscription_data.Id, query, make(chan []BatchMessage, 100)}
+			(*subscriptions).Subscriptions = append(
+				(*subscriptions).Subscriptions,
+				newSubscription,
+			)
+			go startSubscriber(newSubscription, notifications)
+			// subscriptions_notifications <- true // is this still needed?
 		}
 	}
 }
@@ -269,30 +275,30 @@ func parser_worker(unparsed_messages <-chan string, claims chan<- []Term, retrac
 	}
 }
 
-func claim_worker(claims <-chan []Term, subscriptions_notifications chan<- bool, db *map[string]Fact) {
-	for fact_terms := range claims {
-		start := time.Now()
-		dbMutex.Lock()
-		claim(db, Fact{fact_terms})
-		dbMutex.Unlock()
-		elapsed := time.Since(start)
-		zap.L().Debug("claim time", zap.Duration("duration", elapsed))
-		subscriptions_notifications <- true
-	}
-}
+// func claim_worker(claims <-chan []Term, subscriptions_notifications chan<- bool, db *map[string]Fact) {
+// 	for fact_terms := range claims {
+// 		start := time.Now()
+// 		dbMutex.Lock()
+// 		claim(db, Fact{fact_terms})
+// 		dbMutex.Unlock()
+// 		elapsed := time.Since(start)
+// 		zap.L().Debug("claim time", zap.Duration("duration", elapsed))
+// 		subscriptions_notifications <- true
+// 	}
+// }
 
-func retract_worker(retractions <-chan []Term, subscriptions_notifications chan<- bool, db *map[string]Fact) {
-	for fact_terms := range retractions {
-		start := time.Now()
-		dbMutex.Lock()
-		retract(db, Fact{fact_terms})
-		// print_all_facts(*db)
-		dbMutex.Unlock()
-		subscriptions_notifications <- true
-		elapsed := time.Since(start)
-		zap.L().Debug("retract time", zap.Duration("duration", elapsed))
-	}
-}
+// func retract_worker(retractions <-chan []Term, subscriptions_notifications chan<- bool, db *map[string]Fact) {
+// 	for fact_terms := range retractions {
+// 		start := time.Now()
+// 		dbMutex.Lock()
+// 		retract(db, Fact{fact_terms})
+// 		// print_all_facts(*db)
+// 		dbMutex.Unlock()
+// 		subscriptions_notifications <- true
+// 		elapsed := time.Since(start)
+// 		zap.L().Debug("retract time", zap.Duration("duration", elapsed))
+// 	}
+// }
 
 func notify_subscribers_worker(notify_subscribers <-chan bool, subscriber_worker_finished chan<- bool, db *map[string]Fact, notifications chan<- Notification, subscriptions *Subscriptions) {
 	// TODO: passing in subscriptions is probably not safe because it can be written in the other goroutine
@@ -376,7 +382,7 @@ func debug_database_observer(db *map[string]Fact) {
 	}
 }
 
-func batch_worker(batch_messages <-chan string, claims chan<- []Term, retractions chan<- []Term, subscriptions_notifications chan<- bool, db *map[string]Fact) {
+func batch_worker(batch_messages <-chan string, claims chan<- []Term, retractions chan<- []Term, subscriptions_notifications chan<- bool, db *map[string]Fact, subscriptions *Subscriptions) {
 	event_type_len := 9
 	source_len := 4
 	latencyMeasurer := makeLatencyMeasurer()
@@ -414,7 +420,10 @@ func batch_worker(batch_messages <-chan string, claims chan<- []Term, retraction
 				dbMutex.Unlock()
 			}
 		}
-		subscriptions_notifications <- true
+		// subscriptions_notifications <- true
+		for _, subscription := range (*subscriptions).Subscriptions {
+			subscription.batch_messages <- batch_messages
+		}
 		latencyMeasurer = updateLatencyMeasurer(latencyMeasurer, 1, "latency - batch")
 		latencyMeasurer = preLatencyMeasurePart("messageWait", latencyMeasurer)
 	}
@@ -463,14 +472,14 @@ func main() {
 	batch_messages := make(chan string, 100)
 
 	go parser_worker(unparsed_messages, claims, retractions)
-	go subscribe_worker(subscription_messages, claims, subscriptions_notifications, &subscriptions)
-	go claim_worker(claims, subscriptions_notifications, &factDatabase)
-	go retract_worker(retractions, subscriptions_notifications, &factDatabase)
+	go subscribe_worker(subscription_messages, claims, subscriptions_notifications, &subscriptions, notifications)
+	// go claim_worker(claims, subscriptions_notifications, &factDatabase)
+	// go retract_worker(retractions, subscriptions_notifications, &factDatabase)
 	go notify_subscribers_worker(notify_subscribers, subscriber_worker_finished, &factDatabase, notifications, &subscriptions)
 	go debounce_subscriber_worker(subscriptions_notifications, subscriber_worker_finished, notify_subscribers)
 	go notification_worker(notifications, retractions)
 	go debug_database_observer(&factDatabase)
-	go batch_worker(batch_messages, claims, retractions, subscriptions_notifications, &factDatabase)
+	go batch_worker(batch_messages, claims, retractions, subscriptions_notifications, &factDatabase, &subscriptions)
 
 	// go func() {
 	// 	for {
