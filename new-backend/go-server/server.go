@@ -222,7 +222,13 @@ func update_all_subscriptions(db *map[string]Fact, notifications chan<- Notifica
 	return latencyMeasurer
 }
 
-func subscribe_worker(subscription_messages <-chan string, claims chan<- []Term, subscriptions_notifications chan<- bool, subscriptions *Subscriptions, notifications chan<- Notification) {
+func subscribe_worker(subscription_messages <-chan string,
+	claims chan<- []Term,
+	subscriptions_notifications chan<- bool,
+	subscriptions *Subscriptions,
+	notifications chan<- Notification,
+	db *map[string]Fact) {
+
 	event_type_len := 9
 	source_len := 4
 	for msg := range subscription_messages {
@@ -247,7 +253,7 @@ func subscribe_worker(subscription_messages <-chan string, claims chan<- []Term,
 				(*subscriptions).Subscriptions,
 				newSubscription,
 			)
-			go startSubscriber(newSubscription, notifications)
+			go startSubscriber(newSubscription, notifications, *db)
 			// subscriptions_notifications <- true // is this still needed?
 		}
 	}
@@ -472,7 +478,7 @@ func main() {
 	batch_messages := make(chan string, 100)
 
 	go parser_worker(unparsed_messages, claims, retractions)
-	go subscribe_worker(subscription_messages, claims, subscriptions_notifications, &subscriptions, notifications)
+	go subscribe_worker(subscription_messages, claims, subscriptions_notifications, &subscriptions, notifications, &factDatabase)
 	// go claim_worker(claims, subscriptions_notifications, &factDatabase)
 	// go retract_worker(retractions, subscriptions_notifications, &factDatabase)
 	go notify_subscribers_worker(notify_subscribers, subscriber_worker_finished, &factDatabase, notifications, &subscriptions)

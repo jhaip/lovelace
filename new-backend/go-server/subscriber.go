@@ -118,11 +118,28 @@ func getQueryResultsForSubscriber(sub Subscription2) []QueryResult {
 	return queryResults
 }
 
-func startSubscriber(subscriptionData Subscription, notifications chan<- Notification) {
+func warmSubscriberCache(subscriptionData Subscription, preExistingFacts map[string]Fact) {
+	dbAsBatchClaims := make([]BatchMessage, len(preExistingFacts))
+	i := 0
+	for _, fact := range preExistingFacts {
+		// transformt the data into a different format
+		batchMessageFact := make([][]string, len(fact.Terms))
+		for k, term := range fact.Terms {
+			batchMessageFact[k] = []string{term.Type, term.Value}
+		}
+		dbAsBatchClaims[i] = BatchMessage{"claim", batchMessageFact}
+		i++
+	}
+	// claim each preExistingFact to warm this subscribers cache
+	subscriptionData.batch_messages <- dbAsBatchClaims
+}
+
+func startSubscriber(subscriptionData Subscription, notifications chan<- Notification, preExistingFacts map[string]Fact) {
 	// TODO: warm subscriber
 	subscriber := makeSubscriber(subscriptionData.Query)
 	var updatedResults bool
 	zap.L().Info("inside startSubscriber")
+	warmSubscriberCache(subscriptionData, preExistingFacts)
 	for batch_messages := range subscriptionData.batch_messages {
 		zap.L().Info("startSubscriber parsing a batch message")
 		updatedResults = false
@@ -177,15 +194,15 @@ func makeSubscriber(query [][]Term) Subscription2 {
 }
 
 func populateFirstLayerFromMatchResults(queryPartIndex int, matchResults QueryResult, sub Subscription2, claim []Term) (Subscription2, bool) {
-	fmt.Println("MATCH RESULTS:")
-	fmt.Println(matchResults)
-	fmt.Println(matchResults.Result)
-	fmt.Println("--")
+	// fmt.Println("MATCH RESULTS:")
+	// fmt.Println(matchResults)
+	// fmt.Println(matchResults.Result)
+	// fmt.Println("--")
 	matchResultVariableNames := make([]string, 0)
 	for variableName, _ := range matchResults.Result {
 		matchResultVariableNames = append(matchResultVariableNames, variableName)
 	}
-	fmt.Println("----")
+	// fmt.Println("----")
 	querySourceVariableName := "*query" + strconv.Itoa(queryPartIndex)
 	queryPartVariableNames := append(
 		[]string{querySourceVariableName},

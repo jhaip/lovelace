@@ -1,31 +1,47 @@
 pre wait for server
 GOT MESSAGE
-0003862e803c-bb4c-4248-b6d7-86075b0caf881541732120149
-ID: 862e803c-bb4c-4248-b6d7-86075b0caf88 == 862e803c-bb4c-4248-b6d7-86075b0caf88
+000367296903-6c42-4ab4-9fc3-a2eb8b677f8e1541733754450[{"X":["id","0003"]},{"X":["id","0003"]}]
+ID: 67296903-6c42-4ab4-9fc3-a2eb8b677f8e == 500e7278-fcea-47a1-a1db-127dab6dfb1c
+unknown subscription ID...
+GOT MESSAGE
+0003500e7278-fcea-47a1-a1db-127dab6dfb1c1541733754455
+ID: 500e7278-fcea-47a1-a1db-127dab6dfb1c == 500e7278-fcea-47a1-a1db-127dab6dfb1c
 SERVER LISTENING!!
 post wait for server
 send ON listen
 GOT MESSAGE
-0003d9358d17-5ce0-46a0-a988-5eeb664b8cd01541732122155[{"X":["id","0003"]}]
-ID: d9358d17-5ce0-46a0-a988-5eeb664b8cd0 == 862e803c-bb4c-4248-b6d7-86075b0caf88
+0003c98302cc-5812-4a42-a590-35e8c3af179e1541733754957[{"X":["id","0003"]}]
+ID: c98302cc-5812-4a42-a590-35e8c3af179e == 500e7278-fcea-47a1-a1db-127dab6dfb1c
 results:
 [ { X: [32m'0003'[39m } ]
 Fox is out!
 GOT MESSAGE
-0003d9358d17-5ce0-46a0-a988-5eeb664b8cd01541732123159[{"X":["id","0003"]},{"X":["id","0003"]}]
-ID: d9358d17-5ce0-46a0-a988-5eeb664b8cd0 == 862e803c-bb4c-4248-b6d7-86075b0caf88
+0003c98302cc-5812-4a42-a590-35e8c3af179e1541733755460[{"X":["id","0003"]},{"X":["id","0003"]}]
+ID: c98302cc-5812-4a42-a590-35e8c3af179e == 500e7278-fcea-47a1-a1db-127dab6dfb1c
 results:
 [ { X: [32m'0003'[39m }, { X: [32m'0003'[39m } ]
 Fox is out!
 GOT MESSAGE
-0003d9358d17-5ce0-46a0-a988-5eeb664b8cd01541732125164[{"X":["id","0003"]}]
-ID: d9358d17-5ce0-46a0-a988-5eeb664b8cd0 == 862e803c-bb4c-4248-b6d7-86075b0caf88
+000367296903-6c42-4ab4-9fc3-a2eb8b677f8e1541733755460[{"X":["id","0003"]},{"X":["id","0003"]},{"X":["id","0003"]}]
+ID: 67296903-6c42-4ab4-9fc3-a2eb8b677f8e == 500e7278-fcea-47a1-a1db-127dab6dfb1c
+unknown subscription ID...
+GOT MESSAGE
+0003c98302cc-5812-4a42-a590-35e8c3af179e1541733757467[{"X":["id","0003"]}]
+ID: c98302cc-5812-4a42-a590-35e8c3af179e == 500e7278-fcea-47a1-a1db-127dab6dfb1c
 results:
 [ { X: [32m'0003'[39m } ]
 Fox is out!
 GOT MESSAGE
-0003d9358d17-5ce0-46a0-a988-5eeb664b8cd01541732126168[{"X":["id","0003"]},{"X":["id","0003"]}]
-ID: d9358d17-5ce0-46a0-a988-5eeb664b8cd0 == 862e803c-bb4c-4248-b6d7-86075b0caf88
+000367296903-6c42-4ab4-9fc3-a2eb8b677f8e1541733757467[{"X":["id","0003"]}]
+ID: 67296903-6c42-4ab4-9fc3-a2eb8b677f8e == 500e7278-fcea-47a1-a1db-127dab6dfb1c
+unknown subscription ID...
+GOT MESSAGE
+0003c98302cc-5812-4a42-a590-35e8c3af179e1541733758467[{"X":["id","0003"]},{"X":["id","0003"]}]
+ID: c98302cc-5812-4a42-a590-35e8c3af179e == 500e7278-fcea-47a1-a1db-127dab6dfb1c
 results:
 [ { X: [32m'0003'[39m }, { X: [32m'0003'[39m } ]
 Fox is out!
+GOT MESSAGE
+000367296903-6c42-4ab4-9fc3-a2eb8b677f8e1541733758467[{"X":["id","0003"]},{"X":["id","0003"]}]
+ID: 67296903-6c42-4ab4-9fc3-a2eb8b677f8e == 500e7278-fcea-47a1-a1db-127dab6dfb1c
+unknown subscription ID...
