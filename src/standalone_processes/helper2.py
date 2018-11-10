@@ -7,8 +7,6 @@ import random
 import os
 import sys
 
-logging.basicConfig(level=logging.INFO)
-
 context = zmq.Context()
 rpc_url = "localhost"
 sub_socket = context.socket(zmq.SUB)
@@ -142,6 +140,7 @@ def init(root_filename, skipListening=False):
         listen()
     end = time.time()
     print("INIT TIME: {} ms".format((end - start)*1000.0))
+    logging.info("INIT TIME: {} ms".format((end - start)*1000.0))
     # time.sleep(0.2)
     if py_prehook:
         py_prehook()
