@@ -253,7 +253,7 @@ func subscribe_worker(subscription_messages <-chan string,
 				(*subscriptions).Subscriptions,
 				newSubscription,
 			)
-			go startSubscriber(newSubscription, notifications, *db)
+			go startSubscriber(newSubscription, notifications, copyDatabase(db))
 			// subscriptions_notifications <- true // is this still needed?
 		}
 	}
@@ -351,18 +351,28 @@ func debounce_subscriber_worker(subscriptions_notifications <-chan bool, subscri
 	}()
 }
 
+func copyDatabase(db *map[string]Fact) map[string]Fact {
+	dbCopy := make(map[string]Fact)
+	dbMutex.RLock()
+	for k, fact := range *db {
+		dbCopy[k] = Fact{make([]Term, len(fact.Terms))}
+		for i, term := range fact.Terms {
+			dbCopy[k].Terms[i] = Term{term.Type, term.Value}
+		}
+	}
+	dbMutex.RUnlock()
+	return dbCopy
+}
+
 func debug_database_observer(db *map[string]Fact) {
 	for {
-		dbMutex.RLock()
+		dbCopy := copyDatabase(db)
 		dbAsSstring := []byte("\033[H\033[2J") // clear terminal output on MacOS
 		dbAsBase64Strings := ""
 		var keys []string
-		dbCopy := make(map[string]Fact)
-		for k, fact := range *db {
+		for k, _ := range dbCopy {
 			keys = append(keys, k)
-			dbCopy[k] = fact
 		}
-		dbMutex.RUnlock()
 		sort.Strings(keys)
 		for _, fact_string := range keys {
 			dbAsSstring = append(dbAsSstring, []byte(fact_string)...)
@@ -380,6 +390,7 @@ func debug_database_observer(db *map[string]Fact) {
 			}
 			dbAsBase64Strings += "]\n"
 		}
+		dbAsBase64Strings += fmt.Sprintf("[[\"id\", \"0\"], [\"text\", \"%s\"]]\n", b64.StdEncoding.EncodeToString([]byte(time.Now().String())))
 		err := ioutil.WriteFile("./db_view.txt", dbAsSstring, 0644)
 		checkErr(err)
 		err2 := ioutil.WriteFile("./db_view_base64.txt", []byte(dbAsBase64Strings), 0644)
