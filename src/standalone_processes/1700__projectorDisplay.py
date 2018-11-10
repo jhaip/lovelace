@@ -279,7 +279,7 @@ class Example(wx.Frame):
         gc.SetBrush(last_brush)
 
         if draw_commands:
-            print(draw_commands)
+            # logging.info(draw_commands)
             for command in draw_commands:
                 command_type = command.get("type")
                 opt = command.get("options")
@@ -292,22 +292,21 @@ class Example(wx.Frame):
                         gc.DrawEllipse(opt["x"], opt["y"], opt["w"], opt["h"])
                 elif command_type == 'text':
                     if opt:
-                        print("DRAWING TEXT")
                         lines = opt["text"].split("\n")
                         line_height = paper_font.GetPixelSize().GetHeight() * 1.3
                         for i, l in enumerate(lines):
                             gc.DrawText(
                                 l, opt["x"], opt["y"] + i * line_height)
                     else:
-                        print("would draw text but missing opt")
+                        logging.error("would draw text but missing opt")
                 elif command_type == 'line':
                     if opt and len(opt) == 4:
                         # actually only drawing 1 line
                         gc.DrawLines([wx.Point2D(opt[0], opt[1]),
                                       wx.Point2D(opt[2], opt[3])])
                     else:
-                        print("bad line")
-                        print(opt)
+                        logging.error("bad line")
+                        logging.error(opt)
                 elif command_type == 'polygon':
                     if opt and len(opt) > 2:
                         path = gc.CreatePath()
@@ -316,8 +315,8 @@ class Example(wx.Frame):
                             path.AddLineToPoint(wx.Point2D(pt[0], pt[1]))
                         gc.DrawPath(path)
                     else:
-                        print("bad polygon")
-                        print(opt)
+                        logging.error("bad polygon")
+                        logging.error(opt)
                 elif command_type == 'fill':
                     if opt:
                         if type(opt) is str:
@@ -376,8 +375,8 @@ class Example(wx.Frame):
                     if opt:
                         gc.Translate(opt["x"], opt["y"])
                 else:
-                    print("Unrecognized command:")
-                    print(command)
+                    logging.error("Unrecognized command:")
+                    logging.error(command)
 
     def draw_paper(self, gc, paper, draw_commands):
         if not draw_commands or len(draw_commands) == 0:
