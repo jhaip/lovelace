@@ -9,16 +9,28 @@ import json
 import zmq
 import logging
 import sys
+import os
 
-logging.basicConfig(level=logging.INFO)
-
-MY_ID = sys.argv[1]
-MY_ID_STR = str(MY_ID).zfill(4)
+MY_ID_STR = None
 CAM_WIDTH = 1920
 CAM_HEIGHT = 1080
 
+def initLogToFile(root_filename):
+    global MY_ID_STR
+    scriptName = os.path.basename(root_filename)
+    scriptNameNoExtension = os.path.splitext(scriptName)[0]
+    fileDir = os.path.dirname(os.path.realpath(root_filename))
+    logPath = os.path.join(fileDir, 'logs/' + scriptNameNoExtension + '.log')
+    logging.basicConfig(filename=logPath, level=logging.INFO)
+    MY_ID = (scriptName.split(".")[0]).split("__")[0]
+    MY_ID_STR = str(MY_ID).zfill(4)
+    print("INSIDE INIT:")
+    print(MY_ID)
+    print(MY_ID_STR)
+    print(logPath)
+
 class ShowCapture(wx.Panel):
-    def __init__(self, parent, capture, fps=1):
+    def __init__(self, parent, capture, fps=4):
         wx.Panel.__init__(self, parent)
 
         self.capture = capture
@@ -178,8 +190,8 @@ class ShowCapture(wx.Panel):
                 ]})
             self.batch(batch_claims)
 
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            self.bmp.CopyFromBuffer(frame)
+            # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            # self.bmp.CopyFromBuffer(frame)
             #
             # img = wx.Bitmap.ConvertToImage( self.bmp )
             # img_str = img.GetData()
@@ -188,7 +200,7 @@ class ShowCapture(wx.Panel):
             self.Refresh()
 
         end = time.time()
-        print(end - start, 1.0/(end - start), "fps")
+        logging.info("{} {} fps".format(end - start, 1.0/(end - start)))
 
     def moveCurrentCalibrationPointRel(self, dx, dy):
         if self.projector_calibration_state is not None:
@@ -261,6 +273,8 @@ logging.error("---")
 # capture.stream.set(cv2.CAP_PROP_EXPOSURE, TODO)
 # time.sleep(2)
 capture.start()
+
+initLogToFile(__file__)
 
 app = wx.App()
 frame = wx.Frame(None)
