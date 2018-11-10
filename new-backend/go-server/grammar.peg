@@ -95,6 +95,7 @@ Postfix ← '%' ( Integer / Word )? {
 Number ← '-'? Integer ( '.' DecimalDigit+ )? Exponent? {
     // JSON numbers have the same syntax as Go's, and are parseable using
     // strconv.
+    // TODO: both of the following strconv functions return errors -> should these be caught?
     if (strings.Contains(string(c.text), ".")) {
         return strconv.ParseFloat(string(c.text), 64)
     } else {
@@ -113,6 +114,7 @@ Word ← ([,()@] / [a-zA-Z]+ [a-zA-Z0-9]*) {
 String ← '"' ( !EscapedChar . / '\\' EscapeSequence )* '"' {
     // TODO : the forward slash (solidus) is not a valid escape in Go, it will
     // fail if there's one in the string
+    // TODO: catch error from strconv.Unquote() ?
     return strconv.Unquote(string(c.text))
 }
 
