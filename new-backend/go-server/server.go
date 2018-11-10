@@ -76,6 +76,7 @@ func checkErr(err error) {
 	if err != nil {
 		// log.Fatal(err)
 		zap.L().Fatal("FATAL ERROR", zap.Error(err))
+		panic(err)
 	}
 }
 
