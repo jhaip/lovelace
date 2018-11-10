@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -145,6 +144,8 @@ func startSubscriber(subscriptionData Subscription, notifications chan<- Notific
 		latencyMeasurer = postLatencyMeasurePart("messageWait", latencyMeasurer)
 		updatedResults = false
 		if len(batch_messages) == 1 && batch_messages[0].Type == "die" {
+			// sending on a closed channel causes a panic and noramlly this should be done by the sender,
+			// not the recevier like it is doing here.
 			close(subscriptionData.batch_messages)
 			return
 		}
@@ -294,8 +295,6 @@ func addQueryResultToWholeVariableCache(queryPartIndex int, subscriptionUpdateOp
 					)
 				}
 			}
-		} else {
-			fmt.Println("elementAtOffsetHasNoOverlapOrMatchingOverlap is FALSE!")
 		}
 	}
 
@@ -386,8 +385,4 @@ func subscriberBatchUpdate(sub Subscription2, batch_messages []BatchMessage) (Su
 		}
 	}
 	return sub, updatedSubscriberOutput
-}
-
-func subscriber(batch_messages <-chan string) {
-
 }
