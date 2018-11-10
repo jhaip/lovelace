@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"sort"
 	// "time"
 )
@@ -47,13 +46,13 @@ func fact_to_string(fact Fact) string {
 	return terms_to_string(fact.Terms)
 }
 
-func print_all_facts(facts map[string]Fact) {
-	fmt.Println("### Database of Facts ###")
-	for _, fact := range facts {
-		fmt.Println(fact_to_string(fact))
-	}
-	fmt.Println("#########################")
-}
+// func print_all_facts(facts map[string]Fact) {
+// 	fmt.Println("### Database of Facts ###")
+// 	for _, fact := range facts {
+// 		fmt.Println(fact_to_string(fact))
+// 	}
+// 	fmt.Println("#########################")
+// }
 
 func fact_match(A Fact, B Fact, env QueryResult) (bool, QueryResult) {
 	A_has_postfix := A.Terms[len(A.Terms)-1].Type == "postfix"
@@ -166,10 +165,3 @@ func make_fact_database() map[string]Fact {
 	factMap := make(map[string]Fact)
 	return factMap
 }
-
-// TODO: a better way to differentiate no results, vs results but without a name (for exact match)
-// TODO: handle claims
-// TODO: handle subscriptions
-// TODO: a way to detect if a claim will include a part of a subscription?
-// TODO: return in format compatible with rest of code
-// TODO: return IDs of select results for use in retract
