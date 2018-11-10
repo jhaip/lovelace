@@ -19,7 +19,6 @@ import (
 )
 
 var dbMutex sync.RWMutex
-var zmqMutex sync.Mutex
 
 const MeasurementDuration = 5.0 * time.Second
 
