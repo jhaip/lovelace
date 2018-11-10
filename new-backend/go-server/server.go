@@ -131,9 +131,11 @@ func updateLatencyMeasurer(latencyMeasurer LatencyMeasurer, actionsDone int64, s
 }
 
 func notification_worker(notifications <-chan Notification, retractions chan<- []Term) {
-	publisher, _ := zmq.NewSocket(zmq.PUB)
+	publisher, err := zmq.NewSocket(zmq.PUB)
+	checkErr(err)
 	defer publisher.Close()
-	publisher.Bind("tcp://*:5555")
+	publisherBindErr := publisher.Bind("tcp://*:5555")
+	checkErr(publisherBindErr)
 	NO_RESULTS_MESSAGE := "[]"
 	cache := make(map[string]string)
 	latencyMeasurer := makeLatencyMeasurer()
@@ -149,7 +151,8 @@ func notification_worker(notifications <-chan Notification, retractions chan<- [
 			cache[cache_key] = msg
 			if notification.Result != NO_RESULTS_MESSAGE {
 				msgWithTime := fmt.Sprintf("%s%s%v%s", notification.Source, notification.Id, makeTimestamp(), notification.Result)
-				publisher.Send(msgWithTime, zmq.DONTWAIT)
+				_, sendErr := publisher.Send(msgWithTime, zmq.DONTWAIT)
+				checkErr(sendErr)
 			}
 		}
 		timeToSendResults := time.Since(start)
@@ -238,7 +241,8 @@ func subscribe_worker(subscription_messages <-chan string,
 		val := msg[(event_type_len + source_len):]
 		if event_type == "SUBSCRIBE" {
 			subscription_data := SubscriptionData{}
-			json.Unmarshal([]byte(val), &subscription_data)
+			err := json.Unmarshal([]byte(val), &subscription_data)
+			checkErr(err)
 			query := make([][]Term, 0)
 			for i, fact_string := range subscription_data.Facts {
 				subscription_fact_msg := fmt.Sprintf("subscription \"%s\" %v %s", subscription_data.Id, i, fact_string)
@@ -457,7 +461,8 @@ func NewLogger() (*zap.Logger, error) {
 
 func main() {
 	// defer profile.Start().Stop()
-	logger, _ := NewLogger() // zap.NewDevelopment() // NewLogger()
+	logger, loggerCreateError := NewLogger() // zap.NewDevelopment() // NewLogger()
+	checkErr(loggerCreateError)
 	zap.ReplaceGlobals(logger)
 
 	factDatabase := make_fact_database()
@@ -465,15 +470,24 @@ func main() {
 	subscriptions := Subscriptions{}
 
 	zap.L().Info("Connecting to ZMQ")
-	subscriber, _ := zmq.NewSocket(zmq.SUB)
+	subscriber, zmqSubscribeError := zmq.NewSocket(zmq.SUB)
+	checkErr(zmqSubscribeError)
 	defer subscriber.Close()
-	subscriber.Bind("tcp://*:5556")
-	subscriber.SetSubscribe(".....PING")
-	subscriber.SetSubscribe("....CLAIM")
-	subscriber.SetSubscribe("....BATCH")
-	subscriber.SetSubscribe("...SELECT")
-	subscriber.SetSubscribe("..RETRACT")
-	subscriber.SetSubscribe("SUBSCRIBE")
+	subBindErr := subscriber.Bind("tcp://*:5556")
+	checkErr(subBindErr)
+	var subSetFilterErr error
+	subSetFilterErr = subscriber.SetSubscribe(".....PING")
+	checkErr(subSetFilterErr)
+	subSetFilterErr = subscriber.SetSubscribe("....CLAIM")
+	checkErr(subSetFilterErr)
+	subSetFilterErr = subscriber.SetSubscribe("....BATCH")
+	checkErr(subSetFilterErr)
+	subSetFilterErr = subscriber.SetSubscribe("...SELECT")
+	checkErr(subSetFilterErr)
+	subSetFilterErr = subscriber.SetSubscribe("..RETRACT")
+	checkErr(subSetFilterErr)
+	subSetFilterErr = subscriber.SetSubscribe("SUBSCRIBE")
+	checkErr(subSetFilterErr)
 
 	event_type_len := 9
 	source_len := 4
@@ -508,7 +522,8 @@ func main() {
 
 	zap.L().Info("listening...")
 	for {
-		msg, _ := subscriber.Recv(0)
+		msg, recvErr := subscriber.Recv(0)
+		checkErr(recvErr)
 		event_type := msg[0:event_type_len]
 		source := msg[event_type_len:(event_type_len + source_len)]
 		val := msg[(event_type_len + source_len):]
