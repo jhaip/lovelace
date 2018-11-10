@@ -151,7 +151,6 @@ func main() {
 		log.Printf("total     : %s \n", elapsed)
 
 		// time.Sleep(10 * time.Millisecond)
-		fmt.Println("done with loop")
 	}
 }
 
@@ -221,13 +220,13 @@ func printCorners(data []Corner) {
 	for i, d := range data {
 		s[i] = fmt.Sprintf("%v \t %v \t %v \t %v \t %v", d.Corner, d.lines, d.sides, d.PaperId, d.CornerId)
 	}
-	fmt.Println(strings.Join(s, "\n"))
+	log.Println(strings.Join(s, "\n"))
 
 	cornersAlmostStr, err := json.Marshal(data)
-	fmt.Println("Err?")
-	fmt.Println(err)
+	log.Println("Err?")
+	log.Println(err)
 	cornersStr := string(cornersAlmostStr)
-	fmt.Println(cornersStr)
+	log.Println(cornersStr)
 }
 
 func distanceSquared(p1 Dot, p2 Dot) float64 {
@@ -601,13 +600,9 @@ func getDots(subscriber *zmq.Socket, MY_ID_STR string, dot_sub_id string, start 
 		log.Println(err)
 		panic(err)
 	}
-	// fmt.Println("time val")
-	// fmt.Println(timeVal)
 	timeDiff := makeTimestampMillis() - timeVal
-	fmt.Printf("time diff: %v ms\n", timeDiff)
+	log.Printf("time diff: %v ms\n", timeDiff)
 	val := trimLeftChars(reply, len(dot_prefix)+13)
-	// fmt.Println("GOT RESULT:")
-	// fmt.Println(val)
 	json_val := make([]map[string][]string, 0)
 	/*
 		  type Dot struct {
@@ -620,8 +615,6 @@ func getDots(subscriber *zmq.Socket, MY_ID_STR string, dot_sub_id string, start 
 	// TODO: parse val
 	json.Unmarshal([]byte(val), &json_val)
 	log.Println("GET JSON RESULT:")
-	// fmt.Println(json_val)
-	// fmt.Println(json_val[0])
 	claimTime, _ := strconv.ParseFloat(json_val[0]["t"][1], 64)
 	claimTimeDiff := makeTimestampMillis() - int64(claimTime)
 	log.Printf("claim time diff: %v ms\n", claimTimeDiff)
@@ -638,8 +631,8 @@ func getDots(subscriber *zmq.Socket, MY_ID_STR string, dot_sub_id string, start 
 }
 
 func claimPapers(publisher *zmq.Socket, MY_ID_STR string, papers []Paper) {
-	fmt.Println("CLAIM PAPERS -----")
-	fmt.Println(papers)
+	log.Println("CLAIM PAPERS -----")
+	log.Println(papers)
 	// papersAlmostStr, _ := json.Marshal(papers)
 	// papersStr := string(papersAlmostStr)
 	// log.Println(papersStr)
@@ -715,7 +708,6 @@ func claimPapers(publisher *zmq.Socket, MY_ID_STR string, papers []Paper) {
 	batch_claim_str, _ := json.Marshal(batch_claims)
 	msg := fmt.Sprintf("....BATCH%s%s", MY_ID_STR, batch_claim_str)
 	log.Println("Sending ", msg)
-	fmt.Println("Sending ", msg)
 	s, err := publisher.Send(msg, 0)
 	time.Sleep(1.0 * time.Millisecond)
 	// s, err := publisher.Send(msg, zmq.DONTWAIT)
