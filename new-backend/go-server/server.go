@@ -79,7 +79,7 @@ func checkErr(err error) {
 	}
 }
 
-func makeTimestamp() int64 {
+func makeTimestampMillis() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
 }
 
@@ -150,7 +150,7 @@ func notification_worker(notifications <-chan Notification, retractions chan<- [
 		if cache_hit == false || cache_value != msg {
 			cache[cache_key] = msg
 			if notification.Result != NO_RESULTS_MESSAGE {
-				msgWithTime := fmt.Sprintf("%s%s%v%s", notification.Source, notification.Id, makeTimestamp(), notification.Result)
+				msgWithTime := fmt.Sprintf("%s%s%v%s", notification.Source, notification.Id, makeTimestampMillis(), notification.Result)
 				_, sendErr := publisher.Send(msgWithTime, zmq.DONTWAIT)
 				checkErr(sendErr)
 			}

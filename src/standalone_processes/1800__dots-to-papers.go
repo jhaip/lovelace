@@ -560,7 +560,7 @@ func trimLeftChars(s string, n int) string {
 	return s[:0]
 }
 
-func makeTimestamp() int64 {
+func makeTimestampMillis() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
 }
 
@@ -603,7 +603,7 @@ func getDots(subscriber *zmq.Socket, MY_ID_STR string, dot_sub_id string, start 
 	}
 	// fmt.Println("time val")
 	// fmt.Println(timeVal)
-	timeDiff := makeTimestamp() - timeVal
+	timeDiff := makeTimestampMillis() - timeVal
 	fmt.Printf("time diff: %v ms\n", timeDiff)
 	val := trimLeftChars(reply, len(dot_prefix)+13)
 	// fmt.Println("GOT RESULT:")
@@ -623,7 +623,7 @@ func getDots(subscriber *zmq.Socket, MY_ID_STR string, dot_sub_id string, start 
 	// fmt.Println(json_val)
 	// fmt.Println(json_val[0])
 	claimTime, _ := strconv.ParseFloat(json_val[0]["t"][1], 64)
-	claimTimeDiff := makeTimestamp() - int64(claimTime)
+	claimTimeDiff := makeTimestampMillis() - int64(claimTime)
 	log.Printf("claim time diff: %v ms\n", claimTimeDiff)
 	res := make([]Dot, 0)
 	for _, json_result := range json_val {
@@ -703,7 +703,7 @@ func claimPapers(publisher *zmq.Socket, MY_ID_STR string, papers []Paper) {
 			[]string{"integer", strconv.Itoa(paper.Corners[3].Y)},
 			[]string{"text", ")"},
 			[]string{"text", "@"},
-			[]string{"integer", "99"},
+			[]string{"integer", strconv.FormatUint(uint64(makeTimestampMillis()), 10)},
 		}})
 	}
 	batch_claims = append(batch_claims, BatchMessage{"claim", [][]string{
