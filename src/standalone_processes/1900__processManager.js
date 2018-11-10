@@ -79,6 +79,7 @@ room.on(
         stopPaper(name, nameToProcessIdCache[name])
       }
     }
+    room.retract(`$ processManager update $`)
     room.assert(`processManager update ${(new Date()).toISOString()}`)
   }
 )
