@@ -93,6 +93,8 @@ try:
         if time.time() - lastUpdateTime >= 60.0/BPM and len(MELODY) > 0:
             playNextNode(midi_out, INSTRUMENT, MELODY[MELODY_INDEX], 60.0/BPM)
             MELODY_INDEX = (MELODY_INDEX + 1) % len(MELODY)
+        else:
+            time.sleep(0.01)
 finally:
     midi_out.note_off(MELODY[MELODY_INDEX], 127)
     midi_out.close()
