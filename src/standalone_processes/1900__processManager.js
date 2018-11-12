@@ -39,7 +39,11 @@ function runPaper(name) {
 
 function stopPaper(name, pid) {
   console.error(`making ${name} with PID ${pid} NOT be running`)
-  process.kill(pid, 'SIGTERM')
+  try {
+    process.kill(pid, 'SIGKILL')
+  } catch {
+    console.error("UNABLE TO KILL", pid)
+  }
   room.retract(`#${myId}`, ["text", name], `has process id $`);
   const dyingPaperId = (name.split(".")[0]).split("__")[0]
   console.log("done STOPPING PID", pid, "with ID", dyingPaperId)
