@@ -30,8 +30,11 @@ def initLogToFile(root_filename):
     print(logPath)
 
 class ShowCapture(wx.Panel):
-    def __init__(self, parent, capture, fps=4):
+    def __init__(self, parent, capture, fps=1):
         wx.Panel.__init__(self, parent)
+
+        initLogToFile(__file__)
+        logging.error("begin")
 
         self.capture = capture
         ret, frame = (True, self.capture.read())
@@ -53,13 +56,20 @@ class ShowCapture(wx.Panel):
                                       (CAM_WIDTH-50, CAM_HEIGHT-50),
                                       (50, CAM_HEIGHT-50)]
         
+        logging.error("PRE ZMQ SETUP")
+
         time.sleep(1.0)
         context = zmq.Context()
         rpc_url = "localhost"
         self.pub_socket = context.socket(zmq.PUB)
         self.pub_socket.connect("tcp://{0}:5556".format(rpc_url))
-        self.claim("projector calibration {}".format(
-            self.projector_calibration))
+        time.sleep(1.0)
+
+        logging.error("post connect")
+
+        # self.claimProjectorCalibration()
+        
+        logging.error("post claim")
 
         self.timer = wx.Timer(self)
         self.timer.Start(1000./fps)
@@ -77,6 +87,44 @@ class ShowCapture(wx.Panel):
         global MY_ID_STR
         self.pub_socket.send_string("....CLAIM{}{}".format(
             MY_ID_STR, fact_string), zmq.NOBLOCK)
+    
+    def claimProjectorCalibration(self):
+        global MY_ID_STR
+        batch_claims = [{"type": "claim", "fact": [
+            ["id", MY_ID_STR],
+            ["text", "camera"],
+            ["integer", "1"],
+            ["text", "has"],
+            ["text", "projector"],
+            ["text", "calibration"],
+            ["text", "TL"],
+            ["text", "("],
+            ["integer", str(self.projector_calibration[0][0])],
+            ["text", ","],
+            ["integer", str(self.projector_calibration[0][1])],
+            ["text", ")"],
+            ["text", "TR"],
+            ["text", "("],
+            ["integer", str(self.projector_calibration[1][0])],
+            ["text", ","],
+            ["integer", str(self.projector_calibration[1][1])],
+            ["text", ")"],
+            ["text", "BR"],
+            ["text", "("],
+            ["integer", str(self.projector_calibration[2][0])],
+            ["text", ","],
+            ["integer", str(self.projector_calibration[2][1])],
+            ["text", ")"],
+            ["text", "BL"],
+            ["text", "("],
+            ["integer", str(self.projector_calibration[3][0])],
+            ["text", ","],
+            ["integer", str(self.projector_calibration[3][1])],
+            ["text", ")"],
+            ["text", "@"],
+            ["integer", str(int(round(time.time() * 1000)))],
+        ]}]
+        self.batch(batch_claims)
 
     def retract(self, fact_string):
         global MY_ID_STR
@@ -190,8 +238,8 @@ class ShowCapture(wx.Panel):
                 ]})
             self.batch(batch_claims)
 
-            # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            # self.bmp.CopyFromBuffer(frame)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            self.bmp.CopyFromBuffer(frame)
             #
             # img = wx.Bitmap.ConvertToImage( self.bmp )
             # img_str = img.GetData()
@@ -200,21 +248,19 @@ class ShowCapture(wx.Panel):
             self.Refresh()
 
         end = time.time()
-        logging.info("{} {} fps".format(end - start, 1.0/(end - start)))
+        logging.error("{} {} fps".format(end - start, 1.0/(end - start)))
 
     def moveCurrentCalibrationPointRel(self, dx, dy):
         if self.projector_calibration_state is not None:
             prev = self.projector_calibration[self.projector_calibration_state]
             next = (prev[0] + dx, prev[1] + dy)
             self.projector_calibration[self.projector_calibration_state] = next
-            self.claim("projector calibration {}".format(
-                self.projector_calibration))
+            self.claimProjectorCalibration()
 
     def moveCurrentCalibrationPoint(self, pt):
         if self.projector_calibration_state is not None:
             self.projector_calibration[self.projector_calibration_state] = (pt[0], pt[1])
-            self.claim("projector calibration {}".format(
-                self.projector_calibration))
+            self.claimProjectorCalibration()
 
     def changeCurrentCalibrationPoint(self, key):
         if key == '`':
@@ -274,7 +320,7 @@ logging.error("---")
 # time.sleep(2)
 capture.start()
 
-initLogToFile(__file__)
+# initLogToFile(__file__)
 
 app = wx.App()
 frame = wx.Frame(None)
