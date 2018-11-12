@@ -19,6 +19,7 @@ import (
 )
 
 var dbMutex sync.RWMutex
+var subscriberMutex sync.RWMutex
 
 const MeasurementDuration = 5.0 * time.Second
 
@@ -130,7 +131,7 @@ func updateLatencyMeasurer(latencyMeasurer LatencyMeasurer, actionsDone int64, s
 	return latencyMeasurer
 }
 
-func notification_worker(notifications <-chan Notification, retractions chan<- []Term) {
+func notification_worker(notifications <-chan Notification) {
 	publisher, err := zmq.NewSocket(zmq.PUB)
 	checkErr(err)
 	defer publisher.Close()
@@ -177,56 +178,55 @@ func marshal_query_result(query_results []QueryResult) string {
 	return string(marshalled_results)
 }
 
-func single_subscriber_update(db map[string]Fact, notifications chan<- Notification, subscription Subscription, wg *sync.WaitGroup, i int) {
-	start := time.Now()
-	query := make([]Fact, len(subscription.Query))
-	for i, fact_terms := range subscription.Query {
-		query[i] = Fact{fact_terms}
-	}
-	results := select_facts(db, query)
-	selectDuration := time.Since(start)
-	results_as_str := marshal_query_result(results)
-	notifications <- Notification{subscription.Source, subscription.Id, results_as_str}
-	wg.Done()
-	duration := time.Since(start)
-	zap.L().Debug("SINGLE SUBSCRIBER DONE",
-		zap.Int("sub_index", i),
-		zap.String("source", subscription.Source),
-		zap.Duration("select", selectDuration),
-		zap.Duration("send", duration-selectDuration),
-		zap.Duration("total", duration))
-}
+// func single_subscriber_update(db map[string]Fact, notifications chan<- Notification, subscription Subscription, wg *sync.WaitGroup, i int) {
+// 	start := time.Now()
+// 	query := make([]Fact, len(subscription.Query))
+// 	for i, fact_terms := range subscription.Query {
+// 		query[i] = Fact{fact_terms}
+// 	}
+// 	results := select_facts(db, query)
+// 	selectDuration := time.Since(start)
+// 	results_as_str := marshal_query_result(results)
+// 	notifications <- Notification{subscription.Source, subscription.Id, results_as_str}
+// 	wg.Done()
+// 	duration := time.Since(start)
+// 	zap.L().Debug("SINGLE SUBSCRIBER DONE",
+// 		zap.Int("sub_index", i),
+// 		zap.String("source", subscription.Source),
+// 		zap.Duration("select", selectDuration),
+// 		zap.Duration("send", duration-selectDuration),
+// 		zap.Duration("total", duration))
+// }
 
-func update_all_subscriptions(db *map[string]Fact, notifications chan<- Notification, subscriptions Subscriptions, latencyMeasurer LatencyMeasurer) LatencyMeasurer {
-	latencyMeasurer = preLatencyMeasurePart("db", latencyMeasurer)
-	dbMutex.RLock()
-	dbValue := make(map[string]Fact)
-	for k, fact := range *db {
-		newTerms := make([]Term, len(fact.Terms))
-		for i, t := range fact.Terms {
-			newTerms[i] = t
-		}
-		dbValue[k] = Fact{newTerms}
-	}
-	latencyMeasurer = postLatencyMeasurePart("db", latencyMeasurer)
-	dbMutex.RUnlock()
-	latencyMeasurer = preLatencyMeasurePart("action", latencyMeasurer)
-	var wg sync.WaitGroup
-	wg.Add(len(subscriptions.Subscriptions))
-	zap.L().Debug("SINGLE SUBSCRIBER -- begin")
-	// TODO: there may be a race condition if the contents of subscriptions changes when running this func.
-	// How about just passing in a copy of the subscriptions
-	for i, subscription := range subscriptions.Subscriptions {
-		go single_subscriber_update(dbValue, notifications, subscription, &wg, i)
-	}
-	wg.Wait()
-	zap.L().Debug("SINGLE SUBSCRIBER -- end")
-	latencyMeasurer = postLatencyMeasurePart("action", latencyMeasurer)
-	return latencyMeasurer
-}
+// func update_all_subscriptions(db *map[string]Fact, notifications chan<- Notification, subscriptions Subscriptions, latencyMeasurer LatencyMeasurer) LatencyMeasurer {
+// 	latencyMeasurer = preLatencyMeasurePart("db", latencyMeasurer)
+// 	dbMutex.RLock()
+// 	dbValue := make(map[string]Fact)
+// 	for k, fact := range *db {
+// 		newTerms := make([]Term, len(fact.Terms))
+// 		for i, t := range fact.Terms {
+// 			newTerms[i] = t
+// 		}
+// 		dbValue[k] = Fact{newTerms}
+// 	}
+// 	latencyMeasurer = postLatencyMeasurePart("db", latencyMeasurer)
+// 	dbMutex.RUnlock()
+// 	latencyMeasurer = preLatencyMeasurePart("action", latencyMeasurer)
+// 	var wg sync.WaitGroup
+// 	wg.Add(len(subscriptions.Subscriptions))
+// 	zap.L().Debug("SINGLE SUBSCRIBER -- begin")
+// 	// TODO: there may be a race condition if the contents of subscriptions changes when running this func.
+// 	// How about just passing in a copy of the subscriptions
+// 	for i, subscription := range subscriptions.Subscriptions {
+// 		go single_subscriber_update(dbValue, notifications, subscription, &wg, i)
+// 	}
+// 	wg.Wait()
+// 	zap.L().Debug("SINGLE SUBSCRIBER -- end")
+// 	latencyMeasurer = postLatencyMeasurePart("action", latencyMeasurer)
+// 	return latencyMeasurer
+// }
 
 func subscribe_worker(subscription_messages <-chan string,
-	claims chan<- []Term,
 	subscriptions_notifications chan<- bool,
 	subscriptions *Subscriptions,
 	notifications chan<- Notification,
@@ -248,15 +248,17 @@ func subscribe_worker(subscription_messages <-chan string,
 				subscription_fact_msg := fmt.Sprintf("subscription \"%s\" %v %s", subscription_data.Id, i, fact_string)
 				subscription_fact := parse_fact_string(subscription_fact_msg)
 				subscription_fact = append([]Term{Term{"text", "subscription"}, Term{"id", source}}, subscription_fact...)
-				claims <- subscription_fact
+				// claims <- subscription_fact
 				fact := parse_fact_string(fact_string) // AVOID DOUBLE PARSING!, this work was already done above
 				query = append(query, fact)
 			}
 			newSubscription := Subscription{source, subscription_data.Id, query, make(chan []BatchMessage, 100)}
+			subscriberMutex.Lock()
 			(*subscriptions).Subscriptions = append(
 				(*subscriptions).Subscriptions,
 				newSubscription,
 			)
+			subscriberMutex.Unlock()
 			go startSubscriber(newSubscription, notifications, copyDatabase(db))
 			// subscriptions_notifications <- true // is this still needed?
 		}
@@ -310,50 +312,50 @@ func parser_worker(unparsed_messages <-chan string, claims chan<- []Term, retrac
 // 	}
 // }
 
-func notify_subscribers_worker(notify_subscribers <-chan bool, subscriber_worker_finished chan<- bool, db *map[string]Fact, notifications chan<- Notification, subscriptions *Subscriptions) {
-	// TODO: passing in subscriptions is probably not safe because it can be written in the other goroutine
-	latencyMeasurer := makeLatencyMeasurer()
-	latencyMeasurer = preLatencyMeasurePart("messageWait", latencyMeasurer)
-	for range notify_subscribers {
-		latencyMeasurer = postLatencyMeasurePart("messageWait", latencyMeasurer)
-		start := time.Now()
-		latencyMeasurer = update_all_subscriptions(db, notifications, *subscriptions, latencyMeasurer)
-		updateSubscribersTime := time.Since(start)
-		zap.L().Debug("notify subscribers time", zap.Duration("duration", updateSubscribersTime))
-		subscriber_worker_finished <- true
-		latencyMeasurer = updateLatencyMeasurer(latencyMeasurer, 1, "latency - notify subscribers")
-		latencyMeasurer = preLatencyMeasurePart("messageWait", latencyMeasurer)
-	}
-}
+// func notify_subscribers_worker(notify_subscribers <-chan bool, subscriber_worker_finished chan<- bool, db *map[string]Fact, notifications chan<- Notification, subscriptions *Subscriptions) {
+// 	// TODO: passing in subscriptions is probably not safe because it can be written in the other goroutine
+// 	latencyMeasurer := makeLatencyMeasurer()
+// 	latencyMeasurer = preLatencyMeasurePart("messageWait", latencyMeasurer)
+// 	for range notify_subscribers {
+// 		latencyMeasurer = postLatencyMeasurePart("messageWait", latencyMeasurer)
+// 		start := time.Now()
+// 		latencyMeasurer = update_all_subscriptions(db, notifications, *subscriptions, latencyMeasurer)
+// 		updateSubscribersTime := time.Since(start)
+// 		zap.L().Debug("notify subscribers time", zap.Duration("duration", updateSubscribersTime))
+// 		subscriber_worker_finished <- true
+// 		latencyMeasurer = updateLatencyMeasurer(latencyMeasurer, 1, "latency - notify subscribers")
+// 		latencyMeasurer = preLatencyMeasurePart("messageWait", latencyMeasurer)
+// 	}
+// }
 
-func debounce_subscriber_worker(subscriptions_notifications <-chan bool, subscriber_worker_finished <-chan bool, notify_subscribers chan<- bool) {
-	claim_waiting := false
-	worker_is_free := true
-	// TODO: don't use "worker_is_free", but have the notify_subscibers drain the channel?
-	go func() {
-		for range subscriptions_notifications {
-			if worker_is_free {
-				worker_is_free = false
-				zap.L().Debug("notifying subscriber worker")
-				notify_subscribers <- true
-			} else {
-				zap.L().Debug("debouncing subscription notification becasue worker is busy")
-				claim_waiting = true
-			}
-		}
-	}()
-	go func() {
-		for range subscriber_worker_finished {
-			zap.L().Debug("subscriber_worker_finished")
-			worker_is_free = true
-			if claim_waiting {
-				zap.L().Debug("subscriber_worker_finished - running again to catch up to claims")
-				claim_waiting = false
-				notify_subscribers <- true
-			}
-		}
-	}()
-}
+// func debounce_subscriber_worker(subscriptions_notifications <-chan bool, subscriber_worker_finished <-chan bool, notify_subscribers chan<- bool) {
+// 	claim_waiting := false
+// 	worker_is_free := true
+// 	// TODO: don't use "worker_is_free", but have the notify_subscibers drain the channel?
+// 	go func() {
+// 		for range subscriptions_notifications {
+// 			if worker_is_free {
+// 				worker_is_free = false
+// 				zap.L().Debug("notifying subscriber worker")
+// 				notify_subscribers <- true
+// 			} else {
+// 				zap.L().Debug("debouncing subscription notification becasue worker is busy")
+// 				claim_waiting = true
+// 			}
+// 		}
+// 	}()
+// 	go func() {
+// 		for range subscriber_worker_finished {
+// 			zap.L().Debug("subscriber_worker_finished")
+// 			worker_is_free = true
+// 			if claim_waiting {
+// 				zap.L().Debug("subscriber_worker_finished - running again to catch up to claims")
+// 				claim_waiting = false
+// 				notify_subscribers <- true
+// 			}
+// 		}
+// 	}()
+// }
 
 func copyDatabase(db *map[string]Fact) map[string]Fact {
 	dbCopy := make(map[string]Fact)
@@ -403,7 +405,7 @@ func debug_database_observer(db *map[string]Fact) {
 	}
 }
 
-func batch_worker(batch_messages <-chan string, claims chan<- []Term, retractions chan<- []Term, subscriptions_notifications chan<- bool, db *map[string]Fact, subscriptions *Subscriptions) {
+func batch_worker(batch_messages <-chan string, subscriptions_notifications chan<- bool, db *map[string]Fact, subscriptions *Subscriptions) {
 	event_type_len := 9
 	source_len := 4
 	latencyMeasurer := makeLatencyMeasurer()
@@ -415,6 +417,10 @@ func batch_worker(batch_messages <-chan string, claims chan<- []Term, retraction
 		val := msg[(event_type_len + source_len):]
 		var batch_messages []BatchMessage
 		err := json.Unmarshal([]byte(val), &batch_messages)
+		if err != nil {
+			zap.L().Info("BATCH MESSAGE BODY:")
+			zap.L().Info(val)
+		}
 		checkErr(err)
 		for _, batch_message := range batch_messages {
 			terms := make([]Term, len(batch_message.Fact))
@@ -442,9 +448,11 @@ func batch_worker(batch_messages <-chan string, claims chan<- []Term, retraction
 			}
 		}
 		// subscriptions_notifications <- true
+		subscriberMutex.RLock()
 		for _, subscription := range (*subscriptions).Subscriptions {
 			subscription.batch_messages <- batch_messages
 		}
+		subscriberMutex.RUnlock()
 		latencyMeasurer = updateLatencyMeasurer(latencyMeasurer, 1, "latency - batch")
 		latencyMeasurer = preLatencyMeasurePart("messageWait", latencyMeasurer)
 	}
@@ -492,25 +500,25 @@ func main() {
 	event_type_len := 9
 	source_len := 4
 
-	unparsed_messages := make(chan string, 100)
+	// unparsed_messages := make(chan string, 100)
 	subscription_messages := make(chan string, 100)
-	claims := make(chan []Term, 100)
-	retractions := make(chan []Term, 100)
+	// claims := make(chan []Term, 1)
+	// retractions := make(chan []Term, 100)
 	subscriptions_notifications := make(chan bool, 100)
-	subscriber_worker_finished := make(chan bool, 99)
-	notify_subscribers := make(chan bool, 99)
+	// subscriber_worker_finished := make(chan bool, 99)
+	// notify_subscribers := make(chan bool, 99)
 	notifications := make(chan Notification, 1000)
 	batch_messages := make(chan string, 100)
 
-	go parser_worker(unparsed_messages, claims, retractions)
-	go subscribe_worker(subscription_messages, claims, subscriptions_notifications, &subscriptions, notifications, &factDatabase)
+	// go parser_worker(unparsed_messages, claims, retractions)
+	go subscribe_worker(subscription_messages, subscriptions_notifications, &subscriptions, notifications, &factDatabase)
 	// go claim_worker(claims, subscriptions_notifications, &factDatabase)
 	// go retract_worker(retractions, subscriptions_notifications, &factDatabase)
-	go notify_subscribers_worker(notify_subscribers, subscriber_worker_finished, &factDatabase, notifications, &subscriptions)
-	go debounce_subscriber_worker(subscriptions_notifications, subscriber_worker_finished, notify_subscribers)
-	go notification_worker(notifications, retractions)
+	// go notify_subscribers_worker(notify_subscribers, subscriber_worker_finished, &factDatabase, notifications, &subscriptions)
+	// go debounce_subscriber_worker(subscriptions_notifications, subscriber_worker_finished, notify_subscribers)
+	go notification_worker(notifications)
 	go debug_database_observer(&factDatabase)
-	go batch_worker(batch_messages, claims, retractions, subscriptions_notifications, &factDatabase, &subscriptions)
+	go batch_worker(batch_messages, subscriptions_notifications, &factDatabase, &subscriptions)
 
 	// go func() {
 	// 	for {
@@ -531,9 +539,13 @@ func main() {
 			zap.L().Debug("got PING", zap.String("source", source), zap.String("value", val))
 			notifications <- Notification{source, val, ""}
 		} else if event_type == "....CLAIM" {
-			unparsed_messages <- msg
+			zap.L().Warn("CLAIM IS NOT SUPPORTED RIGHT NOW, USE BATCH")
+			panic("CLAIM IS NOT SUPPORTED RIGHT NOW, USE BATCH")
+			// unparsed_messages <- msg
 		} else if event_type == "..RETRACT" {
-			unparsed_messages <- msg
+			zap.L().Warn("RETRACT IS NOT SUPPORTED RIGHT NOW, USE BATCH")
+			panic("RETRACT IS NOT SUPPORTED RIGHT NOW, USE BATCH")
+			// unparsed_messages <- msg
 			// } else if event_type == "...SELECT" {
 			//     json_val = json.loads(val)
 			//     select(json_val["facts"], json_val["id"], source)
