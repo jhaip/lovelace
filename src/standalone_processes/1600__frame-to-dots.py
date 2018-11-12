@@ -67,7 +67,7 @@ class ShowCapture(wx.Panel):
 
         logging.error("post connect")
 
-        # self.claimProjectorCalibration()
+        self.claimProjectorCalibration()
         
         logging.error("post claim")
 
