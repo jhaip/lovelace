@@ -57,15 +57,12 @@ func getCombinedKeyNames(a []string, b []string) ([]string, []string, bool) {
 	res := make([]string, 0)
 	addedVariables := make([]string, 0)
 	keys := make(map[string]bool)
-	atLeastOneOverlap := false
 	for _, x := range a {
 		res = append(res, x)
 		keys[x] = true
 	}
 	for _, y := range b {
-		if keys[y] {
-			atLeastOneOverlap = true
-		} else {
+		if !(keys[y]) {
 			res = append(res, y)
 			addedVariables = append(addedVariables, y)
 		}
@@ -80,7 +77,7 @@ func getCombinedKeyNames(a []string, b []string) ([]string, []string, bool) {
 	if len(b) == 1 && strings.HasPrefix(b[0], "*query") {
 		return res, addedVariables, true
 	}
-	return res, addedVariables, atLeastOneOverlap
+	return res, addedVariables, true
 }
 
 func makeNodeFromVariableNames(variableNames []string) Node {

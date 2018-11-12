@@ -36,19 +36,19 @@ const paper_approximation = (paper, perspT, canvasWidth, canvasHeight) => {
 console.error("starting ---")
 
 room.on(
-  `$ camera $cameraId has projector calibration TL ($PCx1, $PCy1) TR ($PCx2, $PCy2) BR ($PCx3, $PCy3) BL ($PCx4, $PCy4) @ $`,
-  `$ camera $ sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $`,
+  `$ camera 1 has projector calibration TL ($PCx1, $PCy1) TR ($PCx2, $PCy2) BR ($PCx3, $PCy3) BL ($PCx4, $PCy4) @ $`,
+  `$ camera 1 sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $`,
   results => {
+    console.error("GOT RESULTS")
+    console.error(results)
+    room.cleanup()
     results.forEach(data => {
-      console.error("GOT SOME DATA!!")
-      console.error(data);
       if (
         !isNaN(data.x1) && !isNaN(data.y1) &&
         !isNaN(data.x2) && !isNaN(data.y2) &&
         !isNaN(data.x3) && !isNaN(data.y3) &&
         !isNaN(data.x4) && !isNaN(data.y4)
       ) {
-        console.error("it wasn't null")
         const projectorCalibration = [
           data.PCx1 || 0, data.PCy1 || 0,
           data.PCx2 || 0, data.PCy2 || 0,
