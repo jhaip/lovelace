@@ -49,7 +49,7 @@ room.assert(`camera 99 sees paper 1459 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2
 // Dots to papers
 room.assert(`camera 99 sees paper 1800 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Print paper
-// room.assert(`camera 99 sees paper 1382 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+room.assert(`camera 99 sees paper 1382 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Process Manager
 room.assert(`camera 99 sees paper 1900 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Persist Projector Calibration
@@ -136,5 +136,6 @@ const cleanSourceCode = sourceCode.replace(/\n/g, '\\n').replace(/"/g, String.fr
 //   ["text", ","],
 //   ["float", "400.000000"],
 //   ["text", ")"]])
+// room.assert(`camera 99 sees paper 777 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 
 run();
