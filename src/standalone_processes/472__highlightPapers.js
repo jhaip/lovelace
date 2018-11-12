@@ -6,14 +6,16 @@ room.subscribe(
   results => {
     room.cleanup();
     console.log("results:")
-    console.log(results);
+    // console.log(results);
     results.forEach(p => {
       if (
         !isNaN(p.x1) && !isNaN(p.y1) &&
         !isNaN(p.x2) && !isNaN(p.y2) &&
         !isNaN(p.x3) && !isNaN(p.y3) &&
-        !isNaN(p.x4) && !isNaN(p.y4)
+        !isNaN(p.x4) && !isNaN(p.y4) &&
+        parseInt(p.cameraId) != 99
       ) {
+        console.log(p.id)
         const margin = 0; // 0.1;
         const low = margin;
         const high = 1.0 - margin;
@@ -27,6 +29,8 @@ room.subscribe(
         room.assert(`draw a (255, 255, 1) line from (${p.x3}, ${p.y3}) to (${p.x4}, ${p.y4})`);
         room.assert(`draw a (255, 255, 1) line from (${p.x4}, ${p.y4}) to (${p.x1}, ${p.y1})`);
         room.assert(`draw centered label`, ["text", `"What is ${p.id}"`], `at (${(p.x1 + p.x2 + p.x3 + p.x4) / 4.0}, ${(p.y1 + p.y2 + p.y3 + p.y4) / 4.0})`);
+      } else {
+        console.log(`BAD PAPER ${p.id}`)
       }
     })
   }
