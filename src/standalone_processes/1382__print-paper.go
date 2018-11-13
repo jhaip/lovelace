@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -14,14 +15,6 @@ import (
 	zmq "github.com/pebbe/zmq4"
 )
 
-const URL = "http://localhost:3000/"
-
-const BASE_PATH = "/Users/jhaip/Code/lovelace/src/standalone_processes/"
-
-// const BASE_PATH = "/home/jacob/lovelace/src/standalone_processes/"
-const DOT_CODES_PATH = BASE_PATH + "files/dot-codes.txt"
-const PDF_OUTPUT_FOLDER = BASE_PATH + "files/"
-const LOG_PATH = BASE_PATH + "logs/1382__print-paper.log"
 const MY_ID = 1382
 
 type PrintWishResult struct {
@@ -69,7 +62,7 @@ func setFillColorFromDotCode(pdf *gofpdf.Fpdf, codeChar byte) {
 	}
 }
 
-func generatePrintFile(sourceCode string, programId int, name string, code8400 []string) {
+func generatePrintFile(sourceCode string, programId int, name string, code8400 []string, pdf_output_folder string) {
 	pdf := gofpdf.New("P", "mm", "Letter", "")
 	pdf.AddPage()
 
@@ -141,7 +134,7 @@ func generatePrintFile(sourceCode string, programId int, name string, code8400 [
 	pdf.SetFont("Courier", "", 8)
 	pdf.WriteAligned(0, 20, name, "C")
 
-	err := pdf.OutputFileAndClose(PDF_OUTPUT_FOLDER + strconv.Itoa(programId) + ".pdf")
+	err := pdf.OutputFileAndClose(pdf_output_folder + strconv.Itoa(programId) + ".pdf")
 	if err != nil {
 		log.Println(err)
 	}
@@ -262,8 +255,25 @@ func initWishSubscription(publisher *zmq.Socket, MY_ID_STR string) string {
 	return subscription_id
 }
 
+func GetBasePath() string {
+	envBasePath := os.Getenv("DYNAMIC_ROOT")
+	if envBasePath != "" {
+		return envBasePath + "/src/standalone_processes/"
+	}
+	env := "HOME"
+	if runtime.GOOS == "windows" {
+		env = "USERPROFILE"
+	} else if runtime.GOOS == "plan9" {
+		env = "home"
+	}
+	return os.Getenv(env) + "/lovelace/src/standalone_processes/"
+}
+
 func main() {
+	BASE_PATH := GetBasePath()
+
 	/*** Set up logging ***/
+	LOG_PATH := BASE_PATH + "logs/1382__print-paper.log"
 	f, err := os.OpenFile(LOG_PATH, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)
@@ -274,6 +284,8 @@ func main() {
 	// log.Println("This is a test log entry")
 	/*** /end logging setup ***/
 
+	PDF_OUTPUT_FOLDER := BASE_PATH + "files/"
+	DOT_CODES_PATH := BASE_PATH + "files/dot-codes.txt"
 	code8400, err := readLines(DOT_CODES_PATH)
 	checkErr(err)
 
@@ -294,7 +306,7 @@ func main() {
 			log.Println("PROGRAM ID:::")
 			log.Printf("%#v\n", result.paperId)
 			log.Printf("%#v\n", result.shortFilename)
-			generatePrintFile(result.sourceCode, result.paperId, result.shortFilename, code8400)
+			generatePrintFile(result.sourceCode, result.paperId, result.shortFilename, code8400, PDF_OUTPUT_FOLDER)
 			outputFilename := PDF_OUTPUT_FOLDER + strconv.Itoa(result.paperId) + ".pdf"
 			wishOutputFileWouldBePrinted(publisher, MY_ID_STR, outputFilename)
 		}

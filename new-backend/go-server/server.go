@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"runtime"
 	"sort"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -458,11 +460,25 @@ func batch_worker(batch_messages <-chan string, subscriptions_notifications chan
 	}
 }
 
+func GetBasePath() string {
+	envBasePath := os.Getenv("DYNAMIC_ROOT")
+	if envBasePath != "" {
+		return envBasePath + "/"
+	}
+	env := "HOME"
+	if runtime.GOOS == "windows" {
+		env = "USERPROFILE"
+	} else if runtime.GOOS == "plan9" {
+		env = "home"
+	}
+	return os.Getenv(env) + "/lovelace/"
+}
+
 func NewLogger() (*zap.Logger, error) {
 	// cfg := zap.NewProductionConfig()
 	cfg := zap.NewDevelopmentConfig()
 	cfg.OutputPaths = []string{
-		"/Users/jhaip/Code/lovelace/new-backend/go-server/server.log",
+		GetBasePath() + "new-backend/go-server/server.log",
 	}
 	return cfg.Build()
 }

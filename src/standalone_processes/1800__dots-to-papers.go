@@ -8,6 +8,7 @@ import (
 	"log"
 	"math"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -17,10 +18,9 @@ import (
 	zmq "github.com/pebbe/zmq4"
 )
 
-const BASE_PATH = "/Users/jhaip/Code/lovelace/src/standalone_processes/"
-
-// const BASE_PATH = "/home/jacob/lovelace/src/standalone_processes/"
-const LOG_PATH = BASE_PATH + "logs/1800__dots-to-papers.log"
+const CAM_WIDTH = 1920
+const CAM_HEIGHT = 1080
+const dotSize = 12
 
 type Vec struct {
 	X int `json:"x"`
@@ -66,12 +66,25 @@ type BatchMessage struct {
 	Fact [][]string `json:"fact"`
 }
 
-const CAM_WIDTH = 1920
-const CAM_HEIGHT = 1080
-const dotSize = 12
+func GetBasePath() string {
+	envBasePath := os.Getenv("DYNAMIC_ROOT")
+	if envBasePath != "" {
+		return envBasePath + "/src/standalone_processes/"
+	}
+	env := "HOME"
+	if runtime.GOOS == "windows" {
+		env = "USERPROFILE"
+	} else if runtime.GOOS == "plan9" {
+		env = "home"
+	}
+	return os.Getenv(env) + "/lovelace/src/standalone_processes/"
+}
 
 func main() {
+	BASE_PATH := GetBasePath()
+
 	/*** Set up logging ***/
+	LOG_PATH := BASE_PATH + "logs/1800__dots-to-papers.log"
 	f, err := os.OpenFile(LOG_PATH, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)
