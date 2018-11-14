@@ -141,7 +141,6 @@ func notification_worker(notifications <-chan Notification) {
 	defer publisher.Close()
 	publisherBindErr := publisher.Bind("tcp://*:5555")
 	checkErr(publisherBindErr)
-	NO_RESULTS_MESSAGE := "[]"
 	cache := make(map[string]string)
 	latencyMeasurer := makeLatencyMeasurer()
 	latencyMeasurer = preLatencyMeasurePart("messageWait", latencyMeasurer)
@@ -154,11 +153,9 @@ func notification_worker(notifications <-chan Notification) {
 		cache_value, cache_hit := cache[cache_key]
 		if cache_hit == false || cache_value != msg {
 			cache[cache_key] = msg
-			if notification.Result != NO_RESULTS_MESSAGE {
-				msgWithTime := fmt.Sprintf("%s%s%v%s", notification.Source, notification.Id, makeTimestampMillis(), notification.Result)
-				_, sendErr := publisher.Send(msgWithTime, zmq.DONTWAIT)
-				checkErr(sendErr)
-			}
+			msgWithTime := fmt.Sprintf("%s%s%v%s", notification.Source, notification.Id, makeTimestampMillis(), notification.Result)
+			_, sendErr := publisher.Send(msgWithTime, zmq.DONTWAIT)
+			checkErr(sendErr)
 		}
 		timeToSendResults := time.Since(start)
 		zap.L().Debug("send notification", zap.Duration("timeToSendResults", timeToSendResults))
