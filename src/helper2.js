@@ -52,6 +52,14 @@ const fullyParseFact = q => {
     }
 }
 
+function getIdFromProcessName(scriptName) {
+    return (scriptName.split(".")[0]).split("__")[0]
+}
+
+function getIdStringFromId(id) {
+    return String(id).padStart(4, '0')
+}
+
 function init(filename) {
     const scriptName = path.basename(filename);
     const scriptNameNoExtension = path.parse(scriptName).name;
@@ -61,14 +69,14 @@ function init(filename) {
     process.on('uncaughtException', function (err) {
         console.error((err && err.stack) ? err.stack : err);
     })
-    const myId = (scriptName.split(".")[0]).split("__")[0]
+    const myId = getIdFromProcessName(scriptName);
 
     const subscriber = zmq.socket('sub');
     const publisher = zmq.socket('pub');
     const rpc_url = "localhost";
     subscriber.connect(`tcp://${rpc_url}:5555`)
     publisher.connect(`tcp://${rpc_url}:5556`)
-    const MY_ID_STR = String(myId).padStart(4, '0');
+    const MY_ID_STR = getIdStringFromId(myId);
     subscriber.subscribe(MY_ID_STR);
 
     let init_ping_id = randomId()
@@ -228,7 +236,7 @@ function init(filename) {
     }
 
     return {
-        room, myId, scriptName, MY_ID_STR, run
+        room, myId, scriptName, MY_ID_STR, run, getIdFromProcessName, getIdStringFromId
     }
 }
 
