@@ -371,6 +371,12 @@ func subscriberBatchUpdate(sub Subscription2, batch_messages []BatchMessage) (Su
 			sub, batchMessageUpdatedSubscriberOutput = subscriberClaimUpdate(sub, terms)
 		} else if batch_message.Type == "retract" {
 			sub, batchMessageUpdatedSubscriberOutput = subscriberRetractUpdate(sub, terms)
+		} else if batch_message.Type == "death" {
+			// TODO: don't reply logic from server.go that also does this retract
+			dying_source := batch_message.Fact[0][1]
+			clearSourceClaims := []Term{Term{"id", dying_source}, Term{"postfix", ""}}
+			// TODO: clearSourceSubscriptions := []Term{Term{"text", "subscription"}, Term{"id", dying_source}, Term{"postfix", ""}}
+			sub, batchMessageUpdatedSubscriberOutput = subscriberRetractUpdate(sub, clearSourceClaims)
 		}
 		if batchMessageUpdatedSubscriberOutput {
 			updatedSubscriberOutput = true
