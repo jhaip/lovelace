@@ -7,6 +7,7 @@ import (
 	"os"
 	"runtime"
 	"sort"
+	"strconv"
 
 	_ "github.com/mattn/go-sqlite3"
 	zmq "github.com/pebbe/zmq4"
@@ -46,6 +47,7 @@ type Subscription struct {
 	Id             string
 	Query          [][]Term
 	batch_messages chan []BatchMessage
+	dead           *sync.WaitGroup
 }
 
 type Subscriptions struct {
@@ -247,14 +249,15 @@ func subscribe_worker(subscription_messages <-chan string,
 			checkErr(err)
 			query := make([][]Term, 0)
 			for i, fact_string := range subscription_data.Facts {
-				subscription_fact_msg := fmt.Sprintf("subscription \"%s\" %v %s", subscription_data.Id, i, fact_string)
-				subscription_fact := parse_fact_string(subscription_fact_msg)
-				subscription_fact = append([]Term{Term{"text", "subscription"}, Term{"id", source}}, subscription_fact...)
-				// claims <- subscription_fact
-				fact := parse_fact_string(fact_string) // AVOID DOUBLE PARSING!, this work was already done above
+				fact := parse_fact_string(fact_string)
 				query = append(query, fact)
+				subscription_fact := append([]Term{Term{"text", "subscription"}, Term{"id", source}, Term{"integer", strconv.Itoa(i)}}, fact...)
+				dbMutex.Lock()
+				claim(db, Fact{subscription_fact})
+				dbMutex.Unlock()
 			}
-			newSubscription := Subscription{source, subscription_data.Id, query, make(chan []BatchMessage, 100)}
+			newSubscription := Subscription{source, subscription_data.Id, query, make(chan []BatchMessage, 100), &sync.WaitGroup{}}
+			newSubscription.dead.Add(1)
 			subscriberMutex.Lock()
 			(*subscriptions).Subscriptions = append(
 				(*subscriptions).Subscriptions,
@@ -407,6 +410,32 @@ func debug_database_observer(db *map[string]Fact) {
 	}
 }
 
+func on_source_death(dying_source string, db *map[string]Fact, subscriptions *Subscriptions) {
+	zap.L().Info("SOURCE DEATH - recv", zap.String("source", dying_source))
+	// Retract all facts by source and facts about the source's subscriptions
+	dbMutex.Lock()
+	retract(db, Fact{[]Term{Term{"id", dying_source}, Term{"postfix", ""}}})
+	retract(db, Fact{[]Term{Term{"text", "subscription"}, Term{"id", dying_source}, Term{"postfix", ""}}})
+	dbMutex.Unlock()
+	subscriberMutex.Lock()
+	newSubscriptions := make([]Subscription, 0)
+	for _, subscription := range (*subscriptions).Subscriptions {
+		if subscription.Source != dying_source {
+			newSubscriptions = append(newSubscriptions, subscription)
+		} else {
+			zap.L().Info("SOURCE DEATH - closing channel", zap.String("source", dying_source))
+			close(subscription.batch_messages)
+			zap.L().Info("SOURCE DEATH - waiting for death signal", zap.String("source", dying_source))
+			subscription.dead.Wait()
+			zap.L().Info("SOURCE DEATH - confirmed dead", zap.String("source", dying_source))
+			// SOMETHING BAD COULD HAPPEN IF A MESSAGE WAS RECEIVED AND SOMEONE TRIED TO
+			// ADD A MESSAGE TO THE SUBSCRIPTIONS QUEUE
+		}
+	}
+	(*subscriptions).Subscriptions = newSubscriptions
+	subscriberMutex.Unlock()
+}
+
 func batch_worker(batch_messages <-chan string, subscriptions_notifications chan<- bool, db *map[string]Fact, subscriptions *Subscriptions) {
 	event_type_len := 9
 	source_len := 4
@@ -447,6 +476,12 @@ func batch_worker(batch_messages <-chan string, subscriptions_notifications chan
 				retract(db, Fact{terms})
 				latencyMeasurer = postLatencyMeasurePart("action", latencyMeasurer)
 				dbMutex.Unlock()
+			} else if batch_message.Type == "death" {
+				// Assume Fact = [["id", "0004"]]
+				dying_source := batch_message.Fact[0][1]
+				// This a blocking call that does a couple retracts and waits for a goroutine to die
+				// There is a potential for slowdown or blocking the whole server if a subscriber won't die
+				on_source_death(dying_source, db, subscriptions)
 			}
 		}
 		// subscriptions_notifications <- true

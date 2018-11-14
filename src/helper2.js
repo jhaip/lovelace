@@ -165,7 +165,11 @@ function init(filename) {
         },
         cleanup: () => {
             room.retract(`#${MY_ID_STR} %`)
-        }
+        },
+        cleanupOtherSource: (otherSource) => {
+            const fact_str = JSON.stringify([{ "type": "death", "fact": [["id", otherSource]] }])
+            publisher.send(`....BATCH${MY_ID_STR}${fact_str}`);
+        },
     }
 
     const parseResult = result_str => {
