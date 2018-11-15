@@ -379,8 +379,10 @@ class Example(wx.Frame):
                     logging.error(command)
 
     def draw_paper(self, gc, paper, draw_commands):
-        if not draw_commands or len(draw_commands) == 0:
-            return
+        # if not draw_commands or len(draw_commands) == 0:
+        #     return
+        if not draw_commands:
+            draw_commands = []
         tl = None
         tr = None
         bl = None
@@ -408,6 +410,12 @@ class Example(wx.Frame):
         # gc.SetBrush(wx.Brush("blue"))
 
         # gc.DrawRectangle(0, 0, paper_width, paper_height)
+        draw_commands = [
+            {"type": "line", "options": [0, 0, paper_width, 0]},
+            {"type": "line", "options": [0, 0, 0, paper_height]},
+            {"type": "line", "options": [paper_width, paper_height, paper_width, 0]},
+            {"type": "line", "options": [paper_width, paper_height, 0, paper_height]},
+        ] + draw_commands
 
         self.draw_commands(gc, draw_commands, paper_width)
 
