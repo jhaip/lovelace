@@ -6,8 +6,7 @@ init(__file__, skipListening=True)
 
 is_ctrl_pressed = False
 
-retract("keyboard {} typed key $ @ $".format(get_my_id_str()))
-retract("keyboard {} typed special key $ @ $".format(get_my_id_str()))
+batch([{"type": "retract", "fact": [["id", get_my_id_str()], ["postfix", ""]]}])
 
 def map_special_key(key):
     m = {}
@@ -36,6 +35,7 @@ def add_key(key, special_key):
     ]})
     if special_key:
         special_key = map_special_key(special_key)
+        logging.info("ADDING SPECIAL KEY {} -- {}".format(str(special_key), special_key))
         # say("keyboard {} typed special key \"{}\" @ {}".format(MY_ID, special_key, timestamp))
         claims.append({"type": "claim", "fact": [
             ["id", get_my_id_str()],
@@ -49,6 +49,7 @@ def add_key(key, special_key):
             ["integer", str(timestamp)],
         ]})
     else:
+        logging.info("ADDING KEY {} -- {}".format(str(key), key))
         # say("keyboard {} typed key \"{}\" @ {}".format(MY_ID, key, timestamp))
         claims.append({"type": "claim", "fact": [
             ["id", get_my_id_str()],
