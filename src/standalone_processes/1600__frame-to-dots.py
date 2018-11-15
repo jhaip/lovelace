@@ -41,6 +41,7 @@ class ShowCapture(wx.Panel):
 
         height, width = frame.shape[:2]
         parent.SetSize((width, height))
+        logging.error("WINDOW SIZE: {} {}".format(width, height))
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         self.bmp = wx.Bitmap.FromBuffer(width, height, frame)
@@ -90,7 +91,12 @@ class ShowCapture(wx.Panel):
     
     def claimProjectorCalibration(self):
         global MY_ID_STR
-        batch_claims = [{"type": "claim", "fact": [
+        batch_claims = [{"type": "retract", "fact": [
+            ["id", MY_ID_STR],
+            ["text", "camera"],
+            ["postfix", ""]
+        ]}]
+        batch_claims.append({"type": "claim", "fact": [
             ["id", MY_ID_STR],
             ["text", "camera"],
             ["integer", "1"],
@@ -123,7 +129,7 @@ class ShowCapture(wx.Panel):
             ["text", ")"],
             ["text", "@"],
             ["integer", str(int(round(time.time() * 1000)))],
-        ]}]
+        ]})
         self.batch(batch_claims)
 
     def retract(self, fact_string):
@@ -226,6 +232,7 @@ class ShowCapture(wx.Panel):
             #         dot["x"], dot["y"], dot["color"][0], dot["color"][1], dot["color"][2], int(time.time()*1000.0)))
             batch_claims = [{"type": "retract", "fact": [
                             ["id", MY_ID_STR],
+                            ["text", "dots"],
                             ["postfix", ""]
                             ]}]
             for dot in self.dots:
