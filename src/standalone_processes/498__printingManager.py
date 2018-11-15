@@ -1,16 +1,24 @@
 import subprocess
-from helper import *
-init(__file__)
+import logging
+from helper2 import init, claim, retract, prehook, subscription, batch, get_my_id_str
 
-while True:
-    logging.info("checking for printing wishes")
-    print_wishes = select('wish file $name would be printed')
-    for wish in print_wishes:
-        name = wish['name']['value']
-        retract('wish file "{}" would be printed'.format(name), '$')
+@subscription(["$ wish file $name would be printed"])
+def sub_callback(results):
+    claims = []
+    claims.append({"type": "retract", "fact": [
+        ["variable", ""],
+        ["text", "wish"],
+        ["text", "file"],
+        ["variable", ""],
+        ["text", "would"],
+        ["text", "be"],
+        ["text", "printed"],
+    ]})
+    batch(claims)
+    for result in results:
+        name = result["name"]
         logging.info("PRINTING:")
         logging.info(name)
         subprocess.call(['/usr/bin/lpr', name])
-    time.sleep(1)
 
-logging.info("exited --- ")
+init(__file__)
