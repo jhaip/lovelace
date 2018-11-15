@@ -35,7 +35,7 @@ room.assert('wish', ["text", "826__runSeenPapers.js"], 'would be running')
 // Initial Program Code:
 // room.assert(`camera 1 sees paper 390 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Printing Manager:
-// room.assert(`camera 99 sees paper 498 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+room.assert(`camera 99 sees paper 498 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Program Editor (may not be needed now?)
 room.assert(`camera 99 sees paper 577 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Run Seen Papers
