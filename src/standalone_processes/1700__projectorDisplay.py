@@ -8,6 +8,7 @@ import math
 import json
 import zmq
 import sys
+import copy
 
 CAM_WIDTH = 1920
 CAM_HEIGHT = 1080
@@ -53,9 +54,9 @@ def mapPaperResultToLegacyDataFormat(result):
 def map_projector_calibration_to_legacy_data_format(result):
     return [
         [result["x1"], result["y1"]],
-        [result["x2"], result["y1"]],
-        [result["x3"], result["y1"]],
-        [result["x4"], result["y1"]]
+        [result["x2"], result["y2"]],
+        [result["x3"], result["y3"]],
+        [result["x4"], result["y4"]]
     ]
 
 @subscription(["$ camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time"])
@@ -72,8 +73,9 @@ def sub_callback_calibration(results):
     global projector_calibration
     logging.info("sub_callback_calibration")
     logging.info(results)
-    projector_calibration = list(map(map_projector_calibration_to_legacy_data_format, results))
-    logging.info(projector_calibration)
+    if results:
+        projector_calibration = map_projector_calibration_to_legacy_data_format(results[0])
+        logging.info(projector_calibration)
 
 @subscription(["$id draw a ($r, $g, $b) line from ($x, $y) to ($xx, $yy)"])
 def sub_callback_line(results):
@@ -181,7 +183,7 @@ class Example(wx.Frame):
         # logging.error("loop")
         wishes = []
         deaths = []
-        old_calibration = projector_calibration
+        old_calibration = copy.deepcopy(projector_calibration)
         
         # logging.info("listening")
         listen()
