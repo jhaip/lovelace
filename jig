@@ -15,6 +15,10 @@ function cmd() {
     pkill -f "go run server.go parser2.go subscriber.go database.go"
     pkill -f "/exe/server"
     pkill -f "src/standalone_processes/0__boot.js"
+    pkill -f "node src/standalone_processes"
+    pkill -f "python3 src/standalone_processes"
+    pkill -f "go run src/standalone_processes"
+    pkill -f "/tmp/go-build"
   elif [ "$1" == "webcam" ]
   then
     v4l2-ctl \
