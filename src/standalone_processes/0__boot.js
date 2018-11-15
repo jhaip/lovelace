@@ -53,7 +53,7 @@ room.assert(`camera 99 sees paper 1382 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2
 // Process Manager
 room.assert(`camera 99 sees paper 1900 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Persist Projector Calibration
-room.assert(`camera 99 sees paper 989 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// room.assert(`camera 99 sees paper 989 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Debug web viewer
 room.assert(`camera 99 sees paper 10 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Latency measurement
