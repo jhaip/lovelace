@@ -40,6 +40,7 @@ def add_key(key, special_key):
     batch(claims)
 
 pygame.init()
+screen = pygame.display.set_mode((50, 50), 0, 32)
 while True:
     pressed = pygame.key.get_pressed()
     ctrl_held = pressed[pygame.K_LCTRL] or pressed[pygame.K_RCTRL]
