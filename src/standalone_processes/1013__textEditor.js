@@ -87,7 +87,9 @@ const render = () => {
   room.cleanup();
   let lines = ["Point at something!"]
   if (currentTargetName) {
-    lines = currentSourceCode.replace(new RegExp(String.fromCharCode(34), 'g'), String.fromCharCode(9787)).split("\n")
+    lines = currentSourceCode
+      .replace(new RegExp(String.fromCharCode(9787), 'g'), String.fromCharCode(34))
+      .split("\n")
     console.error(lines)
   }
   editorWidthCharacters = 1000;
@@ -185,9 +187,14 @@ room.on(
         deleteChar();
       } else if (specialKey === "C-p") {
         const language = currentTargetName.split(".")[1];
-        const cleanSourceCode = currentSourceCode.replace(/\n/g, '\\n').replace(/"/g, String.fromCharCode(9787))
+        const cleanSourceCode = currentSourceCode
+          .replace(/"/g, String.fromCharCode(9787))
+        //  .replace(/\n/g, '\\n')
         const millis = (new Date()).getTime()
-        room.assert(`#${myId} wish a paper would be created in "${language}" with source code "${cleanSourceCode}" @ ${millis}`);
+        room.assert(
+          `wish a paper would be created in`, ["text", language],
+          `with source code`, ["text", cleanSourceCode],
+          `@ ${millis}`);
       }
     });
   }
