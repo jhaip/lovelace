@@ -185,6 +185,17 @@ room.on(
         render();
       } else if (specialKey === "backspace") {
         deleteChar();
+      } else if (specialKey === "C-s") {
+        const cleanSourceCode = currentSourceCode
+          .replace(/"/g, String.fromCharCode(9787))
+        room.assert(
+          `wish`, ["text", currentTargetName],
+          `has source code`, ["text", cleanSourceCode]);
+        // claim it's not running to force the paper to be killed
+        // so the source code change is used when it starts again
+        room.retract(
+          `$ wish`, ["text", currentTargetName], `would be running`
+        )
       } else if (specialKey === "C-p") {
         const language = currentTargetName.split(".")[1];
         const cleanSourceCode = currentSourceCode
