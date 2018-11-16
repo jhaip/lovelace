@@ -834,3 +834,70 @@ func TestMakeSubscriberOnePart2(t *testing.T) {
 
 	repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
 }
+
+func TestMakeSubscriberThreeParts(t *testing.T) {
+	query_part1 := []Term{
+		Term{"variable", ""},
+		Term{"text", "is"},
+		Term{"variable", "B"},
+	}
+	query_part2 := []Term{
+		Term{"variable", ""},
+		Term{"text", "has"},
+		Term{"variable", "C"},
+	}
+	query_part3 := []Term{
+		Term{"variable", ""},
+		Term{"text", "was"},
+		Term{"variable", "C"},
+	}
+	query := [][]Term{query_part1, query_part2, query_part3}
+	subscription := makeSubscriber(query)
+
+	if len(subscription.nodes) != 7 {
+		t.Error("Wrong number of nodes ", len(subscription.nodes))
+	}
+	expected_nodes := make(map[string]Node)
+	expected_nodes["*query0 B"] = makeNodeFromVariableNames([]string{"*query0", "B"})
+	expected_nodes["*query1 C"] = makeNodeFromVariableNames([]string{"*query1", "C"})
+	expected_nodes["*query2 C"] = makeNodeFromVariableNames([]string{"*query2", "C"})
+	expected_nodes["*query0 *query1 B C"] = makeNodeFromVariableNames([]string{"*query0", "*query1", "B", "C"})
+	expected_nodes["*query0 *query2 B C"] = makeNodeFromVariableNames([]string{"*query0", "*query2", "B", "C"})
+	expected_nodes["*query1 *query2 C"] = makeNodeFromVariableNames([]string{"*query1", "*query2", "C"})
+	expected_nodes["*query0 *query1 *query2 B C"] = makeNodeFromVariableNames([]string{"*query0", "*query1", "*query2", "B", "C"})
+	if !reflect.DeepEqual(subscription.nodes, expected_nodes) {
+		t.Error("Contents of nodes is wrong", subscription.nodes)
+	}
+
+	if len(subscription.queryPartToUpdate) != len(query) {
+		t.Error("length of queryPartToUpdate should match query len", len(subscription.queryPartToUpdate), len(query))
+	}
+	expected_queryPartToUpdate0 := []SubscriptionUpdateOptions{
+		SubscriptionUpdateOptions{"*query1 C", "*query0 *query1 B C", []string{"*query0", "B"}},
+		SubscriptionUpdateOptions{"*query2 C", "*query0 *query2 B C", []string{"*query0", "B"}},
+		SubscriptionUpdateOptions{"*query1 *query2 C", "*query0 *query1 *query2 B C", []string{"*query0", "B"}},
+	}
+	expected_queryPartToUpdate1 := []SubscriptionUpdateOptions{
+		SubscriptionUpdateOptions{"*query0 B", "*query0 *query1 B C", []string{"*query1", "C"}},
+		SubscriptionUpdateOptions{"*query2 C", "*query1 *query2 C", []string{"*query1"}},
+		SubscriptionUpdateOptions{"*query0 *query2 B C", "*query0 *query1 *query2 B C", []string{"*query1"}},
+	}
+	expected_queryPartToUpdate2 := []SubscriptionUpdateOptions{
+		SubscriptionUpdateOptions{"*query0 B", "*query0 *query2 B C", []string{"*query2", "C"}},
+		SubscriptionUpdateOptions{"*query1 C", "*query1 *query2 C", []string{"*query2"}},
+		SubscriptionUpdateOptions{"*query0 *query1 B C", "*query0 *query1 *query2 B C", []string{"*query2"}},
+	}
+	if !reflect.DeepEqual(subscription.queryPartToUpdate[0], expected_queryPartToUpdate0) {
+		t.Error("subscription.queryPartToUpdate[0] does not match")
+	}
+	if !reflect.DeepEqual(subscription.queryPartToUpdate[1], expected_queryPartToUpdate1) {
+		t.Error("subscription.queryPartToUpdate[1] does not match")
+	}
+	if !reflect.DeepEqual(subscription.queryPartToUpdate[2], expected_queryPartToUpdate2) {
+		t.Error("subscription.queryPartToUpdate[2] does not match")
+	}
+
+	// TODO: test claims, retracts, and results
+
+	repr.Println(subscription, repr.Indent("  "), repr.OmitEmpty(true))
+}

@@ -167,19 +167,29 @@ func makeSubscriber(query [][]Term) Subscription2 {
 		originalSubscriberNodeKeys = append(originalSubscriberNodeKeys, variableTermKey)
 		subscriber.queryPartToUpdate[i] = make([]SubscriptionUpdateOptions, 0)
 	}
-	for _, originalSubscriberNodeKey := range originalSubscriberNodeKeys {
-		for i, originalSubscriberNodeKey2 := range originalSubscriberNodeKeys {
-			combinedKeys, addedVariables, matched := getCombinedKeyNames(
-				getVariableNamesFromNode(subscriber.nodes[originalSubscriberNodeKey]),
-				getVariableNamesFromNode(subscriber.nodes[originalSubscriberNodeKey2]))
-			if matched {
-				variableTermKey := getVariableTermKey(combinedKeys)
-				subscriber.nodes[variableTermKey] = makeNodeFromVariableNames(combinedKeys)
-				subscriber.queryPartToUpdate[i] = append(subscriber.queryPartToUpdate[i],
-					SubscriptionUpdateOptions{
-						originalSubscriberNodeKey,
-						variableTermKey,
-						addedVariables})
+	newlyAddedNodesMap := subscriber.nodes
+	for p := 0; p < len(query)-1; p++ {
+		newlyAddedNodeKeysCopy := make([]string, 0)
+		for k, _ := range newlyAddedNodesMap {
+			newlyAddedNodeKeysCopy = append(newlyAddedNodeKeysCopy, k)
+		}
+		sort.Strings(newlyAddedNodeKeysCopy)
+		newlyAddedNodesMap = make(map[string]Node)
+		for _, originalSubscriberNodeKey := range newlyAddedNodeKeysCopy {
+			for i, originalSubscriberNodeKey2 := range originalSubscriberNodeKeys {
+				combinedKeys, addedVariables, matched := getCombinedKeyNames(
+					getVariableNamesFromNode(subscriber.nodes[originalSubscriberNodeKey]),
+					getVariableNamesFromNode(subscriber.nodes[originalSubscriberNodeKey2]))
+				if matched {
+					variableTermKey := getVariableTermKey(combinedKeys)
+					subscriber.nodes[variableTermKey] = makeNodeFromVariableNames(combinedKeys)
+					subscriber.queryPartToUpdate[i] = append(subscriber.queryPartToUpdate[i],
+						SubscriptionUpdateOptions{
+							originalSubscriberNodeKey,
+							variableTermKey,
+							addedVariables})
+					newlyAddedNodesMap[variableTermKey] = makeNodeFromVariableNames(combinedKeys)
+				}
 			}
 		}
 	}
