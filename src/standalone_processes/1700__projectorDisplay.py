@@ -293,7 +293,7 @@ class Example(wx.Frame):
 
     def draw_commands(self, gc, draw_commands, width, height):
         paper_font = wx.Font(
-            int(width/10), wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.BOLD)
+            max(int(width/10), 1), wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.BOLD)
         paper_font_color = wx.Colour(255, 255, 255)
 
         # img = wx.Image("./test_image.png", wx.BITMAP_TYPE_ANY)
@@ -389,13 +389,19 @@ class Example(wx.Frame):
                             opt, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.BOLD)
                         gc.SetFont(paper_font, paper_font_color)
                 elif command_type == 'fontcolor':
-                    if opt and len(opt) == 3:
-                        paper_font_color = wx.Colour(opt[0], opt[1], opt[2])
+                    if opt:
+                        paper_font_color = wx.Colour()
+                        if type(opt) is str:
+                            paper_font_color.Set(opt)  # color name like "blue"
+                        elif len(opt) is 3:
+                            paper_font_color.Set(opt[0], opt[1], opt[2])  # RGB
+                        else:
+                            paper_font_color.Set(opt[0], opt[1], opt[2], opt[3])  # RGBA
                         gc.SetFont(paper_font, paper_font_color)
                 elif command_type == 'push':
                     gc.PushState()
                 elif command_type == 'pop':
-                    gc.PushState()
+                    gc.PopState()
                 elif command_type == 'translate':
                     if opt:
                         gc.Translate(opt["x"], opt["y"])
