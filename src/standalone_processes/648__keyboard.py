@@ -66,6 +66,10 @@ while True:
                 add_key(None, "C-p")
             elif event.key == pygame.K_s and ctrl_held:
                 add_key(None, "C-s")
+            elif event.key == pygame.K_EQUALS and ctrl_held:
+                add_key(None, "C-+")
+            elif event.key == pygame.K_MINUS and ctrl_held:
+                add_key(None, "C--")
             elif event.key == pygame.K_QUOTEDBL:
                 add_key(None, "\"")
             elif len(event.unicode) > 0:
