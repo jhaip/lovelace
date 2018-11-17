@@ -1,12 +1,7 @@
 const { room, myId } = require('../helper2')(__filename);
 
 let fontSize = 12; // 32;
-let fontHeight = fontSize;  // / 1080.0;
-let lineHeight = 1.3 * fontHeight;
-// const origin = [0.0001 + 0.1, 0.1 + 0.0001 + lineHeight]
 const origin = [0, 0]
-let charWidth = fontHeight * 0.6;
-const cursorColor = `(255, 128, 2)`
 let cursorPosition = [0, 0]
 let currentWidth = 1;
 let currentHeight = 1;
@@ -82,6 +77,10 @@ const getCursorIndex = () => {
 }
 
 const render = () => {
+  editorWidthCharacters = 1000;
+  const lineHeight = 1.3 * fontSize;
+  editorHeightCharacters = Math.floor(currentHeight / lineHeight);
+  console.log("editor height", editorHeightCharacters);
   correctCursorPosition();
   correctWindowPosition();
   room.cleanup();
@@ -92,29 +91,20 @@ const render = () => {
       .split("\n")
     console.error(lines)
   }
-  editorWidthCharacters = 1000;
-  editorHeightCharacters = Math.floor(currentHeight / lineHeight);
-  console.log("editor height", editorHeightCharacters);
+  let ill = room.newIllumination();
   lines.slice(windowPosition[1], windowPosition[1] + editorHeightCharacters).forEach((lineRaw, i) => {
     const line = lineRaw.substring(0, editorWidthCharacters);
-    room.assert(
-      ["text", "draw"],
-      ["text", `${fontSize}pt`],
-      ["text", "text"],
-      ["text", line],
-      ["text", "at"],
-      ["text", "("],
-      ["float", (origin[0]).toFixed(6)],
-      ["text", ","],
-      ["float", (origin[1] + i * lineHeight).toFixed(6)],
-      ["text", ")"]
-    )
+    ill.fontsize(fontSize);
+    ill.text(origin[0], (origin[1] + i * lineHeight), line);
   });
-  const x1 = (origin[0] + cursorPosition[0] * charWidth).toFixed(6)
-  const y1 = (origin[1] + (cursorPosition[1] - windowPosition[1]) * lineHeight).toFixed(6)
-  const x2 = (origin[0] + cursorPosition[0] * charWidth).toFixed(6)
-  const y2 = (origin[1] + (cursorPosition[1] - windowPosition[1]) * lineHeight + fontHeight).toFixed(6)
-  room.assert(`draw a ${cursorColor} line from (${x1}, ${y1}) to (${x2}, ${y2})`)
+  let cursorLine = "█";
+  for (let q = 0; q < cursorPosition[0]; q+=1) {
+    cursorLine = " " + cursorLine;
+  }
+  ill.fontcolor(255, 128, 2, 100);
+  ill.text(origin[0], (origin[1] + (cursorPosition[1] - windowPosition[1]) * lineHeight), cursorLine);
+  ill.fontcolor(255, 255, 255, 255)
+  room.draw(ill)
   console.log("done rendering")
 }
 
@@ -206,6 +196,12 @@ room.on(
           `wish a paper would be created in`, ["text", language],
           `with source code`, ["text", cleanSourceCode],
           `@ ${millis}`);
+      } else if (specialKey === "C-+") {
+        fontSize += 2;
+        render();
+      } else if (specialKey === "C--") {
+        fontSize -= 2;
+        render();
       }
     });
   }
