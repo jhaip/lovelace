@@ -18,10 +18,11 @@ projector_calibration = None
 centered_labels = {}
 texts = {}
 lines = {}
+graphics = {}
 draw_wishes = {}
 
 def update_draw_wishes():
-    global texts, lines, centered_labels, draw_wishes
+    global texts, lines, centered_labels, graphics, draw_wishes
     draw_wishes = {}
     # draw_wishes[source][target]
     for source in lines:
@@ -39,6 +40,13 @@ def update_draw_wishes():
             draw_wishes[source] = {}
             draw_wishes[source][source] = []
         draw_wishes[source][source] += centered_labels[source]
+    for source in graphics:
+        if source not in draw_wishes:
+            draw_wishes[source] = {}
+        for target in graphics[source]:
+            if target not in draw_wishes[source]:
+                draw_wishes[source][target] = []
+            draw_wishes[source][target].extend(graphics[source][target])
 
 def mapPaperResultToLegacyDataFormat(result):
     return {
@@ -76,6 +84,26 @@ def sub_callback_calibration(results):
     if results:
         projector_calibration = map_projector_calibration_to_legacy_data_format(results[0])
         logging.info(projector_calibration)
+
+
+@subscription(["$id draw graphics $graphics on $target"])
+def sub_callback_graphics(results):
+    global graphics
+    logging.info("sub_callback_graphics")
+    logging.info(results)
+    graphics = {}
+    for v in results:
+        source = int(v["id"])
+        if source not in graphics:
+            graphics[source] = {}
+        target = v["target"]
+        if target != "global":
+            target = int(target)
+        if target not in graphics[source]:
+            graphics[source][target] = []
+        graphics[source][target].extend(json.loads(v["graphics"]))
+    logging.info(graphics)
+    update_draw_wishes()
 
 @subscription(["$id draw a ($r, $g, $b) line from ($x, $y) to ($xx, $yy)"])
 def sub_callback_line(results):
@@ -261,9 +289,9 @@ class Example(wx.Frame):
     def draw_global_wishes(self, gc, commands):
         if not commands:
             return
-        self.draw_commands(gc, commands, CAM_WIDTH)
+        self.draw_commands(gc, commands, CAM_WIDTH, CAM_HEIGHT)
 
-    def draw_commands(self, gc, draw_commands, width):
+    def draw_commands(self, gc, draw_commands, width, height):
         paper_font = wx.Font(
             int(width/10), wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.BOLD)
         paper_font_color = wx.Colour(255, 255, 255)
@@ -279,6 +307,7 @@ class Example(wx.Frame):
         last_brush = wx.Brush("blue")
         gc.SetPen(last_pen)
         gc.SetBrush(last_brush)
+        gc.Clip(0, 0, width+1, height+1)
 
         if draw_commands:
             # logging.info(draw_commands)
@@ -387,12 +416,15 @@ class Example(wx.Frame):
             draw_commands = []
         tl = None
         tr = None
+        br = None
         bl = None
         for corner in paper["corners"]:
             if corner["CornerId"] == 0:
                 tl = self.project2(corner)
             elif corner["CornerId"] == 1:
                 tr = self.project2(corner)
+            elif corner["CornerId"] == 2:
+                br = self.project2(corner)
             elif corner["CornerId"] == 3:
                 bl = self.project2(corner)
         paper_width = self.dist(tl, tr)
@@ -413,13 +445,15 @@ class Example(wx.Frame):
 
         # gc.DrawRectangle(0, 0, paper_width, paper_height)
         draw_commands = [
+            {"type": "stroke", "options": [255, 255, 255, 25]},
             {"type": "line", "options": [0, 0, paper_width, 0]},
             {"type": "line", "options": [0, 0, 0, paper_height]},
             {"type": "line", "options": [paper_width, paper_height, paper_width, 0]},
             {"type": "line", "options": [paper_width, paper_height, 0, paper_height]},
+            {"type": "stroke", "options": [255, 255, 255, 255]},
         ] + draw_commands
 
-        self.draw_commands(gc, draw_commands, paper_width)
+        self.draw_commands(gc, draw_commands, paper_width, paper_height)
 
         gc.PopState()
         gc.EndLayer()

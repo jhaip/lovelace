@@ -60,6 +60,39 @@ function getIdStringFromId(id) {
     return String(id).padStart(4, '0')
 }
 
+class Illumination {
+    constructor() {
+        this.illuminations = [];
+        this.add = (type, opts) => {
+            this.illuminations.push({ "type": type, "options": opts })
+        }
+        this.addColorType = (type, opts) => {
+            opts = (opts.length === 1) ? opts[0] : opts;
+            this.add(type, opts);
+        }
+    }
+    rect(x, y, w, h) { this.add("rectangle", {"x": x, "y": y, "w": w, "h": h}) }
+    ellipse(x, y, w, h) { this.add("ellipse", { "x": x, "y": y, "w": w, "h": h }) }
+    text(x, y, txt) { this.add("text", { "x": x, "y": y, "text": txt }) }
+    line(x1, y1, x2, y2) { this.add("line", [x1, y1, x2, y2]) }
+    // point format: [[x1, y1], [x2, y2], ...]
+    polygon(points) { this.add("polygon", points) }
+    // color format: string, [r, g, b], or [r, g, b, a]
+    fill(...color) { this.addColorType("fill", color) }
+    stroke(...color) { this.addColorType("stroke", color) }
+    nostroke() { this.add("nostroke", []) }
+    nofill() { this.add("nofill", []) }
+    strokewidth(width) { this.add("strokewidth", width) }
+    fontsize(width) { this.add("fontsize", width) }
+    fontcolor(...color) { this.addColorType("fontcolor", color) }
+    push() { this.add("push", []) }
+    pop() { this.add("pop", []) }
+    translate(x, y) { this.add("translate", { "x": x, "y": y }) }
+    rotate(radians) { this.add("rotate", radians) }
+    scale(x, y) { this.add("scale", { "x": x, "y": y }) }
+    toString() { return JSON.stringify(this.illuminations) }
+}
+
 function init(filename) {
     const scriptName = path.basename(filename);
     const scriptNameNoExtension = path.parse(scriptName).name;
@@ -177,6 +210,13 @@ function init(filename) {
         cleanupOtherSource: (otherSource) => {
             const fact_str = JSON.stringify([{ "type": "death", "fact": [["id", otherSource]] }])
             publisher.send(`....BATCH${MY_ID_STR}${fact_str}`);
+        },
+        draw: (illumination, target) => {
+            target = typeof target === 'undefined' ? myId : target;
+            room.assert(`draw graphics`, ["text", illumination.toString()], `on ${target}`)
+        },
+        newIllumination: () => {
+            return new Illumination()
         },
     }
 
