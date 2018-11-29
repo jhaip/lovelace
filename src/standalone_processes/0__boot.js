@@ -140,5 +140,6 @@ const cleanSourceCode = sourceCode.replace(/\n/g, '\\n').replace(/"/g, String.fr
 //   ["text", ")"]])
 // room.assert(`camera 99 sees paper 777 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 room.assert(`camera 99 sees paper 33 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+room.assert(`camera 99 sees paper 34 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 
 run();

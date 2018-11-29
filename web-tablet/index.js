@@ -1,4 +1,4 @@
-function render(data) {
+function renderText(data) {
     if (!data || data.length === 0) {
         $(".results").html("No results")
         return
@@ -9,10 +9,21 @@ function render(data) {
     } catch {
         $(".results").html("error parsing");
     }
-    
+}
+function renderBackground(data) {
+    if (!data || data.length === 0) {
+        $("body").css('background-color', `rgb(0, 0, 0)`);
+        return
+    }
+    try {
+        let color = JSON.parse(data)[0];
+        $("body").css('background-color', `rgb(${color.r}, ${color.b}, ${color.g})`);
+    } catch {
+        $("body").css('background-color', `rgb(255, 0, 0)`);
+    }
 }
 
-function update() {
+function textUpdate() {
     $.ajax({
         type: "GET",
         url: "/select",
@@ -21,15 +32,36 @@ function update() {
         },
         success: function (data) {
             console.log(data);
-            render(data);
-            setTimeout(update, 2000);
+            renderText(data);
+            setTimeout(textUpdate, 2000);
         },
         failure: function (errMsg) {
-            render([]);
+            renderText([]);
             alert(errMsg);
-            setTimeout(update, 2000);
+            setTimeout(textUpdate, 2000);
         }
     });
 }
 
-update();
+function backgroundColorUpdate() {
+    $.ajax({
+        type: "GET",
+        url: "/select",
+        data: {
+            subscription: JSON.stringify(["$ wish tablet had background color ( $r , $g , $b )"])
+        },
+        success: function (data) {
+            console.log(data);
+            renderBackground(data);
+            setTimeout(backgroundColorUpdate, 2000);
+        },
+        failure: function (errMsg) {
+            renderBackground([]);
+            alert(errMsg);
+            setTimeout(backgroundColorUpdate, 2000);
+        }
+    });
+}
+
+textUpdate();
+backgroundColorUpdate();
