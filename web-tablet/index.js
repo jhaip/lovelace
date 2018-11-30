@@ -17,7 +17,7 @@ function renderBackground(data) {
     }
     try {
         let color = JSON.parse(data)[0];
-        $("body").css('background-color', `rgb(${color.r}, ${color.b}, ${color.g})`);
+        $("body").css('background-color', `rgb(${color.r}, ${color.g}, ${color.b})`);
     } catch {
         $("body").css('background-color', `rgb(255, 0, 0)`);
     }
