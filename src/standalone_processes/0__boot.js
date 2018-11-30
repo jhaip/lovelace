@@ -141,5 +141,7 @@ const cleanSourceCode = sourceCode.replace(/\n/g, '\\n').replace(/"/g, String.fr
 // room.assert(`camera 99 sees paper 777 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 room.assert(`camera 99 sees paper 33 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 room.assert(`camera 99 sees paper 34 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+room.assert(`camera 99 sees paper 35 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// room.assert(`wish RGB light strand is color 0 50 0`)
 
 run();

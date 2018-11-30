@@ -47,7 +47,11 @@ app.get('/select', (req, res) => {
                 }
             )
         }
-        res.status(200).send(JSON.stringify(selectResults));
+        if (req.query.first && selectResults.length > 0) {
+            res.status(200).send(JSON.stringify(selectResults[0]));    
+        } else {
+            res.status(200).send(JSON.stringify(selectResults));
+        }
     } catch {
         res.status(400).send("could not parse JSON query parameter 'subscription'")
     }
