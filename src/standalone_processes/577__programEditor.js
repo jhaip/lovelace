@@ -20,6 +20,7 @@ room.on(
       fs.writeFile(`src/standalone_processes/${name}`, sourceCode, (err) => {
         if (err) throw err;
         console.error('The file has been saved!');
+        room.assert(["text", name], `has source code`, ["text", sourceCode]);
       });
     })
   }
