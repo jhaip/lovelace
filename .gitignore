@@ -4,3 +4,4 @@ node_modules
 __pycache__
 .log
 src/standalone_processes/files/*.pdf
+src/standalone_processes/logs/
