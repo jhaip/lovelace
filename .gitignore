@@ -3,3 +3,4 @@ node_modules
 .py[co]
 __pycache__
 .log
+src/standalone_processes/files/*.pdf
