@@ -17,6 +17,7 @@ room.on(
       console.log('debug:::')
       console.log(`#${wisherId} wish "${name}" has source code $`)
       room.retract(`#${wisherId} wish`, ["text", name], `has source code $`)
+      room.retract(`$`, ["text", name], `has source code $`);
       fs.writeFile(`src/standalone_processes/${name}`, sourceCode, (err) => {
         if (err) throw err;
         console.error('The file has been saved!');
