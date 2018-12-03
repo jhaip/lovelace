@@ -12,6 +12,7 @@ import copy
 
 CAM_WIDTH = 1920
 CAM_HEIGHT = 1080
+DRAW_DEBUG_TEXT = False
 
 papers = []
 projector_calibration = None
@@ -233,7 +234,7 @@ class Example(wx.Frame):
         # print(1000*(end - start), "ms", 1.0/(end - start), "fps")
 
     def OnPaint(self, e):
-        global draw_wishes, papers, lines
+        global draw_wishes, papers, lines, DRAW_DEBUG_TEXT
         now = time.time()
         # if self.lastPaint:
         #     print(1.0/(now - self.lastPaint), "fps for paint")
@@ -266,9 +267,10 @@ class Example(wx.Frame):
         logging.error("---draw wishes")
         logging.error(paper_draw_wishes)
 
-        for i, target in enumerate(paper_draw_wishes):
-            dc.DrawText(str(target) + ": " +
-                        json.dumps(paper_draw_wishes[target]), 10, 10+16*i)
+        if DRAW_DEBUG_TEXT:
+            for i, target in enumerate(paper_draw_wishes):
+                dc.DrawText(str(target) + ": " +
+                            json.dumps(paper_draw_wishes[target]), 10, 10+16*i)
 
         self.draw_global_wishes(gc, paper_draw_wishes.get("global"))
 

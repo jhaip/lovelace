@@ -1,18 +1,25 @@
-const N = 16;
+const BASE_ID = 2000;
+const N = 9;
 
-for (var i = 0; i < 16; i += 1) {
+for (var i = BASE_ID; i < BASE_ID + N; i += 1) {
     $("select").append(`<option value="${i}">${i}</option>`)
 }
 
-$('select').on('change', function () {
+function claimNewEditTarget(editTargetId) {
     $.ajax({
         type: "POST",
         url: "/cleanup-claim",
         data: {
-            claim: `paper 1013 is pointing at paper ${this.value}`,
+            claim: `paper 1013 is pointing at paper ${editTargetId}`,
             retract: `$ paper 1013 is pointing at paper $`
         },
         success: function () { console.log("success") },
         failure: function (errMsg) { console.log(errMsg) }
     });
+}
+
+$('select').on('change', function () {
+    claimNewEditTarget(this.value);
 });
+
+claimNewEditTarget(BASE_ID);

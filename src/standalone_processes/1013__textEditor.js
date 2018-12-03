@@ -186,6 +186,7 @@ room.on(
         room.retract(
           `$ wish`, ["text", currentTargetName], `would be running`
         )
+        room.assert(`wish`, ["text", currentTargetName], `would be running`)
       } else if (specialKey === "C-p") {
         const language = currentTargetName.split(".")[1];
         const cleanSourceCode = currentSourceCode

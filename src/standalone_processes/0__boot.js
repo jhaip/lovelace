@@ -41,7 +41,7 @@ room.assert(`camera 99 sees paper 577 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2)
 // Run Seen Papers
 room.assert(`camera 99 sees paper 826 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Pointing At
-room.assert(`camera 99 sees paper 277 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// room.assert(`camera 99 sees paper 277 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Paper Details
 room.assert(`camera 99 sees paper 620 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Create New Paper
@@ -142,6 +142,8 @@ const cleanSourceCode = sourceCode.replace(/\n/g, '\\n').replace(/"/g, String.fr
 room.assert(`camera 99 sees paper 33 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 room.assert(`camera 99 sees paper 34 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 room.assert(`camera 99 sees paper 35 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+room.assert(`camera 1 sees paper 1013 at TL (0, 0) TR (1440, 0) BR (1440, 860) BL (0, 860) @ 1`)
+room.assert(`paper 1013 has width 1440 height 860 angle 0 at (0, 0)`)
 // room.assert(`wish RGB light strand is color 0 50 0`)
 
 run();
