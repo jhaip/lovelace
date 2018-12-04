@@ -185,11 +185,13 @@ room.on(
           `has source code`, ["text", cleanSourceCode]);
         // claim it's not running to force the paper to be killed
         // so the source code change is used when it starts again
+        console.log(`retract ${currentTargetName}`)
         room.retract(
           `$ wish`, ["text", currentTargetName], `would be running`
         )
         setTimeout(() => {
           room.assert(`wish`, ["text", currentTargetName], `would be running`)
+          console.log(`claim ${currentTargetName}`)
         }, 2000);
       } else if (specialKey === "C-n") {
         const language = currentTargetName.split(".")[1];
