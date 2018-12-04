@@ -62,6 +62,8 @@ while True:
                 add_key(None, "up")
             elif event.key == pygame.K_DOWN:
                 add_key(None, "down")
+            elif event.key == pygame.K_n and ctrl_held:
+                add_key(None, "C-n")
             elif event.key == pygame.K_p and ctrl_held:
                 add_key(None, "C-p")
             elif event.key == pygame.K_s and ctrl_held:

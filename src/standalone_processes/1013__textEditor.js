@@ -9,6 +9,7 @@ let editorWidthCharacters = 1;
 let editorHeightCharacters = 1;
 let windowPosition = [0, 0]
 let currentTargetName;
+let currentTargetId;
 let currentSourceCode = "";
 
 const correctCursorPosition = () => {
@@ -129,6 +130,7 @@ room.subscribe(
     results.forEach(({targetId, targetName, sourceCode, myWidth, myHeight}) => {
       if (currentTargetName !== targetName) {
         currentTargetName = targetName;
+        currentTargetId = targetId;
         currentSourceCode = sourceCode;
       }
       curentWidth = myWidth;
@@ -187,7 +189,7 @@ room.on(
           `$ wish`, ["text", currentTargetName], `would be running`
         )
         room.assert(`wish`, ["text", currentTargetName], `would be running`)
-      } else if (specialKey === "C-p") {
+      } else if (specialKey === "C-n") {
         const language = currentTargetName.split(".")[1];
         const cleanSourceCode = currentSourceCode
           .replace(/"/g, String.fromCharCode(9787))
@@ -197,6 +199,8 @@ room.on(
           `wish a paper would be created in`, ["text", language],
           `with source code`, ["text", cleanSourceCode],
           `@ ${millis}`);
+      } else if (specialKey === "C-p") {
+        room.assert(`wish paper ${currentTargetId} at`, ["text", currentTargetName], `would be printed`)
       } else if (specialKey === "C-+") {
         fontSize += 2;
         render();
