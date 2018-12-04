@@ -191,6 +191,7 @@ room.on(
         )
         setTimeout(() => {
           room.assert(`wish`, ["text", currentTargetName], `would be running`)
+          room.flush();
           console.log(`claim ${currentTargetName}`)
         }, 2000);
       } else if (specialKey === "C-n") {
