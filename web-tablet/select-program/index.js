@@ -1,5 +1,5 @@
 const BASE_ID = 2000;
-const N = 9;
+const N = 10;
 
 for (var i = BASE_ID; i < BASE_ID + N; i += 1) {
     $("select").append(`<option value="${i}">${i}</option>`)
