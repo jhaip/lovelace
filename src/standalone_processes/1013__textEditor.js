@@ -1,4 +1,4 @@
-const { room, myId } = require('../helper2')(__filename);
+const { room, myId, MY_ID_STR } = require('../helper2')(__filename);
 
 let fontSize = 12; // 32;
 const origin = [0, 0]
@@ -84,7 +84,7 @@ const render = () => {
   console.log("editor height", editorHeightCharacters);
   correctCursorPosition();
   correctWindowPosition();
-  room.cleanup();
+  room.retract(`#${MY_ID_STR} draw graphics $ on target $`) // room.cleanup();
   let lines = ["Point at something!"]
   if (currentTargetName) {
     lines = currentSourceCode
