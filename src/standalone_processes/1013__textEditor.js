@@ -84,7 +84,7 @@ const render = () => {
   console.log("editor height", editorHeightCharacters);
   correctCursorPosition();
   correctWindowPosition();
-  room.retract(`#${MY_ID_STR} draw graphics $ on target $`) // room.cleanup();
+  room.retract(`#${MY_ID_STR} draw graphics $ on $`) // room.cleanup();
   let lines = ["Point at something!"]
   if (currentTargetName) {
     lines = currentSourceCode
