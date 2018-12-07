@@ -248,7 +248,7 @@ func subscribe_worker(subscription_messages <-chan string,
 			for i, fact_string := range subscription_data.Facts {
 				fact := parse_fact_string(fact_string)
 				query = append(query, fact)
-				subscription_fact := append([]Term{Term{"text", "subscription"}, Term{"id", source}, Term{"integer", strconv.Itoa(i)}}, fact...)
+				subscription_fact := append([]Term{Term{"text", "subscription"}, Term{"id", source}, Term{"text", subscription_data.Id}, Term{"integer", strconv.Itoa(i)}}, fact...)
 				dbMutex.Lock()
 				claim(db, Fact{subscription_fact})
 				dbMutex.Unlock()
