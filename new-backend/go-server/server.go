@@ -245,6 +245,7 @@ func subscribe_worker(subscription_messages <-chan string,
 			err := json.Unmarshal([]byte(val), &subscription_data)
 			checkErr(err)
 			query := make([][]Term, 0)
+			batch_messages := make([]BatchMessage, len(subscription_data.Facts))
 			for i, fact_string := range subscription_data.Facts {
 				fact := parse_fact_string(fact_string)
 				query = append(query, fact)
@@ -252,6 +253,12 @@ func subscribe_worker(subscription_messages <-chan string,
 				dbMutex.Lock()
 				claim(db, Fact{subscription_fact})
 				dbMutex.Unlock()
+				// prepare a batch message for the new subscription fact
+				batch_message_facts := make([][]string, len(subscription_fact))
+				for k, subscription_fact_term := range subscription_fact {
+					batch_message_facts[k] = []string{subscription_fact_term.Type, subscription_fact_term.Value}
+				}
+				batch_messages[i] = BatchMessage{"claim", batch_message_facts}
 			}
 			newSubscription := Subscription{source, subscription_data.Id, query, make(chan []BatchMessage, 100), &sync.WaitGroup{}}
 			newSubscription.dead.Add(1)
@@ -260,6 +267,9 @@ func subscribe_worker(subscription_messages <-chan string,
 				(*subscriptions).Subscriptions,
 				newSubscription,
 			)
+			for _, subscription := range (*subscriptions).Subscriptions {
+				subscription.batch_messages <- batch_messages
+			}
 			subscriberMutex.Unlock()
 			go startSubscriber(newSubscription, notifications, copyDatabase(db))
 			// subscriptions_notifications <- true // is this still needed?
@@ -419,6 +429,11 @@ func on_source_death(dying_source string, db *map[string]Fact, subscriptions *Su
 	for _, subscription := range (*subscriptions).Subscriptions {
 		if subscription.Source != dying_source {
 			newSubscriptions = append(newSubscriptions, subscription)
+			batch_messages := []BatchMessage{
+				BatchMessage{"retract", [][]string{[]string{"id", dying_source}, []string{"postfix", ""}}},
+				BatchMessage{"retract", [][]string{[]string{"text", "subscription"}, []string{"id", dying_source}, []string{"postfix", ""}}},
+			}
+			subscription.batch_messages <- batch_messages
 		} else {
 			zap.L().Info("SOURCE DEATH - closing channel", zap.String("source", dying_source))
 			close(subscription.batch_messages)
