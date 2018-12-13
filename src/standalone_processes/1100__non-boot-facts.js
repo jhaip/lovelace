@@ -32,6 +32,17 @@ function render() {
     room.draw(ill);
 }
 
+function subscribe(id) {
+    room.on(`#${id} %fact`, factSubscriptionResult => {
+        FACTS[id] = factSubscriptionResult;
+        render();
+    });
+    room.on(`subscription #${id} %subscription`, subscriptionSubscriptionResult => {
+        SUBSCRIPTIONS[id] = subscriptionSubscriptionResult;
+        render();
+    });
+}
+
 room.on(
     `$ camera 1 sees paper $id at TL ( $ , $ ) TR ( $ , $ ) BR ( $ , $ ) BL ( $ , $ ) @ $time`,
     results => {
@@ -41,14 +52,7 @@ room.on(
             const id = results[i].id.toString().padStart(4, '0');
             if (nonBootFactSubcriptions[id] !== "SUBSCRIBED") {
                 nonBootFactSubcriptions[id] = "SUBSCRIBED";
-                room.on(`#${id} %fact`, factSubscriptionResult => {
-                    FACTS[id] = factSubscriptionResult;
-                    render();
-                });
-                room.on(`subscription #${id} %subscription`, subscriptionSubscriptionResult => {
-                    SUBSCRIPTIONS[id] = subscriptionSubscriptionResult;
-                    render();
-                });
+                subscribe(id);
             }
         }
     }
