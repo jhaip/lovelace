@@ -59,7 +59,7 @@ room.assert(`camera 99 sees paper 10 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) 
 // Latency measurement
 room.assert(`camera 99 sees paper 11 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // HTTP Client
-room.assert(`camera 99 sees paper 20 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+room.assert(`camera 1 sees paper 20 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 //
 /* TODO:
 - keyboard.py
@@ -155,6 +155,7 @@ room.assert(`camera 1 sees paper 2007 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2)
 room.assert(`camera 1 sees paper 2008 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 room.assert(`camera 1 sees paper 2009 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 room.assert(`camera 1 sees paper 1013 at TL (0, 0) TR (1440, 0) BR (1440, 860) BL (0, 860) @ 1`)
+room.assert(`camera 1 sees paper 648 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 room.assert(`paper 1013 has width 1440 height 860 angle 0 at (0, 0)`)
 room.assert(`paper 1100 has width 1440 height 860 angle 0 at (0, 0)`)
 // room.assert(`wish RGB light strand is color 0 50 0`)
