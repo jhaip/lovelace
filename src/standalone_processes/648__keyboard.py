@@ -1,11 +1,14 @@
 import time
 import logging
 import pygame
-from helper2 import init, claim, retract, prehook, subscription, batch, get_my_id_str
+from helper2 import init, claim, retract, prehook, subscription, batch, get_my_id_str, check_server_connection
 init(__file__, skipListening=True)
 batch([{"type": "retract", "fact": [["id", get_my_id_str()], ["postfix", ""]]}])
+last_server_health_check = time.time()
+health_check_delay_s = 5
 
 def add_key(key, special_key):
+    global last_server_health_check, health_check_delay_s
     timestamp = int(time.time()*1000.0)
     claims = []
     claims.append({"type": "retract", "fact": [
@@ -38,6 +41,9 @@ def add_key(key, special_key):
             ["integer", str(timestamp)],
         ]})
     batch(claims)
+    if time.time() - last_server_health_check > health_check_delay_s:
+        last_server_health_check = time.time()
+        check_server_connection()
 
 pygame.init()
 screen = pygame.display.set_mode((50, 50), 0, 32)
