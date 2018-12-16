@@ -88,7 +88,7 @@ def parse_results(val):
     return results
 
 
-def listen():
+def listen(sleep_time_s=0.01):
     global server_listening
     while True:
         try:
@@ -115,8 +115,39 @@ def listen():
         except zmq.Again:
             break
     # logging.info("loop")
-    time.sleep(0.01)
+    time.sleep(sleep_time_s)
 
+
+def check_server_connection():
+    global server_listening, sub_socket, pub_socket
+    if server_listening:
+        print("checking if server is still listening")
+        server_listening = False
+        i = 0
+        while not server_listening:
+            pub_socket.send_string(".....PING{}{}".format(
+                MY_ID_STR, init_ping_id), zmq.NOBLOCK)
+            listen()
+            i += 1
+            if i > 10:
+                # no response from server, assume server is dead
+                check_server_connection()
+                break
+    else:
+        # Close conneciton to ZMQ and try again
+        print("SERVER DIED, attempting to reconnect")
+        while not server_listening:
+            sub_socket.disconnect("tcp://{0}:5555".format(rpc_url))
+            pub_socket.disconnect("tcp://{0}:5556".format(rpc_url))
+            sub_socket.connect("tcp://{0}:5555".format(rpc_url))
+            pub_socket.connect("tcp://{0}:5556".format(rpc_url))
+            sub_socket.setsockopt_string(zmq.SUBSCRIBE, MY_ID_STR)
+            print("checking if server is alive")
+            pub_socket.send_string(".....PING{}{}".format(
+                MY_ID_STR, init_ping_id), zmq.NOBLOCK)
+            reconnect_check_delay_s = 10
+            listen(reconnect_check_delay_s)
+        print("SERVER IS ALIVE!")
 
 def init(root_filename, skipListening=False):
     global MY_ID, MY_ID_STR, py_subscriptions, py_prehook
