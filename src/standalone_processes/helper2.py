@@ -119,10 +119,11 @@ def listen(sleep_time_s=0.01):
 
 
 def check_server_connection():
-    global server_listening, sub_socket, pub_socket
+    global server_listening, sub_socket, pub_socket, init_ping_id
     if server_listening:
         print("checking if server is still listening")
         server_listening = False
+        init_ping_id = str(uuid.uuid4())
         listening_start_time = time.time()
         while not server_listening:
             pub_socket.send_string(".....PING{}{}".format(
@@ -141,6 +142,7 @@ def check_server_connection():
         pub_socket.connect("tcp://{0}:5556".format(rpc_url))
         sub_socket.setsockopt_string(zmq.SUBSCRIBE, MY_ID_STR)
         reconnect_check_delay_s = 10
+        init_ping_id = str(uuid.uuid4())
         listening_start_time = time.time()
         while not server_listening:
             print("checking if server is alive")
