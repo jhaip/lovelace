@@ -17,6 +17,7 @@ function cmd() {
     pkill -f "src/standalone_processes/0__boot.js"
     pkill -f "node src/standalone_processes"
     pkill -f "python3 src/standalone_processes"
+    pkill -f -9 "648__keyboard.py"
     pkill -f "go run src/standalone_processes"
     pkill -f "/tmp/go-build"
   elif [ "$1" == "webcam" ]
