@@ -144,16 +144,32 @@ const cleanSourceCode = sourceCode.replace(/\n/g, '\\n').replace(/"/g, String.fr
 // room.assert(`camera 99 sees paper 35 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 
 room.assert(`camera 99 sees paper 1100 at TL (0, 0) TR (1440, 0) BR (1440, 860) BL (0, 860) @ 1`)
-room.assert(`camera 1 sees paper 2000 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
-room.assert(`camera 1 sees paper 2001 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
-room.assert(`camera 1 sees paper 2002 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
-room.assert(`camera 1 sees paper 2003 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
-room.assert(`camera 1 sees paper 2004 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
-room.assert(`camera 1 sees paper 2005 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
-room.assert(`camera 1 sees paper 2006 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
-room.assert(`camera 1 sees paper 2007 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
-room.assert(`camera 1 sees paper 2008 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
-room.assert(`camera 1 sees paper 2009 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+let sPaperWidth = 100;
+let sPaperHeight = 150;
+let sPaperHMargin = 10;
+let sPaperVMargin = 10;
+let sOriginX = 200;
+let sOriginY = 100;
+for (let x = 0; x < 3; x += 1) {
+  for (let y = 0; y < 3; y += 1) {
+    let idOffset = 2000 + x + y*3;
+    let x1 = sOriginX + x * (sPaperWidth + sPaperHMargin);
+    let x2 = sOriginX + x * (sPaperWidth + sPaperHMargin) + sPaperWidth;
+    let y1 = sOriginY + y * (sPaperHeight + sPaperVMargin);
+    let y2 = sOriginY + y * (sPaperHeight + sPaperVMargin) + sPaperHeight;
+    room.assert(`camera 1 sees paper ${idOffset} at TL (${x1}, ${y1}) TR (${x2}, ${y1}) BR (${x2}, ${y2}) BL (${x1}, ${y2}) @ 1`)
+  }
+}
+// room.assert(`camera 1 sees paper 2000 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// room.assert(`camera 1 sees paper 2001 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// room.assert(`camera 1 sees paper 2002 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// room.assert(`camera 1 sees paper 2003 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// room.assert(`camera 1 sees paper 2004 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// room.assert(`camera 1 sees paper 2005 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// room.assert(`camera 1 sees paper 2006 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// room.assert(`camera 1 sees paper 2007 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// room.assert(`camera 1 sees paper 2008 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// room.assert(`camera 1 sees paper 2009 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 room.assert(`camera 1 sees paper 1013 at TL (0, 0) TR (1440, 0) BR (1440, 860) BL (0, 860) @ 1`)
 room.assert(`camera 1 sees paper 648 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 room.assert(`paper 1013 has width 1440 height 860 angle 0 at (0, 0)`)
