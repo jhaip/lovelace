@@ -1,4 +1,4 @@
-from helper2 import init, claim, retract, prehook, subscription, batch, MY_ID_STR, listen
+from helper2 import init, claim, retract, prehook, subscription, batch, MY_ID_STR, listen, check_server_connection
 import wx
 import cv2
 import time
@@ -13,6 +13,8 @@ import copy
 CAM_WIDTH = 1920
 CAM_HEIGHT = 1080
 DRAW_DEBUG_TEXT = False
+LAST_SERVER_HEALTH_CHECK = time.time()
+HEALTH_CHECK_DELAY_S = 5
 PAPER_FILTER = None
 if len(sys.argv) == 2:
     PAPER_FILTER = sys.argv[1]
@@ -199,7 +201,7 @@ class Example(wx.Frame):
         wx.CallLater(100, self.MyListenDrawLoop)
 
     def ListenForSubscriptionUpdates(self, event):
-        global projector_calibration
+        global projector_calibration, LAST_SERVER_HEALTH_CHECK, HEALTH_CHECK_DELAY_S
         start = time.time()
         wishes = []
         deaths = []
@@ -218,6 +220,10 @@ class Example(wx.Frame):
 
         end = time.time()
         # print(1000*(end - start), "ms", 1.0/(end - start), "fps")
+
+        if time.time() - LAST_SERVER_HEALTH_CHECK > HEALTH_CHECK_DELAY_S:
+            LAST_SERVER_HEALTH_CHECK = time.time()
+            check_server_connection()
     
     def OnPaint(self, e):
         wx.BufferedPaintDC(self, self.drawingBuffer)
