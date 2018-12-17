@@ -180,49 +180,32 @@ class Example(wx.Frame):
                                       size=(CAM_WIDTH, CAM_HEIGHT))
         
         self.lastPaint = time.time()
-        self.bigStart = time.time()
-
-        self.i = 0
         self.bmp = None
         self.projection_matrix = None
 
-        self.timer = wx.Timer(self, Example.ID_TIMER)
-        self.Bind(wx.EVT_TIMER, self.OnTimer, id=Example.ID_TIMER)
-
-        self.graphics_timer = wx.Timer(self, Example.GRAPHICS_TIMER)
-        self.Bind(wx.EVT_TIMER, self.OnGraphicsTimer,
-                  id=Example.GRAPHICS_TIMER)
-
-        fps = 10
-        self.timer.Start(1000./fps)
-
-        graphics_fps = 10
-        self.graphics_timer.Start(1000./graphics_fps)
+        self.drawingBuffer = wx.Bitmap(CAM_WIDTH, CAM_HEIGHT)
+        self.background = (0, 0, 0)
 
         self.Bind(wx.EVT_PAINT, self.OnPaint)
 
-        # self.Centre()
         self.Show()
         self.Maximize(True)
 
-    def OnGraphicsTimer(self, event):
-        self.Refresh()
+        self.MyListenDrawLoop()
+    
+    def MyListenDrawLoop(self):
+        self.ListenForSubscriptionUpdates(None)
+        self.Draw(None)
+        wx.CallLater(100, self.MyListenDrawLoop)
 
-    def OnTimer(self, event):
+    def ListenForSubscriptionUpdates(self, event):
         global projector_calibration
         start = time.time()
-        self.bigStart = time.time()
-        # logging.error("loop")
         wishes = []
         deaths = []
         old_calibration = copy.deepcopy(projector_calibration)
         
-        # logging.info("listening")
         listen()
-        # logging.info("done listening")
-
-        # self.onWish(wishes)
-        # self.onProgramDeath(deaths)
 
         if old_calibration != projector_calibration:
             if projector_calibration and len(projector_calibration) is 4:
@@ -235,26 +218,31 @@ class Example(wx.Frame):
 
         end = time.time()
         # print(1000*(end - start), "ms", 1.0/(end - start), "fps")
-
+    
     def OnPaint(self, e):
+        wx.BufferedPaintDC(self, self.drawingBuffer)
+    
+    def triggerRepaint(self):
+        self.Refresh(eraseBackground=False)
+        self.Update()
+
+    def Draw(self, e):
         global draw_wishes, papers, lines, DRAW_DEBUG_TEXT
         now = time.time()
         # if self.lastPaint:
         #     print(1.0/(now - self.lastPaint), "fps for paint")
         self.lastPaint = time.time()
 
-        dc = wx.BufferedPaintDC(self)
-        gc = wx.GraphicsContext.Create(dc)
-        dc.SetBackground(wx.Brush(wx.Colour(0, 0, 0)))
+        dc = wx.MemoryDC(self.drawingBuffer)
+        dc.SelectObject(self.drawingBuffer)
+        dc.SetBackground(wx.Brush(self.background, style=wx.SOLID))
         dc.Clear()
+        gc = wx.GraphicsContext.Create(dc)
         dc.SetTextForeground(wx.Colour(255, 255, 255))
         dc.SetBrush(wx.Brush())
         font = dc.GetFont()
         font.SetWeight(wx.FONTWEIGHT_BOLD)
         dc.SetFont(font)
-
-        # if self.bmp:
-        #     dc.DrawBitmap(self.bmp, 0, 0)
 
         paper_draw_wishes = {}
         if draw_wishes:
@@ -290,6 +278,9 @@ class Example(wx.Frame):
 
         end = time.time()
         # print(1000*(end - now), "ms", 1.0/(end - now), "fps to do paint stuff")
+
+        dc.SelectObject(wx.NullBitmap)
+        self.triggerRepaint()
 
     def dist(self, p1, p2):
         return math.sqrt((p1["x"] - p2["x"])**2 + (p1["y"] - p2["y"])**2)
