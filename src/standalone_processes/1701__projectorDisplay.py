@@ -16,8 +16,10 @@ DRAW_DEBUG_TEXT = False
 LAST_SERVER_HEALTH_CHECK = time.time()
 HEALTH_CHECK_DELAY_S = 5
 PAPER_FILTER = None
-if len(sys.argv) == 2:
-    PAPER_FILTER = sys.argv[1]
+if len(sys.argv) >= 2:
+    PAPER_FILTER = sys.argv[1:]
+    for i in range(len(PAPER_FILTER)):
+        PAPER_FILTER[i] = str(PAPER_FILTER[i])
 
 papers = []
 projector_calibration = None
@@ -277,7 +279,7 @@ class Example(wx.Frame):
                 dc.DrawText(str(target) + ": " +
                             json.dumps(paper_draw_wishes[target]), 10, 10+16*i)
 
-        if PAPER_FILTER is None or PAPER_FILTER == "global":
+        if PAPER_FILTER is None or "global" in PAPER_FILTER:
             self.draw_global_wishes(gc, paper_draw_wishes.get("global"))
 
         logging.error("PAPERS:")
@@ -285,7 +287,7 @@ class Example(wx.Frame):
         if papers:
             for paper in papers:
                 if len(paper["corners"]) == 4:
-                    if PAPER_FILTER is not None and str(PAPER_FILTER) != str(paper["id"]):
+                    if PAPER_FILTER is not None and str(paper["id"]) not in PAPER_FILTER:
                         continue
                     self.draw_paper(
                         gc, paper, paper_draw_wishes.get(paper["id"]))
