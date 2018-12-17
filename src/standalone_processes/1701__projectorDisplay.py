@@ -25,6 +25,7 @@ lines = {}
 graphics = {}
 draw_wishes = {}
 
+
 def update_draw_wishes():
     global texts, lines, centered_labels, graphics, draw_wishes
     draw_wishes = {}
@@ -52,6 +53,7 @@ def update_draw_wishes():
                 draw_wishes[source][target] = []
             draw_wishes[source][target].extend(graphics[source][target])
 
+
 def mapPaperResultToLegacyDataFormat(result):
     return {
         "id": result["id"],
@@ -63,6 +65,7 @@ def mapPaperResultToLegacyDataFormat(result):
         ]
     }
 
+
 def map_projector_calibration_to_legacy_data_format(result):
     return [
         [result["x1"], result["y1"]],
@@ -70,6 +73,7 @@ def map_projector_calibration_to_legacy_data_format(result):
         [result["x3"], result["y3"]],
         [result["x4"], result["y4"]]
     ]
+
 
 @subscription(["$ camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time"])
 def sub_callback_papers(results):
@@ -86,7 +90,8 @@ def sub_callback_calibration(results):
     logging.info("sub_callback_calibration")
     logging.info(results)
     if results:
-        projector_calibration = map_projector_calibration_to_legacy_data_format(results[0])
+        projector_calibration = map_projector_calibration_to_legacy_data_format(
+            results[0])
         logging.info(projector_calibration)
 
 
@@ -109,6 +114,7 @@ def sub_callback_graphics(results):
     logging.info(graphics)
     update_draw_wishes()
 
+
 @subscription(["$id draw a ($r, $g, $b) line from ($x, $y) to ($xx, $yy)"])
 def sub_callback_line(results):
     global lines
@@ -119,7 +125,8 @@ def sub_callback_line(results):
         source = int(v["id"])
         if source not in lines:
             lines[source] = []
-        lines[source].append({"type": "line", "options": [v["x"], v["y"], v["xx"], v["yy"]]})
+        lines[source].append({"type": "line", "options": [
+                             v["x"], v["y"], v["xx"], v["yy"]]})
     logging.info(lines)
     update_draw_wishes()
 
@@ -171,6 +178,7 @@ def sub_callback_text(results):
     logging.info(texts)
     update_draw_wishes()
 
+
 class Example(wx.Frame):
     ID_TIMER = 1
     GRAPHICS_TIMER = 2
@@ -178,51 +186,34 @@ class Example(wx.Frame):
     def __init__(self, parent, title):
         super(Example, self).__init__(parent, title=title,
                                       size=(CAM_WIDTH, CAM_HEIGHT))
-        
-        self.lastPaint = time.time()
-        self.bigStart = time.time()
 
-        self.i = 0
+        self.lastPaint = time.time()
         self.bmp = None
         self.projection_matrix = None
 
-        self.timer = wx.Timer(self, Example.ID_TIMER)
-        self.Bind(wx.EVT_TIMER, self.OnTimer, id=Example.ID_TIMER)
-
-        self.graphics_timer = wx.Timer(self, Example.GRAPHICS_TIMER)
-        self.Bind(wx.EVT_TIMER, self.OnGraphicsTimer,
-                  id=Example.GRAPHICS_TIMER)
-
-        fps = 10
-        self.timer.Start(1000./fps)
-
-        graphics_fps = 10
-        self.graphics_timer.Start(1000./graphics_fps)
+        self.drawingBuffer = wx.Bitmap(CAM_WIDTH, CAM_HEIGHT)
+        self.background = (0, 0, 0)
 
         self.Bind(wx.EVT_PAINT, self.OnPaint)
 
-        # self.Centre()
         self.Show()
         self.Maximize(True)
 
-    def OnGraphicsTimer(self, event):
-        self.Refresh()
+        self.MyListenDrawLoop()
 
-    def OnTimer(self, event):
+    def MyListenDrawLoop(self):
+        self.ListenForSubscriptionUpdates(None)
+        self.Draw(None)
+        wx.CallLater(100, self.MyListenDrawLoop)
+
+    def ListenForSubscriptionUpdates(self, event):
         global projector_calibration
         start = time.time()
-        self.bigStart = time.time()
-        # logging.error("loop")
         wishes = []
         deaths = []
         old_calibration = copy.deepcopy(projector_calibration)
-        
-        # logging.info("listening")
-        listen()
-        # logging.info("done listening")
 
-        # self.onWish(wishes)
-        # self.onProgramDeath(deaths)
+        listen()
 
         if old_calibration != projector_calibration:
             if projector_calibration and len(projector_calibration) is 4:
@@ -237,24 +228,29 @@ class Example(wx.Frame):
         # print(1000*(end - start), "ms", 1.0/(end - start), "fps")
 
     def OnPaint(self, e):
+        wx.BufferedPaintDC(self, self.drawingBuffer)
+
+    def triggerRepaint(self):
+        self.Refresh(eraseBackground=False)
+        self.Update()
+
+    def Draw(self, e):
         global draw_wishes, papers, lines, DRAW_DEBUG_TEXT
         now = time.time()
         # if self.lastPaint:
         #     print(1.0/(now - self.lastPaint), "fps for paint")
         self.lastPaint = time.time()
 
-        dc = wx.BufferedPaintDC(self)
-        gc = wx.GraphicsContext.Create(dc)
-        dc.SetBackground(wx.Brush(wx.Colour(0, 0, 0)))
+        dc = wx.MemoryDC(self.drawingBuffer)
+        dc.SelectObject(self.drawingBuffer)
+        dc.SetBackground(wx.Brush(self.background, style=wx.SOLID))
         dc.Clear()
+        gc = wx.GraphicsContext.Create(dc)
         dc.SetTextForeground(wx.Colour(255, 255, 255))
         dc.SetBrush(wx.Brush())
         font = dc.GetFont()
         font.SetWeight(wx.FONTWEIGHT_BOLD)
         dc.SetFont(font)
-
-        # if self.bmp:
-        #     dc.DrawBitmap(self.bmp, 0, 0)
 
         paper_draw_wishes = {}
         if draw_wishes:
@@ -290,6 +286,9 @@ class Example(wx.Frame):
 
         end = time.time()
         # print(1000*(end - now), "ms", 1.0/(end - now), "fps to do paint stuff")
+
+        dc.SelectObject(wx.NullBitmap)
+        self.triggerRepaint()
 
     def dist(self, p1, p2):
         return math.sqrt((p1["x"] - p2["x"])**2 + (p1["y"] - p2["y"])**2)
@@ -404,7 +403,8 @@ class Example(wx.Frame):
                         elif len(opt) is 3:
                             paper_font_color.Set(opt[0], opt[1], opt[2])  # RGB
                         else:
-                            paper_font_color.Set(opt[0], opt[1], opt[2], opt[3])  # RGBA
+                            paper_font_color.Set(
+                                opt[0], opt[1], opt[2], opt[3])  # RGBA
                         gc.SetFont(paper_font, paper_font_color)
                 elif command_type == 'push':
                     gc.PushState()
@@ -462,8 +462,10 @@ class Example(wx.Frame):
             {"type": "stroke", "options": [255, 255, 255, 25]},
             {"type": "line", "options": [0, 0, paper_width, 0]},
             {"type": "line", "options": [0, 0, 0, paper_height]},
-            {"type": "line", "options": [paper_width, paper_height, paper_width, 0]},
-            {"type": "line", "options": [paper_width, paper_height, 0, paper_height]},
+            {"type": "line", "options": [
+                paper_width, paper_height, paper_width, 0]},
+            {"type": "line", "options": [
+                paper_width, paper_height, 0, paper_height]},
             {"type": "stroke", "options": [255, 255, 255, 255]},
         ] + draw_commands
 
