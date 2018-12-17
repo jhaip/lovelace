@@ -144,12 +144,12 @@ const cleanSourceCode = sourceCode.replace(/\n/g, '\\n').replace(/"/g, String.fr
 // room.assert(`camera 99 sees paper 35 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 
 room.assert(`camera 99 sees paper 1100 at TL (0, 0) TR (1440, 0) BR (1440, 860) BL (0, 860) @ 1`)
-let sPaperWidth = 100;
-let sPaperHeight = 150;
-let sPaperHMargin = 10;
-let sPaperVMargin = 10;
-let sOriginX = 200;
-let sOriginY = 100;
+let sPaperWidth = 200
+let sPaperHeight = 300;
+let sPaperHMargin = 45;
+let sPaperVMargin = 20;
+let sOriginX = 590;
+let sOriginY = 40;
 for (let x = 0; x < 3; x += 1) {
   for (let y = 0; y < 3; y += 1) {
     let idOffset = 2000 + x + y*3;
