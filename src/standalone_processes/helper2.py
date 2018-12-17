@@ -119,7 +119,7 @@ def listen(sleep_time_s=0.01):
 
 
 def check_server_connection():
-    global server_listening, sub_socket, pub_socket, init_ping_id
+    global server_listening, sub_socket, pub_socket, init_ping_id, py_subscriptions, py_prehook
     if server_listening:
         print("checking if server is still listening")
         server_listening = False
@@ -153,6 +153,12 @@ def check_server_connection():
                 print("no response from server, sleeping for a bit...")
                 time.sleep(reconnect_check_delay_s)
         print("SERVER IS ALIVE!")
+        if py_prehook:
+            py_prehook()
+        for s in py_subscriptions:
+            query = s[0]
+            callback = s[1]
+            subscribe(query, callback)
 
 def init(root_filename, skipListening=False):
     global MY_ID, MY_ID_STR, py_subscriptions, py_prehook
