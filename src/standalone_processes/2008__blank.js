@@ -1,12 +1,11 @@
 const { room, myId, run } = require('../helper2')(__filename);
 
-// Write code here!
-
-room.cleanup();
-
-let ill = room.newIllumination()
-ill.fill("red")
-ill.rect(0, 0, 1000, 1000);
-room.draw(ill)
+room.on(`$ time is $time`, results => {
+  room.cleanup()
+  let current_time = results.length > 0 ? results[0].time : 1;
+  if (Math.floor(current_time/1000) % 2 === 0) {
+    room.assert("I wish I was highlighted orange")
+  }
+})
 
 run()
