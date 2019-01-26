@@ -33,8 +33,17 @@ const stringToTerm = x => {
     return ["float", (+x).toFixed(6)]
 }
 
-const fullyParseFact = q => {
-    const tokenizeString = s => s.trim().replace(/\)/g, ' ) ').replace(/\(/g, ' ( ').replace(/,/g, ' , ').trim().split(/\s+/)
+const tokenizeString = str => {
+    // from https://stackoverflow.com/questions/2817646/javascript-split-string-on-space-or-on-quotes-to-array
+    var spacedStr = str.trim().replace(/\)/g, ' ) ').replace(/\(/g, ' ( ').replace(/,/g, ' , ').trim();
+    var aStr = spacedStr.match(/\w+|"[^"]+"/g), i = aStr.length;
+    while(i--){
+        aStr[i] = aStr[i].replace(/"/g,"");
+    }
+    return aStr
+}
+
+const fullyParseFact = q => {    
     if (typeof q === "string") {
         const q_tokens = tokenizeString(q)
         return q_tokens.map(x => stringToTerm(x))
