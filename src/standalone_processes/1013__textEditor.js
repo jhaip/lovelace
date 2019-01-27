@@ -190,7 +190,7 @@ room.on(
           `$ wish`, ["text", currentTargetName], `would be running`
         )
         setTimeout(() => {
-          room.assert(`wish`, ["text", currentTargetName], `would be running`)
+          room.assert(`wish`, ["text", currentTargetName.replace(".prejs", ".js")], `would be running`)
           room.flush();
           console.log(`claim ${currentTargetName}`)
         }, 2000);

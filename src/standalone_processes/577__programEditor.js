@@ -22,6 +22,9 @@ room.on(
         if (err) throw err;
         console.error('The file has been saved!');
         room.assert(["text", name], `has source code`, ["text", sourceCode]);
+        if (name.includes(".prejs")) {
+          room.assert(`wish`, ["text", name], `would be compiled to js`);
+        }
       });
     })
   }

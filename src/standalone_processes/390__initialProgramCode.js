@@ -46,7 +46,15 @@ const loadModulesInFolder = folder => {
     try {
       const processFilePath = path.join(processesFolder, processFile)
       console.log(fs.lstatSync(processFilePath).isFile())
-      if (!fs.lstatSync(processFilePath).isFile()) return
+      if (!fs.lstatSync(processFilePath).isFile()) {
+        return
+      }
+      if (
+        processFile.includes(".js") &&
+        processFiles.includes(processFile.replace(".js", ".prejs"))
+      ) {
+        return
+      }
       readFile(processFilePath)
     } catch (e) {
       console.error(e)
