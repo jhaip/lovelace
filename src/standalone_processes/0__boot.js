@@ -60,6 +60,8 @@ room.assert(`camera 99 sees paper 10 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) 
 room.assert(`camera 99 sees paper 11 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // HTTP Client
 room.assert(`camera 1 sees paper 20 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// JS compiler
+room.assert(`camera 99 sees paper 40 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 //
 /* TODO:
 - keyboard.py
