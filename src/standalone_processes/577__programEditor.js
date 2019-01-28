@@ -10,7 +10,7 @@ room.on(
       console.error(wisherId)
       console.error(name)
       console.error(sourceCode)
-      if (!name.includes('.py') && !name.includes('.js')) {
+      if (!name.includes('.py') && !name.includes('.js') && !name.includes('.prejs')) {
         name += '.js'
       }
       sourceCode = sourceCode.replace(new RegExp(String.fromCharCode(9787), 'g'), String.fromCharCode(34))
