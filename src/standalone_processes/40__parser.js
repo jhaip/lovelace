@@ -26,19 +26,19 @@ function parse(x) {
 
   const whenOtherwiseFunc = s => {
     return s.replace(/when ([^:]*):([\s\S]*)otherwise:\n([\s\S]*$)/g, (match, p1, p2, p3) => {
-      const middle = p1.split(",").map(a => a.trim()).join(`",\n        "`)
+      const middle = p1.split(",\n").map(a => a.trim()).join(`",\n        "`)
       return `room.on(\`${middle}\`,\n        results => {\nif (!results) {\n` + p2 + "} else {\n" + p3 + "\n}\n})\n"
     })
   }
   const whenEndFunc = s => {
     return s.replace(/when ([^:]*):([\s\S]*)end\n/g, (match, p1, p2) => {
-      const middle = p1.split(",").map(a => a.trim()).join(`",\n        "`)
+      const middle = p1.split(",\n").map(a => a.trim()).join(`",\n        "`)
       return `room.on(\`${middle}\`,\n        results => {\n` + p2 + "\n})\n"
     })
   }
   const whenFunc = s => {
     return s.replace(/when ([^:]*):([\s\S]*$)/g, (match, p1, p2) => {
-      const middle = p1.split(",").map(a => a.trim()).join(`",\n        "`)
+      const middle = p1.split(",\n").map(a => a.trim()).join(`",\n        "`)
       return `room.on(\`${middle}\`,\n        results => {` + p2 + "\n})\n"
     })
   }
