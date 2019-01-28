@@ -53,6 +53,7 @@ const loadModulesInFolder = folder => {
         processFile.includes(".js") &&
         processFiles.includes(processFile.replace(".js", ".prejs"))
       ) {
+        console.error(`returning because ${processFile} is a .js of a .prejs file`)
         return
       }
       readFile(processFilePath)
