@@ -36,7 +36,7 @@ const stringToTerm = x => {
 const tokenizeString = str => {
     // from https://stackoverflow.com/questions/2817646/javascript-split-string-on-space-or-on-quotes-to-array
     var spacedStr = str.trim().replace(/\)/g, ' ) ').replace(/\(/g, ' ( ').replace(/,/g, ' , ').trim();
-    var aStr = spacedStr.match(/\w+|"[^"]+"/g), i = aStr.length;
+    var aStr = spacedStr.match(/[\w,()@\.\$\%]+|"[^"]+"/g), i = aStr.length;
     while(i--){
         aStr[i] = aStr[i].replace(/"/g,"");
     }
