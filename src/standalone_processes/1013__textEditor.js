@@ -186,11 +186,12 @@ room.on(
         // claim it's not running to force the paper to be killed
         // so the source code change is used when it starts again
         console.log(`retract ${currentTargetName}`)
+        let postCompiledTargetName = currentTargetName.replace(".prejs", ".js");
         room.retract(
-          `$ wish`, ["text", currentTargetName], `would be running`
+          `$ wish`, ["text", postCompiledTargetName], `would be running`
         )
         setTimeout(() => {
-          room.assert(`wish`, ["text", currentTargetName.replace(".prejs", ".js")], `would be running`)
+          room.assert(`wish`, ["text", postCompiledTargetName], `would be running`)
           room.flush();
           console.log(`claim ${currentTargetName}`)
         }, 2000);
