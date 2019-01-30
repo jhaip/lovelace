@@ -77,6 +77,77 @@ const getCursorIndex = () => {
   return linesBeforeCursor.reduce((acc, line) => acc + line.length + 1, 0) + cursorPosition[0]
 }
 
+function parseForSyntaxHighlighting(s) {
+  let specialParts = [];
+  const matchFirst = (re, type) => {
+    let match;
+    while ((match = re.exec(s)) !== null) {
+      specialParts.push({
+        "type": type,
+        "index": match.index,
+        "length": match[1].length
+      })
+    }
+  }
+  const matchSecond = (re, type) => {
+    let match;
+    while ((match = re.exec(s)) !== null) {
+      specialParts.push({
+        "type": type,
+        "index": match.index + match[1].length,
+        "length": match[2].length
+      })
+    }
+  }
+  matchFirst(/(when [^:]*:)[\s\S]*otherwise:\n[\s\S]*$/g, "when")
+  matchSecond(/(when [^:]*:[\s\S]*)(otherwise:)\n[\s\S]*$/g, "otherwise")
+  matchFirst(/(when [^:]*:)[\s\S]*end\n/g, "when")
+  matchSecond(/(when [^:]*:[\s\S]*)(end)\n/g, "whenend")
+  matchFirst(/(when [^:]*:)[\s\S]*$/g, "when")
+  matchFirst(/(claim [^\n]*)/g, "claim")
+  matchFirst(/(retract [^\n]*)/g, "retract")
+  matchFirst(/(cleanup\n)/g, "cleanup")
+  specialParts.sort((a, b) => a.index - b.index);
+  let head = 0;
+  let chunks = [];
+  specialParts.forEach((part, i) => {
+    if (part.index < head) {
+      console.log("repeat index", part);
+      return;
+    }
+    chunks.push({ type: "normal", text: s.slice(head, part.index) })
+    chunks.push({ type: part.type, text: s.slice(part.index, part.index + part.length) })
+    head = part.index + part.length;
+  });
+  if (chunks.length === 0) {
+    chunks.push({ type: "normal", text: s })
+  }
+  return chunks;
+}
+
+function convertSyntaxHighlightingToLines(syntaxChunks) {
+  return syntaxChunks.reduce((lines, x) => {
+    x.text.replace(
+      new RegExp(String.fromCharCode(9787), 'g'),
+      String.fromCharCode(34)
+    ).split("\n").forEach((y, i) => {
+      if (i > 0) {
+        lines.push([])
+      }
+      if (y === "") {
+        return;
+      }
+      let nSpaces = 0;
+      if (lines[lines.length - 1].length > 0) {
+        const nLineParts = lines[lines.length - 1].length;
+        nSpaces = lines[lines.length - 1][nLineParts - 1].text.length;
+      }
+      lines[lines.length - 1].push(Object.assign({}, x, { text: " ".repeat(nSpaces) + y }))
+    });
+    return lines;
+  }, [[]])
+}
+
 const render = () => {
   editorWidthCharacters = 1000;
   const lineHeight = 1.3 * fontSize;
@@ -85,18 +156,23 @@ const render = () => {
   correctCursorPosition();
   correctWindowPosition();
   room.retract(`#${MY_ID_STR} draw graphics $ on $`) // room.cleanup();
-  let lines = ["Point at something!"]
+  let lines = [{type: "text", text: "Point at something!"}]
   if (currentTargetName) {
-    lines = currentSourceCode
-      .replace(new RegExp(String.fromCharCode(9787), 'g'), String.fromCharCode(34))
-      .split("\n")
+    lines = convertSyntaxHighlightingToLines(parseForSyntaxHighlighting(currentSourceCode))
     console.error(lines)
   }
   let ill = room.newIllumination();
   lines.slice(windowPosition[1], windowPosition[1] + editorHeightCharacters).forEach((lineRaw, i) => {
-    const line = lineRaw.substring(0, editorWidthCharacters);
-    ill.fontsize(fontSize);
-    ill.text(origin[0], (origin[1] + i * lineHeight), line);
+    if (lineRaw.length === 0) {
+      return; // skip drawing for this blank line
+    }
+    lineRaw.forEach(lineRawPart => {
+      const line = lineRawPart.text.substring(0, editorWidthCharacters);
+      const fontColor = lineRawPart.type === "normal" ? "white" : "red";
+      ill.fontcolor(fontColor);
+      ill.fontsize(fontSize);
+      ill.text(origin[0], (origin[1] + i * lineHeight), line);
+    });
   });
   let cursorLine = "█";
   for (let q = 0; q < cursorPosition[0]; q+=1) {
