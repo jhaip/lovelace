@@ -148,6 +148,19 @@ function convertSyntaxHighlightingToLines(syntaxChunks) {
   }, [[]])
 }
 
+function getColorForSyntaxLinePart(part) {
+  switch(part) {
+    case "normal": return [255, 255, 255];
+    case "when": return [0, 255, 255];
+    case "otherwise": return [0, 165, 255];
+    case "whenend": return [0, 0, 255];
+    case "claim": return [0, 255, 0];
+    case "retract": return [255, 165, 0];
+    case "cleanup": return [255, 0, 0];
+  }
+  return [255, 255, 255];
+}
+
 const render = () => {
   editorWidthCharacters = 1000;
   const lineHeight = 1.3 * fontSize;
@@ -168,8 +181,7 @@ const render = () => {
     }
     lineRaw.forEach(lineRawPart => {
       const line = lineRawPart.text.substring(0, editorWidthCharacters);
-      const fontColor = lineRawPart.type === "normal" ? "white" : "red";
-      ill.fontcolor(fontColor);
+      ill.fontcolor(...getColorForSyntaxLinePart(lineRawPart.type));
       ill.fontsize(fontSize);
       ill.text(origin[0], (origin[1] + i * lineHeight), line);
     });
