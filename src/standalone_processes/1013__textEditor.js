@@ -84,29 +84,17 @@ function parseForSyntaxHighlighting(s) {
     while ((match = re.exec(s)) !== null) {
       specialParts.push({
         "type": type,
-        "index": match.index,
+        "index": match.index + match[0].indexOf(match[1]),
         "length": match[1].length
       })
     }
   }
-  const matchSecond = (re, type) => {
-    let match;
-    while ((match = re.exec(s)) !== null) {
-      specialParts.push({
-        "type": type,
-        "index": match.index + match[1].length,
-        "length": match[2].length
-      })
-    }
-  }
-  matchFirst(/(when [^:]*:)[\s\S]*otherwise:\n[\s\S]*$/g, "when")
-  matchSecond(/(when [^:]*:[\s\S]*)(otherwise:)\n[\s\S]*$/g, "otherwise")
-  matchFirst(/(when [^:]*:)[\s\S]*end\n/g, "when")
-  matchSecond(/(when [^:]*:[\s\S]*)(end)\n/g, "whenend")
-  matchFirst(/(when [^:]*:)[\s\S]*$/g, "when")
-  matchFirst(/(claim [^\n]*)/g, "claim")
-  matchFirst(/(retract [^\n]*)/g, "retract")
-  matchFirst(/(cleanup\n)/g, "cleanup")
+  matchFirst(/(?:^|\n)[ \t]*(when [^:]*:)(?:$|\n)/g, "when")
+  matchFirst(/(?:^|\n)[ \t]*(otherwise:)(?:$|\n)/g, "otherwise")
+  matchFirst(/(?:^|\n)[ \t]*(end)(?:$|\n)/g, "whenend")
+  matchFirst(/(?:^|\n)[ \t]*(claim [^\n]*)(?:$|\n)/g, "claim")
+  matchFirst(/(?:^|\n)[ \t]*(retract [^\n]*)(?:$|\n)/g, "retract")
+  matchFirst(/(?:^|\n)[ \t]*(cleanup)(?:$|\n)/g, "cleanup")
   specialParts.sort((a, b) => a.index - b.index);
   let head = 0;
   let chunks = [];
@@ -119,9 +107,7 @@ function parseForSyntaxHighlighting(s) {
     chunks.push({ type: part.type, text: s.slice(part.index, part.index + part.length) })
     head = part.index + part.length;
   });
-  if (chunks.length === 0) {
-    chunks.push({ type: "normal", text: s })
-  }
+  chunks.push({ type: "normal", text: s.slice(head, s.length) })
   return chunks;
 }
 
