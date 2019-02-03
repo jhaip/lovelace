@@ -222,7 +222,7 @@ function init(filename) {
                 if (typeof a === "string") {
                     return `$ ${a}`
                 } else if (Array.isArray(a)) {
-                    return [["variable", "$"]].concat(a)
+                    return [["variable", ""]].concat(a)
                 }
             }))
         },
