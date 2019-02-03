@@ -1,6 +1,6 @@
 const { room, myId, run } = require('../helper2')(__filename);
 
-room.onRaw(`$source I wish I was highlighted $color`, results => {
+room.onGetSource('source', `I wish I was highlighted $color`, results => {
   room.cleanup();
   results.forEach(result => {
     let ill = room.newIllumination()  

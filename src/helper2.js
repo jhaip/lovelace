@@ -155,6 +155,12 @@ function init(filename) {
             publisher.send(`SUBSCRIBE${MY_ID_STR}${query_msg_str}`);
             console.log("send ON listen")
         },
+        onGetSource: async (...args) => {
+            const sourceVariableName = args.slice(0, 1)
+            const query_strings = args.slice(1, -1).map(s => `$${sourceVariableName} ${s}`)
+            const callback = args[args.length - 1]
+            onRaw(...query_strings, callback)
+        },
         on: async (...args) => {
             const query_strings = args.slice(1, -1).map(s => `$ ${s}`)
             const callback = args[args.length - 1]

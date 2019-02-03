@@ -1,8 +1,8 @@
 const fs = require('fs');
 const { room, myId, scriptName, run } = require('../helper2')(__filename);
 
-room.onRaw(
-  `$wisherId wish $name has source code $sourceCode`,
+room.onGetSource('wisherId',
+  `wish $name has source code $sourceCode`,
   results => {
     console.error(results);
     results.forEach(({ wisherId, name, sourceCode }) => {
