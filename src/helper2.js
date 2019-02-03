@@ -237,7 +237,7 @@ function init(filename) {
             publisher.send(`....BATCH${MY_ID_STR}${fact_str}`);
         },
         cleanup: () => {
-            room.retract(`#${MY_ID_STR} %`)
+            room.retractMine(`%`)
         },
         cleanupOtherSource: (otherSource) => {
             const fact_str = JSON.stringify([{ "type": "death", "fact": [["id", otherSource]] }])
