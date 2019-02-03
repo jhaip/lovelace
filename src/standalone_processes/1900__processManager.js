@@ -55,7 +55,7 @@ function stopPaper(name, pid) {
 let nameToProcessIdCache = {};
 
 room.on(
-  `$ $name has process id $pid`,
+  `$name has process id $pid`,
   results => {
     nameToProcessIdCache = {};
     results.forEach(result => {
@@ -67,7 +67,7 @@ room.on(
 )
 
 room.on(
-  `$ wish $name would be running`,
+  `wish $name would be running`,
   results => {
     console.error("$ wish $name would be running")
     console.error(results)

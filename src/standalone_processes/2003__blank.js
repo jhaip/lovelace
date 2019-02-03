@@ -1,7 +1,7 @@
 const { room, myId, run } = require('../helper2')(__filename);
 
 room.on(
-    `$ $photon sees color ( $r, $g, $b )`,
+    `$photon sees color ( $r, $g, $b )`,
     results => {
         console.log("results:")
         console.log(results)

@@ -2,7 +2,7 @@ const fs = require('fs');
 const { room, myId, run } = require('../helper2')(__filename);
 
 room.on(
-  `$ wish $name would be compiled to js`,
+  `wish $name would be compiled to js`,
   results => {
     console.log("results:")
     console.log(results)

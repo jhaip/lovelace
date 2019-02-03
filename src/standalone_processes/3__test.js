@@ -9,7 +9,7 @@ setTimeout(() => {
 
     // subscription should be immediately triggered because a matching claim already exists
     room.on(
-        `$X Fox is out`,
+        `Fox is out`,
         results => {
             console.log("results:")
             console.log(results)

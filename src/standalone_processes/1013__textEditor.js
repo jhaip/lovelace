@@ -188,10 +188,10 @@ console.error("my id")
 console.error(myId)
 
 room.on(
-  `$ paper ${myId} is pointing at paper $targetId`,
-  `$ $targetName has paper ID $targetId`,
-  `$ $targetName has source code $sourceCode`,
-  `$ paper ${myId} has width $myWidth height $myHeight angle $ at ( $ , $ )`,
+  `paper ${myId} is pointing at paper $targetId`,
+  `$targetName has paper ID $targetId`,
+  `$targetName has source code $sourceCode`,
+  `paper ${myId} has width $myWidth height $myHeight angle $ at ( $ , $ )`,
   results => {
   // ({assertions, retractions}) => {
     console.error("got stuff")
@@ -215,7 +215,7 @@ room.on(
 )
 
 room.on(
-  `$ keyboard $ typed key $key @ $t`,
+  `keyboard $ typed key $key @ $t`,
   results => {
     results.forEach(({ key }) => {
       console.log("key", key);
@@ -225,7 +225,7 @@ room.on(
 )
 
 room.on(
-  `$ keyboard $ typed special key $specialKey @ $t`,
+  `keyboard $ typed special key $specialKey @ $t`,
   results => {
     results.forEach(({ specialKey }) => {
       console.log("special key", specialKey);

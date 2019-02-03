@@ -4,7 +4,7 @@ let N = 100
 let i = 0
 
 room.on(
-    `$ $X ${myId} has $Y toes`,
+    `$X ${myId} has $Y toes`,
     results => {
         console.log("results:")
         console.log(results)

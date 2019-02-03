@@ -17,7 +17,7 @@ function sendPing() {
 }
 
 room.on(
-    `#${MY_ID_STR} ping $time`,
+    `ping $time`,
     results => {
         const pingTime = new Date(parseInt(results[0].time))
         const latencyMs = (new Date()) - pingTime

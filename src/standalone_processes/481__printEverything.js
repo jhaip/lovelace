@@ -1,6 +1,6 @@
 const { room, myId } = require('../helper')(__filename);
 
-room.on(`$ wish everything would be printed`, async (options) => {
+room.on(`wish everything would be printed`, async (options) => {
   room.retract(`$ wish everything would be printed`)
   const papers = (await room.select(`$ $processName has paper ID $paperId`))
   console.log("papers:")

@@ -139,7 +139,7 @@ function init(filename) {
     }
 
     const room = {
-        on: async (...args) => {
+        onRaw: async (...args) => {
             console.log("pre wait for server")
             await waitForServerListening();
             console.log("post wait for server")
@@ -154,6 +154,11 @@ function init(filename) {
             subscription_ids[subscription_id] = callback
             publisher.send(`SUBSCRIBE${MY_ID_STR}${query_msg_str}`);
             console.log("send ON listen")
+        },
+        on: async (...args) => {
+            const query_strings = args.slice(1, -1).map(s => `$ ${s}`)
+            const callback = args[args.length - 1]
+            onRaw(...query_strings, callback)
         },
         select: async (...args) => {
             await waitForServerListening();

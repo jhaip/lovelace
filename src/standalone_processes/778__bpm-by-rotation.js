@@ -1,7 +1,7 @@
 const { room, myId, scriptName, run } = require('../helper2')(__filename)
 
 room.on(
-    `$ paper ${myId} has width $ height $ angle $angleRadians at ( $ , $ )`,
+    `paper ${myId} has width $ height $ angle $angleRadians at ( $ , $ )`,
     results => {
         room.cleanup()
         room.retract("$ beats per minute is $")

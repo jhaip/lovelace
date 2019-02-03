@@ -29,7 +29,7 @@ ill.text(0, 130, `time is:`)
 ill.text(0, 160 ,`${current_time}`)
 }
 
-room.on(`$ time is $time`, results => {
+room.on(`time is $time`, results => {
   room.cleanup();
   let ill = room.newIllumination();
   let current_time = results.length > 0 ? results[0].time : 1;

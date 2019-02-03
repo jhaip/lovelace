@@ -1,7 +1,7 @@
 const { room, myId, run } = require('../helper2')(__filename);
 
 room.on(
-    `$ $photon says the humidity is $humidity and temp is $temp`,
+    `$photon says the humidity is $humidity and temp is $temp`,
     results => {
 
         // room.cleanup()

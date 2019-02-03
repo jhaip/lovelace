@@ -15,7 +15,7 @@ fs.readFile(savedCalibrationLocation, 'utf8', function(err, contents) {
   }
   // Listen for calibration updates and save them
   console.log("listening for changes to calibration")
-  room.on(
+  room.onRaw(
     `$wisherId camera $cameraId has projector calibration TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $`,
     results => {
       results.forEach(({ wisherId, cameraId, x1, y1, x2, y2, x3, y3, x4, y4 }) => {

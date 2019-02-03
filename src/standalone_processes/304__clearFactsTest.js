@@ -9,7 +9,7 @@ const URL = 'http://localhost:3000/'
 const room = new Room()
 
 room.on(
-  `$ wish all facts would be cleared`,
+  `wish all facts would be cleared`,
   options => {
     request(`${URL}facts`, { json: true }, (err, response, body) => {
       if (err) { return console.log(err); }
