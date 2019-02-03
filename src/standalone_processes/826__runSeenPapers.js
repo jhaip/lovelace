@@ -30,7 +30,7 @@ room.on(
         room.assert(`wish`, ["text", processName], `would be running`);
       } else if (!bootPapers.includes(paperId)) {
         console.error(`RETRACT: wish "${processName}" would be running`)
-        room.retract(`#${myId} wish`, ["text", processName], `would be running`);
+        room.retractMine(`wish`, ["text", processName], `would be running`);
       }
     });
     room.assert(`runSeenPapers update ${(new Date()).toISOString()}`)
@@ -42,7 +42,7 @@ room.on(
   results => {
     console.log("no papers, stopping all programs")
     knownPapers.forEach(paper => {
-      room.retract(`#${myId} wish`, ["text", processName], `would be running`);
+      room.retractMine(`wish`, ["text", processName], `would be running`);
     });
   }
 )

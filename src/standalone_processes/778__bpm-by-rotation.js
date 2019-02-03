@@ -4,7 +4,7 @@ room.on(
     `paper ${myId} has width $ height $ angle $angleRadians at ( $ , $ )`,
     results => {
         room.cleanup()
-        room.retract("$ beats per minute is $")
+        room.retractAll("beats per minute is $")
         try {
             const angleRadians = parseFloat(results[0]["angleRadians"])
             const angleAsPercentageOfRange = (angleRadians + Math.PI) / (2.0 * Math.PI)

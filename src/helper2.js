@@ -194,9 +194,37 @@ function init(filename) {
         retractNow: (query) => {
             publisher.send(`..RETRACT${MY_ID_STR}${query}`);
         },
-        retract: (...args) => {
+        retractRaw: (...args) => {
             // TODO: need to push into an array specific to the subsciber, in case there are multiple subscribers in one client
             batched_calls.push({ "type": "retract", "fact": fullyParseFact(args) })
+        },
+        retractMine: (...args) => {
+            retractRaw(args.map(a => {
+                if (typeof a === "string") {
+                    return `#${MY_ID_STR} ${a}`
+                } else if (Array.isArray(a)) {
+                    return [["id", MY_ID_STR]].concat(a)
+                }
+            }))
+        },
+        retractFromSource: (...args) => {
+            const source = args[0]
+            retractRaw(args.slice(1, -1).map(a => {
+                if (typeof a === "string") {
+                    return `#${source} ${a}`
+                } else if (Array.isArray(a)) {
+                    return [["id", source]].concat(a)
+                }
+            }))
+        },
+        retractAll: (...args) => {
+            retractRaw(args.map(a => {
+                if (typeof a === "string") {
+                    return `$ ${a}`
+                } else if (Array.isArray(a)) {
+                    return [["variable", "$"]].concat(a)
+                }
+            }))
         },
         flush: () => {
             // TODO: need to push into an array specific to the subsciber, in case there are multiple subscribers in one client

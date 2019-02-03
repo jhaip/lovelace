@@ -154,7 +154,7 @@ const render = () => {
   console.log("editor height", editorHeightCharacters);
   correctCursorPosition();
   correctWindowPosition();
-  room.retract(`#${MY_ID_STR} draw graphics $ on $`) // room.cleanup();
+  room.retractMine(`draw graphics $ on $`) // room.cleanup();
   let lines = [{type: "text", text: "Point at something!"}]
   if (currentTargetName) {
     lines = convertSyntaxHighlightingToLines(parseForSyntaxHighlighting(currentSourceCode))
@@ -261,8 +261,8 @@ room.on(
         // so the source code change is used when it starts again
         console.log(`retract ${currentTargetName}`)
         let postCompiledTargetName = currentTargetName.replace(".prejs", ".js");
-        room.retract(
-          `$ wish`, ["text", postCompiledTargetName], `would be running`
+        room.retractAll(
+          `wish`, ["text", postCompiledTargetName], `would be running`
         )
         setTimeout(() => {
           room.assert(`wish`, ["text", postCompiledTargetName], `would be running`)

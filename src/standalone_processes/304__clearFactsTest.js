@@ -16,7 +16,7 @@ room.on(
       console.log("REQUEST RESPONSE!!!!!")
       console.log(body.assertions.length)
       body.assertions.forEach(a => {
-        room.retract(a);
+        room.retractRaw(a);
       })
     });
   }

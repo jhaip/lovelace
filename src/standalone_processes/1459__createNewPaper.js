@@ -31,7 +31,7 @@ room.onGetSource('wisherId'
         if (err) {
           return console.log(err);
         }
-        room.retract(`#${wisherId} wish a paper would be created in ${language} with source code $ @ ${time}`)
+        room.retractFromSource(wisherId, `wish a paper would be created in ${language} with source code $ @ ${time}`)
         room.assert(["text", shortFilename], `has source code`, ["text", sourceCode])
         room.assert(["text", shortFilename], `has paper ID ${newId}`)
         room.assert(`wish paper ${newId} at`, ["text", shortFilename], `would be printed`)

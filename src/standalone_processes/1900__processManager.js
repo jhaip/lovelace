@@ -29,7 +29,7 @@ function runPaper(name) {
     console.error("program died:")
     console.error(name);
     console.error([["id", MY_ID_STR], ["text", name], `has process id $`])
-    room.retract(["id", MY_ID_STR], ["text", name], `has process id $`);
+    room.retractMine(["text", name], `has process id $`);
     room.flush();
     const dyingPaperIdString = getIdStringFromId(getIdFromProcessName(name))
     room.cleanupOtherSource(dyingPaperIdString)
@@ -46,7 +46,7 @@ function stopPaper(name, pid) {
   } catch {
     console.error("UNABLE TO KILL", pid)
   }
-  room.retract(`#${myId}`, ["text", name], `has process id $`);
+  room.retractMine(["text", name], `has process id $`);
   const dyingPaperIdString = getIdStringFromId(getIdFromProcessName(name))
   console.log("done STOPPING PID", pid, "with ID", dyingPaperIdString)
   room.cleanupOtherSource(dyingPaperIdString)
@@ -85,7 +85,7 @@ room.on(
         stopPaper(name, nameToProcessIdCache[name])
       }
     }
-    room.retract(`$ processManager update $`)
+    room.retractMine(`processManager update $`)
     room.assert(`processManager update ${(new Date()).toISOString()}`)
   }
 )

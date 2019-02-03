@@ -16,8 +16,8 @@ room.onGetSource('wisherId',
       sourceCode = sourceCode.replace(new RegExp(String.fromCharCode(9787), 'g'), String.fromCharCode(34))
       console.log('debug:::')
       console.log(`#${wisherId} wish "${name}" has source code $`)
-      room.retract(`#${wisherId} wish`, ["text", name], `has source code $`)
-      room.retract(`$`, ["text", name], `has source code $`);
+      room.retractFromSource(wisherId, `wish`, ["text", name], `has source code $`)
+      room.retractAll(["text", name], `has source code $`);
       fs.writeFile(`src/standalone_processes/${name}`, sourceCode, (err) => {
         if (err) throw err;
         console.error('The file has been saved!');

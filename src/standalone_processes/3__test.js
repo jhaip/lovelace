@@ -20,7 +20,7 @@ setTimeout(() => {
         room.assert(`Fox is out`)
         room.flush()
         setTimeout(() => {
-            room.retract(`$X Fox is out`)
+            room.retractMine(`Fox is out`)
             room.flush()
             setTimeout(() => {
                 room.assert(`Fox is out`)

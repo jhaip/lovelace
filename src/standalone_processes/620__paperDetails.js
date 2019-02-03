@@ -66,7 +66,7 @@ room.on(
           BL: {x: data.x4, y: data.y4}
         };
         const paperApprox = paper_approximation(paper, perspT, canvasWidth, canvasHeight);
-        room.retract(`#${myId} paper ${data.id} has width $ height $ angle $ at ($, $)`)
+        room.retractMine(`paper ${data.id} has width $ height $ angle $ at ($, $)`)
         room.assert(
           `paper ${data.id} has width ${paperApprox.width}` +
           ` height ${paperApprox.height}` +
