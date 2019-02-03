@@ -139,22 +139,6 @@ function init(filename) {
     }
 
     const room = {
-        subscribe: async (...args) => {
-            await waitForServerListening();
-            const query_strings = args.slice(0, -1)
-            const callback = args[args.length - 1]
-            const subscription_id = randomId()
-            const query_msg = {
-                "id": subscription_id,
-                "facts": query_strings
-            }
-            console.log("query_msg:")
-            console.log(query_msg)
-            const query_msg_str = JSON.stringify(query_msg)
-            console.log(query_msg_str)
-            subscription_ids[subscription_id] = callback
-            publisher.send(`SUBSCRIBE${MY_ID_STR}${query_msg_str}`);
-        },
         on: async (...args) => {
             console.log("pre wait for server")
             await waitForServerListening();

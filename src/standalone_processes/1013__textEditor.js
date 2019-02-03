@@ -187,7 +187,7 @@ console.error("HEllo from text editor")
 console.error("my id")
 console.error(myId)
 
-room.subscribe(
+room.on(
   `$ paper ${myId} is pointing at paper $targetId`,
   `$ $targetName has paper ID $targetId`,
   `$ $targetName has source code $sourceCode`,

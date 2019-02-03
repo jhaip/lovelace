@@ -1,7 +1,7 @@
 const { room, myId } = require('../helper2')(__filename);
 
 // DRAW PAPERS
-room.subscribe(
+room.on(
   `$ camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time`,
   results => {
     room.cleanup();
@@ -36,7 +36,7 @@ room.subscribe(
   }
 )
 
-room.subscribe(
+room.on(
   `$ camera 1 sees no papers @ $time`,
   results => {
     // this may not do anything because this program might not be running
