@@ -55,7 +55,7 @@ function parse(x) {
   }
   const retractFunc = s => {
     return s.replace(/retract ([^\n]*)/g, (match, p1) => {
-      return `room.retractMine(\`${p1}\`)`;
+      return `room.retractAll(\`${p1}\`)`;
     })
   }
   const cleanupFunc = s => {
