@@ -126,6 +126,8 @@ function init(filename) {
     let subscription_ids = {}
     let server_listening = false
     let batched_calls = []
+    const DEFAULT_SUBSCRIPTION_ID = 0;
+    let currentSubscriptionId = DEFAULT_SUBSCRIPTION_ID;
 
     const waitForServerListening = () => {
         return new Promise(async resolve => {
@@ -157,12 +159,12 @@ function init(filename) {
         },
         onGetSource: async (...args) => {
             const sourceVariableName = args[0]
-            const query_strings = args.slice(1, -1).map(s => `$${sourceVariableName} ${s}`)
+            const query_strings = args.slice(1, -1).map(s => `$${sourceVariableName} $ ${s}`)
             const callback = args[args.length - 1]
             onRaw(...query_strings, callback)
         },
         on: async (...args) => {
-            const query_strings = args.slice(1, -1).map(s => `$ ${s}`)
+            const query_strings = args.slice(1, -1).map(s => `$ $ ${s}`)
             const callback = args[args.length - 1]
             onRaw(...query_strings, callback)
         },
@@ -185,11 +187,22 @@ function init(filename) {
         },
         assertForOtherSource: (otherSource, fact) => {
             console.error("assertForOtherSource")
-            batched_calls.push({ "type": "claim", "fact": [["id", otherSource]].concat(fullyParseFact(fact)) })
+            batched_calls.push({
+                "type": "claim",
+                "fact": [
+                    ["id", otherSource],
+                    ["id", DEFAULT_SUBSCRIPTION_ID]
+                ].concat(fullyParseFact(fact))
+            })
         },
         assert: (...args) => {
-            // TODO: need to push into an array specific to the subsciber, in case there are multiple subscribers in one client
-            batched_calls.push({ "type": "claim", "fact": [["id", MY_ID_STR]].concat(fullyParseFact(args)) })
+            batched_calls.push({
+                "type": "claim",
+                "fact": [
+                    ["id", MY_ID_STR],
+                    ["id", currentSubscriptionId]
+                ].concat(fullyParseFact(args))
+            })
         },
         retractNow: (query) => {
             publisher.send(`..RETRACT${MY_ID_STR}${query}`);
@@ -201,9 +214,18 @@ function init(filename) {
         retractMine: (...args) => {
             retractRaw(args.map(a => {
                 if (typeof a === "string") {
-                    return `#${MY_ID_STR} ${a}`
+                    return `#${MY_ID_STR} $ ${a}`
                 } else if (Array.isArray(a)) {
-                    return [["id", MY_ID_STR]].concat(a)
+                    return [["id", MY_ID_STR], ["variable", ""]].concat(a)
+                }
+            }))
+        },
+        retractMineFromThisSubscription: (...args) => {
+            retractRaw(args.map(a => {
+                if (typeof a === "string") {
+                    return `#${MY_ID_STR} #${currentSubscriptionId} ${a}`
+                } else if (Array.isArray(a)) {
+                    return [["id", MY_ID_STR], ["id", currentSubscriptionId]].concat(a)
                 }
             }))
         },
@@ -211,18 +233,18 @@ function init(filename) {
             const source = args[0]
             retractRaw(args.slice(1, -1).map(a => {
                 if (typeof a === "string") {
-                    return `#${source} ${a}`
+                    return `#${source} $ ${a}`
                 } else if (Array.isArray(a)) {
-                    return [["id", source]].concat(a)
+                    return [["id", source], ["variable", ""]].concat(a)
                 }
             }))
         },
         retractAll: (...args) => {
             retractRaw(args.map(a => {
                 if (typeof a === "string") {
-                    return `$ ${a}`
+                    return `$ $ ${a}`
                 } else if (Array.isArray(a)) {
-                    return [["variable", ""]].concat(a)
+                    return [["variable", ""], ["variable", ""]].concat(a)
                 }
             }))
         },
