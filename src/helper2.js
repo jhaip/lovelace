@@ -229,9 +229,9 @@ function init(filename) {
             const source = args[0]
             const retractArgs = args.slice(1, -1);
             if (typeof retractArgs === "string") {
-                room.retractRaw(`$ $ ${retractArgs}`)
+                room.retractRaw(`#${source} $ ${retractArgs}`)
             } else if (Array.isArray(retractArgs)) {
-                room.retractRaw(...[["id", source], ["variable", ""]].concat(retractArgs))
+                room.retractRaw(...[["id", `${source}`], ["variable", ""]].concat(retractArgs))
             }
         },
         retractAll: (...args) => {
