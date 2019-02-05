@@ -1,12 +1,13 @@
 const fs = require('fs');
 const { room, myId, run } = require('../helper2')(__filename);
 
-room.on(
+room.onGetSource('wisherId',
   `wish $name would be compiled to js`,
   results => {
     console.log("results:")
     console.log(results)
     room.cleanup()
+    const wisherId = results[0].wisherId;
     const name = results[0].name;
     const sourceCode = fs.readFileSync(`src/standalone_processes/${name}`, 'utf8');
     const parsedSourceCode = parse(sourceCode);
@@ -15,6 +16,7 @@ room.on(
       parsedSourceCode, (err) => {
         if (err) throw err;
         console.error('The file has been saved!');
+        room.retractRaw(`#${wisherId} #0 wish`, ["text", name], `would be compiled to js`)
       }
     );
   }
