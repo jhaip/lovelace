@@ -14,6 +14,7 @@ def my_prehook():
     ]})
     batch_claims.append({"type": "claim", "fact": [
         ["id", get_my_id_str()],
+        ["id", "0"],
         ["text", "camera"],
         ["integer", "1"],
         ["text", "has"],
@@ -48,6 +49,7 @@ def my_prehook():
     ]})
     batch_claims.append({"type": "claim", "fact": [
         ["id", get_my_id_str()],
+        ["id", "0"],
         ["text", "camera"],
         ["integer", "1"],
         ["text", "sees"],

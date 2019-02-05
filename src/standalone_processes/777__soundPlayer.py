@@ -9,7 +9,7 @@ MELODY = []
 MELODY_INDEX = 0
 INSTRUMENT = 0
 
-@subscription(["$ melody is %melody"])
+@subscription(["$ $ melody is %melody"])
 def melody_callback(results):
     global MELODY, MELODY_INDEX
     try:
@@ -21,7 +21,7 @@ def melody_callback(results):
         MELODY = []
         logging.error("error finding melody in {}".format(results))
 
-@subscription(["$ beats per minute is $bpm"])
+@subscription(["$ $ beats per minute is $bpm"])
 def bpm_callback(results):
     global BPM
     try:
@@ -31,7 +31,7 @@ def bpm_callback(results):
         BPM = 60
         logging.error("error finding BPM in {}".format(results))
 
-@subscription(["$ instrument is $instrument"])
+@subscription(["$ $ instrument is $instrument"])
 def instrument_callback(results):
     global INSTRUMENT
     try:

@@ -70,7 +70,7 @@ def get_paper_you_point_at(papers, you_id, WISKER_LENGTH):
                 return paper["id"]
     return None
 
-@subscription(["$ camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time"])
+@subscription(["$ $ camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time"])
 def sub_callback_papers(results):
     papers = list(map(lambda p: ({
         "id": p["id"],
@@ -96,6 +96,7 @@ def sub_callback_papers(results):
         if other_paper is not None:
             claims.append({"type": "claim", "fact": [
                 ["id", get_my_id_str()],
+                ["id", "1"],
                 ["text", "paper"],
                 ["integer", str(paper["id"])],
                 ["text", "is"],
@@ -106,6 +107,7 @@ def sub_callback_papers(results):
             ]})
     claims.append({"type": "claim", "fact": [
         ["id", get_my_id_str()],
+        ["id", "1"],
         ["text", "pointingAt"],
         ["text", "update"],
         ["text", str(datetime.datetime.now())],
