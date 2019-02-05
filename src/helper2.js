@@ -161,12 +161,12 @@ function init(filename) {
             const sourceVariableName = args[0]
             const query_strings = args.slice(1, -1).map(s => `$${sourceVariableName} $ ${s}`)
             const callback = args[args.length - 1]
-            onRaw(...query_strings, callback)
+            room.onRaw(...query_strings, callback)
         },
         on: async (...args) => {
-            const query_strings = args.slice(1, -1).map(s => `$ $ ${s}`)
+            const query_strings = args.slice(0, -1).map(s => `$ $ ${s}`)
             const callback = args[args.length - 1]
-            onRaw(...query_strings, callback)
+            room.onRaw(...query_strings, callback)
         },
         select: async (...args) => {
             await waitForServerListening();
@@ -191,7 +191,7 @@ function init(filename) {
                 "type": "claim",
                 "fact": [
                     ["id", otherSource],
-                    ["id", DEFAULT_SUBSCRIPTION_ID]
+                    ["id", `${DEFAULT_SUBSCRIPTION_ID}`]
                 ].concat(fullyParseFact(fact))
             })
         },
@@ -200,7 +200,7 @@ function init(filename) {
                 "type": "claim",
                 "fact": [
                     ["id", MY_ID_STR],
-                    ["id", currentSubscriptionId]
+                    ["id", `${currentSubscriptionId}`]
                 ].concat(fullyParseFact(args))
             })
         },
@@ -212,41 +212,34 @@ function init(filename) {
             batched_calls.push({ "type": "retract", "fact": fullyParseFact(args) })
         },
         retractMine: (...args) => {
-            retractRaw(args.map(a => {
-                if (typeof a === "string") {
-                    return `#${MY_ID_STR} $ ${a}`
-                } else if (Array.isArray(a)) {
-                    return [["id", MY_ID_STR], ["variable", ""]].concat(a)
-                }
-            }))
+            if (typeof args === "string") {
+                room.retractRaw(`#${MY_ID_STR} $ ${args}`)
+            } else if (Array.isArray(args)) {
+                room.retractRaw(...[["id", MY_ID_STR], ["variable", ""]].concat(args))
+            }
         },
         retractMineFromThisSubscription: (...args) => {
-            retractRaw(args.map(a => {
-                if (typeof a === "string") {
-                    return `#${MY_ID_STR} #${currentSubscriptionId} ${a}`
-                } else if (Array.isArray(a)) {
-                    return [["id", MY_ID_STR], ["id", currentSubscriptionId]].concat(a)
-                }
-            }))
+            if (typeof args === "string") {
+                room.retractRaw(`#${MY_ID_STR} #${currentSubscriptionId} ${args}`)
+            } else if (Array.isArray(args)) {
+                room.retractRaw(...[["id", MY_ID_STR], ["id", currentSubscriptionId]].concat(args))
+            }
         },
         retractFromSource: (...args) => {
             const source = args[0]
-            retractRaw(args.slice(1, -1).map(a => {
-                if (typeof a === "string") {
-                    return `#${source} $ ${a}`
-                } else if (Array.isArray(a)) {
-                    return [["id", source], ["variable", ""]].concat(a)
-                }
-            }))
+            const retractArgs = args.slice(1, -1);
+            if (typeof retractArgs === "string") {
+                room.retractRaw(`$ $ ${retractArgs}`)
+            } else if (Array.isArray(retractArgs)) {
+                room.retractRaw(...[["id", source], ["variable", ""]].concat(retractArgs))
+            }
         },
         retractAll: (...args) => {
-            retractRaw(args.map(a => {
-                if (typeof a === "string") {
-                    return `$ $ ${a}`
-                } else if (Array.isArray(a)) {
-                    return [["variable", ""], ["variable", ""]].concat(a)
-                }
-            }))
+            if (typeof args === "string") {
+                room.retractRaw(`$ $ ${args}`)
+            } else if (Array.isArray(args)) {
+                room.retractRaw(...[["variable", ""], ["variable", ""]].concat(args))
+            }
         },
         flush: () => {
             // TODO: need to push into an array specific to the subsciber, in case there are multiple subscribers in one client
