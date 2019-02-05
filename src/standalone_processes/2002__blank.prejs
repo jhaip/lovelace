@@ -6,7 +6,7 @@ when $photon sees color ( $r, $g, $b ):
     // cleanup
     claim wish tablet had background color ( 0 , 0 , 0 )
 otherwise:
-    cleanup
+    // cleanup
     let r = results[0].r;
     let g = results[0].g;
     let b = results[0].b;
