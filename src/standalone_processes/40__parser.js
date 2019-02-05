@@ -27,25 +27,25 @@ function parse(x) {
   const whenOtherwiseEndFunc = s => {
     return s.replace(/when ([^:]*):([\s\S]+?)\notherwise:\n([\s\S]+?\n)end(\n|$)/g, (match, p1, p2, p3) => {
       const middle = p1.split(",\n").map(a => a.trim()).join(`\`,\n        \``)
-      return `room.on(\`${middle}\`,\n        results => {\nif (!!results) {\n` + p2 + "\n} else {\n" + p3 + "}\n})\n"
+      return `room.on(\`${middle}\`,\n        results => {\nsubscriptionPrefix();\nif (!!results) {\n` + p2 + "\n} else {\n" + p3 + "}\nsubscriptionPostfix();\n})\n"
     })
   }
   const whenOtherwiseFunc = s => {
     return s.replace(/when ([^:]*):([\s\S]+?)\notherwise:\n([\s\S]+?$)/g, (match, p1, p2, p3) => {
       const middle = p1.split(",\n").map(a => a.trim()).join(`\`,\n        \``)
-      return `room.on(\`${middle}\`,\n        results => {\nif (!!results) {\n` + p2 + "\n} else {\n" + p3 + "\n}\n})\n"
+      return `room.on(\`${middle}\`,\n        results => {\nsubscriptionPrefix();\nif (!!results) {\n` + p2 + "\n} else {\n" + p3 + "\n}\nsubscriptionPostfix();\n})\n"
     })
   }
   const whenEndFunc = s => {
     return s.replace(/when ([^:]*):([\s\S]+?\n)end(\n|$)/g, (match, p1, p2) => {
       const middle = p1.split(",\n").map(a => a.trim()).join(`\`,\n        \``)
-      return `room.on(\`${middle}\`,\n        results => {\n` + p2 + "\n})\n"
+      return `room.on(\`${middle}\`,\n        results => {\nsubscriptionPrefix();\n` + p2 + "\nsubscriptionPostfix();\n})\n"
     })
   }
   const whenFunc = s => {
     return s.replace(/when ([^:]*):([\s\S]+?$)/g, (match, p1, p2) => {
       const middle = p1.split(",\n").map(a => a.trim()).join(`\`,\n        \``)
-      return `room.on(\`${middle}\`,\n        results => {` + p2 + "\n})\n"
+      return `room.on(\`${middle}\`,\n        results => {\nsubscriptionPrefix();\n` + p2 + "\nsubscriptionPostfix();\n})\n"
     })
   }
   const claimFunc = s => {

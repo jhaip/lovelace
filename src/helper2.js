@@ -265,6 +265,13 @@ function init(filename) {
         newIllumination: () => {
             return new Illumination()
         },
+        subscriptionPrefix: () => {
+            currentSubscriptionId += 1;
+            room.retractMineFromThisSubscription("%")
+        },
+        subscriptionPostfix: () => {
+            currentSubscriptionId -= 1;
+        }
     }
 
     const parseResult = result_str => {
