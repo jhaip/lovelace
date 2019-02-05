@@ -116,8 +116,8 @@ def my_prehook():
     ill.rotate(math.pi / 2.0)
     ill.line(0, 0, 200, 0)
     ill.pop()
-    batch_claims.append(ill.to_batch_claim(get_my_id_str(), "global"))
-    batch_claims.append(ill.to_batch_claim(get_my_id_str()))
+    batch_claims.append(ill.to_batch_claim(get_my_id_str(), "0", "global"))
+    batch_claims.append(ill.to_batch_claim(get_my_id_str(), "0"))
     batch(batch_claims)
     # batch([batch_claims[0]])
 

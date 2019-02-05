@@ -68,7 +68,7 @@ class Illumination:
     def to_string(self):
         return json.dumps(self.illuminations)
     
-    def to_batch_claim(self, MY_ID_STR, target=None):
+    def to_batch_claim(self, MY_ID_STR, subscriptionId, target=None):
         target_token = None
         if target == "global":
             target_token = ["text", "global"]
@@ -78,6 +78,7 @@ class Illumination:
             target_token = ["integer", str(int(target))]
         return {"type": "claim", "fact": [
             ["id", MY_ID_STR],
+            ["id", str(subscriptionId)],
             ["text", "draw"],
             ["text", "graphics"],
             ["text", self.to_string()],
