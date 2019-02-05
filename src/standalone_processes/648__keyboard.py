@@ -19,6 +19,7 @@ def add_key(key, special_key):
         logging.info("ADDING SPECIAL KEY {}".format(special_key))
         claims.append({"type": "claim", "fact": [
             ["id", get_my_id_str()],
+            ["id", "0"],
             ["text", "keyboard"],
             ["text", get_my_id_str()],
             ["text", "typed"],
@@ -32,6 +33,7 @@ def add_key(key, special_key):
         logging.info("ADDING KEY {}".format(key))
         claims.append({"type": "claim", "fact": [
             ["id", get_my_id_str()],
+            ["id", "0"],
             ["text", "keyboard"],
             ["text", get_my_id_str()],
             ["text", "typed"],

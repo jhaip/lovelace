@@ -73,7 +73,7 @@ def map_projector_calibration_to_legacy_data_format(result):
         [result["x4"], result["y4"]]
     ]
 
-@subscription(["$ camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time"])
+@subscription(["$ $ camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time"])
 def sub_callback_papers(results):
     global papers
     logging.info("sub_callback_papers")
@@ -82,7 +82,7 @@ def sub_callback_papers(results):
     logging.info(papers)
 
 
-@subscription(["$ camera $cameraId has projector calibration TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time"])
+@subscription(["$ $ camera $cameraId has projector calibration TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time"])
 def sub_callback_calibration(results):
     global projector_calibration
     logging.info("sub_callback_calibration")
@@ -92,7 +92,7 @@ def sub_callback_calibration(results):
         logging.info(projector_calibration)
 
 
-@subscription(["$id draw graphics $graphics on $target"])
+@subscription(["$id $ draw graphics $graphics on $target"])
 def sub_callback_graphics(results):
     global graphics
     logging.info("sub_callback_graphics")
@@ -111,7 +111,7 @@ def sub_callback_graphics(results):
     logging.info(graphics)
     update_draw_wishes()
 
-@subscription(["$id draw a ($r, $g, $b) line from ($x, $y) to ($xx, $yy)"])
+@subscription(["$id $ draw a ($r, $g, $b) line from ($x, $y) to ($xx, $yy)"])
 def sub_callback_line(results):
     global lines
     logging.info("sub_callback_line")
@@ -126,7 +126,7 @@ def sub_callback_line(results):
     update_draw_wishes()
 
 
-@subscription(["$id draw $centered label $text at ($x, $y)"])
+@subscription(["$id $ draw $centered label $text at ($x, $y)"])
 def sub_callback_centered_labels(results):
     global centered_labels
     logging.info("sub_callback_centered_labels")
@@ -148,7 +148,7 @@ def sub_callback_centered_labels(results):
     update_draw_wishes()
 
 
-@subscription(["$id draw $size text $text at ($x, $y)"])
+@subscription(["$id $ draw $size text $text at ($x, $y)"])
 def sub_callback_text(results):
     global texts
     logging.info("sub_callback_text")
