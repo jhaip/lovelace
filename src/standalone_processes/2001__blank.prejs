@@ -1,0 +1,8 @@
+claim wish tablet would show How humid is it?
+
+when $ $photon says the humidity is $humidity and temp is $temp:
+    cleanup
+    claim wish tablet would show "Humidity is ${results[0].humidity}."
+otherwise:
+    cleanup
+    claim wish tablet would show How humid is it?

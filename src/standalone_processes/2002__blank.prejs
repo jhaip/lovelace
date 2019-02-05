@@ -1,11 +1,9 @@
 cleanup
 claim it is working
 
-// new
-
 when $photon sees color ( $r, $g, $b ):
     // I'm new
-    cleanup
+    // cleanup
     claim wish tablet had background color ( 0 , 0 , 0 )
 otherwise:
     cleanup
@@ -13,3 +11,12 @@ otherwise:
     let g = results[0].g;
     let b = results[0].b;
     claim wish tablet had background color ( ${r} , ${g} , ${b} )
+end
+
+let x = 5;
+
+when x is ${x},
+     ok:
+  // yo
+otherwise:
+  // ok
