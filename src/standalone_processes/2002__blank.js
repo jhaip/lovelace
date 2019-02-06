@@ -1,22 +1,19 @@
 const { room, myId, run } = require('../helper2')(__filename);
 
+
 room.cleanup()
-room.assert(`it is working`)
+room.assert(`it is working again`)
 
 room.on(`$photon sees color ( $r, $g, $b )`,
         results => {
 subscriptionPrefix();
 if (!!results) {
+  results.forEach(({ photon, r, g, b }) => {
 
-    // I'm new
-    // room.cleanup()
-    room.assert(`wish tablet had background color ( 0 , 0 , 0 )`)
-} else {
-    // room.cleanup()
-    let r = results[0].r;
-    let g = results[0].g;
-    let b = results[0].b;
     room.assert(`wish tablet had background color ( ${r} , ${g} , ${b} )`)
+  });
+} else {
+    room.assert(`wish tablet had background color ( 0 , 0 , 0 )`)
 }
 subscriptionPostfix();
 })
@@ -28,8 +25,10 @@ room.on(`x is ${x}`,
         results => {
 subscriptionPrefix();
 if (!!results) {
+  results.forEach(({  }) => {
 
   // yo
+  });
 } else {
   // ok
 

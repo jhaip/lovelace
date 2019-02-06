@@ -27,16 +27,30 @@ function parse(x) {
   const importPrefix = "const { room, myId, run } = require('../helper2')(__filename);\n\n"
   const runPostfix = "\n\nrun();"
 
+  function onlyUnique(value, index, self) {
+    return self.indexOf(value) === index;
+  }
+
+  const getUniqueVariables = s => {
+    const variables = s.match(/\$([a-zA-Z0-9]+)/g);
+    if (variables) {
+      return variables.map(x => x.slice(1)).filter(onlyUnique)
+    }
+    return [];
+  }
+
   const whenOtherwiseEndFunc = s => {
     return s.replace(/when ([^:]*):([\s\S]+?)\notherwise:\n([\s\S]+?\n)end(\n|$)/g, (match, p1, p2, p3) => {
       const middle = p1.split(",\n").map(a => a.trim()).join(`\`,\n        \``)
-      return `room.on(\`${middle}\`,\n        results => {\nsubscriptionPrefix();\nif (!!results) {\n` + p2 + "\n} else {\n" + p3 + "}\nsubscriptionPostfix();\n})\n"
+      const variables = getUniqueVariables(p1);
+      return `room.on(\`${middle}\`,\n        results => {\nsubscriptionPrefix();\nif (!!results) {\n  results.forEach(({ ${variables.join(", ")} }) => {\n` + p2 + "\n  });\n} else {\n" + p3 + "}\nsubscriptionPostfix();\n})\n"
     })
   }
   const whenOtherwiseFunc = s => {
     return s.replace(/when ([^:]*):([\s\S]+?)\notherwise:\n([\s\S]+?$)/g, (match, p1, p2, p3) => {
       const middle = p1.split(",\n").map(a => a.trim()).join(`\`,\n        \``)
-      return `room.on(\`${middle}\`,\n        results => {\nsubscriptionPrefix();\nif (!!results) {\n` + p2 + "\n} else {\n" + p3 + "\n}\nsubscriptionPostfix();\n})\n"
+      const variables = getUniqueVariables(p1);
+      return `room.on(\`${middle}\`,\n        results => {\nsubscriptionPrefix();\nif (!!results) {\n  results.forEach(({ ${variables.join(", ")} }) => {\n` + p2 + "\n  });\n} else {\n" + p3 + "\n}\nsubscriptionPostfix();\n})\n"
     })
   }
   const whenEndFunc = s => {

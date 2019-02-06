@@ -1,16 +1,11 @@
+
 cleanup
-claim it is working
+claim it is working again
 
 when $photon sees color ( $r, $g, $b ):
-    // I'm new
-    // cleanup
-    claim wish tablet had background color ( 0 , 0 , 0 )
-otherwise:
-    // cleanup
-    let r = results[0].r;
-    let g = results[0].g;
-    let b = results[0].b;
     claim wish tablet had background color ( ${r} , ${g} , ${b} )
+otherwise:
+    claim wish tablet had background color ( 0 , 0 , 0 )
 end
 
 let x = 5;
