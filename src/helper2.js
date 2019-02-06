@@ -227,7 +227,7 @@ function init(filename) {
         },
         retractFromSource: (...args) => {
             const source = args[0]
-            const retractArgs = args.slice(1, -1);
+            const retractArgs = args.slice(1);
             if (typeof retractArgs === "string") {
                 room.retractRaw(`#${source} $ ${retractArgs}`)
             } else if (Array.isArray(retractArgs)) {
