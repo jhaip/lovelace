@@ -7,18 +7,19 @@ room.onGetSource('wisherId',
     console.log("results:")
     console.log(results)
     room.cleanup()
-    const wisherId = results[0].wisherId;
-    const name = results[0].name;
-    const sourceCode = fs.readFileSync(`src/standalone_processes/${name}`, 'utf8');
-    const parsedSourceCode = parse(sourceCode);
-    fs.writeFile(
-      `src/standalone_processes/${name.replace(".prejs", ".js")}`,
-      parsedSourceCode, (err) => {
-        if (err) throw err;
-        console.error('The file has been saved!');
-        room.retractRaw(`#${wisherId} #0 wish`, ["text", name], `would be compiled to js`)
-      }
-    );
+    results.forEach(({ wisherId, name }) => {
+      const sourceCode = fs.readFileSync(`src/standalone_processes/${name}`, 'utf8');
+      const parsedSourceCode = parse(sourceCode);
+      fs.writeFile(
+        `src/standalone_processes/${name.replace(".prejs", ".js")}`,
+        parsedSourceCode, (err) => {
+          if (err) throw err;
+          console.error('The file has been saved!');
+          room.retractFromSource(wisherId, `wish`, ["text", name], `would be compiled to js`)
+          room.flush();
+        }
+      );
+    })
   }
 )
 
