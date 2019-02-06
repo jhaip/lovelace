@@ -25,6 +25,7 @@ room.onGetSource('wisherId',
         if (name.includes(".prejs")) {
           room.assert(`wish`, ["text", name], `would be compiled to js`);
         }
+        room.flush();
       });
     })
   }
