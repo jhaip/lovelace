@@ -44,7 +44,12 @@ function parseWithStates(x) {
                 if (line.slice(-1) === ':') {
                     const query = line.match(/^when (.+):$/)[1]
                     const variables = getUniqueVariables(query);
-                    OUTPUT += `room.on(\`${query}\`,\n`
+                    const bySourceQueryMatch = line.match(/^when (.+) by \$source:$/)
+                    if (bySourceQueryMatch) {
+                        OUTPUT += `room.onGetSource('source', \`${bySourceQueryMatch[1]}\`,\n`
+                    } else {
+                        OUTPUT += `room.on(\`${query}\`,\n`
+                    }
                     OUTPUT += `        results => {\n`
                     OUTPUT += `  subscriptionPrefix();\n`
                     OUTPUT += `  if (!!results) {\n`
