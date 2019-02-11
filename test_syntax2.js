@@ -1,5 +1,5 @@
 function parseWithStates(x) {
-    const STATES = { "GLOBAL": "GLOBAL", "WHEN_QUERY_PARAMS": "WHEN_QUERY_PARAMS", "WHEN_TRUE": "WHEN_TRUE", "WHEN_OTHERWISE": "WHEN_OTHERWISE" }
+    const STATES = { "GLOBAL": "GLOBAL", "WHEN_QUERY_PARAMS": "WHEN_QUERY_PARAMS", "WHEN_TRUE": "WHEN_TRUE", "WHEN_OTHERWISE": "WHEN_OTHERWISE", "WHEN_NEW_RESULTS_QUERY_PARAMS": "WHEN_NEW_RESULTS_QUERY_PARAMS", "WHEN_NEW_RESULTS": "WHEN_NEW_RESULTS" }
     let STATE = STATES.GLOBAL;
     let WHEN_VARIABLES_CACHE = "";
     let OUTPUT = "";
@@ -39,7 +39,26 @@ function parseWithStates(x) {
             OUTPUT += claimFunc(line);
             OUTPUT += retractFunc(line);
             OUTPUT += cleanupFunc(line);
-            if (line.match(/^when /)) {
+            if (line.match(/^when new \$results of /)) {
+                STATE = STATES.WHEN_NEW_RESULTS_QUERY_PARAMS;
+                if (line.slice(-1) === ':') {
+                    const query = line.match(/^when new \$results of (.+):$/)[1]
+                    const variables = getUniqueVariables(query);
+                    const bySourceQueryMatch = line.match(/^when new \$results of (.+) by \$source:$/)
+                    if (bySourceQueryMatch) {
+                        OUTPUT += `room.onGetSource('source', \`${bySourceQueryMatch[1]}\`,\n`
+                    } else {
+                        OUTPUT += `room.on(\`${query}\`,\n`
+                    }
+                    OUTPUT += `        results => {\n`
+                    STATE = STATES.WHEN_NEW_RESULTS;
+                } else if (line.slice(-1) === ',') {
+                    const query = line.match(/^when new \$results of (.+),$/)[1]
+                    OUTPUT += `room.on(\`${query}\`,\n`
+                } else {
+                    console.error("bad when query!")
+                }
+            } else if (line.match(/^when /)) {
                 STATE = STATES.WHEN_QUERY_PARAMS;
                 if (line.slice(-1) === ':') {
                     const query = line.match(/^when (.+):$/)[1]
@@ -57,7 +76,7 @@ function parseWithStates(x) {
                     STATE = STATES.WHEN_TRUE;
                 } else if (line.slice(-1) === ',') {
                     const query = line.match(/^when (.+),$/)[1]
-                    WHEN_VARIABLES_CACHE += ' ' + query;
+                    WHEN_VARIABLES_CACHE = query;
                     OUTPUT += `room.on(\`${query}\`,\n`
                 } else {
                     console.error("bad when query!")
@@ -84,6 +103,14 @@ function parseWithStates(x) {
                 STATE = STATES.GLOBAL;
                 OUTPUT += "  }\n  subscriptionPostfix();\n})\n";
             }
+        } else if (STATE == STATES.WHEN_NEW_RESULTS) {
+            OUTPUT += claimFunc(line);
+            OUTPUT += retractFunc(line);
+            OUTPUT += cleanupFunc(line);
+            if (line.match(/^end$/) || isLastLine) {
+                STATE = STATES.GLOBAL;
+                OUTPUT += "\n})\n";
+            }
         } else if (STATE == STATES.WHEN_QUERY_PARAMS) {
             const m = line.match(/^\s*(.+),$/)
             if (m) {
@@ -106,13 +133,29 @@ function parseWithStates(x) {
                     console.error("BAD QUERY")
                 }
             }
+        } else if (STATE == STATES.WHEN_NEW_RESULTS_QUERY_PARAMS) {
+            const m = line.match(/^\s*(.+),$/)
+            if (m) {
+                const query = m[1]
+                OUTPUT += `        \`${query}\`,\n`
+            } else {
+                const m2 = line.match(/^\s*(.+):$/)
+                if (m2) {
+                    const query = m2[1]
+                    OUTPUT += `        \`${query}\`,\n`
+                    OUTPUT += `        results => {\n`
+                    STATE = STATES.WHEN_NEW_RESULTS;
+                } else {
+                    console.error("BAD QUERY")
+                }
+            }
         }
         if (prevOUTPUT === OUTPUT) {
             OUTPUT += line + "\n";
         }
     }
 
-    if (STATE === STATES.WHEN_QUERY_PARAMS) {
+    if (STATE === STATES.WHEN_QUERY_PARAMS || STATE === STATES.WHEN_NEW_RESULTS_QUERY_PARAMS) {
         console.error("NO END TO WHEN QUERY")
     }
     OUTPUT += "\n\nrun();\n"
