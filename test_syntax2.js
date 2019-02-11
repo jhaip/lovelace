@@ -3,6 +3,7 @@ function parseWithStates(x) {
     let STATE = STATES.GLOBAL;
     let WHEN_VARIABLES_CACHE = "";
     let OUTPUT = "";
+    OUTPUT += "const { room, myId, run } = require('../helper2')(__filename);\n\n"
 
     const claimFunc = s => {
         const m = s.match(/^(\s*)claim (.+)\s*$/);
@@ -28,6 +29,7 @@ function parseWithStates(x) {
         }
         return [];
     }
+
     const lines = x.split("\n")
     for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
         const prevOUTPUT = OUTPUT.slice();
@@ -105,9 +107,9 @@ function parseWithStates(x) {
         }
     }
 
-    // end state
     if (STATE === STATES.WHEN_QUERY_PARAMS) {
         console.error("NO END TO WHEN QUERY")
     }
+    OUTPUT += "\n\nrun();\n"
     return OUTPUT;
 }
