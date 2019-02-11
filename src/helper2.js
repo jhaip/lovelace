@@ -270,7 +270,6 @@ function init(filename) {
             room.retractMineFromThisSubscription("%")
         },
         subscriptionPostfix: () => {
-            currentSubscriptionId -= 1;
         }
     }
 
