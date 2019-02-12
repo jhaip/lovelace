@@ -5,21 +5,15 @@ function parseWithStates(x) {
     let OUTPUT = "";
     OUTPUT += "const { room, myId, run } = require('../helper2')(__filename);\n\n"
 
-    const claimFunc = s => {
-        const m = s.match(/^(\s*)claim (.+)\s*$/);
-        if (m === null) return "";
-        return `${m[1]}room.assert(\`${m[2]}\`)\n`;
+    const claimRetractCleanupCheck = s => {
+        let m = s.match(/^(\s*)claim (.+)\s*$/);
+        if (m !== null) OUTPUT += `${m[1]}room.assert(\`${m[2]}\`)\n`;
+        m = s.match(/^(\s*)retract (.+)\s*$/);
+        if (m !== null) OUTPUT += `${m[1]}room.retractAll(\`${m[2]}\`)\n`;
+        m = s.match(/^(\s*)cleanup\s*$/);
+        if (m !== null) OUTPUT += `${m[1]}room.cleanup()\n`;
     }
-    const retractFunc = s => {
-        const m = s.match(/^(\s*)retract (.+)\s*$/);
-        if (m === null) return "";
-        return `${m[1]}room.retractAll(\`${m[2]}\`)\n`;
-    }
-    const cleanupFunc = s => {
-        const m = s.match(/^(\s*)cleanup\s*$/);
-        if (m === null) return "";
-        return `${m[1]}room.cleanup()\n`;
-    }
+
     const getUniqueVariables = s => {
         const variables = s.match(/\$([a-zA-Z0-9]+)/g);
         if (variables) {
@@ -36,9 +30,7 @@ function parseWithStates(x) {
         const line = lines[lineIndex];
         const isLastLine = lineIndex === lines.length - 1;
         if (STATE === STATES.GLOBAL) {
-            OUTPUT += claimFunc(line);
-            OUTPUT += retractFunc(line);
-            OUTPUT += cleanupFunc(line);
+            claimRetractCleanupCheck(line);
             if (line.match(/^when new \$results of /)) {
                 STATE = STATES.WHEN_NEW_RESULTS_QUERY_PARAMS;
                 if (line.slice(-1) === ':') {
@@ -83,9 +75,7 @@ function parseWithStates(x) {
                 }
             }
         } else if (STATE == STATES.WHEN_TRUE) {
-            OUTPUT += claimFunc(line);
-            OUTPUT += retractFunc(line);
-            OUTPUT += cleanupFunc(line);
+            claimRetractCleanupCheck(line);
             if (line.match(/^otherwise:$/)) {
                 STATE = STATES.WHEN_OTHERWISE;
                 OUTPUT += "\n    });\n  } else {\n"
@@ -96,17 +86,13 @@ function parseWithStates(x) {
                 OUTPUT += "  }\n  subscriptionPostfix();\n})\n";
             }
         } else if (STATE == STATES.WHEN_OTHERWISE) {
-            OUTPUT += claimFunc(line);
-            OUTPUT += retractFunc(line);
-            OUTPUT += cleanupFunc(line);
+            claimRetractCleanupCheck(line);
             if (line.match(/^end$/) || isLastLine) {
                 STATE = STATES.GLOBAL;
                 OUTPUT += "  }\n  subscriptionPostfix();\n})\n";
             }
         } else if (STATE == STATES.WHEN_NEW_RESULTS) {
-            OUTPUT += claimFunc(line);
-            OUTPUT += retractFunc(line);
-            OUTPUT += cleanupFunc(line);
+            claimRetractCleanupCheck(line);
             if (line.match(/^end$/) || isLastLine) {
                 STATE = STATES.GLOBAL;
                 OUTPUT += "\n})\n";
