@@ -1,6 +1,5 @@
-
 cleanup
-claim it is working again
+claim new it is working again
 
 when $photon sees color ( $r, $g, $b ):
     claim wish tablet had background color ( ${r} , ${g} , ${b} )
