@@ -97,7 +97,7 @@ function parseWithStates(x) {
                 STATE = STATES.GLOBAL;
                 OUTPUT += "\n})\n";
             }
-        } else if (STATE == STATES.WHEN_QUERY_PARAMS) {
+        } else if (STATE == STATES.WHEN_QUERY_PARAMS || STATE == STATES.WHEN_NEW_RESULTS_QUERY_PARAMS) {
             const m = line.match(/^\s*(.+),$/)
             if (m) {
                 const query = m[1]
@@ -108,29 +108,17 @@ function parseWithStates(x) {
                 if (m2) {
                     const query = m2[1]
                     WHEN_VARIABLES_CACHE += ' ' + query;
-                    const variables = getUniqueVariables(WHEN_VARIABLES_CACHE)
                     OUTPUT += `        \`${query}\`,\n`
                     OUTPUT += `        results => {\n`
-                    OUTPUT += `  subscriptionPrefix();\n`
-                    OUTPUT += `  if (!!results) {\n`
-                    OUTPUT += `    results.forEach(({ ${variables.join(", ")} }) => {\n`
-                    STATE = STATES.WHEN_TRUE;
-                } else {
-                    console.error("BAD QUERY")
-                }
-            }
-        } else if (STATE == STATES.WHEN_NEW_RESULTS_QUERY_PARAMS) {
-            const m = line.match(/^\s*(.+),$/)
-            if (m) {
-                const query = m[1]
-                OUTPUT += `        \`${query}\`,\n`
-            } else {
-                const m2 = line.match(/^\s*(.+):$/)
-                if (m2) {
-                    const query = m2[1]
-                    OUTPUT += `        \`${query}\`,\n`
-                    OUTPUT += `        results => {\n`
-                    STATE = STATES.WHEN_NEW_RESULTS;
+                    if (STATE == STATES.WHEN_QUERY_PARAMS) {
+                        OUTPUT += `  subscriptionPrefix();\n`
+                        OUTPUT += `  if (!!results) {\n`
+                        const variables = getUniqueVariables(WHEN_VARIABLES_CACHE)
+                        OUTPUT += `    results.forEach(({ ${variables.join(", ")} }) => {\n`
+                        STATE = STATES.WHEN_TRUE;
+                    } else if (STATE == STATES.WHEN_NEW_RESULTS_QUERY_PARAMS) {
+                        STATE = STATES.WHEN_NEW_RESULTS;
+                    }
                 } else {
                     console.error("BAD QUERY")
                 }
