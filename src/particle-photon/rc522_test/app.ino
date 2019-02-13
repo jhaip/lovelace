@@ -9,7 +9,7 @@
  * Released into the public domain.
  *
  * Sample program showing how to read data from a PICC using a MFRC522 reader on the Arduino SPI interface.
- *----------------------------------------------------------------------------- empty_skull 
+ *----------------------------------------------------------------------------- empty_skull
  * Aggiunti pin per arduino Mega
  * add pin configuration for arduino mega
  * http://mac86project.altervista.org/
@@ -24,7 +24,7 @@
  * SPI MISO   12               50                A4				MISO
  * SPI SCK    13               52                A3				SCK
  *
- * The reader can be found on eBay for around 5 dollars. Search for "mf-rc522" on ebay.com. 
+ * The reader can be found on eBay for around 5 dollars. Search for "mf-rc522" on ebay.com.
  */
 
 
@@ -35,44 +35,55 @@
 #define SS_PIN D1
 #define RST_PIN D2
 
+#define SS_PIN_B D0
+
 MFRC522 mfrc522(SS_PIN, RST_PIN);	// Create MFRC522 instance.
+MFRC522 mfrc522_b(SS_PIN_B, RST_PIN);	// Create MFRC522 instance.
 
 void setup() {
 	Serial.begin(9600);	// Initialize serial communications with the PC
 	mfrc522.setSPIConfig();
+	mfrc522_b.setSPIConfig();
 
 	mfrc522.PCD_Init();	// Init MFRC522 card
+	mfrc522_b.PCD_Init();	// Init MFRC522 card
 	Serial.println("Scan PICC to see UID and type...");
 }
 
-void loop() {
-    delay(1000);
-
+void check_reader(MFRC522 reader, int n) {
+	Serial.println(n);
 	// Look for new cards
-// 	if ( ! mfrc522.PICC_IsNewCardPresent()) {
-// 		return;
-// 	}
-    byte bufferATQA[2];
+	// 	if ( ! mfrc522.PICC_IsNewCardPresent()) {
+	// 		return;
+	// 	}
+  byte bufferATQA[2];
 	byte bufferSize = sizeof(bufferATQA);
-	byte result = mfrc522.PICC_WakeupA(bufferATQA, &bufferSize);
+	byte result = reader.PICC_WakeupA(bufferATQA, &bufferSize);
 	if (!(result == MFRC522::STATUS_OK || result == MFRC522::STATUS_COLLISION)) {
 	    Serial.println("STATUS is not OK or COLLISION");
 	}
 
 	// Select one of the cards
-	if ( ! mfrc522.PICC_ReadCardSerial()) {
+	if ( ! reader.PICC_ReadCardSerial()) {
 		return;
 	}
 
 	// Dump debug info about the card. PICC_HaltA() is automatically called.
-// 	mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
-    MFRC522::Uid *uid = &(mfrc522.uid);
-    Serial.print("Card UID:");
+  // reader.PICC_DumpToSerial(&(reader.uid));
+  MFRC522::Uid *uid = &(reader.uid);
+  Serial.print("Card UID:");
 	for (byte i = 0; i < uid->size; i++) {
 		Serial.print(uid->uidByte[i] < 0x10 ? " 0" : " ");
 		Serial.print(uid->uidByte[i], HEX);
-	} 
+	}
 	Serial.println();
-	
-	mfrc522.PICC_HaltA();
+
+	reader.PICC_HaltA();
+}
+
+void loop() {
+    delay(1000);
+
+		check_reader(mfrc522, 1);
+		check_reader(mfrc522_b, 2);
 }
