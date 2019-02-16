@@ -1,22 +1,32 @@
-const { room, myId, run } = require('../helper2')(__filename);
+const { room, MY_ID_STR, run } = require('../helper2')(__filename);
 
-room.on(
-    `$ $photon says the humidity is $humidity and temp is $temp`,
-    results => {
-
-        // room.cleanup()
-        console.log("results:")
-        console.log(results)
-
-        room.cleanup();
-        if (!results || results.length === 0) {
-            room.assert(`wish tablet would show`, ["text", `How humid is it?`])
-        } else {
-            room.assert(`wish tablet would show`, ["text", `Humidity is ${results[0].humidity}.`])
+room.on(`$source wish I was labeled %text`, results => {
+  room.cleanup()
+  results.push({source: MY_ID_STR, text: "ADD: wish I was labeled..."})
+  results.forEach(result => {
+    let ill = room.newIllumination()
+    let textLines = result.text.split(" ");
+    let maxLineCharacters = 13;
+    let nextLine = ""
+    let lineOffset = 0;
+    ill.translate(10,10)
+    textLines.forEach(textLine => {
+      if (nextLine.length + 1 + textLine.length >= maxLineCharacters) {
+        ill.text(0, lineOffset, nextLine)
+        nextLine = textLine;
+        lineOffset += 30;
+      } else {
+        if (nextLine.length > 0) {
+          nextLine += " "
         }
-    }
-)
+        nextLine += textLine;
+      }
+    });
 
-room.assert(`wish tablet would show`, ["text", `How humid is it?`])
+    ill.text(0, lineOffset, nextLine)
+    room.draw(ill, result.source)
+
+  })
+})
 
 run();

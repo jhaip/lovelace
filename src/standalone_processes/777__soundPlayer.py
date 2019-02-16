@@ -54,6 +54,7 @@ init(__file__, skipListening=True)
 pygame.init()
 pygame.midi.init()
 port = pygame.midi.get_default_output_id()
+# port = 2  # for linux
 logging.info("using output_id :%s:" % port)
 midi_out = pygame.midi.Output(port, 0)
 try:

@@ -147,9 +147,9 @@ room.assert(`camera 99 sees paper 1100 at TL (0, 0) TR (1440, 0) BR (1440, 860) 
 let sPaperWidth = 200
 let sPaperHeight = 300;
 let sPaperHMargin = 45;
-let sPaperVMargin = 20;
-let sOriginX = 590;
-let sOriginY = 40;
+let sPaperVMargin = 10;
+let sOriginX = 350;
+let sOriginY = 50;
 for (let x = 0; x < 3; x += 1) {
   for (let y = 0; y < 3; y += 1) {
     let idOffset = 2000 + x + y*3;
@@ -170,9 +170,11 @@ for (let x = 0; x < 3; x += 1) {
 // room.assert(`camera 1 sees paper 2007 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // room.assert(`camera 1 sees paper 2008 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // room.assert(`camera 1 sees paper 2009 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
-room.assert(`camera 1 sees paper 1013 at TL (0, 0) TR (1440, 0) BR (1440, 860) BL (0, 860) @ 1`)
+// room.assert(`camera 1 sees paper 1013 at TL (0, 0) TR (1440, 0) BR (1440, 860) BL (0, 860) @ 1`)
+room.assert(`camera 1 sees paper 1013 at TL (1100, 20) TR (1900, 20) BR (1100, 860) BL (0, 860) @ 1`)
 room.assert(`camera 1 sees paper 648 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
-room.assert(`paper 1013 has width 1440 height 860 angle 0 at (0, 0)`)
+// room.assert(`paper 1013 has width 1440 height 860 angle 0 at (0, 0)`)
+room.assert(`paper 1013 has width 800 height 840 angle 0 at (0, 0)`)
 room.assert(`paper 1100 has width 1440 height 860 angle 0 at (0, 0)`)
 // room.assert(`wish RGB light strand is color 0 50 0`)
 

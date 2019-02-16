@@ -35,6 +35,7 @@ def midiExample():
     pygame.midi.init()
 
     port = pygame.midi.get_default_output_id()
+    # port = 2  # for linux
     print ("using output_id :%s:" % port)
     midi_out = pygame.midi.Output(port, 0)
     try:
