@@ -1,0 +1,8 @@
+const rfidValueToPaperId = {
+    'TODO': 2000
+}
+
+when $photonId read $value on sensor $sensorId:
+    if (value in rfidValueToPaperId) {
+        claim camera 99 sees paper ${paperId} at TL (0, 0) TR (1, 0) BR (1, 1) BL (0, 1) @ 1
+    }
