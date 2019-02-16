@@ -1,3 +1,9 @@
+// This #include statement was automatically added by the Particle IDE.
+#include <SparkJson.h>
+
+// This #include statement was automatically added by the Particle IDE.
+#include <HttpClient.h>
+
 /*
  * MFRC522 - Library to use ARDUINO RFID MODULE KIT 13.56 MHZ WITH TAGS SPI W AND R BY COOQROBOT.
  * The library file MFRC522.h has a wealth of useful info. Please read it.
@@ -27,18 +33,50 @@
  * The reader can be found on eBay for around 5 dollars. Search for "mf-rc522" on ebay.com.
  */
 
-
 //#include <SPI.h>
 #include "MFRC522.h"
 
-// #define SS_PIN SS
 #define SS_PIN D1
 #define RST_PIN D2
 
 #define SS_PIN_B D0
 
-MFRC522 mfrc522(SS_PIN, RST_PIN);	// Create MFRC522 instance.
-MFRC522 mfrc522_b(SS_PIN_B, RST_PIN);	// Create MFRC522 instance.
+// Create MFRC522 instances
+MFRC522 mfrc522(SS_PIN, RST_PIN);
+MFRC522 mfrc522_b(SS_PIN_B, RST_PIN);
+// MFRC522 mfrc522_c(SS_PIN_C, RST_PIN);
+// MFRC522 mfrc522_d(SS_PIN_D, RST_PIN);
+// MFRC522 mfrc522_e(SS_PIN_E, RST_PIN);
+// MFRC522 mfrc522_f(SS_PIN_F, RST_PIN);
+
+HttpClient http;
+
+// Headers currently need to be set at init, useful for API keys etc.
+http_header_t headers[] = {
+    { "Content-Type", "application/json" },
+    { "Accept" , "application/json" },
+    { "Accept" , "*/*"},
+    { NULL, NULL } // NOTE: Always terminate headers will NULL
+};
+
+http_request_t request;
+http_response_t response;
+
+String myID = System.deviceID();
+
+void publishValueMessage(int sensorId, String sensorValue) {
+    char str[300];
+    sprintf(str, "{\"claim\":\"Photon%s read %s on sensor %i\", \"retract\":\"$ $ Photon%s read $ on sensor $\"}", (const char*)myID, sensorId, sensorValue, (const char*)myID);
+    Serial.println(str);
+    request.ip = {10, 0, 0, 2};
+    request.port = 5000;
+    request.path = "/cleanup-claim";
+    request.body = str;
+    Serial.println(request.body);
+    http.post(request, response, headers);
+    Serial.print("Application>\tResponse status: ");
+    Serial.println(response.status);
+}
 
 void setup() {
 	Serial.begin(9600);	// Initialize serial communications with the PC
@@ -50,40 +88,47 @@ void setup() {
 	Serial.println("Scan PICC to see UID and type...");
 }
 
-void check_reader(MFRC522 reader, int n) {
-	Serial.println(n);
-	// Look for new cards
-	// 	if ( ! mfrc522.PICC_IsNewCardPresent()) {
-	// 		return;
-	// 	}
-  byte bufferATQA[2];
-	byte bufferSize = sizeof(bufferATQA);
-	byte result = reader.PICC_WakeupA(bufferATQA, &bufferSize);
-	if (!(result == MFRC522::STATUS_OK || result == MFRC522::STATUS_COLLISION)) {
-	    Serial.println("STATUS is not OK or COLLISION");
-	}
+String check_reader(MFRC522 reader) {
+    byte bufferATQA[2];
+    byte bufferSize = sizeof(bufferATQA);
+    byte result = reader.PICC_WakeupA(bufferATQA, &bufferSize);
+    if (!(result == MFRC522::STATUS_OK || result == MFRC522::STATUS_COLLISION)) {
+        Serial.println("STATUS is not OK or COLLISION");
+        return "null";
+    }
 
-	// Select one of the cards
-	if ( ! reader.PICC_ReadCardSerial()) {
-		return;
-	}
+    // Select one of the cards
+    if ( ! reader.PICC_ReadCardSerial()) {
+        return "null";
+    }
 
-	// Dump debug info about the card. PICC_HaltA() is automatically called.
-  // reader.PICC_DumpToSerial(&(reader.uid));
-  MFRC522::Uid *uid = &(reader.uid);
-  Serial.print("Card UID:");
-	for (byte i = 0; i < uid->size; i++) {
-		Serial.print(uid->uidByte[i] < 0x10 ? " 0" : " ");
-		Serial.print(uid->uidByte[i], HEX);
-	}
-	Serial.println();
+    MFRC522::Uid *uid = &(reader.uid);
+    String cardUidString = "";
+    Serial.print("Card UID: ");
+    for (byte i = 0; i < uid->size; i++) {
+        cardUidString = cardUidString.concat(uid->uidByte[i] < 0x10 ? " 0" : " ");
+        cardUidString = cardUidString.concat(String(uid->uidByte[i], HEX));
+    }
+    Serial.println(cardUidString);
 
-	reader.PICC_HaltA();
+    reader.PICC_HaltA();
+    return cardUidString;
 }
 
 void loop() {
     delay(1000);
 
-		check_reader(mfrc522, 1);
-		check_reader(mfrc522_b, 2);
+    String val_a = check_reader(mfrc522);
+    String val_b = check_reader(mfrc522_b);
+    // String val_c = check_reader(mfrc522_c);
+    // String val_d = check_reader(mfrc522_d);
+    // String val_e = check_reader(mfrc522_e);
+    // String val_f = check_reader(mfrc522_f);
+
+    // publishValueMessage(1, check_reader(val_a));
+    // publishValueMessage(2, check_reader(val_b));
+    // publishValueMessage(3, check_reader(val_c));
+    // publishValueMessage(4, check_reader(val_d));
+    // publishValueMessage(5, check_reader(val_e));
+    // publishValueMessage(6, check_reader(val_f));
 }
