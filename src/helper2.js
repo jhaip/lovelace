@@ -265,11 +265,12 @@ function init(filename) {
         newIllumination: () => {
             return new Illumination()
         },
-        subscriptionPrefix: () => {
-            currentSubscriptionId += 1;
+        subscriptionPrefix: id => {
+            currentSubscriptionId = id;
             room.retractMineFromThisSubscription("%")
         },
         subscriptionPostfix: () => {
+            currentSubscriptionId = 0;
         }
     }
 

@@ -50,6 +50,7 @@ function parse(x) {
   }
 
   const lines = x.split("\n")
+  let currentSubscriptionId = 0;
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
     const prevOUTPUT = OUTPUT.slice();
     const line = lines[lineIndex];
@@ -58,6 +59,7 @@ function parse(x) {
       claimRetractCleanupCheck(line);
       if (line.match(/^when new \$results of /)) {
         STATE = STATES.WHEN_NEW_RESULTS_QUERY_PARAMS;
+        currentSubscriptionId += 1;
         if (line.slice(-1) === ':') {
           const query = line.match(/^when new \$results of (.+):$/)[1]
           const variables = getUniqueVariables(query);
@@ -77,6 +79,7 @@ function parse(x) {
         }
       } else if (line.match(/^when /)) {
         STATE = STATES.WHEN_QUERY_PARAMS;
+        currentSubscriptionId += 1;
         if (line.slice(-1) === ':') {
           const query = line.match(/^when (.+):$/)[1]
           const variables = getUniqueVariables(query);
@@ -87,7 +90,7 @@ function parse(x) {
             OUTPUT += `room.on(\`${query}\`,\n`
           }
           OUTPUT += `        results => {\n`
-          OUTPUT += `  room.subscriptionPrefix();\n`
+          OUTPUT += `  room.subscriptionPrefix(${currentSubscriptionId});\n`
           OUTPUT += `  if (!!results) {\n`
           OUTPUT += `    results.forEach(({ ${variables.join(", ")} }) => {\n`
           STATE = STATES.WHEN_TRUE;
@@ -136,7 +139,7 @@ function parse(x) {
           OUTPUT += `        \`${query}\`,\n`
           OUTPUT += `        results => {\n`
           if (STATE == STATES.WHEN_QUERY_PARAMS) {
-            OUTPUT += `  room.subscriptionPrefix();\n`
+            OUTPUT += `  room.subscriptionPrefix(${currentSubscriptionId});\n`
             OUTPUT += `  if (!!results) {\n`
             const variables = getUniqueVariables(WHEN_VARIABLES_CACHE)
             OUTPUT += `    results.forEach(({ ${variables.join(", ")} }) => {\n`
