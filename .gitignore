@@ -6,3 +6,8 @@ __pycache__
 src/standalone_processes/files/*.pdf
 src/standalone_processes/logs/
 *.bin
+new-backend/go-server/db_view*.txt
+new-backend/go-server/server
+new-backend/go-server/server.log
+new-backend/memdb1
+new-backend/memdb1-journal
