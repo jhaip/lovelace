@@ -23,7 +23,7 @@ room.on(
     const bootPapers = ["0", "498", "577", "826", "277", "620", "1459", "1800", "1382", "1900", "989"]
 
     knownPapers.forEach(paper => {
-      const processName = paper.processName;
+      const processName = paper.processName.replace(".prejs", ".js");
       const paperId = String(paper.paperId);
       if (visibleIDs.includes(paperId)) {
         console.error(`wish "${processName}" would be running`)
