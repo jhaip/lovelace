@@ -87,7 +87,7 @@ function parse(x) {
             OUTPUT += `room.on(\`${query}\`,\n`
           }
           OUTPUT += `        results => {\n`
-          OUTPUT += `  subscriptionPrefix();\n`
+          OUTPUT += `  room.subscriptionPrefix();\n`
           OUTPUT += `  if (!!results) {\n`
           OUTPUT += `    results.forEach(({ ${variables.join(", ")} }) => {\n`
           STATE = STATES.WHEN_TRUE;
@@ -108,13 +108,13 @@ function parse(x) {
       if (line.match(/^end$/) || isLastLine) {
         STATE = STATES.GLOBAL;
         OUTPUT += "\n    });\n";
-        OUTPUT += "  }\n  subscriptionPostfix();\n})\n";
+        OUTPUT += "  }\n  room.subscriptionPostfix();\n})\n";
       }
     } else if (STATE == STATES.WHEN_OTHERWISE) {
       claimRetractCleanupCheck(line);
       if (line.match(/^end$/) || isLastLine) {
         STATE = STATES.GLOBAL;
-        OUTPUT += "  }\n  subscriptionPostfix();\n})\n";
+        OUTPUT += "  }\n  room.subscriptionPostfix();\n})\n";
       }
     } else if (STATE == STATES.WHEN_NEW_RESULTS) {
       claimRetractCleanupCheck(line);
@@ -136,7 +136,7 @@ function parse(x) {
           OUTPUT += `        \`${query}\`,\n`
           OUTPUT += `        results => {\n`
           if (STATE == STATES.WHEN_QUERY_PARAMS) {
-            OUTPUT += `  subscriptionPrefix();\n`
+            OUTPUT += `  room.subscriptionPrefix();\n`
             OUTPUT += `  if (!!results) {\n`
             const variables = getUniqueVariables(WHEN_VARIABLES_CACHE)
             OUTPUT += `    results.forEach(({ ${variables.join(", ")} }) => {\n`
