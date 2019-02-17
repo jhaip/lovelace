@@ -222,7 +222,7 @@ function init(filename) {
             if (typeof args === "string") {
                 room.retractRaw(`#${MY_ID_STR} #${currentSubscriptionId} ${args}`)
             } else if (Array.isArray(args)) {
-                room.retractRaw(...[["id", MY_ID_STR], ["id", currentSubscriptionId]].concat(args))
+                room.retractRaw(...[["id", MY_ID_STR], ["id", `${currentSubscriptionId}`]].concat(args))
             }
         },
         retractFromSource: (...args) => {
