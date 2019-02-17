@@ -5,7 +5,7 @@ room.assert(`new it is working again`)
 
 room.on(`$photon sees color ( $r, $g, $b )`,
         results => {
-  subscriptionPrefix();
+  room.subscriptionPrefix(1);
   if (!!results) {
     results.forEach(({ photon, r, g, b }) => {
     room.assert(`wish tablet had background color ( ${r} , ${g} , ${b} )`)
@@ -14,7 +14,7 @@ room.on(`$photon sees color ( $r, $g, $b )`,
   } else {
     room.assert(`wish tablet had background color ( 0 , 0 , 0 )`)
   }
-  subscriptionPostfix();
+  room.subscriptionPostfix();
 })
 
 let x = 5;
@@ -22,7 +22,7 @@ let x = 5;
 room.on(`x is ${x}`,
         `ok`,
         results => {
-  subscriptionPrefix();
+  room.subscriptionPrefix(2);
   if (!!results) {
     results.forEach(({  }) => {
   // yo
