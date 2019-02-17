@@ -1,5 +1,5 @@
 const rfidValueToPaperId = {
-    'TODO': 2000
+    '80616ea3': 2002
 }
 
 when $photonId read $value on sensor $sensorId:
