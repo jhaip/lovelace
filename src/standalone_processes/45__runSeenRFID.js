@@ -1,7 +1,8 @@
 const { room, myId, run } = require('../helper2')(__filename);
 
 const rfidValueToPaperId = {
-    '80616ea3': 2002
+    '80616ea3': 2002,
+    '10af78a3': 2006
 }
 
 room.on(`$photonId read $value on sensor $sensorId`,
