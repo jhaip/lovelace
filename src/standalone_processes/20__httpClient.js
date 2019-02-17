@@ -14,9 +14,9 @@ app.post('/cleanup-claim', (req, res) => {
     console.error("cleanup-claim")
     console.error(req.body)
     if (Array.isArray(req.body.retract)) {
-        room.retract(...req.body.retract)
+        room.retractRaw(...req.body.retract)
     } else {
-        room.retract(req.body.retract)
+        room.retractRaw(req.body.retract)
     }
     if (Array.isArray(req.body.claim)) {
         room.assert(...req.body.claim)
