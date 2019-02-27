@@ -138,10 +138,10 @@ void loop()
   String val_e = check_reader(mfrc522_e);
   // String val_f = check_reader(mfrc522_f);
 
-  // publishValueMessage(1, val_a);
-  // publishValueMessage(2, val_b);
-  // publishValueMessage(3, val_c);
-  // publishValueMessage(4, val_d);
-  // publishValueMessage(5, val_e);
+  publishValueMessage(1, val_a);
+  publishValueMessage(2, val_b);
+  publishValueMessage(3, val_c);
+  publishValueMessage(4, val_d);
+  publishValueMessage(5, val_e);
   // publishValueMessage(6, val_f);
 }
