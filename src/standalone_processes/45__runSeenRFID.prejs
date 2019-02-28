@@ -17,17 +17,17 @@ const PAPER_WIDTH = 200
 const PAPER_HEIGHT = 350
 const PAPER_H_MARGIN = 20
 const PAPER_V_MARGIN = 20
-const ORIGIN_X = 640;
-const ORIGIN_Y = 800;
+const ORIGIN_X = 360;
+const ORIGIN_Y = 640;
 const x1 = x => x * (PAPER_WIDTH + PAPER_H_MARGIN);
 const x2 = x => x * (PAPER_WIDTH + PAPER_H_MARGIN) + PAPER_WIDTH;
 const y1 = y => y * (PAPER_HEIGHT + PAPER_V_MARGIN);
 const y2 = y => y * (PAPER_HEIGHT + PAPER_V_MARGIN) + PAPER_HEIGHT;
 const Z = (x, y) => {
-  return `TL (${ORIGIN_X - y1(y)}, ${ORIGIN_Y + x1(y)}) ` + 
-    `TR (${ORIGIN_X - y1(y)}, ${ORIGIN_Y + x2(x)}) ` + 
-    `BR (${ORIGIN_X - y2(y)}, ${ORIGIN_Y + x2(x)}) ` + 
-    `BL (${ORIGIN_X - y2(y)}, ${ORIGIN_Y + x1(x)})`
+  return `TL (${ORIGIN_X + y1(y)}, ${ORIGIN_Y - x1(y)}) ` + 
+    `TR (${ORIGIN_X + y1(y)}, ${ORIGIN_Y - x2(x)}) ` + 
+    `BR (${ORIGIN_X + y2(y)}, ${ORIGIN_Y - x2(x)}) ` + 
+    `BL (${ORIGIN_X + y2(y)}, ${ORIGIN_Y - x1(x)})`
 }
 const sensorScreenLocations = {
     '1': Z(1, 1),
