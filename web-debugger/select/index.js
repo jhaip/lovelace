@@ -27,7 +27,7 @@ function search(query) {
     renderPending();
     $.ajax({
         type: "POST",
-        url: "http://localhost:3000/select",
+        url: "/select",
         // The key needs to match your method's input parameter (case-sensitive).
         data: JSON.stringify({ "query": query }),
         contentType: "application/json; charset=utf-8",

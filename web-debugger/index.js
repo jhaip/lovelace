@@ -24,7 +24,7 @@ function b64DecodeUnicode(str) {
 }
 
 function poll() {
-    $.get("http://localhost:3000/db", function (data) {
+    $.get("/db", function (data) {
         if (!longPollingActive) {
             return;
         }
