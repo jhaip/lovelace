@@ -26,7 +26,7 @@ const x2 = x => x * (PAPER_WIDTH + PAPER_H_MARGIN) + PAPER_WIDTH;
 const y1 = y => y * (PAPER_HEIGHT + PAPER_V_MARGIN);
 const y2 = y => y * (PAPER_HEIGHT + PAPER_V_MARGIN) + PAPER_HEIGHT;
 const Z = (x, y) => {
-  return `TL (${ORIGIN_X + y1(y)}, ${ORIGIN_Y - x1(y)}) ` + 
+  return `TL (${ORIGIN_X + y1(y)}, ${ORIGIN_Y - x1(x)}) ` + 
     `TR (${ORIGIN_X + y1(y)}, ${ORIGIN_Y - x2(x)}) ` + 
     `BR (${ORIGIN_X + y2(y)}, ${ORIGIN_Y - x2(x)}) ` + 
     `BL (${ORIGIN_X + y2(y)}, ${ORIGIN_Y - x1(x)})`
