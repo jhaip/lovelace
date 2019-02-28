@@ -15,12 +15,12 @@ const rfidValueToPaperId = {
   'e21eef27': 6
 }
 
-const PAPER_WIDTH = 320
+const PAPER_WIDTH = 280
 const PAPER_HEIGHT = 500
-const PAPER_H_MARGIN = 20
+const PAPER_H_MARGIN = 100
 const PAPER_V_MARGIN = 20
 const ORIGIN_X = 360;
-const ORIGIN_Y = 750;
+const ORIGIN_Y = 800;
 const x1 = x => x * (PAPER_WIDTH + PAPER_H_MARGIN);
 const x2 = x => x * (PAPER_WIDTH + PAPER_H_MARGIN) + PAPER_WIDTH;
 const y1 = y => y * (PAPER_HEIGHT + PAPER_V_MARGIN);
