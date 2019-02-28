@@ -20,7 +20,7 @@ const PAPER_HEIGHT = 350
 const PAPER_H_MARGIN = 20
 const PAPER_V_MARGIN = 20
 const ORIGIN_X = 400
-const ORIGIN_Y = 800
+const ORIGIN_Y = 800 + PAPER_WIDTH;
 const x1 = x => ORIGIN_X + x * (PAPER_HEIGHT + PAPER_V_MARGIN);
 const x2 = x => ORIGIN_X + x * (PAPER_HEIGHT + PAPER_V_MARGIN) + PAPER_HEIGHT;
 const y1 = y => ORIGIN_Y - y * (PAPER_WIDTH + PAPER_H_MARGIN);
