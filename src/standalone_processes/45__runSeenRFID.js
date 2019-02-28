@@ -15,8 +15,8 @@ const rfidValueToPaperId = {
   'e21eef27': 6
 }
 
-const PAPER_WIDTH = 200
-const PAPER_HEIGHT = 350
+const PAPER_WIDTH = 300
+const PAPER_HEIGHT = 500
 const PAPER_H_MARGIN = 20
 const PAPER_V_MARGIN = 20
 const ORIGIN_X = 360;
