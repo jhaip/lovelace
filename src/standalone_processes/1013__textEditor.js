@@ -1,6 +1,6 @@
 const { room, myId, MY_ID_STR } = require('../helper2')(__filename);
 
-let fontSize = 12; // 32;
+let fontSize = 32; // 12;
 const origin = [0, 0]
 let cursorPosition = [0, 0]
 let currentWidth = 1;
