@@ -48,7 +48,7 @@ room.on(`$photonId read $value on sensor $sensorId`,
   room.subscriptionPostfix();
 })
 
-room.on(`$photonId read $value on sensor $sensorId`,
+room.on(`$photonId read $value on sensor 3`,
   results => {
     room.subscriptionPrefix(1);
     if (!!results) {
