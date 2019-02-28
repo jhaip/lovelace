@@ -129,7 +129,7 @@ String check_reader(MFRC522 reader)
 
 void loop()
 {
-  delay(1000);
+  delay(50);
 
   String val_a = check_reader(mfrc522);
   String val_b = check_reader(mfrc522_b);
