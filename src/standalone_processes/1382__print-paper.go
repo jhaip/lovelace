@@ -71,7 +71,6 @@ func generatePrintFile(sourceCode string, programId int, name string, code8400 [
 	pageWidth, pageHeight := pdf.GetPageSize()
 	leftMargin, topMargin, rightMargin, bottomMargin := pdf.GetMargins()
 	circleRadius := 7.5
-	circleSpacing := circleRadius * 2.0 * 1.4
 	circleMargin := 10 + circleRadius
 
 	pdf.SetFont("Courier", "", 7)
@@ -96,6 +95,7 @@ func generatePrintFile(sourceCode string, programId int, name string, code8400 [
 	pdf.TransformEnd()
 	pdf.ClipEnd()
 
+	// circleSpacing := circleRadius * 2.0 * 1.4
 	// for i := 0; i < 4; i++ {
 	// 	pdf.TransformBegin()
 	// 	pdf.SetFillColor(0, 0, 0)
