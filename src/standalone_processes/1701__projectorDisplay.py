@@ -296,6 +296,7 @@ class Example(wx.Frame):
             for paper in papers:
                 if len(paper["corners"]) == 4:
                     if PAPER_FILTER is not None and str(paper["id"]) not in PAPER_FILTER:
+                        logging.error("skipping becuase " + str(paper["id"]) + " not in " + str(PAPER_FILTER))
                         continue
                     self.draw_paper(
                         gc, paper, paper_draw_wishes.get(paper["id"]))
