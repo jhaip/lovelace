@@ -251,7 +251,7 @@ class Example(wx.Frame):
         self.Update()
 
     def Draw(self, e):
-        global draw_wishes, papers, lines, DRAW_DEBUG_TEXT
+        global draw_wishes, papers, lines, DRAW_DEBUG_TEXT, PAPER_FILTER
         now = time.time()
         # if self.lastPaint:
         #     print(1.0/(now - self.lastPaint), "fps for paint")
