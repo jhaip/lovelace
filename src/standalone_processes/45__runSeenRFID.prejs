@@ -48,7 +48,12 @@ when $photonId read $value on sensor $sensorId:
         claim camera 1 sees paper ${rfidValueToPaperId[value]} at ${sensorScreenLocations[photonId][sensorId]} @ 1
     }
 
-when $photonId read $value on sensor 3:
+when Photon2c001b000347343233323032 read $value on sensor 3:
     if (value in rfidValueToPaperId) {
         claim paper 1013 is pointing at paper ${rfidValueToPaperId[value]}
+    }
+
+when Photon200038000747343232363230 read $value on sensor 1:
+    if (value in rfidValueToPaperId) {
+        claim wish display 1700 only showed ${rfidValueToPaperId[value]}
     }

@@ -59,13 +59,26 @@ room.on(`$photonId read $value on sensor $sensorId`,
   room.subscriptionPostfix();
 })
 
-room.on(`$photonId read $value on sensor 3`,
+room.on(`Photon2c001b000347343233323032 read $value on sensor 3`,
   results => {
     room.subscriptionPrefix(2);
     if (!!results) {
-      results.forEach(({ photonId, value, sensorId }) => {
+      results.forEach(({ value }) => {
         if (value in rfidValueToPaperId) {
           room.assert(`paper 1013 is pointing at paper ${rfidValueToPaperId[value]}`);
+        }
+      });
+    }
+    room.subscriptionPostfix();
+  })
+
+room.on(`Photon200038000747343232363230 read $value on sensor 1`,
+  results => {
+    room.subscriptionPrefix(3);
+    if (!!results) {
+      results.forEach(({ value }) => {
+        if (value in rfidValueToPaperId) {
+          room.assert(`wish display 1700 only showed ${rfidValueToPaperId[value]}`);
         }
       });
     }
