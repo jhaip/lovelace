@@ -61,7 +61,7 @@ room.on(`$photonId read $value on sensor $sensorId`,
 
 room.on(`$photonId read $value on sensor 3`,
   results => {
-    room.subscriptionPrefix(1);
+    room.subscriptionPrefix(2);
     if (!!results) {
       results.forEach(({ photonId, value, sensorId }) => {
         if (value in rfidValueToPaperId) {
