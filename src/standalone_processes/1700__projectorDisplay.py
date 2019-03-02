@@ -16,8 +16,10 @@ DRAW_DEBUG_TEXT = False
 LAST_SERVER_HEALTH_CHECK = time.time()
 HEALTH_CHECK_DELAY_S = 5
 PAPER_FILTER = None
-if len(sys.argv) == 2:
-    PAPER_FILTER = sys.argv[1]
+if len(sys.argv) >= 2:
+    PAPER_FILTER = sys.argv[1:]
+    for i in range(len(PAPER_FILTER)):
+        PAPER_FILTER[i] = str(PAPER_FILTER[i])
 
 papers = []
 projector_calibration = None
@@ -26,6 +28,7 @@ texts = {}
 lines = {}
 graphics = {}
 draw_wishes = {}
+
 
 def update_draw_wishes():
     global texts, lines, centered_labels, graphics, draw_wishes
@@ -54,6 +57,7 @@ def update_draw_wishes():
                 draw_wishes[source][target] = []
             draw_wishes[source][target].extend(graphics[source][target])
 
+
 def mapPaperResultToLegacyDataFormat(result):
     return {
         "id": result["id"],
@@ -65,6 +69,7 @@ def mapPaperResultToLegacyDataFormat(result):
         ]
     }
 
+
 def map_projector_calibration_to_legacy_data_format(result):
     return [
         [result["x1"], result["y1"]],
@@ -72,6 +77,7 @@ def map_projector_calibration_to_legacy_data_format(result):
         [result["x3"], result["y3"]],
         [result["x4"], result["y4"]]
     ]
+
 
 @subscription(["$ $ camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time"])
 def sub_callback_papers(results):
@@ -88,7 +94,8 @@ def sub_callback_calibration(results):
     logging.info("sub_callback_calibration")
     logging.info(results)
     if results:
-        projector_calibration = map_projector_calibration_to_legacy_data_format(results[0])
+        projector_calibration = map_projector_calibration_to_legacy_data_format(
+            results[0])
         logging.info(projector_calibration)
 
 
@@ -111,6 +118,7 @@ def sub_callback_graphics(results):
     logging.info(graphics)
     update_draw_wishes()
 
+
 @subscription(["$id $ draw a ($r, $g, $b) line from ($x, $y) to ($xx, $yy)"])
 def sub_callback_line(results):
     global lines
@@ -121,7 +129,8 @@ def sub_callback_line(results):
         source = int(v["id"])
         if source not in lines:
             lines[source] = []
-        lines[source].append({"type": "line", "options": [v["x"], v["y"], v["xx"], v["yy"]]})
+        lines[source].append({"type": "line", "options": [
+                             v["x"], v["y"], v["xx"], v["yy"]]})
     logging.info(lines)
     update_draw_wishes()
 
@@ -173,6 +182,7 @@ def sub_callback_text(results):
     logging.info(texts)
     update_draw_wishes()
 
+
 class Example(wx.Frame):
     ID_TIMER = 1
     GRAPHICS_TIMER = 2
@@ -180,7 +190,7 @@ class Example(wx.Frame):
     def __init__(self, parent, title):
         super(Example, self).__init__(parent, title=title,
                                       size=(CAM_WIDTH, CAM_HEIGHT))
-        
+
         self.lastPaint = time.time()
         self.bmp = None
         self.projection_matrix = None
@@ -194,7 +204,7 @@ class Example(wx.Frame):
         self.Maximize(True)
 
         self.MyListenDrawLoop()
-    
+
     def MyListenDrawLoop(self):
         self.ListenForSubscriptionUpdates(None)
         self.Draw(None)
@@ -206,7 +216,7 @@ class Example(wx.Frame):
         wishes = []
         deaths = []
         old_calibration = copy.deepcopy(projector_calibration)
-        
+
         listen()
 
         if old_calibration != projector_calibration:
@@ -224,10 +234,10 @@ class Example(wx.Frame):
         if time.time() - LAST_SERVER_HEALTH_CHECK > HEALTH_CHECK_DELAY_S:
             LAST_SERVER_HEALTH_CHECK = time.time()
             check_server_connection()
-    
+
     def OnPaint(self, e):
         wx.BufferedPaintDC(self, self.drawingBuffer)
-    
+
     def triggerRepaint(self):
         self.Refresh(eraseBackground=False)
         self.Update()
@@ -269,7 +279,7 @@ class Example(wx.Frame):
                 dc.DrawText(str(target) + ": " +
                             json.dumps(paper_draw_wishes[target]), 10, 10+16*i)
 
-        if PAPER_FILTER is None or PAPER_FILTER == "global":
+        if PAPER_FILTER is None or "global" in PAPER_FILTER:
             self.draw_global_wishes(gc, paper_draw_wishes.get("global"))
 
         logging.error("PAPERS:")
@@ -277,7 +287,7 @@ class Example(wx.Frame):
         if papers:
             for paper in papers:
                 if len(paper["corners"]) == 4:
-                    if PAPER_FILTER is not None and str(PAPER_FILTER) != str(paper["id"]):
+                    if PAPER_FILTER is not None and str(paper["id"]) not in PAPER_FILTER:
                         continue
                     self.draw_paper(
                         gc, paper, paper_draw_wishes.get(paper["id"]))
@@ -401,7 +411,8 @@ class Example(wx.Frame):
                         elif len(opt) is 3:
                             paper_font_color.Set(opt[0], opt[1], opt[2])  # RGB
                         else:
-                            paper_font_color.Set(opt[0], opt[1], opt[2], opt[3])  # RGBA
+                            paper_font_color.Set(
+                                opt[0], opt[1], opt[2], opt[3])  # RGBA
                         gc.SetFont(paper_font, paper_font_color)
                 elif command_type == 'push':
                     gc.PushState()
@@ -459,8 +470,10 @@ class Example(wx.Frame):
             {"type": "stroke", "options": [255, 255, 255, 25]},
             {"type": "line", "options": [0, 0, paper_width, 0]},
             {"type": "line", "options": [0, 0, 0, paper_height]},
-            {"type": "line", "options": [paper_width, paper_height, paper_width, 0]},
-            {"type": "line", "options": [paper_width, paper_height, 0, paper_height]},
+            {"type": "line", "options": [
+                paper_width, paper_height, paper_width, 0]},
+            {"type": "line", "options": [
+                paper_width, paper_height, 0, paper_height]},
             {"type": "stroke", "options": [255, 255, 255, 255]},
         ] + draw_commands
 
