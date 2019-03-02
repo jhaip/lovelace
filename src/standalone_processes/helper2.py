@@ -29,6 +29,16 @@ def get_my_id_str():
     global MY_ID_STR
     return MY_ID_STR
 
+def get_my_id_pre_init(root_filename):
+    global MY_ID, MY_ID_STR
+    scriptName = os.path.basename(root_filename)
+    scriptNameNoExtension = os.path.splitext(scriptName)[0]
+    fileDir = os.path.dirname(os.path.realpath(root_filename))
+    logPath = os.path.join(fileDir, 'logs/' + scriptNameNoExtension + '.log')
+    logging.basicConfig(filename=logPath, level=logging.INFO)
+    MY_ID = (scriptName.split(".")[0]).split("__")[0]
+    return MY_ID
+
 
 def claim(fact_string):
     pub_socket.send_string("....CLAIM{}{}".format(
@@ -159,6 +169,7 @@ def check_server_connection():
             query = s[0]
             callback = s[1]
             subscribe(query, callback)
+
 
 def init(root_filename, skipListening=False):
     global MY_ID, MY_ID_STR, py_subscriptions, py_prehook
