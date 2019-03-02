@@ -280,8 +280,7 @@ room.on(
           `with source code`, ["text", cleanSourceCode],
           `@ ${millis}`);
       } else if (specialKey === "C-p") {
-        // room.assert(`wish paper ${currentTargetId} at`, ["text", currentTargetName], `would be printed`)
-        room.assert(`wish file`, ["text", `${__dirname}/${currentTargetName}`], `would be printed`) // no dots
+        room.assert(`wish paper ${currentTargetId} at`, ["text", currentTargetName], `would be printed`)
       } else if (specialKey === "C-+") {
         fontSize += 2;
         render();
