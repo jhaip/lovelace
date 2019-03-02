@@ -182,6 +182,7 @@ func cleanupWishes(publisher *zmq.Socket, MY_ID_STR string) {
 	batch_claims := make([]BatchMessage, 0)
 	batch_claims = append(batch_claims, BatchMessage{"retract", [][]string{
 		[]string{"variable", ""},
+		[]string{"variable", ""},
 		[]string{"text", "wish"},
 		[]string{"text", "paper"},
 		[]string{"variable", ""},
@@ -205,6 +206,7 @@ func wishOutputFileWouldBePrinted(publisher *zmq.Socket, MY_ID_STR string, outpu
 	batch_claims := make([]BatchMessage, 0)
 	batch_claims = append(batch_claims, BatchMessage{"claim", [][]string{
 		[]string{"id", MY_ID_STR},
+		[]string{"id", "1"},
 		[]string{"text", "wish"},
 		[]string{"text", "file"},
 		[]string{"text", outputFilename},
@@ -243,8 +245,8 @@ func initWishSubscription(publisher *zmq.Socket, MY_ID_STR string) string {
 	sub_query := map[string]interface{}{
 		"id": subscription_id,
 		"facts": []string{
-			"$ wish paper $id at $shortFilename would be printed",
-			"$ $shortFilename has source code $sourceCode",
+			"$ $ wish paper $id at $shortFilename would be printed",
+			"$ $ $shortFilename has source code $sourceCode",
 		},
 	}
 	sub_query_msg, jsonMarshallErr := json.Marshal(sub_query)
