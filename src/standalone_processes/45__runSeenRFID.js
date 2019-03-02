@@ -33,11 +33,16 @@ const Z = (x, y) => {
     `BL (${ORIGIN_X + y2(y)}, ${ORIGIN_Y - x1(x)})`
 }
 const sensorScreenLocations = {
-  '1': Z(1, 1),
-  '2': Z(1, 0),
-  '3': 'TL (0, 0) TR (1, 0) BR (1, 1) BL (0, 1)',
-  '4': Z(0, 0),
-  '5': Z(0, 1)
+  'Photon2c001b000347343233323032': {
+    '1': Z(1, 1),
+    '2': Z(1, 0),
+    '3': 'TL (0, 0) TR (1, 0) BR (1, 1) BL (0, 1)',
+    '4': Z(0, 0),
+    '5': Z(0, 1)
+  },
+  'Photon2c001b000347343233323030': {
+    '1': 'TL (0, 0) TR (1440, 0) BR (1440, 860) BL (0, 860)'
+  }
 }
 
 room.on(`$photonId read $value on sensor $sensorId`,
@@ -46,7 +51,7 @@ room.on(`$photonId read $value on sensor $sensorId`,
   if (!!results) {
     results.forEach(({ photonId, value, sensorId }) => {
     if (value in rfidValueToPaperId) {
-        room.assert(`camera 1 sees paper ${rfidValueToPaperId[value]} at ${sensorScreenLocations[sensorId]} @ 1`);
+      room.assert(`camera 1 sees paper ${rfidValueToPaperId[value]} at ${sensorScreenLocations[photonId][sensorId]} @ 1`);
     }
 
     });
