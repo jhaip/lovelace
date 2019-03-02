@@ -119,6 +119,14 @@ def sub_callback_graphics(results):
     update_draw_wishes()
 
 
+@subscription(["$ $ wish display " + MY_ID_STR + " only showed %filter"])
+def sub_callback_display_filter(results):
+    global PAPER_FILTER
+    PAPER_FILTER = []
+    if results and len(results) > 0:
+        PAPER_FILTER = results[0]["filter"].split(" ")
+
+
 @subscription(["$id $ draw a ($r, $g, $b) line from ($x, $y) to ($xx, $yy)"])
 def sub_callback_line(results):
     global lines
