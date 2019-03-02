@@ -119,7 +119,7 @@ def sub_callback_graphics(results):
     update_draw_wishes()
 
 
-@subscription(["$ $ wish display " + MY_ID_STR + " only showed %filter"])
+@subscription(["$ $ wish display " + get_my_id_str() + " only showed %filter"])
 def sub_callback_display_filter(results):
     global PAPER_FILTER
     PAPER_FILTER = []
