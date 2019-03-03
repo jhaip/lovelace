@@ -1,13 +1,19 @@
 const { room, myId, run } = require('../helper2')(__filename);
 
-room.onGetSource('source', `I wish I was highlighted $color`, results => {
-  room.cleanup();
-  results.forEach(result => {
-    let ill = room.newIllumination()  
-    ill.fill(result.color)
-    ill.rect(0, 0, 1000, 1000);
-    room.draw(ill, result.source)
-  })
+room.onGetSource('source', `I wish I was highlighted $color`,
+        results => {
+  room.subscriptionPrefix(1);
+  if (!!results) {
+    results.forEach(({ color, source }) => {
+  let ill = room.newIllumination()
+  ill.fill(color)
+  ill.rect(0, 0, 2000, 2000);
+  room.draw(ill, source)
+
+    });
+  }
+  room.subscriptionPostfix();
 })
 
-run()
+
+run();

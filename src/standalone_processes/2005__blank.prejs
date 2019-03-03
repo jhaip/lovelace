@@ -1,8 +1,5 @@
-when $source I wish I was highlighted $color:
-  cleanup
-  results.forEach(result => {
-    let ill = room.newIllumination()  
-    ill.fill(result.color)
-    ill.rect(0, 0, 1000, 1000);
-    room.draw(ill, result.source)
-  })
+when I wish I was highlighted $color by $source:
+  let ill = room.newIllumination()
+  ill.fill(color)
+  ill.rect(0, 0, 2000, 2000);
+  room.draw(ill, source)
