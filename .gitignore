@@ -11,3 +11,4 @@ new-backend/go-server/server
 new-backend/go-server/server.log
 new-backend/memdb1
 new-backend/memdb1-journal
+src/particle-photon/*/target
