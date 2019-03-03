@@ -228,6 +228,10 @@ room.on(
   `keyboard $ typed special key $specialKey @ $t`,
   results => {
     results.forEach(({ specialKey }) => {
+      if (!currentTargetName) {
+        console.log(`no target to save`)
+        return;
+      }
       console.log("special key", specialKey);
       const special_key_map = {
         "enter": "\n",
