@@ -6,8 +6,6 @@ var token;
 
 var TARGET_DEVICE_ID = '3c002f000e47343432313031';
 
-function downloadFirmwareBinary({ binaryId, auth, stream }) {
-    const req = request.get(`/v1/binaries/${binaryId}`);
 particle.login({ username: 'haipjacob@gmail.com', password: 'FILL THIS IN' }).then(
     function (data) {
         token = data.body.access_token;
