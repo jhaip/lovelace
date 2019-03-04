@@ -71,7 +71,7 @@ void loop()
     publishValueMessage(body);
 }
 `
-room.assert(`wish`, ["text", code], `runs on Photon400035001547343433313338`)
+room.assert(`wish`, ["text", code], `runs on Photon3c002f000e47343432313031`)
 
 
 run();

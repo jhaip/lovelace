@@ -69,4 +69,4 @@ void loop()
     publishValueMessage(body);
 }
 `
-claim wish`, ["text", code], `runs on Photon400035001547343433313338`
+claim wish`, ["text", code], `runs on Photon3c002f000e47343432313031`
