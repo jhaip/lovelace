@@ -1,5 +1,3 @@
-const { room, myId, run } = require('../helper2')(__filename);
-
 const code = `
 #include "HttpClient.h"
 #include "Adafruit_DHT.h"
@@ -74,7 +72,4 @@ void loop()
     publishValueMessage(body);
 }
 `
-room.assert(`wish`, ["text", code], `runs on photon 400035001547343433313338`)
-
-
-run();
+claim wish`, ["text", code], `runs on photon 400035001547343433313338
