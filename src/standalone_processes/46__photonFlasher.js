@@ -8,16 +8,17 @@ const LOGIN_INFO = { username: 'haipjacob@gmail.com', password: 'TODO FILL IN' }
 
 var token;
 
-room.on(`wish $code runs on photon $photonId`,
+room.on(`wish $code runs on $photonId`,
     results => {
         room.subscriptionPrefix(1);
         if (!!results) {
             results.forEach(({ code, photonId }) => {
+                photonId = photonId.replace("Photon", "");
                 if (code.includes(`#include "HttpClient.h"`)) {
                     console.log("adding in HTTP definitions to code");
                     const firstBlankLineIndex = code.indexOf("\n\n") + 1;
                     const http_setup_code = `
-                    HttpClient http;
+HttpClient http;
 
 // Headers currently need to be set at init, useful for API keys etc.
 http_header_t headers[] = {
@@ -37,7 +38,7 @@ void publishValueMessage(char body[])
     request.ip = {10, 0, 0, 185};
     request.port = 5000;
     request.path = "/cleanup-claim";
-    request.body = str;
+    request.body = body;
     Serial.println(request.body);
     http.post(request, response, headers);
     Serial.print("Application>\tResponse status: ");
@@ -58,8 +59,7 @@ void publishValueMessage(char body[])
                         console.log('Devices: ', devices.body.filter(x => x.connected))
                         if (devices.body.filter(x => x.connected && x.id === photonId).length === 0) {
                             return new Promise((resolve, reject) => {
-                                throw new Error(`target device not found ${photonId}`);
-                                resolve(true);
+                                reject(`target device not found ${ photonId }`);
                             });
                         }
                         console.log("sending code:")
@@ -76,15 +76,39 @@ void publishValueMessage(char body[])
                         }
                         let currentFileIndex = 1;
                         if (code.includes(`#include "HttpClient.h"`)) {
-                            formData[`file${currentFileIndex}`] = `/Users/jhaip/Code/lovelace/src/particle-photon/dht-sensor/HttpClient.h`;
+                            formData[`file${currentFileIndex}`] = {
+                                value: fs.createReadStream(`/Users/jhaip/Code/lovelace/src/particle-photon/dht-sensor/HttpClient.h`),
+                                options: {
+                                    filename: 'HttpClient.h',
+                                    contentType: 'text/plain'
+                                }
+                            };
                             currentFileIndex += 1;
-                            formData[`file${currentFileIndex}`] = `/Users/jhaip/Code/lovelace/src/particle-photon/dht-sensor/HttpClient.cpp`;
+                            formData[`file${currentFileIndex}`] = {
+                                value: fs.createReadStream(`/Users/jhaip/Code/lovelace/src/particle-photon/dht-sensor/HttpClient.cpp`),
+                                options: {
+                                    filename: 'HttpClient.cpp',
+                                    contentType: 'text/plain'
+                                }
+                            }
                             currentFileIndex += 1;
                         }
                         if (code.includes(`#include "Adafruit_DHT.h"`)) {
-                            formData[`file${currentFileIndex}`] = `/Users/jhaip/Code/lovelace/src/particle-photon/dht-sensor/Adafruit_DHT.h`;
+                            formData[`file${currentFileIndex}`] = {
+                                value: fs.createReadStream(`/Users/jhaip/Code/lovelace/src/particle-photon/dht-sensor/Adafruit_DHT.h`),
+                                options: {
+                                    filename: 'Adafruit_DHT.h',
+                                    contentType: 'text/plain'
+                                }
+                            }
                             currentFileIndex += 1;
-                            formData[`file${currentFileIndex}`] = `/Users/jhaip/Code/lovelace/src/particle-photon/dht-sensor/Adafruit_DHT.cpp`;
+                            formData[`file${currentFileIndex}`] = {
+                                value: fs.createReadStream(`/Users/jhaip/Code/lovelace/src/particle-photon/dht-sensor/Adafruit_DHT.cpp`),
+                                options: {
+                                    filename: 'Adafruit_DHT.cpp',
+                                    contentType: 'text/plain'
+                                }
+                            }
                             currentFileIndex += 1;
                         }
                         console.log("using form data:")
@@ -92,8 +116,7 @@ void publishValueMessage(char body[])
                         var req = request.put({ url, formData }, function (err, resp, body) {
                             if (err) {
                                 return new Promise((resolve, reject) => {
-                                    throw new Error(err);
-                                    resolve(true);
+                                    reject(`target device not found ${photonId}`);
                                 });
                             }
                             console.log("successful compile");

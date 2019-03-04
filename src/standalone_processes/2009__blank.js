@@ -6,7 +6,6 @@ const code = `
 
 #define DHTPIN 2 // what pin we're connected to
 
-// Uncomment whatever type you're using!
 //#define DHTTYPE DHT11		// DHT 11
 #define DHTTYPE DHT22 // DHT 22 (AM2302)
 //#define DHTTYPE DHT21		// DHT 21 (AM2301)
@@ -21,8 +20,6 @@ DHT dht(DHTPIN, DHTTYPE);
 void setup()
 {
     Serial.begin(9600);
-    Serial.println("DHTxx test!");
-
     dht.begin();
 }
 
@@ -68,13 +65,13 @@ void loop()
 
     char body[300];
     sprintf(body,
-      "{\"claim\":\"Photon%s says the humidity is %f and temp is %f\", "
-      "\"retract\":\"$ Photon%s says the humidity is $ and temp is $\"}",
-      (const char *)myID, humidity, temp, (const char *)myID);
+      "{\\"claim\\":\\"Photon%s says the humidity is %f and temp is %f\\", "
+      "\\"retract\\":\\"$ Photon%s says the humidity is $ and temp is $\\"}",
+      (const char *)myID, h, t, (const char *)myID);
     publishValueMessage(body);
 }
 `
-room.assert(`wish`, ["text", code], `runs on photon 400035001547343433313338`)
+room.assert(`wish`, ["text", code], `runs on Photon400035001547343433313338`)
 
 
 run();
