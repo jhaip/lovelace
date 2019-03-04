@@ -30,12 +30,18 @@ particle.login({ username: 'haipjacob@gmail.com', password: 'FILL THIS IN' }).th
                     console.log("target device not found", TARGET_DEVICE_ID)
                 } else {
                     const url = `https://api.particle.io/v1/devices/${TARGET_DEVICE_ID}?access_token=${token}`;
-                    const filePath = `/Users/jhaip/Code/lovelace/src/particle-photon/blink/src/blink.ino`;
+                    // const formData = {
+                    //     file: fs.createReadStream(`/Users/jhaip/Code/lovelace/src/particle-photon/blink/src/blink.ino`),
+                    //     // options: {
+                    //     //     filename: 'topsecret.jpg',
+                    //     // }
+                    // }
                     const formData = {
-                        file: fs.createReadStream(filePath),
-                        // options: {
-                        //     filename: 'topsecret.jpg',
-                        // }
+                        file: fs.createReadStream(`/Users/jhaip/Code/lovelace/src/particle-photon/dht-sensor/dht-sensor.ino`),
+                        file1: fs.createReadStream(`/Users/jhaip/Code/lovelace/src/particle-photon/dht-sensor/HttpClient.h`),
+                        file2: fs.createReadStream(`/Users/jhaip/Code/lovelace/src/particle-photon/dht-sensor/HttpClient.cpp`),
+                        file3: fs.createReadStream(`/Users/jhaip/Code/lovelace/src/particle-photon/dht-sensor/Adafruit_DHT.h`),
+                        file4: fs.createReadStream(`/Users/jhaip/Code/lovelace/src/particle-photon/dht-sensor/Adafruit_DHT.cpp`)
                     }
                     var req = request.put({url, formData}, function (err, resp, body) {
                         if (err) {
