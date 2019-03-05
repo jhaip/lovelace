@@ -8,10 +8,10 @@ const LOGIN_INFO = { username: 'haipjacob@gmail.com', password: 'TODO FILL IN' }
 
 var token;
 
-room.onRaw(`Photon400035001547343433313338 read $value on sensor 1`,
-           `Photon400035001547343433313338 can flash photon $photonId`,
-           `paper $paperId has RFID $value`,
-           `paper $paperId has id $source`,
+room.onRaw(`$ $ Photon400035001547343433313338 read $value on sensor 1`,
+           `$ $ Photon400035001547343433313338 can flash photon $photonId`,
+           `$ $ paper $paperId has RFID $value`,
+           `$ $ paper $paperId has id $source`,
            `$source $ wish $code runs on the photon`,
     results => {
         room.subscriptionPrefix(1);
