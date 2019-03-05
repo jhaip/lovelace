@@ -1,16 +1,13 @@
-cleanup
-claim new it is working again
+const code = `
+void setup() {
+  pinMode(D7, OUTPUT);
+}
 
-when $photon sees color ( $r, $g, $b ):
-    claim wish tablet had background color ( ${r} , ${g} , ${b} )
-otherwise:
-    claim wish tablet had background color ( 0 , 0 , 0 )
-end
-
-let x = 5;
-
-when x is ${x},
-     ok:
-  // yo
-otherwise:
-  // ok
+void loop() {
+  delay(1000);
+  digitalWrite(D7, HIGH);
+  delay(1000);
+  digitalWrite(D7, LOW);
+}
+`
+claim wish`, ["text", code], `runs on the photon
