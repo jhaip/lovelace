@@ -61,10 +61,8 @@ void publishValueMessage(char body[])
                     })
                     .then(devices => {
                         console.log('Devices: ', devices.body.filter(x => x.connected))
-                        if (devices.body.filter(x => x.connected && x.id == photonId).length === 0) {
-                            return new Promise((resolve, reject) => {
-                                reject(`target device not found ${ photonId }`);
-                            });
+                        if (devices.body.filter(x => x.connected && x.id === photonId).length === 0) {
+                            throw new Error(`target device not found ${photonId}`);
                         }
                         console.log("sending code:")
                         console.log(code);
@@ -119,9 +117,7 @@ void publishValueMessage(char body[])
                         console.log(formData);
                         var req = request.put({ url, formData }, function (err, resp, body) {
                             if (err) {
-                                return new Promise((resolve, reject) => {
-                                    reject(`target device not found ${photonId}`);
-                                });
+                                throw new Error(`error when flashing ${err}`);
                             }
                             console.log("successful compile");
                             console.log(body);
