@@ -61,7 +61,7 @@ void publishValueMessage(char body[])
                     })
                     .then(devices => {
                         console.log('Devices: ', devices.body.filter(x => x.connected))
-                        if (devices.body.filter(x => x.connected && x.id === photonId).length === 0) {
+                        if (devices.body.filter(x => x.connected && x.id == photonId).length === 0) {
                             return new Promise((resolve, reject) => {
                                 reject(`target device not found ${ photonId }`);
                             });
