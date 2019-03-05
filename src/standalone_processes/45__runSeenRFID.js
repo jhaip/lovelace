@@ -1,21 +1,5 @@
 const { room, myId, run } = require('../helper2')(__filename);
 
-const rfidValueToPaperId = {
-  'f26a0c2e': 2000,
-  'f238222e': 2001,
-  '80616ea3': 2002,
-  'd07911a3': 2003,
-  '91b4d108': 2004,
-  '53825027': 2005,
-  '10af78a3': 2006,
-  '7341a727': 2007,
-  '2574c72d': 2008,
-  'b680cc21': 2009,
-  'd01ff625': 5,
-  'e21eef27': 6,
-  '7bdbe359': 1013
-}
-
 const PAPER_WIDTH = 260
 const PAPER_HEIGHT = 375
 const PAPER_H_MARGIN = 150
@@ -49,13 +33,12 @@ const sensorScreenLocations = {
 }
 
 room.on(`$photonId read $value on sensor $sensorId`,
+        `paper $paperId has RFID $value`,
         results => {
   room.subscriptionPrefix(1);
   if (!!results) {
-    results.forEach(({ photonId, value, sensorId }) => {
-    if (value in rfidValueToPaperId) {
-      room.assert(`camera 1 sees paper ${rfidValueToPaperId[value]} at ${sensorScreenLocations[photonId][sensorId]} @ 1`);
-    }
+    results.forEach(({ photonId, value, sensorId, paperId }) => {
+      room.assert(`camera 1 sees paper ${paperId} at ${sensorScreenLocations[photonId][sensorId]} @ 1`);
 
     });
   }
@@ -63,26 +46,24 @@ room.on(`$photonId read $value on sensor $sensorId`,
 })
 
 room.on(`Photon2c001b000347343233323032 read $value on sensor 3`,
+        `paper $paperId has RFID $value`,
   results => {
     room.subscriptionPrefix(2);
     if (!!results) {
-      results.forEach(({ value }) => {
-        if (value in rfidValueToPaperId) {
-          room.assert(`paper 1013 is pointing at paper ${rfidValueToPaperId[value]}`);
-        }
+      results.forEach(({ value, paperId }) => {
+        room.assert(`paper 1013 is pointing at paper ${paperId}`);
       });
     }
     room.subscriptionPostfix();
   })
 
 room.on(`Photon200038000747343232363230 read $value on sensor 1`,
+        `paper $paperId has RFID $value`,
   results => {
     room.subscriptionPrefix(3);
     if (!!results) {
-      results.forEach(({ value }) => {
-        if (value in rfidValueToPaperId) {
-          room.assert(`wish display 1700 only showed ${rfidValueToPaperId[value]}`);
-        }
+      results.forEach(({ value, paperId }) => {
+        room.assert(`wish display 1700 only showed ${paperId}`);
       });
     }
     room.subscriptionPostfix();
