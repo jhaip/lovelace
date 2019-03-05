@@ -77,9 +77,11 @@ void publishValueMessage(char body[])
                             }
                         }
                         let currentFileIndex = 1;
+                        const baseParticleLibraryCodePath = '../particle-photon/dht-sensor/';
+                        console.log(`example path: ${baseParticleLibraryCodePath}HttpClient.h`);
                         if (code.includes(`#include "HttpClient.h"`)) {
                             formData[`file${currentFileIndex}`] = {
-                                value: fs.createReadStream(`/Users/jhaip/Code/lovelace/src/particle-photon/dht-sensor/HttpClient.h`),
+                                value: fs.createReadStream(`${baseParticleLibraryCodePath}HttpClient.h`),
                                 options: {
                                     filename: 'HttpClient.h',
                                     contentType: 'text/plain'
@@ -87,7 +89,7 @@ void publishValueMessage(char body[])
                             };
                             currentFileIndex += 1;
                             formData[`file${currentFileIndex}`] = {
-                                value: fs.createReadStream(`/Users/jhaip/Code/lovelace/src/particle-photon/dht-sensor/HttpClient.cpp`),
+                                value: fs.createReadStream(`${baseParticleLibraryCodePath}HttpClient.cpp`),
                                 options: {
                                     filename: 'HttpClient.cpp',
                                     contentType: 'text/plain'
@@ -97,7 +99,7 @@ void publishValueMessage(char body[])
                         }
                         if (code.includes(`#include "Adafruit_DHT.h"`)) {
                             formData[`file${currentFileIndex}`] = {
-                                value: fs.createReadStream(`/Users/jhaip/Code/lovelace/src/particle-photon/dht-sensor/Adafruit_DHT.h`),
+                                value: fs.createReadStream(`${baseParticleLibraryCodePath}Adafruit_DHT.h`),
                                 options: {
                                     filename: 'Adafruit_DHT.h',
                                     contentType: 'text/plain'
@@ -105,7 +107,7 @@ void publishValueMessage(char body[])
                             }
                             currentFileIndex += 1;
                             formData[`file${currentFileIndex}`] = {
-                                value: fs.createReadStream(`/Users/jhaip/Code/lovelace/src/particle-photon/dht-sensor/Adafruit_DHT.cpp`),
+                                value: fs.createReadStream(`${baseParticleLibraryCodePath}Adafruit_DHT.cpp`),
                                 options: {
                                     filename: 'Adafruit_DHT.cpp',
                                     contentType: 'text/plain'
