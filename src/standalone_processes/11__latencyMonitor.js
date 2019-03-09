@@ -1,4 +1,7 @@
 const { room, myId, scriptName, MY_ID_STR, run } = require('../helper2')(__filename);
+const fs = require('fs');
+
+const stream = fs.createWriteStream("files/latency-ms-log.txt", { flags: 'a' });
 
 var lastSentPing
 const serverTimeoutMs = 5000
@@ -24,6 +27,7 @@ room.on(
         console.log("LATENCY (ms):", latencyMs)
         room.cleanup()
         room.assert(`measured latency ${latencyMs} ms at`, ["text", (new Date()).toUTCString()])
+        stream.write(`${(new Date()).toUTCString()},${latencyMs}\n`);
         setTimeout(sendPing, delayBetweenMeasurementsMs)
     }
 )
