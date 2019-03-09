@@ -49,7 +49,7 @@ function parse(x) {
     return [];
   }
 
-  const lines = x.split("\n")
+  const lines = x.split("\n").concat("");  // parser needs code to end in a blank line so add one to be safe
   let currentSubscriptionId = 0;
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
     const prevOUTPUT = OUTPUT.slice();
