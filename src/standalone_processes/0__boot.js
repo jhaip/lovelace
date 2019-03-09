@@ -193,7 +193,7 @@ room.assert(`paper 2006 has RFID "10af78a3"`)
 room.assert(`paper 2007 has RFID "7341a727"`)
 room.assert(`paper 2008 has RFID "2574c72d"`)
 room.assert(`paper 2009 has RFID "b680cc21"`)
-room.assert(`paper 5 has RFID "d01ff625"`)
+room.assert(`paper 1100 has RFID "d01ff625"`)
 room.assert(`paper 6 has RFID "e21eef27"`)
 room.assert(`paper 1013 has RFID "7bdbe359"`)
 
