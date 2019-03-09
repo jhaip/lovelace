@@ -199,20 +199,6 @@ room.assert(`paper 5 has RFID "d01ff625"`)
 room.assert(`paper 1100 has RFID "e21eef27"`)
 room.assert(`paper 1013 has RFID "7bdbe359"`)
 
-room.assert(`paper 2000 has id`, ["id", "2000"])
-room.assert(`paper 2001 has id`, ["id", "2001"])
-room.assert(`paper 2002 has id`, ["id", "2002"])
-room.assert(`paper 2003 has id`, ["id", "2003"])
-room.assert(`paper 2004 has id`, ["id", "2004"])
-room.assert(`paper 2005 has id`, ["id", "2005"])
-room.assert(`paper 2006 has id`, ["id", "2006"])
-room.assert(`paper 2007 has id`, ["id", "2007"])
-room.assert(`paper 2008 has id`, ["id", "2008"])
-room.assert(`paper 2009 has id`, ["id", "2009"])
-room.assert(`paper 5 has id`, ["id", "0005"])
-room.assert(`paper 6 has id`, ["id", "0006"])
-room.assert(`paper 1013 has id`, ["id", "1013"])
-
 room.assert(`Photon400035001547343433313338 can flash photon Photon3c002f000e47343432313031`)
 
 run();
