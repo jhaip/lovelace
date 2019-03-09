@@ -1,4 +1,4 @@
-const { room, myId, run } = require('../helper2')(__filename);
+const { room, myId, run, MY_ID_STR } = require('../helper2')(__filename);
 
 var FACTS = {};
 var SUBSCRIPTIONS = {};
@@ -50,10 +50,12 @@ room.on(
         console.error(results)
         for (let i=0; i<results.length; i+=1) {
             const id = results[i].id.toString().padStart(4, '0');
-            if (nonBootFactSubcriptions[id] !== "SUBSCRIBED") {
+            if (nonBootFactSubcriptions[id] !== "SUBSCRIBED" && id !== MY_ID_STR) {
                 nonBootFactSubcriptions[id] = "SUBSCRIBED";
                 subscribe(id);
             }
         }
     }
 )
+
+run()
