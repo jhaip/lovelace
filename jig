@@ -38,6 +38,22 @@ function cmd() {
   elif [ "$1" == "log" ]
   then
     tail -f new-backend/go-server/server.log
+  elif [ "$1" == "displays" ]
+  then
+    export DISPLAY=:0
+    python3 src/standalone_processes/648__keyboard.py
+    python3 src/standalone_processes/1700__projectorDisplay.py
+    python3 src/standalone_processes/1701__projectorDisplay.py
+    keyboard_pid = pgrep -f 648__keyboard.py
+    keyboard_window_id = xdotool search --pid $keyboard_pid
+    xdotool windowmove $keyboard_window_id 0 0
+    display_pid1 = pgrep -f 648__keyboard.py
+    display_window_id1 = xdotool search --pid $display_pid1
+    xdotool windowmove $display_window_id1 0 0
+    display_pid2 = pgrep -f 648__keyboard.py
+    display_window_id2 = xdotool search --pid $display_pid1
+    xdotool windowmove $display_window_id2 1921 0
+    xdotool windowactivate $keyboard_window_id
   else
     echo -e "UNKNOWN COMMAND"
     exit 1
