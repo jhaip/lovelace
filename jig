@@ -38,12 +38,18 @@ function cmd() {
   elif [ "$1" == "log" ]
   then
     tail -f new-backend/go-server/server.log
+  elif [ "$1" == "stopdisplays" ]
+  then
+    pkill --signal 9 -f src/standalone_processes/648__keyboard.py
+    pkill --signal 9 -f src/standalone_processes/1700__projectorDisplay.py
+    pkill --signal 9 -f src/standalone_processes/1701__projectorDisplay.py
   elif [ "$1" == "displays" ]
   then
     export DISPLAY=:0
-    pkill -f src/standalone_processes/648__keyboard.py
-    pkill -f src/standalone_processes/1700__projectorDisplay.py
-    pkill -f src/standalone_processes/1701__projectorDisplay.py
+    pkill --signal 9 -f src/standalone_processes/648__keyboard.py
+    pkill --signal 9 -f src/standalone_processes/1700__projectorDisplay.py
+    pkill --signal 9 -f src/standalone_processes/1701__projectorDisplay.py
+    sleep 5
     python3 src/standalone_processes/648__keyboard.py &
     python3 src/standalone_processes/1700__projectorDisplay.py &
     python3 src/standalone_processes/1701__projectorDisplay.py &
@@ -55,7 +61,7 @@ function cmd() {
       echo "no keyboard pid"
       exit
     fi
-    keyboard_window_id=$(xdotool search --pid $keyboard_pid)
+    keyboard_window_id=$(xdotool search --onlyvisible --pid $keyboard_pid)
     echo "keyboard window id $keyboard_window_id"
     if [ -z "$keyboard_window_id" ]
     then
@@ -70,7 +76,7 @@ function cmd() {
       echo "no display_pid1"
       exit
     fi
-    display_window_id1=$(xdotool search --pid $display_pid1)
+    display_window_id1=$(xdotool search --onlyvisible --pid $display_pid1)
     if [ -z "$display_window_id1" ]
     then
       echo "no display_window_id1"
@@ -85,7 +91,7 @@ function cmd() {
       echo "no display_pid2"
       exit
     fi
-    display_window_id2=$(xdotool search --pid $display_pid2)
+    display_window_id2=$(xdotool search --onlyvisible --pid $display_pid2)
     echo "display 2 id $display_window_id2"
     if [ -z "$display_window_id2" ]
     then
