@@ -209,7 +209,7 @@ class Example(wx.Frame):
         self.Bind(wx.EVT_PAINT, self.OnPaint)
 
         self.Show()
-        self.Maximize(True)
+        # self.Maximize(True)
 
         self.MyListenDrawLoop()
 

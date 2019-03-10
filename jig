@@ -68,7 +68,7 @@ function cmd() {
       echo "no keyboard_window_id"
       exit
     fi
-    xdotool windowmove $keyboard_window_id 500 0
+    xdotool windowmove $keyboard_window_id 0 0
     display_pid1=$(pgrep -f 1700__projectorDisplay.py)
     echo "display 1 pid $display_pid1"
     if [ -z "$display_pid1" ]
