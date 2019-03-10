@@ -98,7 +98,7 @@ function cmd() {
       echo "no display_window_id2"
       exit
     fi
-    xdotool windowmove $display_window_id2 500 0
+    xdotool windowmove $display_window_id2 1921 0
     xdotool windowactivate $keyboard_window_id
   else
     echo -e "UNKNOWN COMMAND"
