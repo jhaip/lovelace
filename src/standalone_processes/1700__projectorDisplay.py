@@ -516,5 +516,5 @@ if __name__ == '__main__':
     #     listen()
     #     time.sleep(1.0)
     app = wx.App()
-    Example(None, 'Line')
+    Example(None, get_my_id_pre_init(__file__))
     app.MainLoop()
