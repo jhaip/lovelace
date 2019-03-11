@@ -1,3 +1,5 @@
+const { room, myId, run } = require('../helper2')(__filename);
+
 let data = []
 const max_data = 10
 const OX = 120
@@ -5,7 +7,11 @@ const W = 12
 const H = 10
 const C = 4
 
-when $ says the humidity is $H and temp is $T:
+room.on(`$ says the humidity is $H and temp is $T`,
+        results => {
+  room.subscriptionPrefix(1);
+  if (!!results) {
+    results.forEach(({ H, T }) => {
   data.push(H);
   data = data.slice(-max_data);
   let ill = room.newIllumination()
@@ -22,7 +28,16 @@ when $ says the humidity is $H and temp is $T:
     ill.ellipse(OX + i*W, H+data[i]*C, 3, 3)
   }
   room.draw(ill)
-otherwise:
+
+    });
+  } else {
   let ill = room.newIllumination()
   ill.text(25, 25, "No data yet")
   room.draw(ill)
+
+  }
+  room.subscriptionPostfix();
+})
+
+
+run();

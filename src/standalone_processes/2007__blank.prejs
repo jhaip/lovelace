@@ -1,1 +1,5 @@
-claim I wish I was highlighted green
+when $ says the humidity is $H and temp is $T:
+  let ill = room.newIllumination()
+  ill.text(25, 50, "humidity " + H)
+  ill.text(25, 100, "temp " + T)
+  room.draw(ill)

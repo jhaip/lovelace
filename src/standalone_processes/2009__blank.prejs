@@ -64,9 +64,9 @@ void loop()
     char body[300];
     sprintf(body,
       "{\\"claim\\":\\"Photon%s says the humidity is %f and temp is %f\\", "
-      "\\"retract\\":\\"$ Photon%s says the humidity is $ and temp is $\\"}",
+      "\\"retract\\":\\"$ $ Photon%s says the humidity is $ and temp is $\\"}",
       (const char *)myID, h, t, (const char *)myID);
     publishValueMessage(body);
 }
 `
-claim wish`, ["text", code], `runs on the photon`
+claim wish`, ["text", code], `runs on the photon
