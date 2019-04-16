@@ -1,3 +1,5 @@
+const { room, myId, run } = require('../helper2')(__filename);
+
 const TARGET_ID = "0648"
 var FACTS = {};
 var SUBSCRIPTIONS = {};
@@ -55,3 +57,8 @@ function subscribe(id) {
 }
 
 subscribe(TARGET_ID)
+
+
+
+
+run();
