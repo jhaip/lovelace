@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package roomprotocol;
+
+service Room {
+    rpc RoomTalk(stream RoomUpdate) returns (stream RoomUpdate) {}
+}
+
+message UpdatePart {
+    string type = 1;
+    float floatVal = 2;
+    int32 intVal = 3;
+    string stringVal = 4;
+    bytes bytesVal = 5;
+}
+
+message RoomUpdate {
+    string type = 1;
+    repeated UpdatePart tokens = 2;
+}
