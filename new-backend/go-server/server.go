@@ -3,15 +3,20 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"runtime"
 	"strconv"
 	"sync"
 	"time"
 
+	"net/http"
+	_ "net/http/pprof"
+
 	_ "github.com/mattn/go-sqlite3"
 	zmq "github.com/pebbe/zmq4"
 	"go.uber.org/zap"
+	// "runtime/trace"
 )
 
 var dbMutex sync.RWMutex
@@ -270,10 +275,30 @@ func NewLogger() (*zap.Logger, error) {
 }
 
 func main() {
+	// f, err := os.Create("trace.out")
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// defer f.Close()
+
+	// err = trace.Start(f)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// defer trace.Stop()
+
+	// programStartTime := time.Now()
+
 	// defer profile.Start().Stop()
 	logger, loggerCreateError := NewLogger() // zap.NewDevelopment() // NewLogger()
 	checkErr(loggerCreateError)
 	zap.ReplaceGlobals(logger)
+
+	runtime.SetMutexProfileFraction(5)
+
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
 
 	factDatabase := make_fact_database()
 
@@ -321,5 +346,10 @@ func main() {
 			batch_messages <- msg
 		}
 		time.Sleep(1.0 * time.Microsecond)
+		// delta := time.Now().Sub(programStartTime)
+		// if (delta.Seconds() > 30) {
+		// 	zap.L().Debug("30 seconds elapsed -- ending")
+		// 	break;
+		// }
 	}
 }
