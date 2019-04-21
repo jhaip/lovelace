@@ -10,6 +10,44 @@ function cmd() {
     sleep 2
     node src/standalone_processes/0__boot.js &
     echo -e "booting"
+  elif [ "$1" == "test" ]
+  then
+    cd new-backend/go-server
+    go run server.go parser2.go subscriber.go database.go &
+    echo -e "running server"
+    cd ../..
+    sleep 2
+    node src/standalone_processes/1200__test.js &
+    node src/standalone_processes/1201__test.js &
+    node src/standalone_processes/1202__test.js &
+    node src/standalone_processes/1203__test.js &
+    node src/standalone_processes/1204__test.js &
+    node src/standalone_processes/1205__test.js &
+    node src/standalone_processes/1206__test.js &
+    node src/standalone_processes/1207__test.js &
+    node src/standalone_processes/1208__test.js &
+    node src/standalone_processes/1209__test.js &
+    node src/standalone_processes/1210__test.js &
+    echo -e "booting"
+  elif [ "$1" == "stoptest" ]
+  then
+    pkill -f "go run server.go parser2.go subscriber.go database.go"
+    pkill -f "/exe/server"
+    pkill -f "src/standalone_processes/1200__boot.js"
+    pkill -f "src/standalone_processes/1201__boot.js"
+    pkill -f "src/standalone_processes/1202__boot.js"
+    pkill -f "src/standalone_processes/1203__boot.js"
+    pkill -f "src/standalone_processes/1204__boot.js"
+    pkill -f "src/standalone_processes/1205__boot.js"
+    pkill -f "src/standalone_processes/1206__boot.js"
+    pkill -f "src/standalone_processes/1207__boot.js"
+    pkill -f "src/standalone_processes/1208__boot.js"
+    pkill -f "src/standalone_processes/1209__boot.js"
+    pkill -f "src/standalone_processes/1210__boot.js"
+    pkill -f "node src/standalone_processes"
+    pkill -f "python3 src/standalone_processes"
+    pkill -f "go run src/standalone_processes"
+    pkill -f "/tmp/go-build"
   elif [ "$1" == "stop" ]
   then
     pkill -f "go run server.go parser2.go subscriber.go database.go"
