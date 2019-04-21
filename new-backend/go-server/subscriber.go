@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"sort"
 	"strconv"
 	"strings"
@@ -148,8 +149,7 @@ func startSubscriber(subscriptionData Subscription, notifications chan<- Notific
 
 func startLiteSubscriber(subscriptionData Subscription, notifications chan<- Notification, preExistingFacts map[string]Fact) {
 	subscriber := makeSubscriber(subscriptionData.Query)
-	var updatedResults bool
-	zap.L().Info("inside startSubscriber")
+	zap.L().Info("inside startLiteSubscriber")
 	warmSubscriberCache(subscriptionData, preExistingFacts)
 	for batch_messages := range subscriptionData.batch_messages {
 		matching_batch_messages := getSubscriptionMatchingBatchMessages(subscriber, batch_messages)
@@ -402,8 +402,8 @@ func subscriberBatchUpdate(sub Subscription2, batch_messages []BatchMessage) (Su
 	return sub, updatedSubscriberOutput
 }
 
-func subscriberMatchesUpdate(sub Subscription2, claim []Term) (Subscription2, bool) {
-	for i, query_part := range sub.query {
+func subscriberMatchesUpdate(sub Subscription2, claim []Term) bool {
+	for _, query_part := range sub.query {
 		match, _ := fact_match(Fact{query_part}, Fact{claim}, QueryResult{})
 		if match {
 			return true
@@ -412,8 +412,8 @@ func subscriberMatchesUpdate(sub Subscription2, claim []Term) (Subscription2, bo
 	return false
 }
 
-func getSubscriptionMatchingBatchMessages(sub Subscription2, batch_messages []BatchMessage) []BatchMessage] {
-	matching_batch_messages := make([]string, 0)
+func getSubscriptionMatchingBatchMessages(sub Subscription2, batch_messages []BatchMessage) []BatchMessage {
+	matching_batch_messages := make([]BatchMessage, 0)
 	for _, batch_message := range batch_messages {
 		terms := make([]Term, len(batch_message.Fact))
 		for j, term := range batch_message.Fact {
