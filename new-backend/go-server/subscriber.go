@@ -146,6 +146,20 @@ func startSubscriber(subscriptionData Subscription, notifications chan<- Notific
 	subscriptionData.dead.Done()
 }
 
+func startLiteSubscriber(subscriptionData Subscription, notifications chan<- Notification, preExistingFacts map[string]Fact) {
+	subscriber := makeSubscriber(subscriptionData.Query)
+	var updatedResults bool
+	zap.L().Info("inside startSubscriber")
+	warmSubscriberCache(subscriptionData, preExistingFacts)
+	for batch_messages := range subscriptionData.batch_messages {
+		matching_batch_messages := getSubscriptionMatchingBatchMessages(subscriber, batch_messages)
+		marshalled_results, err := json.Marshal(matching_batch_messages)
+		checkErr(err)
+		notifications <- Notification{subscriptionData.Source, subscriptionData.Id, string(marshalled_results)}
+	}
+	subscriptionData.dead.Done()
+}
+
 func makeSubscriber(query [][]Term) Subscription2 {
 	subscriber := Subscription2{query, make(map[int][]SubscriptionUpdateOptions), make(map[string]Node), make([]string, 0), ""}
 	originalSubscriberNodeKeys := make([]string, 0)
@@ -386,4 +400,44 @@ func subscriberBatchUpdate(sub Subscription2, batch_messages []BatchMessage) (Su
 		}
 	}
 	return sub, updatedSubscriberOutput
+}
+
+func subscriberMatchesUpdate(sub Subscription2, claim []Term) (Subscription2, bool) {
+	for i, query_part := range sub.query {
+		match, _ := fact_match(Fact{query_part}, Fact{claim}, QueryResult{})
+		if match {
+			return true
+		}
+	}
+	return false
+}
+
+func getSubscriptionMatchingBatchMessages(sub Subscription2, batch_messages []BatchMessage) []BatchMessage] {
+	matching_batch_messages := make([]string, 0)
+	for _, batch_message := range batch_messages {
+		terms := make([]Term, len(batch_message.Fact))
+		for j, term := range batch_message.Fact {
+			terms[j] = Term{term[0], term[1]}
+		}
+		if batch_message.Type == "claim" || batch_message.Type == "retract" {
+			batchMessageMatches := subscriberMatchesUpdate(sub, terms)
+			if batchMessageMatches {
+				matching_batch_messages = append(matching_batch_messages, batch_message)
+			}
+		}
+		// else if batch_message.Type == "death" {
+		// 	// TODO: this may already be on in the server.go on_source_death()
+		// 	dying_source := batch_message.Fact[0][1]
+		// 	clearSourceClaims := []Term{Term{"id", dying_source}, Term{"postfix", ""}}
+		// 	batchMessageMatches = subscriberMatchesUpdate(sub, clearSourceClaims)
+		// 	if batchMessageMatches {
+		// 		batch_messages := []BatchMessage{
+		// 			BatchMessage{"retract", [][]string{[]string{"id", dying_source}, []string{"postfix", ""}}},
+		// 			BatchMessage{"retract", [][]string{[]string{"text", "subscription"}, []string{"id", dying_source}, []string{"postfix", ""}}},
+		// 		}
+		// 		matching_batch_messages = append(matching_batch_messages, clearSourceClaimsBatchMessage)
+		// 	}
+		// }
+	}
+	return matching_batch_messages
 }
