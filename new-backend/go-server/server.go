@@ -3,20 +3,25 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	// "log"
 	"os"
+	"io"
 	"runtime"
 	"strconv"
 	"sync"
 	"time"
 
-	"net/http"
+	// "net/http"
 	_ "net/http/pprof"
 
 	_ "github.com/mattn/go-sqlite3"
 	zmq "github.com/pebbe/zmq4"
 	"go.uber.org/zap"
 	// "runtime/trace"
+
+	opentracing "github.com/opentracing/opentracing-go"
+	jaeger "github.com/uber/jaeger-client-go"
+	config "github.com/uber/jaeger-client-go/config"
 )
 
 var dbMutex sync.RWMutex
@@ -61,6 +66,24 @@ type Notification struct {
 type BatchMessage struct {
 	Type string     `json:"type"`
 	Fact [][]string `json:"fact"`
+}
+
+// initJaeger returns an instance of Jaeger Tracer that samples 100% of traces and logs all spans to stdout.
+func initJaeger(service string) (opentracing.Tracer, io.Closer) {
+    cfg := &config.Configuration{
+        Sampler: &config.SamplerConfig{
+            Type:  "const",
+            Param: 1,
+        },
+        Reporter: &config.ReporterConfig{
+            LogSpans: true,
+        },
+    }
+    tracer, closer, err := cfg.New(service, config.Logger(jaeger.StdLogger))
+    if err != nil {
+        panic(fmt.Sprintf("ERROR: cannot init Jaeger: %v\n", err))
+    }
+    return tracer, closer
 }
 
 func checkErr(err error) {
@@ -275,6 +298,9 @@ func NewLogger() (*zap.Logger, error) {
 }
 
 func main() {
+	tracer, closer := initJaeger("room-service")
+	// defer closer.Close()
+	opentracing.SetGlobalTracer(tracer)
 	// f, err := os.Create("trace.out")
 	// if err != nil {
 	// 	panic(err)
@@ -296,9 +322,9 @@ func main() {
 
 	runtime.SetMutexProfileFraction(5)
 
-	go func() {
-		log.Println(http.ListenAndServe("localhost:6060", nil))
-	}()
+	// go func() {
+	// 	log.Println(http.ListenAndServe("localhost:6060", nil))
+	// }()
 
 	factDatabase := make_fact_database()
 
@@ -331,9 +357,20 @@ func main() {
 	go batch_worker(batch_messages, subscriptions_notifications, &factDatabase, &subscriptions)
 
 	zap.L().Info("listening...")
+	rootSpan := tracer.StartSpan("run-test")
+	go func() {
+		time.Sleep(time.Duration(5) * time.Second)
+		rootSpan.Finish()
+		closer.Close()
+		panic("time elapsed - ending");
+	}()
 	for {
 		msg, recvErr := subscriber.Recv(0)
 		checkErr(recvErr)
+		span := rootSpan.Tracer().StartSpan(
+			"zmq-recv-loop",
+			opentracing.ChildOf(rootSpan.Context()),
+		)
 		event_type := msg[0:event_type_len]
 		source := msg[event_type_len:(event_type_len + source_len)]
 		val := msg[(event_type_len + source_len):]
@@ -345,11 +382,19 @@ func main() {
 		} else if event_type == "....BATCH" {
 			batch_messages <- msg
 		}
-		time.Sleep(1.0 * time.Microsecond)
+		sleepSpan := span.Tracer().StartSpan(
+			"zmq-recv-loop-sleep",
+			opentracing.ChildOf(span.Context()),
+		)
+		time.Sleep(time.Duration(1) * time.Microsecond)
+		sleepSpan.Finish()
+		span.Finish()
 		// delta := time.Now().Sub(programStartTime)
-		// if (delta.Seconds() > 30) {
-		// 	zap.L().Debug("30 seconds elapsed -- ending")
+		// if (delta.Seconds() > 20) {
+		// 	zap.L().Debug("time elapsed -- ending")
 		// 	break;
+		// } else {
+		// 	zap.L().Debug("not done yet")
 		// }
 	}
 }
