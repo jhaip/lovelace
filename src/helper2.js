@@ -3,6 +3,27 @@ const path = require('path');
 const zmq = require('zeromq');
 const uuidV4 = require('uuid/v4');
 const child_process = require("child_process");
+var initTracer = require('jaeger-client').initTracer;
+var opentracing = require('opentracing');
+
+// See schema https://github.com/jaegertracing/jaeger-client-node/blob/master/src/configuration.js#L37
+var config = {
+    serviceName: 'room-service',
+    'reporter': {
+        'logSpans': true,
+        'agentHost': 'localhost',
+        'agentPort': 6832
+    },
+    'sampler': {
+        'type': 'const',
+        'param': 1.0
+    }
+};
+var options = {
+    // metrics: metrics,
+    // logger: logger,
+};
+var tracer = initTracer(config, options);
 
 const randomId = () => 
     uuidV4();
@@ -128,6 +149,7 @@ function init(filename) {
     let batched_calls = []
     const DEFAULT_SUBSCRIPTION_ID = 0;
     let currentSubscriptionId = DEFAULT_SUBSCRIPTION_ID;
+    var wireCtx;
 
     const waitForServerListening = () => {
         return new Promise(async resolve => {
@@ -141,6 +163,16 @@ function init(filename) {
     }
 
     const room = {
+        setCtx: ctx => {
+            wireCtx = ctx;
+            this.wireCtx = ctx;
+            console.log("room.setCtx")
+            console.log(this.wireCtx);
+
+        },
+        wireCtx: () => {
+            return this.wireCtx;
+        },
         onRaw: async (...args) => {
             console.log("pre wait for server")
             await waitForServerListening();
@@ -304,6 +336,9 @@ function init(filename) {
         if (id == init_ping_id) {
             server_listening = true
             console.log("SERVER LISTENING!!")
+            console.log(val)
+            console.log(opentracing.FORMAT_TEXT_MAP)
+            room.setCtx(tracer.extract(opentracing.FORMAT_TEXT_MAP, {"uber-trace-id": val}));
             return
         }
         if (id in select_ids) {
@@ -330,7 +365,7 @@ function init(filename) {
     }
 
     return {
-        room, myId, scriptName, MY_ID_STR, run, getIdFromProcessName, getIdStringFromId
+        room, myId, scriptName, MY_ID_STR, run, getIdFromProcessName, getIdStringFromId, tracer
     }
 }
 

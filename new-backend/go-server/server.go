@@ -358,6 +358,14 @@ func main() {
 
 	zap.L().Info("listening...")
 	rootSpan := tracer.StartSpan("run-test")
+	mapc := opentracing.TextMapCarrier(make(map[string]string))
+	err := tracer.Inject(rootSpan.Context(), opentracing.TextMap, mapc)
+	checkErr(err)
+	zap.L().Info(mapc["uber-trace-id"])
+	// for k, v := range mapc { 
+	// 	zap.L().Info(k)
+	// 	zap.L().Info(v)
+	// }
 	go func() {
 		time.Sleep(time.Duration(5) * time.Second)
 		rootSpan.Finish()
@@ -376,7 +384,7 @@ func main() {
 		val := msg[(event_type_len + source_len):]
 		if event_type == ".....PING" {
 			zap.L().Debug("got PING", zap.String("source", source), zap.String("value", val))
-			notifications <- Notification{source, val, ""}
+			notifications <- Notification{source, val, mapc["uber-trace-id"]}
 		} else if event_type == "SUBSCRIBE" {
 			subscription_messages <- msg
 		} else if event_type == "....BATCH" {

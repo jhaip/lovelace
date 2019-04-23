@@ -1,4 +1,4 @@
-const { room, myId, run, MY_ID_STR } = require('../helper2')(__filename);
+const { room, myId, run, MY_ID_STR, tracer } = require('../helper2')(__filename);
 
 const N = 10;
 const F = parseInt(myId) + N;
@@ -19,7 +19,21 @@ room.on(
     }
 )
 
-const currentTimeMs = (new Date()).getTime()
-room.assert(`test client ${myId} says ${myId} @ ${currentTimeMs}`);
-
 run()
+
+setTimeout(() => {
+    const ctx = room.wireCtx();
+    console.log("wire context:")
+    console.log(ctx);
+    const span = tracer.startSpan('1200-claim', {
+        childOf: ctx
+    });
+    span.log({ 'event': 'claim from #1200' });
+    const currentTimeMs = (new Date()).getTime()
+    room.assert(`test client ${myId} says ${myId} @ ${currentTimeMs}`);
+    span.finish();
+
+    room.flush();
+}, 3000)
+
+
