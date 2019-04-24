@@ -274,9 +274,11 @@ function init(filename) {
             }
         },
         flush: () => {
+            // const span = tracer.startSpan(`${myId}-batch-send`, { childOf: room.wireCtx() });
             // TODO: need to push into an array specific to the subsciber, in case there are multiple subscribers in one client
             room.batch(batched_calls);
             batched_calls = [];
+            // span.finish();
         },
         batch: batched_calls => {
             // console.log("SEINDING BATCH", batched_calls)
@@ -324,6 +326,8 @@ function init(filename) {
     }
 
     subscriber.on('message', (request) => {
+        const span = tracer.startSpan(`client-${myId}-recv`, { childOf: room.wireCtx() });
+        const preSpan = tracer.startSpan(`client-${myId}-prerecv`, { childOf: span });
         console.log("GOT MESSAGE")
         const msg = request.toString();
         console.log(msg)
@@ -333,6 +337,7 @@ function init(filename) {
         const id = msg.slice(source_len, source_len + SUBSCRIPTION_ID_LEN)
         console.log(`ID: ${id} == ${init_ping_id}`)
         const val = msg.slice(source_len + SUBSCRIPTION_ID_LEN + SERVER_SEND_TIME_LEN)
+        preSpan.finish();
         if (id == init_ping_id) {
             server_listening = true
             console.log("SERVER LISTENING!!")
@@ -349,14 +354,21 @@ function init(filename) {
             callback = subscription_ids[id]
             // room.cleanup()
             // console.log("found match")
+            const parseSpan = tracer.startSpan(`client-${myId}-parserecv`, { childOf: span });
             const r = parseResult(val)
+            parseSpan.finish();
             // console.log(r)
+            const callbackSpan = tracer.startSpan(`client-${myId}-callbackrecv`, { childOf: span });
             callback(r)
+            callbackSpan.finish();
             // console.log("flushing")
+            const callbackFlushSpan = tracer.startSpan(`client-${myId}-callbackflushrecv`, { childOf: span });
             room.flush()
+            callbackFlushSpan.finish();
         } else {
             console.log("unknown subscription ID...")
         }
+        span.finish();
     });
 
     const run = async () => {
@@ -364,8 +376,13 @@ function init(filename) {
         room.flush()
     }
 
+    const afterServerConnects = async (callback) => {
+        await waitForServerListening();
+        callback();
+    }
+
     return {
-        room, myId, scriptName, MY_ID_STR, run, getIdFromProcessName, getIdStringFromId, tracer
+        room, myId, scriptName, MY_ID_STR, run, getIdFromProcessName, getIdStringFromId, tracer, afterServerConnects
     }
 }
 
