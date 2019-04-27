@@ -10,7 +10,8 @@ room.on(
         room.subscriptionPrefix(1);
         if (!!results) {
             const currentTimeMs = (new Date()).getTime()
-            room.assert(`test client ${myId} says ${myId} @ ${currentTimeMs}`);
+            // room.assert(`test client ${myId} says ${myId} @ ${currentTimeMs}`);
+    room.assert(["text", "test"], ["text", "client"], ["integer", `${myId}`], ["text", "says"], ["integer", `${myId}`], ["text", "@"], ["integer", `${currentTimeMs}`]);
         }
         room.subscriptionPostfix();
     }

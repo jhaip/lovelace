@@ -166,9 +166,8 @@ function init(filename) {
         setCtx: ctx => {
             wireCtx = ctx;
             this.wireCtx = ctx;
-            console.log("room.setCtx")
-            console.log(this.wireCtx);
-
+            // console.log("room.setCtx")
+            // console.log(this.wireCtx);
         },
         wireCtx: () => {
             return this.wireCtx;
@@ -301,7 +300,7 @@ function init(filename) {
         },
         subscriptionPrefix: id => {
             currentSubscriptionId = id;
-            room.retractMineFromThisSubscription("%")
+            room.retractMineFromThisSubscription(["postfix", ""])
         },
         subscriptionPostfix: () => {
             currentSubscriptionId = 0;
