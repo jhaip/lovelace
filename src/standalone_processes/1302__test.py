@@ -8,7 +8,6 @@ P = int(get_my_id_pre_init(__file__))-1
 
 @subscription(["$ test client " + str(M) + " says $x @ $time"])
 def sub_callback(results):
-    print("1301 recv")
     currentTimeMs = int(round(time.time() * 1000))
     claims = []
     claims.append({"type": "retract", "fact": [

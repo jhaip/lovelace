@@ -6,6 +6,28 @@ import uuid
 import random
 import os
 import sys
+import opentracing
+from opentracing import Format
+from jaeger_client import Config
+
+config = Config(
+    config={
+        'sampler': {
+            'type': 'const',
+            'param': 1,
+        },
+        'local_agent': {
+            'reporting_host': 'localhost',
+            'reporting_port': '6832',
+        },
+        'logging': True,
+    },  
+    service_name='room-service',
+    validate=True,
+)
+# this call also sets opentracing.tracer
+tracer = config.initialize_tracer()
+ROOM_SPAN_CONTEXT = None
 
 context = zmq.Context()
 rpc_url = "localhost"
@@ -99,17 +121,23 @@ def parse_results(val):
 
 
 def listen(sleep_time_s=0.01):
-    global server_listening
+    global server_listening, ROOM_SPAN_CONTEXT, tracer, MY_ID
+    print(ROOM_SPAN_CONTEXT)
+    # with tracer.start_span('client-'+MY_ID+'-recv', child_of=ROOM_SPAN_CONTEXT) as span:
     while True:
         try:
             string = sub_socket.recv_string(flags=zmq.NOBLOCK)
+            span = tracer.start_span(operation_name='client-recv', references=opentracing.child_of(ROOM_SPAN_CONTEXT))
             source_len = 4
             server_send_time_len = 13
             id = string[source_len:(source_len + SUBSCRIPTION_ID_LEN)]
             val = string[(source_len + SUBSCRIPTION_ID_LEN +
-                          server_send_time_len):]
+                        server_send_time_len):]
             if id == init_ping_id:
                 server_listening = True
+                print("SET ROOM CONTEXT")
+                ROOM_SPAN_CONTEXT = tracer.extract(format=Format.TEXT_MAP, carrier={"uber-trace-id": val})
+                print(ROOM_SPAN_CONTEXT)
                 return
             if id in select_ids:
                 callback = select_ids[id]
@@ -122,9 +150,10 @@ def listen(sleep_time_s=0.01):
             # else:
             #     logging.info("UNRECOGNIZED:")
             #     logging.info(string)
+            span.finish()
         except zmq.Again:
             break
-    # logging.info("loop")
+    print("loop done")
     time.sleep(sleep_time_s)
 
 
@@ -229,3 +258,11 @@ def subscription(expr):
             func(x)
         return function_wrapper
     return subscription_decorator
+
+
+def tracer_cleanup():
+    time.sleep(2)   # yield to IOLoop to flush the spans - https://github.com/jaegertracing/jaeger-client-python/issues/50
+    tracer.close()  # flush any buffered spans
+
+import atexit
+atexit.register(tracer_cleanup)
