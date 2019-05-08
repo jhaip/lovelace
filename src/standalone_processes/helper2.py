@@ -10,23 +10,28 @@ import opentracing
 from opentracing import Format
 from jaeger_client import Config
 
-config = Config(
-    config={
-        'sampler': {
-            'type': 'const',
-            'param': 1,
-        },
-        'local_agent': {
-            'reporting_host': 'localhost',
-            'reporting_port': '6832',
-        },
-        'logging': True,
-    },  
-    service_name='room-service',
-    validate=True,
-)
+
+
+def init_jaeger_tracer():
+    config = Config(
+        config={
+            'sampler': {
+                'type': 'const',
+                'param': 1,
+            },
+            # 'local_agent': {
+            #     'reporting_host': 'localhost',
+            #     'reporting_port': '6832',
+            # },
+            'logging': True,
+        },  
+        service_name='room-service',
+        validate=True,
+    )
+    return config.initialize_tracer()
+
 # this call also sets opentracing.tracer
-tracer = config.initialize_tracer()
+tracer = None
 ROOM_SPAN_CONTEXT = None
 
 context = zmq.Context()
@@ -122,17 +127,21 @@ def parse_results(val):
 
 def listen(sleep_time_s=0.01):
     global server_listening, ROOM_SPAN_CONTEXT, tracer, MY_ID
-    print(ROOM_SPAN_CONTEXT)
+    # print(ROOM_SPAN_CONTEXT)
     # with tracer.start_span('client-'+MY_ID+'-recv', child_of=ROOM_SPAN_CONTEXT) as span:
     while True:
         try:
             string = sub_socket.recv_string(flags=zmq.NOBLOCK)
-            span = tracer.start_span(operation_name='client-recv', references=opentracing.child_of(ROOM_SPAN_CONTEXT))
+            # span = tracer.start_span(operation_name='client-recv', references=opentracing.child_of(ROOM_SPAN_CONTEXT))
+            span = tracer.start_span('client-'+MY_ID+'-recv', references=opentracing.child_of(ROOM_SPAN_CONTEXT))
+            # span = tracer.start_span('client-'+MY_ID+'-recv')
+            preSpan = tracer.start_span('client-'+MY_ID+'-prerecv', child_of=span)
             source_len = 4
             server_send_time_len = 13
             id = string[source_len:(source_len + SUBSCRIPTION_ID_LEN)]
             val = string[(source_len + SUBSCRIPTION_ID_LEN +
                         server_send_time_len):]
+            preSpan.finish()
             if id == init_ping_id:
                 server_listening = True
                 print("SET ROOM CONTEXT")
@@ -146,14 +155,16 @@ def listen(sleep_time_s=0.01):
             elif id in subscription_ids:
                 logging.debug(string)
                 callback = subscription_ids[id]
+                callbackSpan = tracer.start_span('client-'+MY_ID+'-callbackrecv', child_of=span)
                 callback(parse_results(val))
+                callbackSpan.finish()
             # else:
             #     logging.info("UNRECOGNIZED:")
             #     logging.info(string)
             span.finish()
         except zmq.Again:
             break
-    print("loop done")
+    # print("loop done")
     time.sleep(sleep_time_s)
 
 
@@ -201,7 +212,7 @@ def check_server_connection():
 
 
 def init(root_filename, skipListening=False):
-    global MY_ID, MY_ID_STR, py_subscriptions, py_prehook
+    global MY_ID, MY_ID_STR, py_subscriptions, py_prehook, tracer
     scriptName = os.path.basename(root_filename)
     scriptNameNoExtension = os.path.splitext(scriptName)[0]
     fileDir = os.path.dirname(os.path.realpath(root_filename))
@@ -214,6 +225,11 @@ def init(root_filename, skipListening=False):
     print(MY_ID_STR)
     print(logPath)
     print("-")
+    tracer = init_jaeger_tracer()
+    # span = tracer.start_span('aaaa')
+    # span.finish()
+    # time.sleep(2)   # yield to IOLoop to flush the spans - https://github.com/jaegertracing/jaeger-client-python/issues/50
+    # tracer.close()  # flush any buffered spans
     sub_socket.setsockopt_string(zmq.SUBSCRIBE, MY_ID_STR)
     start = time.time()
     while not server_listening:
@@ -261,6 +277,7 @@ def subscription(expr):
 
 
 def tracer_cleanup():
+    global tracer
     time.sleep(2)   # yield to IOLoop to flush the spans - https://github.com/jaegertracing/jaeger-client-python/issues/50
     tracer.close()  # flush any buffered spans
 

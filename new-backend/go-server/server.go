@@ -76,7 +76,7 @@ func initJaeger(service string) (opentracing.Tracer, io.Closer) {
             Param: 1,
         },
         Reporter: &config.ReporterConfig{
-            LogSpans: true,
+            LogSpans: false,
         },
     }
     tracer, closer, err := cfg.New(service, config.Logger(jaeger.StdLogger))
@@ -367,7 +367,7 @@ func main() {
 	// 	zap.L().Info(v)
 	// }
 	go func() {
-		time.Sleep(time.Duration(5) * time.Second)
+		time.Sleep(time.Duration(15) * time.Second)
 		rootSpan.Finish()
 		closer.Close()
 		panic("time elapsed - ending");

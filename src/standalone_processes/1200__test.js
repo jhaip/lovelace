@@ -24,15 +24,17 @@ room.on(
 run()
 
 afterServerConnects(() => {
-    // console.log("wire context:")
-    // console.log(room.wireCtx());
-    const span = tracer.startSpan('1200-claim', { childOf: room.wireCtx() });
-    span.log({ 'event': 'claim from #1200' });
-    const currentTimeMs = (new Date()).getTime()
-    // room.assert(`testt client ${myId} says ${myId} @ ${currentTimeMs}`);
-    room.assert(["text", "test"], ["text", "client"], ["integer", `${myId}`], ["text", "says"], ["integer", `${myId}`], ["text", "@"], ["integer", `${currentTimeMs}`]);
-    span.finish();
-    room.flush();
+    setTimeout(() => {
+        // console.log("wire context:")
+        // console.log(room.wireCtx());
+        const span = tracer.startSpan('1200-claim', { childOf: room.wireCtx() });
+        span.log({ 'event': 'claim from #1200' });
+        const currentTimeMs = (new Date()).getTime()
+        // room.assert(`testt client ${myId} says ${myId} @ ${currentTimeMs}`);
+        room.assert(["text", "test"], ["text", "client"], ["integer", `${myId}`], ["text", "says"], ["integer", `${myId}`], ["text", "@"], ["integer", `${currentTimeMs}`]);
+        span.finish();
+        room.flush();
+    }, 10000);
 })
 
 
