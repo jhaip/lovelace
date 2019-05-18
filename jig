@@ -29,21 +29,101 @@ function cmd() {
     node src/standalone_processes/1209__test.js &
     node src/standalone_processes/1210__test.js &
     echo -e "booting"
+  elif [ "$1" == "pytest" ]
+  then
+    cd new-backend/go-server
+    go run server.go parser2.go subscriber.go database.go &
+    echo -e "running server"
+    cd ../..
+    sleep 2
+    python3 src/standalone_processes/1300__test.py &
+    python3 src/standalone_processes/1301__test.py &
+    python3 src/standalone_processes/1302__test.py &
+    python3 src/standalone_processes/1303__test.py &
+    python3 src/standalone_processes/1304__test.py &
+    python3 src/standalone_processes/1305__test.py &
+    python3 src/standalone_processes/1306__test.py &
+    python3 src/standalone_processes/1307__test.py &
+    python3 src/standalone_processes/1308__test.py &
+    python3 src/standalone_processes/1309__test.py &
+    python3 src/standalone_processes/1310__test.py &
+    python3 src/standalone_processes/1311__test.py &
+    python3 src/standalone_processes/1312__test.py &
+    python3 src/standalone_processes/1313__test.py &
+    python3 src/standalone_processes/1314__test.py &
+    python3 src/standalone_processes/1315__test.py &
+    python3 src/standalone_processes/1316__test.py &
+    python3 src/standalone_processes/1317__test.py &
+    python3 src/standalone_processes/1318__test.py &
+    python3 src/standalone_processes/1319__test.py &
+    python3 src/standalone_processes/1320__test.py &
+    echo -e "booting"
+  elif [ "$1" == "gotest" ]
+  then
+    cd new-backend/go-server
+    go run server.go parser2.go subscriber.go database.go &
+    echo -e "running server"
+    cd ../..
+    sleep 2
+    go run src/standalone_processes/1400__exp.go 1400 &
+    go run src/standalone_processes/1400__exp.go 1401 &
+    go run src/standalone_processes/1400__exp.go 1402 &
+    go run src/standalone_processes/1400__exp.go 1403 &
+    go run src/standalone_processes/1400__exp.go 1404 &
+    go run src/standalone_processes/1400__exp.go 1405 &
+    go run src/standalone_processes/1400__exp.go 1406 &
+    go run src/standalone_processes/1400__exp.go 1407 &
+    go run src/standalone_processes/1400__exp.go 1408 &
+    go run src/standalone_processes/1400__exp.go 1409 &
+    go run src/standalone_processes/1400__exp.go 1410 &
+    go run src/standalone_processes/1400__exp.go 1411 &
+    go run src/standalone_processes/1400__exp.go 1412 &
+    go run src/standalone_processes/1400__exp.go 1413 &
+    go run src/standalone_processes/1400__exp.go 1414 &
+    go run src/standalone_processes/1400__exp.go 1415 &
+    go run src/standalone_processes/1400__exp.go 1416 &
+    go run src/standalone_processes/1400__exp.go 1417 &
+    go run src/standalone_processes/1400__exp.go 1418 &
+    go run src/standalone_processes/1400__exp.go 1419 &
+    go run src/standalone_processes/1400__exp.go 1420 &
+    echo -e "booting"
   elif [ "$1" == "stoptest" ]
   then
     pkill -f "go run server.go parser2.go subscriber.go database.go"
     pkill -f "/exe/server"
-    pkill -f "src/standalone_processes/1200__boot.js"
-    pkill -f "src/standalone_processes/1201__boot.js"
-    pkill -f "src/standalone_processes/1202__boot.js"
-    pkill -f "src/standalone_processes/1203__boot.js"
-    pkill -f "src/standalone_processes/1204__boot.js"
-    pkill -f "src/standalone_processes/1205__boot.js"
-    pkill -f "src/standalone_processes/1206__boot.js"
-    pkill -f "src/standalone_processes/1207__boot.js"
-    pkill -f "src/standalone_processes/1208__boot.js"
-    pkill -f "src/standalone_processes/1209__boot.js"
-    pkill -f "src/standalone_processes/1210__boot.js"
+    pkill -f "src/standalone_processes/1200__test.js"
+    pkill -f "src/standalone_processes/1201__test.js"
+    pkill -f "src/standalone_processes/1202__test.js"
+    pkill -f "src/standalone_processes/1203__test.js"
+    pkill -f "src/standalone_processes/1204__test.js"
+    pkill -f "src/standalone_processes/1205__test.js"
+    pkill -f "src/standalone_processes/1206__test.js"
+    pkill -f "src/standalone_processes/1207__test.js"
+    pkill -f "src/standalone_processes/1208__test.js"
+    pkill -f "src/standalone_processes/1209__test.js"
+    pkill -f "src/standalone_processes/1210__test.js"
+    pkill -f "src/standalone_processes/1300__test.py"
+    pkill -f "src/standalone_processes/1301__test.py"
+    pkill -f "src/standalone_processes/1302__test.py"
+    pkill -f "src/standalone_processes/1303__test.py"
+    pkill -f "src/standalone_processes/1304__test.py"
+    pkill -f "src/standalone_processes/1305__test.py"
+    pkill -f "src/standalone_processes/1306__test.py"
+    pkill -f "src/standalone_processes/1307__test.py"
+    pkill -f "src/standalone_processes/1308__test.py"
+    pkill -f "src/standalone_processes/1309__test.py"
+    pkill -f "src/standalone_processes/1310__test.py"
+    pkill -f "src/standalone_processes/1311__test.py"
+    pkill -f "src/standalone_processes/1312__test.py"
+    pkill -f "src/standalone_processes/1313__test.py"
+    pkill -f "src/standalone_processes/1314__test.py"
+    pkill -f "src/standalone_processes/1315__test.py"
+    pkill -f "src/standalone_processes/1316__test.py"
+    pkill -f "src/standalone_processes/1317__test.py"
+    pkill -f "src/standalone_processes/1318__test.py"
+    pkill -f "src/standalone_processes/1319__test.py"
+    pkill -f "src/standalone_processes/1320__test.py"
+    pkill -f "1400__exp"
     pkill -f "node src/standalone_processes"
     pkill -f "python3 src/standalone_processes"
     pkill -f "go run src/standalone_processes"
