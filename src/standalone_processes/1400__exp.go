@@ -23,7 +23,7 @@ func main() {
 	F, _ := strconv.Atoi(MY_ID)
 	MY_ID_STR := fmt.Sprintf("%04d", F)
   F = F + N
-	SUBSCRIPTION_ID_LEN := 16
+	SUBSCRIPTION_ID_LEN := 36
 	fmt.Println(MY_ID)
 	fmt.Println(F)
 	fmt.Println(MY_ID_STR)
@@ -40,7 +40,7 @@ func main() {
 	source_len := 4
 	server_send_time_len := 13
 
-	time.Sleep(10.0 * time.Millisecond)
+	time.Sleep(100.0 * time.Millisecond)
 
 	publisher.Send(fmt.Sprintf(".....PING%s%s", MY_ID_STR, init_ping_id), zmq.DONTWAIT)
 	fmt.Println("sent ping")
@@ -60,21 +60,31 @@ func main() {
 			fmt.Println(val)
 		}
 	}
+
+	subscription_id := RandomString(SUBSCRIPTION_ID_LEN)
+	sub_msg := fmt.Sprintf("{\"id\": \"%s\", \"facts\": [\"$ test client %s says $x @ $time1\", \"$ test client %d says $y @ $time2\"]}", subscription_id, MY_ID, F)
+	publisher.Send(fmt.Sprintf("SUBSCRIBE%s%s", MY_ID_STR, sub_msg), zmq.DONTWAIT)
+	fmt.Println("subscribe done")
+
+	time.Sleep(100.0 * time.Millisecond)
 	
-	// # time.sleep(10)
-    // logging.error("sending #1")
-    // currentTimeMs = int(round(time.time() * 1000))
-    // claims = []
-    // claims.append({"type": "claim", "fact": [
-    //     ["text", get_my_id_str()],
-    //     ["text", "test"],
-    //     ["text", "client"],
-    //     ["integer", MY_ID],
-    //     ["text", "says"],
-    //     ["integer", MY_ID],
-    //     ["text", "@"],
-    //     ["integer", str(currentTimeMs)]
-    // ]})
-    // batch(claims)
-    // print("1300 claim")
+	currentTimeMs := time.Now().UnixNano() / 1000000
+	claim_msg := fmt.Sprintf("[{\"type\": \"claim\", \"fact\": [[\"text\", \"%s\"], [\"text\", \"test\"], [\"text\", \"client\"], [\"integer\", \"%s\"], [\"text\", \"says\"], [\"integer\", \"%s\"], [\"text\", \"@\"], [\"integer\", \"%d\"]]}]", MY_ID_STR, MY_ID, MY_ID, currentTimeMs)
+	publisher.Send(fmt.Sprintf("....BATCH%s%s", MY_ID_STR, claim_msg), zmq.DONTWAIT)
+	fmt.Println("startup claim done")
+		
+	for {
+		msg, _ := subscriber.Recv(0)
+		fmt.Println("Recv")
+		fmt.Println(msg)
+		id := msg[source_len:(source_len + SUBSCRIPTION_ID_LEN)]
+		val := msg[(source_len + SUBSCRIPTION_ID_LEN + server_send_time_len):]
+		if id == init_ping_id {
+			fmt.Println("server is listening")
+			fmt.Println(id)
+		} else {
+			fmt.Println(val)
+		}
+		break
+	}
 }
