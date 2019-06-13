@@ -125,13 +125,13 @@ def parse_results(val):
     return results
 
 
-def listen(sleep_time_s=0.01):
+def listen(sleep_time_s=0):
     global server_listening, ROOM_SPAN_CONTEXT, tracer, MY_ID
     # print(ROOM_SPAN_CONTEXT)
     # with tracer.start_span('client-'+MY_ID+'-recv', child_of=ROOM_SPAN_CONTEXT) as span:
     while True:
         try:
-            string = sub_socket.recv_string(flags=zmq.NOBLOCK)
+            string = sub_socket.recv_string()
             # span = tracer.start_span(operation_name='client-recv', references=opentracing.child_of(ROOM_SPAN_CONTEXT))
             span = tracer.start_span('client-'+MY_ID+'-recv', references=opentracing.child_of(ROOM_SPAN_CONTEXT))
             # span = tracer.start_span('client-'+MY_ID+'-recv')
@@ -232,10 +232,16 @@ def init(root_filename, skipListening=False):
     # tracer.close()  # flush any buffered spans
     sub_socket.setsockopt_string(zmq.SUBSCRIBE, MY_ID_STR)
     start = time.time()
+    time.sleep(1.0)
+    pub_socket.send_string(".....PING{}{}".format(
+        MY_ID_STR, init_ping_id), zmq.NOBLOCK)
     while not server_listening:
-        pub_socket.send_string(".....PING{}{}".format(
-            MY_ID_STR, init_ping_id), zmq.NOBLOCK)
+        # pub_socket.send_string(".....PING{}{}".format(
+        #     MY_ID_STR, init_ping_id), zmq.NOBLOCK)
         listen()
+    # pub_socket.send_string(".....PING{}{}".format(
+    #     MY_ID_STR, init_ping_id), zmq.NOBLOCK)
+    # listen()
     end = time.time()
     print("INIT TIME: {} ms".format((end - start)*1000.0))
     logging.info("INIT TIME: {} ms".format((end - start)*1000.0))
