@@ -105,7 +105,7 @@ func notification_worker(notifications <-chan Notification) {
 	checkErr(publisherBindErr)
 	cache := make(map[string]string)
 	for notification := range notifications {
-		start := time.Now()
+		// start := time.Now()
 		msg := fmt.Sprintf("%s%s%s", notification.Source, notification.Id, notification.Result)
 		cache_key := fmt.Sprintf("%s%s", notification.Source, notification.Id)
 		cache_value, cache_hit := cache[cache_key]
@@ -114,9 +114,11 @@ func notification_worker(notifications <-chan Notification) {
 			msgWithTime := fmt.Sprintf("%s%s%v%s", notification.Source, notification.Id, makeTimestampMillis(), notification.Result)
 			_, sendErr := publisher.Send(msgWithTime, zmq.DONTWAIT)
 			checkErr(sendErr)
+		} else {
+			zap.L().Error(fmt.Sprintf("SKIPPING MESSAGE %s", notification.Source))
 		}
-		timeToSendResults := time.Since(start)
-		zap.L().Debug("send notification", zap.Duration("timeToSendResults", timeToSendResults))
+		// timeToSendResults := time.Since(start)
+		// zap.L().Debug("send notification", zap.Duration("timeToSendResults", timeToSendResults))
 	}
 }
 
@@ -167,7 +169,7 @@ func subscribe_worker(subscription_messages <-chan string,
 				}
 				batch_messages[i] = BatchMessage{"claim", batch_message_facts}
 			}
-			newSubscription := Subscription{source, subscription_data.Id, query, make(chan []BatchMessage, 100), &sync.WaitGroup{}}
+			newSubscription := Subscription{source, subscription_data.Id, query, make(chan []BatchMessage, 1000), &sync.WaitGroup{}}
 			newSubscription.dead.Add(1)
 			subscriberMutex.Lock()
 			(*subscriptions).Subscriptions = append(
@@ -298,9 +300,9 @@ func NewLogger() (*zap.Logger, error) {
 }
 
 func main() {
-	tracer, closer := initJaeger("room-service")
+	// tracer, closer := initJaeger("room-service")
 	// defer closer.Close()
-	opentracing.SetGlobalTracer(tracer)
+	// opentracing.SetGlobalTracer(tracer)
 	// f, err := os.Create("trace.out")
 	// if err != nil {
 	// 	panic(err)
@@ -333,9 +335,9 @@ func main() {
 	zap.L().Info("Connecting to ZMQ")
 	subscriber, zmqSubscribeError := zmq.NewSocket(zmq.SUB)
 	checkErr(zmqSubscribeError)
+	subscriber.SetRcvhwm(100000)
 	defer subscriber.Close()
-	subBindErr := subscriber.Bind("tcp://*:5556")
-	checkErr(subBindErr)
+	
 	var subSetFilterErr error
 	subSetFilterErr = subscriber.SetSubscribe(".....PING")
 	checkErr(subSetFilterErr)
@@ -344,59 +346,72 @@ func main() {
 	subSetFilterErr = subscriber.SetSubscribe("SUBSCRIBE")
 	checkErr(subSetFilterErr)
 
+	subBindErr := subscriber.Bind("tcp://*:5556")
+	checkErr(subBindErr)
+
 	event_type_len := 9
 	source_len := 4
 
-	subscription_messages := make(chan string, 100)
-	subscriptions_notifications := make(chan bool, 100)
+	subscription_messages := make(chan string, 1000)
+	subscriptions_notifications := make(chan bool, 1000)
 	notifications := make(chan Notification, 1000)
-	batch_messages := make(chan string, 100)
+	batch_messages := make(chan string, 1000)
 
 	go subscribe_worker(subscription_messages, subscriptions_notifications, &subscriptions, notifications, &factDatabase)
 	go notification_worker(notifications)
 	go batch_worker(batch_messages, subscriptions_notifications, &factDatabase, &subscriptions)
 
+	// zap.L().Info("pre-recv")
+	// subscriber.Recv(0)
+	// zap.L().Info("post-recv")
+
+	time.Sleep(time.Duration(2) * time.Second)
 	zap.L().Info("listening...")
-	rootSpan := tracer.StartSpan("run-test")
-	mapc := opentracing.TextMapCarrier(make(map[string]string))
-	err := tracer.Inject(rootSpan.Context(), opentracing.TextMap, mapc)
-	checkErr(err)
-	zap.L().Info(mapc["uber-trace-id"])
+	// rootSpan := tracer.StartSpan("run-test")
+	// mapc := opentracing.TextMapCarrier(make(map[string]string))
+	// err := tracer.Inject(rootSpan.Context(), opentracing.TextMap, mapc)
+	// checkErr(err)
+	// zap.L().Info(mapc["uber-trace-id"])
 	// for k, v := range mapc { 
 	// 	zap.L().Info(k)
 	// 	zap.L().Info(v)
 	// }
+	
 	go func() {
-		time.Sleep(time.Duration(15) * time.Second)
-		rootSpan.Finish()
-		closer.Close()
+		time.Sleep(time.Duration(40) * time.Second)
+		// rootSpan.Finish()
+		// closer.Close()
 		panic("time elapsed - ending");
 	}()
 	for {
+		zap.L().Info("pre-recv")
 		msg, recvErr := subscriber.Recv(0)
+		zap.L().Info("post-recv")
 		checkErr(recvErr)
-		span := rootSpan.Tracer().StartSpan(
-			"zmq-recv-loop",
-			opentracing.ChildOf(rootSpan.Context()),
-		)
+		zap.L().Error(msg)
+		// span := rootSpan.Tracer().StartSpan(
+		// 	"zmq-recv-loop",
+		// 	opentracing.ChildOf(rootSpan.Context()),
+		// )
 		event_type := msg[0:event_type_len]
 		source := msg[event_type_len:(event_type_len + source_len)]
 		val := msg[(event_type_len + source_len):]
 		if event_type == ".....PING" {
 			zap.L().Debug("got PING", zap.String("source", source), zap.String("value", val))
-			notifications <- Notification{source, val, mapc["uber-trace-id"]}
+			// notifications <- Notification{source, val, mapc["uber-trace-id"]}
+			notifications <- Notification{source, val, ""}
 		} else if event_type == "SUBSCRIBE" {
 			subscription_messages <- msg
 		} else if event_type == "....BATCH" {
 			batch_messages <- msg
 		}
-		sleepSpan := span.Tracer().StartSpan(
-			"zmq-recv-loop-sleep",
-			opentracing.ChildOf(span.Context()),
-		)
+		// sleepSpan := span.Tracer().StartSpan(
+		// 	"zmq-recv-loop-sleep",
+		// 	opentracing.ChildOf(span.Context()),
+		// )
 		time.Sleep(time.Duration(1) * time.Microsecond)
-		sleepSpan.Finish()
-		span.Finish()
+		// sleepSpan.Finish()
+		// span.Finish()
 		// delta := time.Now().Sub(programStartTime)
 		// if (delta.Seconds() > 20) {
 		// 	zap.L().Debug("time elapsed -- ending")
