@@ -325,18 +325,18 @@ function init(filename) {
     }
 
     subscriber.on('message', (request) => {
-        const span = tracer.startSpan(`client-${myId}-recv`, { childOf: room.wireCtx() });
-        const preSpan = tracer.startSpan(`client-${myId}-prerecv`, { childOf: span });
-        console.log("GOT MESSAGE")
+        // const span = tracer.startSpan(`client-${myId}-recv`, { childOf: room.wireCtx() });
+        // const preSpan = tracer.startSpan(`client-${myId}-prerecv`, { childOf: span });
+        // console.log("GOT MESSAGE")
         const msg = request.toString();
-        console.log(msg)
+        // console.log(msg)
         const source_len = 4
         const SUBSCRIPTION_ID_LEN = (randomId()).length
         const SERVER_SEND_TIME_LEN = 13
         const id = msg.slice(source_len, source_len + SUBSCRIPTION_ID_LEN)
-        console.log(`ID: ${id} == ${init_ping_id}`)
+        // console.log(`ID: ${id} == ${init_ping_id}`)
         const val = msg.slice(source_len + SUBSCRIPTION_ID_LEN + SERVER_SEND_TIME_LEN)
-        preSpan.finish();
+        // preSpan.finish();
         if (id == init_ping_id) {
             server_listening = true
             console.log("SERVER LISTENING!!")
@@ -353,21 +353,21 @@ function init(filename) {
             callback = subscription_ids[id]
             // room.cleanup()
             // console.log("found match")
-            const parseSpan = tracer.startSpan(`client-${myId}-parserecv`, { childOf: span });
+            // const parseSpan = tracer.startSpan(`client-${myId}-parserecv`, { childOf: span });
             const r = parseResult(val)
-            parseSpan.finish();
+            // parseSpan.finish();
             // console.log(r)
-            const callbackSpan = tracer.startSpan(`client-${myId}-callbackrecv`, { childOf: span });
+            // const callbackSpan = tracer.startSpan(`client-${myId}-callbackrecv`, { childOf: span });
             callback(r)
-            callbackSpan.finish();
+            // callbackSpan.finish();
             // console.log("flushing")
-            const callbackFlushSpan = tracer.startSpan(`client-${myId}-callbackflushrecv`, { childOf: span });
+            // const callbackFlushSpan = tracer.startSpan(`client-${myId}-callbackflushrecv`, { childOf: span });
             room.flush()
-            callbackFlushSpan.finish();
+            // callbackFlushSpan.finish();
         } else {
             console.log("unknown subscription ID...")
         }
-        span.finish();
+        // span.finish();
     });
 
     const run = async () => {
