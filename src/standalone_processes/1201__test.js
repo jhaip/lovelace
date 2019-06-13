@@ -6,7 +6,7 @@ const P = parseInt(myId)-1;
 room.on(
     `test client ${M} says $x @ $time`,
     results => {
-        console.error(results);
+        // console.error(results);
         room.subscriptionPrefix(1);
         if (!!results) {
             const currentTimeMs = (new Date()).getTime()

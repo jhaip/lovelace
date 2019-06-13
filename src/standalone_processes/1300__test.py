@@ -2,7 +2,7 @@ import time
 import logging
 from helper2 import init, claim, retract, prehook, subscription, batch, get_my_id_pre_init, get_my_id_str
 
-N = 20
+N = 10
 MY_ID = str(get_my_id_pre_init(__file__))
 F = int(get_my_id_pre_init(__file__)) + N
 logging.error("testing with N = " + str(N))

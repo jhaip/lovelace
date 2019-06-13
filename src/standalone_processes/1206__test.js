@@ -7,7 +7,7 @@ room.on(
     `test client ${M} says $x @ $time1`,
     `test client ${P} says $y @ $time2`,
     results => {
-        console.error(results);
+        // console.error(results);
         room.subscriptionPrefix(1);
         if (!!results) {
             const currentTimeMs = (new Date()).getTime()
