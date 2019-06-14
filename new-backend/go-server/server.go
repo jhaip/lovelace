@@ -116,7 +116,8 @@ func notification_worker(notifications <-chan Notification, client *zmq.Socket) 
 			zmqClient.Lock()
 			// _, sendErr := publisher.Send(msgWithTime, zmq.DONTWAIT)
 			// checkErr(sendErr)
-			client.SendMessage(notification.Source, msgWithTime)
+			_, sendErr := client.SendMessage(notification.Source, msgWithTime)
+			checkErr(sendErr)
 			zmqClient.Unlock()
 		} else {
 			zap.L().Error(fmt.Sprintf("SKIPPING MESSAGE %s", notification.Source))
@@ -392,13 +393,17 @@ func main() {
 		panic("time elapsed - ending");
 	}()
 	for {
-		zap.L().Info("pre-recv")  // TODO: remove
+		// zap.L().Info("pre-recv")  // TODO: remove
 		// msg, recvErr := subscriber.Recv(0)
 		zmqClient.Lock()
-		rawMsg, recvErr := client.RecvMessage(0)
+		rawMsg, recvErr := client.RecvMessage(zmq.DONTWAIT)
+		if recvErr != nil {
+			zmqClient.Unlock()
+			continue;
+		}
 		// zap.L().Info("post-recv")
-		checkErr(recvErr)
-		zap.L().Info(fmt.Sprintf("%s %s", rawMsg[0], rawMsg[1])) // TODO: remove
+		// checkErr(recvErr)
+		// zap.L().Info(fmt.Sprintf("%s %s", rawMsg[0], rawMsg[1])) // TODO: remove
 		rawMsgId := rawMsg[0]
 		msg := rawMsg[1]
 		zmqClient.Unlock()
