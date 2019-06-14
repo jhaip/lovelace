@@ -50,7 +50,7 @@ func main() {
 	source_len := 4
 	server_send_time_len := 13
 
-	// time.Sleep(time.Duration(500) * time.Millisecond)
+	// time.Sleep(time.Duration(1000) * time.Millisecond)
 
 	// publisher.Send(fmt.Sprintf(".....PING%s%s", MY_ID_STR, init_ping_id), zmq.DONTWAIT)
 	client.SendMessage(fmt.Sprintf(".....PING%s%s", MY_ID_STR, init_ping_id))
@@ -100,13 +100,14 @@ func main() {
 	fmt.Println(fmt.Sprintf("listening... %s", MY_ID_STR))
 	for {
 		// subscriber.Recv(0)
-		msg, _ := client.RecvMessage(0)
-		fmt.Println(msg);
+		client.RecvMessage(0)
+		// msg, _ := client.RecvMessage(0)
+		// fmt.Println(msg);
 		// _, err := subscriber.Recv(0)
 		// if err != nil {
 		// 	fmt.Println(fmt.Sprintf("RECV ERROR! %s", MY_ID_STR))
 		// }
-		fmt.Println(fmt.Sprintf("Recv %s", MY_ID_STR))
+		// fmt.Println(fmt.Sprintf("Recv %s", MY_ID_STR))
 		// fmt.Println(msg)
 		// id := msg[source_len:(source_len + SUBSCRIPTION_ID_LEN)]
 		// val := msg[(source_len + SUBSCRIPTION_ID_LEN + server_send_time_len):]
@@ -123,7 +124,7 @@ func main() {
 			claim_msg := fmt.Sprintf("[{\"type\": \"claim\", \"fact\": [[\"text\", \"%s\"], [\"text\", \"test\"], [\"text\", \"client\"], [\"integer\", \"%s\"], [\"text\", \"says\"], [\"integer\", \"%s\"], [\"text\", \"@\"], [\"integer\", \"%d\"], [\"text\", \"%s\"]]}]", MY_ID_STR, MY_ID, MY_ID, currentTimeMs, garbage)
 			// publisher.Send(fmt.Sprintf("....BATCH%s%s", MY_ID_STR, claim_msg), zmq.DONTWAIT)
 			client.SendMessage(fmt.Sprintf("....BATCH%s%s", MY_ID_STR, claim_msg))
-			fmt.Println(fmt.Sprintf("response claim from %s", MY_ID_STR))
+			// fmt.Println(fmt.Sprintf("response claim from %s", MY_ID_STR))
 		}
 		break
 	}
