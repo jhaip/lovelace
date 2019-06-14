@@ -26,6 +26,7 @@ import (
 
 var dbMutex sync.RWMutex
 var subscriberMutex sync.RWMutex
+var zmqClient sync.Mutex
 
 const MeasurementDuration = 5.0 * time.Second
 
@@ -97,12 +98,12 @@ func makeTimestampMillis() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
 }
 
-func notification_worker(notifications <-chan Notification) {
-	publisher, err := zmq.NewSocket(zmq.PUB)
-	checkErr(err)
-	defer publisher.Close()
-	publisherBindErr := publisher.Bind("tcp://*:5555")
-	checkErr(publisherBindErr)
+func notification_worker(notifications <-chan Notification, client *zmq.Socket) {
+	// publisher, err := zmq.NewSocket(zmq.PUB)
+	// checkErr(err)
+	// defer publisher.Close()
+	// publisherBindErr := publisher.Bind("tcp://*:5555")
+	// checkErr(publisherBindErr)
 	cache := make(map[string]string)
 	for notification := range notifications {
 		// start := time.Now()
@@ -112,8 +113,11 @@ func notification_worker(notifications <-chan Notification) {
 		if cache_hit == false || cache_value != msg {
 			cache[cache_key] = msg
 			msgWithTime := fmt.Sprintf("%s%s%v%s", notification.Source, notification.Id, makeTimestampMillis(), notification.Result)
-			_, sendErr := publisher.Send(msgWithTime, zmq.DONTWAIT)
-			checkErr(sendErr)
+			zmqClient.Lock()
+			// _, sendErr := publisher.Send(msgWithTime, zmq.DONTWAIT)
+			// checkErr(sendErr)
+			client.SendMessage(notification.Source, msgWithTime)
+			zmqClient.Unlock()
 		} else {
 			zap.L().Error(fmt.Sprintf("SKIPPING MESSAGE %s", notification.Source))
 		}
@@ -333,21 +337,25 @@ func main() {
 	subscriptions := Subscriptions{}
 
 	zap.L().Info("Connecting to ZMQ")
-	subscriber, zmqSubscribeError := zmq.NewSocket(zmq.SUB)
-	checkErr(zmqSubscribeError)
-	subscriber.SetRcvhwm(100000)
-	defer subscriber.Close()
+	// subscriber, zmqSubscribeError := zmq.NewSocket(zmq.SUB)
+	// checkErr(zmqSubscribeError)
+	// subscriber.SetRcvhwm(100000)
+	// defer subscriber.Close()
 	
-	var subSetFilterErr error
-	subSetFilterErr = subscriber.SetSubscribe(".....PING")
-	checkErr(subSetFilterErr)
-	subSetFilterErr = subscriber.SetSubscribe("....BATCH")
-	checkErr(subSetFilterErr)
-	subSetFilterErr = subscriber.SetSubscribe("SUBSCRIBE")
-	checkErr(subSetFilterErr)
+	// var subSetFilterErr error
+	// subSetFilterErr = subscriber.SetSubscribe(".....PING")
+	// checkErr(subSetFilterErr)
+	// subSetFilterErr = subscriber.SetSubscribe("....BATCH")
+	// checkErr(subSetFilterErr)
+	// subSetFilterErr = subscriber.SetSubscribe("SUBSCRIBE")
+	// checkErr(subSetFilterErr)
 
-	subBindErr := subscriber.Bind("tcp://*:5556")
-	checkErr(subBindErr)
+	// subBindErr := subscriber.Bind("tcp://*:5556")
+	// checkErr(subBindErr)
+	client, zmqCreationErr := zmq.NewSocket(zmq.ROUTER)
+	checkErr(zmqCreationErr)
+	defer client.Close()
+    client.Bind("tcp://*:5570")
 
 	event_type_len := 9
 	source_len := 4
@@ -358,14 +366,14 @@ func main() {
 	batch_messages := make(chan string, 1000)
 
 	go subscribe_worker(subscription_messages, subscriptions_notifications, &subscriptions, notifications, &factDatabase)
-	go notification_worker(notifications)
+	go notification_worker(notifications, client)
 	go batch_worker(batch_messages, subscriptions_notifications, &factDatabase, &subscriptions)
 
 	// zap.L().Info("pre-recv")
 	// subscriber.Recv(0)
 	// zap.L().Info("post-recv")
 
-	time.Sleep(time.Duration(2) * time.Second)
+	// time.Sleep(time.Duration(2) * time.Second)
 	zap.L().Info("listening...")
 	// rootSpan := tracer.StartSpan("run-test")
 	// mapc := opentracing.TextMapCarrier(make(map[string]string))
@@ -384,17 +392,23 @@ func main() {
 		panic("time elapsed - ending");
 	}()
 	for {
-		zap.L().Info("pre-recv")
-		msg, recvErr := subscriber.Recv(0)
-		zap.L().Info("post-recv")
+		zap.L().Info("pre-recv")  // TODO: remove
+		// msg, recvErr := subscriber.Recv(0)
+		zmqClient.Lock()
+		rawMsg, recvErr := client.RecvMessage(0)
+		// zap.L().Info("post-recv")
 		checkErr(recvErr)
-		zap.L().Error(msg)
+		zap.L().Info(fmt.Sprintf("%s %s", rawMsg[0], rawMsg[1])) // TODO: remove
+		rawMsgId := rawMsg[0]
+		msg := rawMsg[1]
+		zmqClient.Unlock()
 		// span := rootSpan.Tracer().StartSpan(
 		// 	"zmq-recv-loop",
 		// 	opentracing.ChildOf(rootSpan.Context()),
 		// )
 		event_type := msg[0:event_type_len]
-		source := msg[event_type_len:(event_type_len + source_len)]
+		// source := msg[event_type_len:(event_type_len + source_len)]
+		source := rawMsgId
 		val := msg[(event_type_len + source_len):]
 		if event_type == ".....PING" {
 			zap.L().Debug("got PING", zap.String("source", source), zap.String("value", val))

@@ -32,27 +32,35 @@ func main() {
 	// fmt.Println(F)
 	// fmt.Println(MY_ID_STR)
 
-	publisher, _ := zmq.NewSocket(zmq.PUB)
-	defer publisher.Close()
-	publisher.Connect("tcp://localhost:5556")
-	subscriber, _ := zmq.NewSocket(zmq.SUB)
-	defer subscriber.Close()
-	subscriber.SetSubscribe(MY_ID_STR)
-	// subscriber.SetRcvhwm(100000)
-	subscriber.Connect("tcp://localhost:5555")
+	// publisher, _ := zmq.NewSocket(zmq.PUB)
+	// defer publisher.Close()
+	// publisher.Connect("tcp://localhost:5556")
+	// subscriber, _ := zmq.NewSocket(zmq.SUB)
+	// defer subscriber.Close()
+	// subscriber.SetSubscribe(MY_ID_STR)
+	// // subscriber.SetRcvhwm(100000)
+	// subscriber.Connect("tcp://localhost:5555")
+	client, _ := zmq.NewSocket(zmq.DEALER)
+	defer client.Close()
+
+	client.SetIdentity(MY_ID_STR)
+	client.Connect("tcp://localhost:5570")
 
 	init_ping_id := RandomString(SUBSCRIPTION_ID_LEN)
 	source_len := 4
 	server_send_time_len := 13
 
-	time.Sleep(time.Duration(500) * time.Millisecond)
+	// time.Sleep(time.Duration(500) * time.Millisecond)
 
-	publisher.Send(fmt.Sprintf(".....PING%s%s", MY_ID_STR, init_ping_id), zmq.DONTWAIT)
+	// publisher.Send(fmt.Sprintf(".....PING%s%s", MY_ID_STR, init_ping_id), zmq.DONTWAIT)
+	client.SendMessage(fmt.Sprintf(".....PING%s%s", MY_ID_STR, init_ping_id))
 	// fmt.Println("sent ping")
 	fmt.Println(fmt.Sprintf("sent ping %s", MY_ID_STR))
 
 	for {
-		msg, _ := subscriber.Recv(0)
+		// msg, _ := subscriber.Recv(0)
+		rawMsg, _ := client.RecvMessage(0)
+		msg := rawMsg[0]
 		// fmt.Println("Recv")
 		// fmt.Println(msg)
 		id := msg[source_len:(source_len + SUBSCRIPTION_ID_LEN)]
@@ -70,7 +78,8 @@ func main() {
 	subscription_id := RandomString(SUBSCRIPTION_ID_LEN)
 	// sub_msg := fmt.Sprintf("{\"id\": \"%s\", \"facts\": [\"$ test client %s says $x @ $time1\", \"$ test client %d says $y @ $time2\"]}", subscription_id, MY_ID, F)
 	sub_msg := fmt.Sprintf("{\"id\": \"%s\", \"facts\": [\"$ test client %d says $y @ $time2 $garbage\"]}", subscription_id, F)
-	publisher.Send(fmt.Sprintf("SUBSCRIBE%s%s", MY_ID_STR, sub_msg), zmq.DONTWAIT)	
+	// publisher.Send(fmt.Sprintf("SUBSCRIBE%s%s", MY_ID_STR, sub_msg), zmq.DONTWAIT)
+	client.SendMessage(fmt.Sprintf("SUBSCRIBE%s%s", MY_ID_STR, sub_msg))
 
 	var startTimeMs int64
 	var startTimeMicro int64
@@ -83,13 +92,16 @@ func main() {
 		startTimeMicro = time.Now().UnixNano() / 1000
 		currentTimeMs := time.Now().UnixNano() / 1000000
 		claim_msg := fmt.Sprintf("[{\"type\": \"claim\", \"fact\": [[\"text\", \"%s\"], [\"text\", \"test\"], [\"text\", \"client\"], [\"integer\", \"%s\"], [\"text\", \"says\"], [\"integer\", \"%s\"], [\"text\", \"@\"], [\"integer\", \"%d\"], [\"text\", \"%s\"]]}]", MY_ID_STR, MY_ID, MY_ID, currentTimeMs, garbage)
-		publisher.Send(fmt.Sprintf("....BATCH%s%s", MY_ID_STR, claim_msg), zmq.DONTWAIT)
+		// publisher.Send(fmt.Sprintf("....BATCH%s%s", MY_ID_STR, claim_msg), zmq.DONTWAIT)
+		client.SendMessage(fmt.Sprintf("....BATCH%s%s", MY_ID_STR, claim_msg))
 		fmt.Println("startup claim done")
 	}
 	
 	fmt.Println(fmt.Sprintf("listening... %s", MY_ID_STR))
 	for {
-		subscriber.Recv(0)
+		// subscriber.Recv(0)
+		msg, _ := client.RecvMessage(0)
+		fmt.Println(msg);
 		// _, err := subscriber.Recv(0)
 		// if err != nil {
 		// 	fmt.Println(fmt.Sprintf("RECV ERROR! %s", MY_ID_STR))
@@ -109,7 +121,8 @@ func main() {
 			fmt.Println(fmt.Sprintf("elapsed time: %d us", (time.Now().UnixNano() / 1000)-startTimeMicro))
 		} else {
 			claim_msg := fmt.Sprintf("[{\"type\": \"claim\", \"fact\": [[\"text\", \"%s\"], [\"text\", \"test\"], [\"text\", \"client\"], [\"integer\", \"%s\"], [\"text\", \"says\"], [\"integer\", \"%s\"], [\"text\", \"@\"], [\"integer\", \"%d\"], [\"text\", \"%s\"]]}]", MY_ID_STR, MY_ID, MY_ID, currentTimeMs, garbage)
-			publisher.Send(fmt.Sprintf("....BATCH%s%s", MY_ID_STR, claim_msg), zmq.DONTWAIT)
+			// publisher.Send(fmt.Sprintf("....BATCH%s%s", MY_ID_STR, claim_msg), zmq.DONTWAIT)
+			client.SendMessage(fmt.Sprintf("....BATCH%s%s", MY_ID_STR, claim_msg))
 			fmt.Println(fmt.Sprintf("response claim from %s", MY_ID_STR))
 		}
 		break
