@@ -134,29 +134,46 @@ function init(filename) {
     })
     const myId = getIdFromProcessName(scriptName);
 
-    const subscriber = zmq.socket('sub');
-    const publisher = zmq.socket('pub');
+    // const subscriber = zmq.socket('sub');
+    // const publisher = zmq.socket('pub');
     const rpc_url = "localhost";
-    subscriber.connect(`tcp://${rpc_url}:5555`)
-    publisher.connect(`tcp://${rpc_url}:5556`)
+    // subscriber.connect(`tcp://${rpc_url}:5555`)
+    // publisher.connect(`tcp://${rpc_url}:5556`)
+    
     const MY_ID_STR = getIdStringFromId(myId);
-    subscriber.subscribe(MY_ID_STR);
+    // subscriber.subscribe(MY_ID_STR);
+
+    client = zmq.socket('dealer');
+    client.identity = MY_ID_STR
+    client.connect(`tcp://${rpc_url}:5570`)
 
     let init_ping_id = randomId()
     let select_ids = {}
     let subscription_ids = {}
     let server_listening = false
+    let sent_ping = false;
     let batched_calls = []
     const DEFAULT_SUBSCRIPTION_ID = 0;
     let currentSubscriptionId = DEFAULT_SUBSCRIPTION_ID;
     var wireCtx;
 
+    const sleep = (ms) => {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
     const waitForServerListening = () => {
         return new Promise(async resolve => {
-            while (server_listening === false) {
-                publisher.send(`.....PING${MY_ID_STR}${init_ping_id}`)
-                // console.log("SEND PING!")
-                await sleep(500)
+            if (server_listening === false) {
+                if (sent_ping == false) {
+                    client.send([`.....PING${MY_ID_STR}${init_ping_id}`])
+                    console.log(`SEND PING! ${MY_ID_STR}`)
+                    sent_ping = true;
+                }
+                while (server_listening === false) {
+                    await sleep(100);
+                    // await null; // prevents app from hanging
+                }
+                console.log(`server listening! ${MY_ID_STR}`)
             }
             resolve();
         });
@@ -185,7 +202,8 @@ function init(filename) {
             }
             const query_msg_str = JSON.stringify(query_msg)
             subscription_ids[subscription_id] = callback
-            publisher.send(`SUBSCRIBE${MY_ID_STR}${query_msg_str}`);
+            // publisher.send(`SUBSCRIBE${MY_ID_STR}${query_msg_str}`);
+            client.send([`SUBSCRIBE${MY_ID_STR}${query_msg_str}`]);
             console.log("send ON listen")
         },
         onGetSource: async (...args) => {
@@ -282,7 +300,8 @@ function init(filename) {
         batch: batched_calls => {
             // console.log("SEINDING BATCH", batched_calls)
             const fact_str = JSON.stringify(batched_calls)
-            publisher.send(`....BATCH${MY_ID_STR}${fact_str}`);
+            // publisher.send(`....BATCH${MY_ID_STR}${fact_str}`);
+            client.send([`....BATCH${MY_ID_STR}${fact_str}`]);
         },
         cleanup: () => {
             room.retractMine(`%`)
@@ -324,12 +343,12 @@ function init(filename) {
         })
     }
 
-    subscriber.on('message', (request) => {
+    client.on('message', (request) => {
         // const span = tracer.startSpan(`client-${myId}-recv`, { childOf: room.wireCtx() });
         // const preSpan = tracer.startSpan(`client-${myId}-prerecv`, { childOf: span });
         // console.log("GOT MESSAGE")
         const msg = request.toString();
-        // console.log(msg)
+        console.log(msg)
         const source_len = 4
         const SUBSCRIPTION_ID_LEN = (randomId()).length
         const SERVER_SEND_TIME_LEN = 13
@@ -339,7 +358,7 @@ function init(filename) {
         // preSpan.finish();
         if (id == init_ping_id) {
             server_listening = true
-            console.log("SERVER LISTENING!!")
+            console.log(`SERVER LISTENING!! ${MY_ID_STR}`)
             console.log(val)
             console.log(opentracing.FORMAT_TEXT_MAP)
             room.setCtx(tracer.extract(opentracing.FORMAT_TEXT_MAP, {"uber-trace-id": val}));
