@@ -1,6 +1,6 @@
 import time
 import logging
-from helper2 import init, claim, retract, prehook, subscription, batch, get_my_id_pre_init, get_my_id_str
+from helper2 import init, claim, retract, prehook, subscription, batch, override_my_id
 import sys
 
 # M = 1300
@@ -11,6 +11,8 @@ M = int(sys.argv[1])
 MY_ID = str(M)
 MY_ID_STR = MY_ID
 P = M - 1
+
+override_my_id(MY_ID)
 
 @subscription(["$ test client " + str(P) + " says $x @ $time"])
 def sub_callback(results):

@@ -26,7 +26,7 @@ def sub_callback(results):
 
 @prehook
 def my_prehook():
-    time.sleep(10)
+    time.sleep(1)
     logging.error("sending #1")
     currentTimeMs = int(round(time.time() * 1000))
     claims = []
