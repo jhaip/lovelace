@@ -125,9 +125,15 @@ def parse_results(val):
     return results
 
 
-def listen(sleep_time_s=0):
+def listen(blocking=True):
     global server_listening, ROOM_SPAN_CONTEXT, tracer, MY_ID
-    raw_msg = client.recv_multipart()
+    flags = 0
+    if not blocking:
+        flags = zmq.NOBLOCK
+    try:
+        raw_msg = client.recv_multipart(flags=flags)
+    except zmq.Again:
+        return
     string = raw_msg[0].decode()
     span = tracer.start_span('client-'+MY_ID+'-recv', references=opentracing.child_of(ROOM_SPAN_CONTEXT))
     # preSpan = tracer.start_span('client-'+MY_ID+'-prerecv', child_of=span)
@@ -156,43 +162,39 @@ def listen(sleep_time_s=0):
         logging.info("UNRECOGNIZED:")
         logging.info(string)
     # span.finish()
-    time.sleep(sleep_time_s)
 
 
 def check_server_connection():
     global server_listening, client, init_ping_id, py_subscriptions, py_prehook
+    SERVER_NO_RESPONSE_TIMEOUT_TIME_SECONDS = 2
     if server_listening:
         print("checking if server is still listening")
         server_listening = False
         init_ping_id = str(uuid.uuid4())
         listening_start_time = time.time()
+        client.send_multipart([".....PING{}{}".format(MY_ID_STR, init_ping_id).encode()])
         while not server_listening:
-            pub_socket.send_string(".....PING{}{}".format(
-                MY_ID_STR, init_ping_id), zmq.NOBLOCK)
-            listen()
-            if time.time() - listening_start_time > 2:
+            listen(blocking=False)
+            # poll quickly went we think the server is already running and should respond
+            time.sleep(0.01)
+            if time.time() - listening_start_time > SERVER_NO_RESPONSE_TIMEOUT_TIME_SECONDS:
                 # no response from server, assume server is dead
                 check_server_connection()
                 break
     else:
-        # Close conneciton to ZMQ and try again
         print("SERVER DIED, attempting to reconnect")
-        sub_socket.disconnect("tcp://{0}:5555".format(rpc_url))
-        pub_socket.disconnect("tcp://{0}:5556".format(rpc_url))
-        sub_socket.connect("tcp://{0}:5555".format(rpc_url))
-        pub_socket.connect("tcp://{0}:5556".format(rpc_url))
-        sub_socket.setsockopt_string(zmq.SUBSCRIBE, MY_ID_STR)
         reconnect_check_delay_s = 10
         init_ping_id = str(uuid.uuid4())
         listening_start_time = time.time()
+        client.send_multipart([".....PING{}{}".format(MY_ID_STR, init_ping_id).encode()])
         while not server_listening:
             print("checking if server is alive")
-            pub_socket.send_string(".....PING{}{}".format(
-                MY_ID_STR, init_ping_id), zmq.NOBLOCK)
-            listen()
-            if time.time() - listening_start_time > 2:
+            listen(blocking=False)
+            time.sleep(0.5)
+            if time.time() - listening_start_time > SERVER_NO_RESPONSE_TIMEOUT_TIME_SECONDS:
                 print("no response from server, sleeping for a bit...")
                 time.sleep(reconnect_check_delay_s)
+                client.send_multipart([".....PING{}{}".format(MY_ID_STR, init_ping_id).encode()])
         print("SERVER IS ALIVE!")
         if py_prehook:
             py_prehook()
