@@ -3,6 +3,28 @@ const path = require('path');
 const zmq = require('zeromq');
 const uuidV4 = require('uuid/v4');
 const child_process = require("child_process");
+var initTracer = require('jaeger-client').initTracer;
+var opentracing = require('opentracing');
+
+// See schema https://github.com/jaegertracing/jaeger-client-node/blob/master/src/configuration.js#L37
+var config = {
+    serviceName: 'room-service',
+    'reporter': {
+        'logSpans': true,
+        'agentHost': 'localhost',
+        'agentPort': 6832
+    },
+    'sampler': {
+        'type': 'const',
+        'param': 1.0
+    }
+};
+var options = {
+    // metrics: metrics,
+    // logger: logger,
+};
+// var tracer = initTracer(config, options);  // uncomment to use real tracer
+var tracer = new opentracing.Tracer();  // no-op dummy tracer
 
 const randomId = () => 
     uuidV4();
@@ -113,38 +135,55 @@ function init(filename) {
     })
     const myId = getIdFromProcessName(scriptName);
 
-    const subscriber = zmq.socket('sub');
-    const publisher = zmq.socket('pub');
     const rpc_url = "localhost";
-    subscriber.connect(`tcp://${rpc_url}:5555`)
-    publisher.connect(`tcp://${rpc_url}:5556`)
     const MY_ID_STR = getIdStringFromId(myId);
-    subscriber.subscribe(MY_ID_STR);
+    client = zmq.socket('dealer');
+    client.identity = MY_ID_STR;
+    client.connect(`tcp://${rpc_url}:5570`);
 
     let init_ping_id = randomId()
     let select_ids = {}
     let subscription_ids = {}
     let server_listening = false
+    let sent_ping = false;
     let batched_calls = []
     const DEFAULT_SUBSCRIPTION_ID = 0;
     let currentSubscriptionId = DEFAULT_SUBSCRIPTION_ID;
+    var wireCtx;
+
+    const sleep = (ms) => {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
 
     const waitForServerListening = () => {
+        // Sends a single ping and loops until server_listening is set to true
+        // server_listening is set to true outside this function in the message received callback
         return new Promise(async resolve => {
-            while (server_listening === false) {
-                publisher.send(`.....PING${MY_ID_STR}${init_ping_id}`)
-                // console.log("SEND PING!")
-                await sleep(500)
+            if (server_listening === false) {
+                if (sent_ping == false) {
+                    client.send([`.....PING${MY_ID_STR}${init_ping_id}`])
+                    sent_ping = true;
+                }
+                while (server_listening === false) {
+                    await sleep(100);
+                    // await null; // prevents app from hanging
+                }
+                // console.log(`wait for server listening done ${MY_ID_STR}`)
             }
             resolve();
         });
     }
 
     const room = {
+        setCtx: ctx => {
+            wireCtx = ctx;
+            this.wireCtx = ctx;
+        },
+        wireCtx: () => {
+            return this.wireCtx;
+        },
         onRaw: async (...args) => {
-            console.log("pre wait for server")
             await waitForServerListening();
-            console.log("post wait for server")
             const query_strings = args.slice(0, -1)
             const callback = args[args.length - 1]
             const subscription_id = randomId()
@@ -154,8 +193,7 @@ function init(filename) {
             }
             const query_msg_str = JSON.stringify(query_msg)
             subscription_ids[subscription_id] = callback
-            publisher.send(`SUBSCRIBE${MY_ID_STR}${query_msg_str}`);
-            console.log("send ON listen")
+            client.send([`SUBSCRIBE${MY_ID_STR}${query_msg_str}`]);
         },
         onGetSource: async (...args) => {
             const sourceVariableName = args[0]
@@ -179,14 +217,12 @@ function init(filename) {
             }
             const query_msg_str = JSON.stringify(query_msg)
             select_ids[select_id] = callback
-            publisher.send(`...SELECT${MY_ID_STR}${query_msg_str}`);
-            console.log("SEND!")
+            client.send([`...SELECT${MY_ID_STR}${query_msg_str}`]);
         },
         assertNow: (fact) => {
-            publisher.send(`....CLAIM${MY_ID_STR}${fact}`);
+            client.send([`....CLAIM${MY_ID_STR}${fact}`]);
         },
         assertForOtherSource: (otherSource, fact) => {
-            console.error("assertForOtherSource")
             batched_calls.push({
                 "type": "claim",
                 "fact": [
@@ -205,7 +241,7 @@ function init(filename) {
             })
         },
         retractNow: (query) => {
-            publisher.send(`..RETRACT${MY_ID_STR}${query}`);
+            client.send([`..RETRACT${MY_ID_STR}${query}`]);
         },
         retractRaw: (...args) => {
             // TODO: need to push into an array specific to the subsciber, in case there are multiple subscribers in one client
@@ -247,16 +283,15 @@ function init(filename) {
             batched_calls = [];
         },
         batch: batched_calls => {
-            // console.log("SEINDING BATCH", batched_calls)
             const fact_str = JSON.stringify(batched_calls)
-            publisher.send(`....BATCH${MY_ID_STR}${fact_str}`);
+            client.send([`....BATCH${MY_ID_STR}${fact_str}`]);
         },
         cleanup: () => {
             room.retractMine(`%`)
         },
         cleanupOtherSource: (otherSource) => {
             const fact_str = JSON.stringify([{ "type": "death", "fact": [["id", otherSource]] }])
-            publisher.send(`....BATCH${MY_ID_STR}${fact_str}`);
+            client.send([`....BATCH${MY_ID_STR}${fact_str}`]);
         },
         draw: (illumination, target) => {
             target = typeof target === 'undefined' ? myId : target;
@@ -267,7 +302,7 @@ function init(filename) {
         },
         subscriptionPrefix: id => {
             currentSubscriptionId = id;
-            room.retractMineFromThisSubscription("%")
+            room.retractMineFromThisSubscription(["postfix", ""])
         },
         subscriptionPostfix: () => {
             currentSubscriptionId = 0;
@@ -291,37 +326,35 @@ function init(filename) {
         })
     }
 
-    subscriber.on('message', (request) => {
-        console.log("GOT MESSAGE")
+    client.on('message', (request) => {
+        const span = tracer.startSpan(`client-${myId}-recv`, { childOf: room.wireCtx() });
         const msg = request.toString();
-        console.log(msg)
+        // console.log(msg)
         const source_len = 4
         const SUBSCRIPTION_ID_LEN = (randomId()).length
         const SERVER_SEND_TIME_LEN = 13
         const id = msg.slice(source_len, source_len + SUBSCRIPTION_ID_LEN)
-        console.log(`ID: ${id} == ${init_ping_id}`)
         const val = msg.slice(source_len + SUBSCRIPTION_ID_LEN + SERVER_SEND_TIME_LEN)
         if (id == init_ping_id) {
             server_listening = true
-            console.log("SERVER LISTENING!!")
-            return
-        }
-        if (id in select_ids) {
+            console.log(`SERVER LISTENING!! ${MY_ID_STR} ${val}`)
+            room.setCtx(tracer.extract(opentracing.FORMAT_TEXT_MAP, {"uber-trace-id": val}));
+        } else if (id in select_ids) {
             const callback = select_ids[id]
             delete select_ids[id]
             callback(val)
         } else if (id in subscription_ids) {
             callback = subscription_ids[id]
             // room.cleanup()
-            // console.log("found match")
             const r = parseResult(val)
-            // console.log(r)
+            // const callbackSpan = tracer.startSpan(`client-${myId}-callbackrecv`, { childOf: span });
             callback(r)
-            // console.log("flushing")
+            // callbackSpan.finish();
             room.flush()
         } else {
             console.log("unknown subscription ID...")
         }
+        span.finish();
     });
 
     const run = async () => {
@@ -329,8 +362,13 @@ function init(filename) {
         room.flush()
     }
 
+    const afterServerConnects = async (callback) => {
+        await waitForServerListening();
+        callback();
+    }
+
     return {
-        room, myId, scriptName, MY_ID_STR, run, getIdFromProcessName, getIdStringFromId
+        room, myId, scriptName, MY_ID_STR, run, getIdFromProcessName, getIdStringFromId, tracer, afterServerConnects
     }
 }
 

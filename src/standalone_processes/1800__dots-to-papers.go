@@ -80,6 +80,24 @@ func GetBasePath() string {
 	return os.Getenv(env) + "/lovelace/src/standalone_processes/"
 }
 
+func initZeroMQ(MY_ID_STR string) *zmq.Socket {
+	log.Println("Connecting to server...")
+	client, zmqCreationErr := zmq.NewSocket(zmq.DEALER)
+	checkErr(zmqCreationErr)
+	setIdentityErr := client.SetIdentity(MY_ID_STR)
+	checkErr(setIdentityErr)
+	connectErr := client.Connect("tcp://localhost:5570")
+	checkErr(connectErr)
+
+	init_ping_id := "aae54f21-d95f-48e7-a778-266a17274896"; // just a random ID
+	client.SendMessage(fmt.Sprintf(".....PING%s%s", MY_ID_STR, init_ping_id))
+	// block until ping response received
+	_, recvErr := client.RecvMessage(0) 
+	checkErr(recvErr);
+	
+	return client
+}
+
 func main() {
 	BASE_PATH := GetBasePath()
 
@@ -103,31 +121,21 @@ func main() {
 	MY_ID := 1800
 	MY_ID_STR := fmt.Sprintf("%04d", MY_ID)
 
-	log.Println("Connecting to hello world server...")
-	publisher, _ := zmq.NewSocket(zmq.PUB)
-	defer publisher.Close()
-	// publisher.SetSndhwm(1)
-	publisher.Connect("tcp://localhost:5556")
-	subscriber, _ := zmq.NewSocket(zmq.SUB)
-	defer subscriber.Close()
-	// subscriber.SetRcvhwm(1)  // subscription queue has only room for 1 message: latest dots
-	// Is this ^ actually working?
-	subscriber.SetSubscribe(MY_ID_STR)
-	subscriber.Connect("tcp://localhost:5555")
-	time.Sleep(1.0 * time.Second) // HACK: Wait for subscribers to connect
+	client := initZeroMQ(MY_ID_STR)
+	defer client.Close()
 	count := 0
 
 	dot_sub_id := "f47ac10b-58cc-0372-8567-0e02b2c3d479"
 	dot_sub_query := map[string]interface{}{"id": dot_sub_id, "facts": []string{"$source dots $x $y color $r $g $b $t"}}
 	dot_sub_query_msg, _ := json.Marshal(dot_sub_query)
 	dot_sub_msg := fmt.Sprintf("SUBSCRIBE%s%s", MY_ID_STR, dot_sub_query_msg)
-	publisher.Send(dot_sub_msg, 0)
+	client.SendMessage(dot_sub_msg)
 
 	for {
 		start := time.Now()
 
 		log.Println("waiting for dots")
-		points := getDots(subscriber, MY_ID_STR, dot_sub_id, start) // getPoints()
+		points := getDots(client, MY_ID_STR, dot_sub_id, start) // getPoints()
 		log.Println("got dots")
 
 		timeGotDots := time.Since(start)
@@ -146,17 +154,17 @@ func main() {
 		// printCorners(step3)
 		step4 := doStep4CornersWithIds(step1, step3, dotCodes8400)
 		log.Println("step4", len(step4))
-		// claimCorners(publisher, step4)
+		// claimCorners(client, step4)
 		// printCorners(step4)
 		papers := getPapersFromCorners(step4)
 		// log.Println(papers)
 		log.Println("papers", len(papers))
 
 		timeProcessing := time.Since(start)
-		claimPapersAndCorners(publisher, MY_ID_STR, papers, step4)
+		claimPapersAndCorners(client, MY_ID_STR, papers, step4)
 
 		count += 1
-		// claimCounter(publisher, count)
+		// claimCounter(client, count)
 
 		elapsed := time.Since(start)
 		log.Printf("get dots  : %s \n", timeGotDots)
@@ -576,7 +584,7 @@ func makeTimestampMillis() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
 }
 
-func getDots(subscriber *zmq.Socket, MY_ID_STR string, dot_sub_id string, start time.Time) []Dot {
+func getDots(client *zmq.Socket, MY_ID_STR string, dot_sub_id string, start time.Time) []Dot {
 	var reply string
 	nLoops := 0
 	dot_prefix := fmt.Sprintf("%s%s", MY_ID_STR, dot_sub_id)
@@ -584,9 +592,9 @@ func getDots(subscriber *zmq.Socket, MY_ID_STR string, dot_sub_id string, start 
 		log.Println("pre loop")
 		for {
 			nLoops += 1
-			// tmp_reply, err := subscriber.Recv(zmq.DONTWAIT)
 			log.Println("pre loop inner")
-			tmp_reply, err := subscriber.Recv(0)
+			rawReply, err := client.RecvMessage(0)
+			tmp_reply := rawReply[0]
 			if err != nil {
 				log.Println("get dots error:")
 				log.Println(err)
@@ -643,7 +651,7 @@ func getDots(subscriber *zmq.Socket, MY_ID_STR string, dot_sub_id string, start 
 	return res
 }
 
-func claimPapersAndCorners(publisher *zmq.Socket, MY_ID_STR string, papers []Paper, corners []Corner) {
+func claimPapersAndCorners(client *zmq.Socket, MY_ID_STR string, papers []Paper, corners []Corner) {
 	log.Println("CLAIM PAPERS -----")
 	log.Println(papers)
 	// papersAlmostStr, _ := json.Marshal(papers)
@@ -666,7 +674,7 @@ func claimPapersAndCorners(publisher *zmq.Socket, MY_ID_STR string, papers []Pap
 	// 	papersStr := fmt.Sprintf("camera 1 sees paper %s at TL %v %v TR %v %v BR %v %v BL %v %v at %v", paper.Id, paper.Corners[0].X, paper.Corners[0].Y, paper.Corners[1].X, paper.Corners[1].Y, paper.Corners[2].X, paper.Corners[2].Y, paper.Corners[3].X, paper.Corners[3].Y, 99)
 	// 	msg := fmt.Sprintf("....CLAIM%s%s", MY_ID_STR, papersStr)
 	// 	log.Println("Sending ", msg)
-	// 	publisher.Send(msg, 0)
+	// 	client.SendMessage(msg)
 	// }
 
 	batch_claims := make([]BatchMessage, 0)
@@ -742,9 +750,8 @@ func claimPapersAndCorners(publisher *zmq.Socket, MY_ID_STR string, papers []Pap
 	batch_claim_str, _ := json.Marshal(batch_claims)
 	msg := fmt.Sprintf("....BATCH%s%s", MY_ID_STR, batch_claim_str)
 	log.Println("Sending ", msg)
-	s, err := publisher.Send(msg, 0)
-	time.Sleep(1.0 * time.Millisecond)
-	// s, err := publisher.Send(msg, zmq.DONTWAIT)
+	s, err := client.SendMessage(msg)
+	// s, err := client.SendMessage(msg, zmq.DONTWAIT)
 	if err != nil {
 		log.Println("ERROR!")
 		log.Println(err)
@@ -763,7 +770,7 @@ func printJsonDots(dots []Dot) {
 	log.Println("---")
 }
 
-func claimCorners(publisher *zmq.Socket, corners []Corner) {
+func claimCorners(client *zmq.Socket, corners []Corner) {
 	cornersAlmostStr, err := json.Marshal(corners)
 	log.Println("Err?")
 	log.Println(err)
@@ -771,13 +778,15 @@ func claimCorners(publisher *zmq.Socket, corners []Corner) {
 	log.Println(cornersStr)
 	msg := fmt.Sprintf("CLAIM[global/corners]%s", cornersStr)
 	log.Println("Sending ", msg)
-	publisher.Send(msg, 0)
+	client.SendMessage(msg)
+	// client.SendMessage(msg, zmq.DONTWAIT)
 }
 
-func claimCounter(publisher *zmq.Socket, count int) {
+func claimCounter(client *zmq.Socket, count int) {
 	msg := fmt.Sprintf("CLAIM[global/dtpcount]%v", count)
 	log.Println("Sending ", msg)
-	publisher.Send(msg, 0)
+	client.SendMessage(msg)
+	// client.SendMessage(msg, zmq.DONTWAIT)
 }
 
 func get8400(fileName string) []string {

@@ -225,7 +225,7 @@ class Example(wx.Frame):
         deaths = []
         old_calibration = copy.deepcopy(projector_calibration)
 
-        listen()
+        listen(blocking=False)
 
         if old_calibration != projector_calibration:
             if projector_calibration and len(projector_calibration) is 4:

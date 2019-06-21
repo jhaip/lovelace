@@ -152,8 +152,9 @@ func trimLeftChars(s string, n int) string {
 	return s[:0]
 }
 
-func get_wishes(subscriber *zmq.Socket, MY_ID_STR string, subscription_id string) []PrintWishResult {
-	reply, err := subscriber.Recv(0)
+func get_wishes(client *zmq.Socket, MY_ID_STR string, subscription_id string) []PrintWishResult {
+	rawReply, err := client.RecvMessage(0)
+	reply := rawReply[0]
 	if err != nil {
 		log.Println("get wishes error:")
 		log.Println(err)
@@ -178,7 +179,7 @@ func get_wishes(subscriber *zmq.Socket, MY_ID_STR string, subscription_id string
 	return printWishResults
 }
 
-func cleanupWishes(publisher *zmq.Socket, MY_ID_STR string) {
+func cleanupWishes(client *zmq.Socket, MY_ID_STR string) {
 	batch_claims := make([]BatchMessage, 0)
 	batch_claims = append(batch_claims, BatchMessage{"retract", [][]string{
 		[]string{"variable", ""},
@@ -196,13 +197,13 @@ func cleanupWishes(publisher *zmq.Socket, MY_ID_STR string) {
 	checkErr(jsonMarshallErr)
 	msg := fmt.Sprintf("....BATCH%s%s", MY_ID_STR, batch_claim_str)
 	log.Println("Sending ", msg)
-	s, err := publisher.Send(msg, 0)
+	s, err := client.SendMessage(msg)
 	checkErr(err)
 	log.Println("post send message!")
 	log.Println(s)
 }
 
-func wishOutputFileWouldBePrinted(publisher *zmq.Socket, MY_ID_STR string, outputFilename string) {
+func wishOutputFileWouldBePrinted(client *zmq.Socket, MY_ID_STR string, outputFilename string) {
 	batch_claims := make([]BatchMessage, 0)
 	batch_claims = append(batch_claims, BatchMessage{"claim", [][]string{
 		[]string{"id", MY_ID_STR},
@@ -218,29 +219,31 @@ func wishOutputFileWouldBePrinted(publisher *zmq.Socket, MY_ID_STR string, outpu
 	checkErr(jsonMarshallErr)
 	msg := fmt.Sprintf("....BATCH%s%s", MY_ID_STR, batch_claim_str)
 	log.Println("Sending ", msg)
-	s, err := publisher.Send(msg, 0)
+	s, err := client.SendMessage(msg)
 	checkErr(err)
 	log.Println("post send message!")
 	log.Println(s)
 }
 
-func initZeroMQ(MY_ID_STR string) (*zmq.Socket, *zmq.Socket) {
-	log.Println("Connecting to hello world server...")
-	publisher, newPubErr := zmq.NewSocket(zmq.PUB)
-	checkErr(newPubErr)
-	pubSubErr := publisher.Connect("tcp://localhost:5556")
-	checkErr(pubSubErr)
-	subscriber, newSubErr := zmq.NewSocket(zmq.SUB)
-	checkErr(newSubErr)
-	setSubErr := subscriber.SetSubscribe(MY_ID_STR)
-	checkErr(setSubErr)
-	connectErr := subscriber.Connect("tcp://localhost:5555")
+func initZeroMQ(MY_ID_STR string) *zmq.Socket {
+	log.Println("Connecting to server...")
+	client, zmqCreationErr := zmq.NewSocket(zmq.DEALER)
+	checkErr(zmqCreationErr)
+	setIdentityErr := client.SetIdentity(MY_ID_STR)
+	checkErr(setIdentityErr)
+	connectErr := client.Connect("tcp://localhost:5570")
 	checkErr(connectErr)
-	time.Sleep(1.0 * time.Second) // HACK: Wait for subscribers to connect
-	return publisher, subscriber
+
+	init_ping_id := "aae54f21-d95f-48e7-a778-266a17274896"; // just a random ID
+	client.SendMessage(fmt.Sprintf(".....PING%s%s", MY_ID_STR, init_ping_id))
+	// block until ping response received
+	_, recvErr := client.RecvMessage(0) 
+	checkErr(recvErr);
+	
+	return client
 }
 
-func initWishSubscription(publisher *zmq.Socket, MY_ID_STR string) string {
+func initWishSubscription(client *zmq.Socket, MY_ID_STR string) string {
 	subscription_id := "bf272176-2df5-4664-b2a1-f9c5628e1d9f"
 	sub_query := map[string]interface{}{
 		"id": subscription_id,
@@ -252,7 +255,7 @@ func initWishSubscription(publisher *zmq.Socket, MY_ID_STR string) string {
 	sub_query_msg, jsonMarshallErr := json.Marshal(sub_query)
 	checkErr(jsonMarshallErr)
 	sub_msg := fmt.Sprintf("SUBSCRIBE%s%s", MY_ID_STR, sub_query_msg)
-	_, sendErr := publisher.Send(sub_msg, 0)
+	_, sendErr := client.SendMessage(sub_msg)
 	checkErr(sendErr)
 	return subscription_id
 }
@@ -293,16 +296,15 @@ func main() {
 
 	MY_ID_STR := fmt.Sprintf("%04d", MY_ID)
 
-	publisher, subscriber := initZeroMQ(MY_ID_STR)
-	defer publisher.Close()
-	defer subscriber.Close()
-	subscription_id := initWishSubscription(publisher, MY_ID_STR)
+	client := initZeroMQ(MY_ID_STR)
+	defer client.Close()
+	subscription_id := initWishSubscription(client, MY_ID_STR)
 
 	log.Println("done with init")
 
 	for {
-		printWishResults := get_wishes(subscriber, MY_ID_STR, subscription_id)
-		cleanupWishes(publisher, MY_ID_STR)
+		printWishResults := get_wishes(client, MY_ID_STR, subscription_id)
+		cleanupWishes(client, MY_ID_STR)
 		for _, result := range printWishResults {
 			log.Printf("%#v\n", result)
 			log.Println("PROGRAM ID:::")
@@ -310,7 +312,7 @@ func main() {
 			log.Printf("%#v\n", result.shortFilename)
 			generatePrintFile(result.sourceCode, result.paperId, result.shortFilename, code8400, PDF_OUTPUT_FOLDER)
 			outputFilename := PDF_OUTPUT_FOLDER + strconv.Itoa(result.paperId) + ".pdf"
-			wishOutputFileWouldBePrinted(publisher, MY_ID_STR, outputFilename)
+			wishOutputFileWouldBePrinted(client, MY_ID_STR, outputFilename)
 		}
 		time.Sleep(100 * time.Millisecond)
 	}

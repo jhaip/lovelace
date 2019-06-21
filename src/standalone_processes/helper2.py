@@ -6,13 +6,34 @@ import uuid
 import random
 import os
 import sys
+import opentracing
+from opentracing import Format, Tracer
+from jaeger_client import Config
+
+
+
+def init_jaeger_tracer():
+    # config = Config(
+    #     config={
+    #         'sampler': {
+    #             'type': 'const',
+    #             'param': 1,
+    #         },
+    #         'logging': True,
+    #     },  
+    #     service_name='room-service',
+    #     validate=True,
+    # )
+    # return config.initialize_tracer()
+    return Tracer()  # no-op tracer
+
+# this call also sets opentracing.tracer
+tracer = None
+ROOM_SPAN_CONTEXT = None
 
 context = zmq.Context()
 rpc_url = "localhost"
-sub_socket = context.socket(zmq.SUB)
-sub_socket.connect("tcp://{0}:5555".format(rpc_url))
-pub_socket = context.socket(zmq.PUB)
-pub_socket.connect("tcp://{0}:5556".format(rpc_url))
+client = context.socket(zmq.DEALER)
 
 MY_ID = None
 MY_ID_STR = None
@@ -40,19 +61,25 @@ def get_my_id_pre_init(root_filename):
     return MY_ID
 
 
+def override_my_id(id):
+    global MY_ID, MY_ID_STR
+    MY_ID = id
+    MY_ID_STR = str(MY_ID).zfill(4)
+
+
 def claim(fact_string):
-    pub_socket.send_string("....CLAIM{}{}".format(
-        MY_ID_STR, fact_string), zmq.NOBLOCK)
+    client.send_multipart(["....CLAIM{}{}".format(
+        MY_ID_STR, fact_string)], zmq.NOBLOCK)
 
 
 def batch(batch_claims):
-    pub_socket.send_string("....BATCH{}{}".format(
-        MY_ID_STR, json.dumps(batch_claims)), zmq.NOBLOCK)
+    client.send_multipart(["....BATCH{}{}".format(
+        MY_ID_STR, json.dumps(batch_claims)).encode()], zmq.NOBLOCK)
 
 
 def retract(fact_string):
-    pub_socket.send_string("..RETRACT{}{}".format(
-        MY_ID_STR, fact_string), zmq.NOBLOCK)
+    client.send_multipart(["..RETRACT{}{}".format(
+        MY_ID_STR, fact_string)], zmq.NOBLOCK)
 
 
 def select(query_strings, callback):
@@ -65,7 +92,7 @@ def select(query_strings, callback):
     select_ids[select_id] = callback
     msg = "...SELECT{}{}".format(MY_ID_STR, query_msg)
     logging.debug(msg)
-    pub_socket.send_string(msg, zmq.NOBLOCK)
+    client.send_multipart([msg], zmq.NOBLOCK)
 
 
 def subscribe(query_strings, callback):
@@ -78,7 +105,7 @@ def subscribe(query_strings, callback):
     subscription_ids[subscription_id] = callback
     msg = "SUBSCRIBE{}{}".format(MY_ID_STR, query_msg)
     logging.debug(msg)
-    pub_socket.send_string(msg, zmq.NOBLOCK)
+    client.send_multipart([msg.encode()], zmq.NOBLOCK)
 
 
 def parse_results(val):
@@ -98,70 +125,76 @@ def parse_results(val):
     return results
 
 
-def listen(sleep_time_s=0.01):
-    global server_listening
-    while True:
-        try:
-            string = sub_socket.recv_string(flags=zmq.NOBLOCK)
-            source_len = 4
-            server_send_time_len = 13
-            id = string[source_len:(source_len + SUBSCRIPTION_ID_LEN)]
-            val = string[(source_len + SUBSCRIPTION_ID_LEN +
-                          server_send_time_len):]
-            if id == init_ping_id:
-                server_listening = True
-                return
-            if id in select_ids:
-                callback = select_ids[id]
-                del select_ids[id]
-                callback(val)
-            elif id in subscription_ids:
-                logging.debug(string)
-                callback = subscription_ids[id]
-                callback(parse_results(val))
-            # else:
-            #     logging.info("UNRECOGNIZED:")
-            #     logging.info(string)
-        except zmq.Again:
-            break
-    # logging.info("loop")
-    time.sleep(sleep_time_s)
+def listen(blocking=True):
+    global server_listening, ROOM_SPAN_CONTEXT, tracer, MY_ID
+    flags = 0
+    if not blocking:
+        flags = zmq.NOBLOCK
+    try:
+        raw_msg = client.recv_multipart(flags=flags)
+    except zmq.Again:
+        return
+    string = raw_msg[0].decode()
+    span = tracer.start_span('client-'+MY_ID+'-recv', references=opentracing.child_of(ROOM_SPAN_CONTEXT))
+    # preSpan = tracer.start_span('client-'+MY_ID+'-prerecv', child_of=span)
+    source_len = 4
+    server_send_time_len = 13
+    id = string[source_len:(source_len + SUBSCRIPTION_ID_LEN)]
+    val = string[(source_len + SUBSCRIPTION_ID_LEN +
+                server_send_time_len):]
+    # preSpan.finish()
+    if id == init_ping_id:
+        server_listening = True
+        logging.info("SERVER IS LISTENING {}".format(MY_ID))
+        # ROOM_SPAN_CONTEXT = tracer.extract(format=Format.TEXT_MAP, carrier={"uber-trace-id": val})
+        # print(ROOM_SPAN_CONTEXT)
+    elif id in select_ids:
+        callback = select_ids[id]
+        del select_ids[id]
+        callback(val)
+    elif id in subscription_ids:
+        logging.debug(string)
+        callback = subscription_ids[id]
+        # callbackSpan = tracer.start_span('client-'+MY_ID+'-callbackrecv', child_of=span)
+        callback(parse_results(val))
+        # callbackSpan.finish()
+    else:
+        logging.info("UNRECOGNIZED:")
+        logging.info(string)
+    # span.finish()
 
 
 def check_server_connection():
-    global server_listening, sub_socket, pub_socket, init_ping_id, py_subscriptions, py_prehook
+    global server_listening, client, init_ping_id, py_subscriptions, py_prehook
+    SERVER_NO_RESPONSE_TIMEOUT_TIME_SECONDS = 2
     if server_listening:
         print("checking if server is still listening")
         server_listening = False
         init_ping_id = str(uuid.uuid4())
         listening_start_time = time.time()
+        client.send_multipart([".....PING{}{}".format(MY_ID_STR, init_ping_id).encode()])
         while not server_listening:
-            pub_socket.send_string(".....PING{}{}".format(
-                MY_ID_STR, init_ping_id), zmq.NOBLOCK)
-            listen()
-            if time.time() - listening_start_time > 2:
+            listen(blocking=False)
+            # poll quickly went we think the server is already running and should respond
+            time.sleep(0.01)
+            if time.time() - listening_start_time > SERVER_NO_RESPONSE_TIMEOUT_TIME_SECONDS:
                 # no response from server, assume server is dead
                 check_server_connection()
                 break
     else:
-        # Close conneciton to ZMQ and try again
         print("SERVER DIED, attempting to reconnect")
-        sub_socket.disconnect("tcp://{0}:5555".format(rpc_url))
-        pub_socket.disconnect("tcp://{0}:5556".format(rpc_url))
-        sub_socket.connect("tcp://{0}:5555".format(rpc_url))
-        pub_socket.connect("tcp://{0}:5556".format(rpc_url))
-        sub_socket.setsockopt_string(zmq.SUBSCRIBE, MY_ID_STR)
         reconnect_check_delay_s = 10
         init_ping_id = str(uuid.uuid4())
         listening_start_time = time.time()
+        client.send_multipart([".....PING{}{}".format(MY_ID_STR, init_ping_id).encode()])
         while not server_listening:
             print("checking if server is alive")
-            pub_socket.send_string(".....PING{}{}".format(
-                MY_ID_STR, init_ping_id), zmq.NOBLOCK)
-            listen()
-            if time.time() - listening_start_time > 2:
+            listen(blocking=False)
+            time.sleep(0.5)
+            if time.time() - listening_start_time > SERVER_NO_RESPONSE_TIMEOUT_TIME_SECONDS:
                 print("no response from server, sleeping for a bit...")
                 time.sleep(reconnect_check_delay_s)
+                client.send_multipart([".....PING{}{}".format(MY_ID_STR, init_ping_id).encode()])
         print("SERVER IS ALIVE!")
         if py_prehook:
             py_prehook()
@@ -172,29 +205,28 @@ def check_server_connection():
 
 
 def init(root_filename, skipListening=False):
-    global MY_ID, MY_ID_STR, py_subscriptions, py_prehook
+    global MY_ID, MY_ID_STR, py_subscriptions, py_prehook, tracer
     scriptName = os.path.basename(root_filename)
     scriptNameNoExtension = os.path.splitext(scriptName)[0]
     fileDir = os.path.dirname(os.path.realpath(root_filename))
     logPath = os.path.join(fileDir, 'logs/' + scriptNameNoExtension + '.log')
     logging.basicConfig(filename=logPath, level=logging.INFO)
-    MY_ID = (scriptName.split(".")[0]).split("__")[0]
-    MY_ID_STR = str(MY_ID).zfill(4)
+    if MY_ID_STR is None:
+        MY_ID = (scriptName.split(".")[0]).split("__")[0]
+        MY_ID_STR = str(MY_ID).zfill(4)
     print("INSIDE INIT:")
     print(MY_ID)
     print(MY_ID_STR)
-    print(logPath)
-    print("-")
-    sub_socket.setsockopt_string(zmq.SUBSCRIBE, MY_ID_STR)
-    start = time.time()
-    while not server_listening:
-        pub_socket.send_string(".....PING{}{}".format(
-            MY_ID_STR, init_ping_id), zmq.NOBLOCK)
-        listen()
-    end = time.time()
-    print("INIT TIME: {} ms".format((end - start)*1000.0))
-    logging.info("INIT TIME: {} ms".format((end - start)*1000.0))
-    # time.sleep(0.2)
+    # print(logPath)
+    # print("-")
+    tracer = init_jaeger_tracer()
+    client.setsockopt(zmq.IDENTITY, MY_ID_STR.encode())
+    client.connect("tcp://{0}:5570".format(rpc_url))
+    client.send_multipart([".....PING{}{}".format(MY_ID_STR, init_ping_id).encode()])
+    listen()  # assumes the first message recv'd will be the PING response
+
+    # time.sleep(1.0)
+    
     if py_prehook:
         py_prehook()
     # for s in selects:
@@ -229,3 +261,12 @@ def subscription(expr):
             func(x)
         return function_wrapper
     return subscription_decorator
+
+
+def tracer_cleanup():
+    global tracer
+    time.sleep(2)   # yield to IOLoop to flush the spans - https://github.com/jaegertracing/jaeger-client-python/issues/50
+    tracer.close()  # flush any buffered spans
+
+import atexit
+atexit.register(tracer_cleanup)

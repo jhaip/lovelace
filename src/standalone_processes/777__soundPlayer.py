@@ -59,7 +59,7 @@ midi_out = pygame.midi.Output(port, 0)
 try:
     lastUpdateTime = time.time()
     while True:
-        listen()
+        listen(blocking=False)
         if time.time() - lastUpdateTime >= 60.0/BPM and len(MELODY) > 0:
             playNextNode(midi_out, INSTRUMENT, MELODY[MELODY_INDEX], 60.0/BPM)
             MELODY_INDEX = (MELODY_INDEX + 1) % len(MELODY)

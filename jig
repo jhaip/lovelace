@@ -10,6 +10,65 @@ function cmd() {
     sleep 2
     node src/standalone_processes/0__boot.js &
     echo -e "booting"
+  elif [ "$1" == "test" ]
+  then
+    cd new-backend/go-server
+    go run server.go parser2.go subscriber.go database.go &
+    echo -e "running server"
+    cd ../..
+    sleep 2
+    node src/standalone_processes/1200__test.js &
+    node src/standalone_processes/1201__test.js &
+    for value in {1202..1210}
+    do
+      node src/standalone_processes/${value}__test.js &
+    done
+    echo -e "booting"
+  elif [ "$1" == "testcp" ]
+  then
+    for value in {1211..1299}
+    do
+      cp src/standalone_processes/1202__test.js src/standalone_processes/${value}__test.js
+    done
+    echo -e "booting"
+  elif [ "$1" == "pytest" ]
+  then
+    cd new-backend/go-server
+    go run server.go parser2.go subscriber.go database.go &
+    echo -e "running server"
+    cd ../..
+    sleep 2
+    python3 src/standalone_processes/1300__test.py &
+    for value in {1301..1310}
+    do
+      python3 src/standalone_processes/1301__test.py $value &
+    done
+    echo -e "booting"
+  elif [ "$1" == "gotest" ]
+  then
+    cd new-backend/go-server
+    go run server.go parser2.go subscriber.go database.go &
+    echo -e "running server"
+    cd ../..
+    sleep 2
+    cd src/standalone_processes
+    go build 1400__exp.go
+    for value in {1400..1499}
+    do
+      ./1400__exp $value &
+    done
+    echo -e "booting"
+  elif [ "$1" == "stoptest" ]
+  then
+    pkill -f "go run server.go parser2.go subscriber.go database.go"
+    pkill -f "/exe/server"
+    pkill -f src/standalone_processes/12*__test.js
+    pkill -f src/standalone_processes/13*__test.py
+    pkill -f "1400__exp"
+    pkill -f "node src/standalone_processes"
+    pkill -f "python3 src/standalone_processes"
+    pkill -f "go run src/standalone_processes"
+    pkill -f "/tmp/go-build"
   elif [ "$1" == "stop" ]
   then
     pkill -f "go run server.go parser2.go subscriber.go database.go"

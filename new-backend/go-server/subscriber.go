@@ -131,24 +131,17 @@ func warmSubscriberCache(subscriptionData Subscription, preExistingFacts map[str
 }
 
 func startSubscriber(subscriptionData Subscription, notifications chan<- Notification, preExistingFacts map[string]Fact) {
-	latencyMeasurer := makeLatencyMeasurer()
 	subscriber := makeSubscriber(subscriptionData.Query)
 	var updatedResults bool
 	zap.L().Info("inside startSubscriber")
 	warmSubscriberCache(subscriptionData, preExistingFacts)
-	latencyMeasurer = preLatencyMeasurePart("messageWait", latencyMeasurer)
 	for batch_messages := range subscriptionData.batch_messages {
-		latencyMeasurer = postLatencyMeasurePart("messageWait", latencyMeasurer)
 		updatedResults = false
-		latencyMeasurer = preLatencyMeasurePart("action", latencyMeasurer)
 		subscriber, updatedResults = subscriberBatchUpdate(subscriber, batch_messages)
 		if updatedResults {
 			results_as_str := marshal_query_result(getQueryResultsForSubscriber(subscriber))
 			notifications <- Notification{subscriptionData.Source, subscriptionData.Id, results_as_str}
 		}
-		latencyMeasurer = postLatencyMeasurePart("action", latencyMeasurer)
-		latencyMeasurer = updateLatencyMeasurer(latencyMeasurer, 1, "latency - subscriber "+subscriptionData.Source)
-		latencyMeasurer = preLatencyMeasurePart("messageWait", latencyMeasurer)
 	}
 	subscriptionData.dead.Done()
 }
