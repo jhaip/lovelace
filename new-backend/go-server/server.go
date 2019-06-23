@@ -113,8 +113,6 @@ func notification_worker(notifications <-chan Notification, client *zmq.Socket) 
 			_, sendErr := client.SendMessage(notification.Source, msgWithTime)
 			checkErr(sendErr)
 			zmqClient.Unlock()
-		} else {
-			zap.L().Error(fmt.Sprintf("SKIPPING MESSAGE %s", notification.Source))
 		}
 	}
 }
