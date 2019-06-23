@@ -45,7 +45,7 @@ room.on(`$photonId read $value on sensor $sensorId`,
   room.subscriptionPostfix();
 })
 
-room.on(`Photon2c001b000347343233323032 read $value on sensor 3`,
+room.on(`Photon2c001b000347343233323032 read $value on sensor 2`,
         `paper $paperId has RFID $value`,
   results => {
     room.subscriptionPrefix(2);

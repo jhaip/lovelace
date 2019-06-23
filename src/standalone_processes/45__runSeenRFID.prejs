@@ -34,7 +34,7 @@ when $photonId read $value on sensor $sensorId,
      paper $paperId has RFID $value:
     claim camera 1 sees paper ${paperId} at ${sensorScreenLocations[photonId][sensorId]} @ 1
 
-when Photon2c001b000347343233323032 read $value on sensor 3,
+when Photon2c001b000347343233323032 read $value on sensor 2,
      paper $paperId has RFID $value:
     claim paper 1013 is pointing at paper ${paperId}
 
