@@ -6,7 +6,9 @@ import (
 	// "log"
 	"os"
 	"io"
+	"io/ioutil"
 	"runtime"
+	"sort"
 	"strconv"
 	"sync"
 	"time"
@@ -18,6 +20,8 @@ import (
 	zmq "github.com/pebbe/zmq4"
 	"go.uber.org/zap"
 	// "runtime/trace"
+
+	b64 "encoding/base64"
 
 	opentracing "github.com/opentracing/opentracing-go"
 	jaeger "github.com/uber/jaeger-client-go"
