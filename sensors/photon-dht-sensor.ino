@@ -44,7 +44,7 @@ void retract() {
 
     // Particle.publish("retract", str, PRIVATE);
     // request.hostname = "requestbin.fullcontact.com"; // "10.0.0.162";
-    request.ip = {10, 0, 0, 162}; // {52, 222, 150, 205};
+    request.ip = {192, 168, 1, 12}; // {52, 222, 150, 205};
     request.port = 3000;
     request.path = "/retract"; // "/18fjmkf1";
     request.body = str;
@@ -61,7 +61,7 @@ void publishValueMessage(float humidity, float temp) {
     // Serial.println(str);
     // Particle.publish("assert", str, PRIVATE);
     // request.hostname = NULL; // "10.0.0.162";
-    request.ip = {10, 0, 0, 162};
+    request.ip = {192, 168, 1, 12};
     request.port = 3000;
     request.path = "/assert";
     request.body = str;

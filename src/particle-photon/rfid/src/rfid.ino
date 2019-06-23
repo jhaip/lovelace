@@ -69,7 +69,7 @@ void publishValueMessage(int sensorId, String sensorValue)
   char str[300];
   sprintf(str, "{\"claim\":\"Photon%s read \\\"%s\\\" on sensor %i\", \"retract\":\"$ $ Photon%s read $ on sensor %i\"}", (const char *)myID, sensorValue.c_str(), sensorId, (const char *)myID, sensorId);
   Serial.println(str);
-  request.ip = {10, 0, 0, 185};
+  request.ip = {192, 168, 1, 12};
   request.port = 5000;
   request.path = "/cleanup-claim";
   request.body = str;

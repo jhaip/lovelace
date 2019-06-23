@@ -41,7 +41,7 @@ void publishValueMessage(float humidity, float temp)
     // Serial.println(str);
     // Particle.publish("assert", str, PRIVATE);
     // request.hostname = NULL; // "10.0.0.162";
-    request.ip = {10, 0, 0, 185};
+    request.ip = {192, 169, 1, 12};
     request.port = 5000;
     request.path = "/cleanup-claim";
     // request.body = "{\"test\": 5}"; // str;
