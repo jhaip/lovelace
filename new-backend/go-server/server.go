@@ -192,6 +192,41 @@ func copyDatabase(db *map[string]Fact) map[string]Fact {
 	return dbCopy
 }
 
+func debug_database_observer(db *map[string]Fact) {
+	for {
+		dbCopy := copyDatabase(db)
+		dbAsSstring := []byte("\033[H\033[2J") // clear terminal output on MacOS
+		dbAsBase64Strings := ""
+		var keys []string
+		for k, _ := range dbCopy {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, fact_string := range keys {
+			dbAsSstring = append(dbAsSstring, []byte(fact_string)...)
+			dbAsSstring = append(dbAsSstring, '\n')
+			dbAsBase64Strings += "["
+			for i, term := range dbCopy[fact_string].Terms {
+				if i > 0 {
+					dbAsBase64Strings += ","
+				}
+				if term.Type == "text" {
+					dbAsBase64Strings += fmt.Sprintf("[\"%s\", \"%s\"]", term.Type, b64.StdEncoding.EncodeToString([]byte(term.Value)))
+				} else {
+					dbAsBase64Strings += fmt.Sprintf("[\"%s\", \"%v\"]", term.Type, term.Value)
+				}
+			}
+			dbAsBase64Strings += "]\n"
+		}
+		dbAsBase64Strings += fmt.Sprintf("[[\"id\", \"0\"], [\"text\", \"%s\"]]\n", b64.StdEncoding.EncodeToString([]byte(time.Now().String())))
+		err := ioutil.WriteFile("./db_view.txt", dbAsSstring, 0644)
+		checkErr(err)
+		err2 := ioutil.WriteFile("./db_view_base64.txt", []byte(dbAsBase64Strings), 0644)
+		checkErr(err2)
+		time.Sleep(1.0 * time.Second)
+	}
+}
+
 func on_source_death(dying_source string, db *map[string]Fact, subscriptions *Subscriptions) {
 	zap.L().Info("SOURCE DEATH - recv", zap.String("source", dying_source))
 	// Retract all facts by source and facts about the source's subscriptions
@@ -327,6 +362,7 @@ func main() {
 
 	go subscribe_worker(subscription_messages, subscriptions_notifications, &subscriptions, notifications, &factDatabase)
 	go notification_worker(notifications, client)
+	go debug_database_observer(&factDatabase)
 	go batch_worker(batch_messages, subscriptions_notifications, &factDatabase, &subscriptions)
 
 	zap.L().Info("listening...")
