@@ -14,12 +14,16 @@ app.post('/cleanup-claim', (req, res) => {
     console.error("cleanup-claim")
     console.error(req.body)
     if (Array.isArray(req.body.retract)) {
-        room.retractRaw(...req.body.retract)
+        req.body.retract.forEach(retraction => {
+            room.retractRaw(retraction)
+        })
     } else {
         room.retractRaw(req.body.retract)
     }
     if (Array.isArray(req.body.claim)) {
-        room.assert(...req.body.claim)
+        req.body.claim.forEach(claim => {
+            room.assert(claim)
+        })
     } else {
         room.assert(req.body.claim)
     }

@@ -64,10 +64,35 @@ http_response_t response;
 
 String myID = System.deviceID();
 
+unsigned long lastTime = 0;
+unsigned long now = 0;
+
 void publishValueMessage(int sensorId, String sensorValue)
 {
   char str[300];
   sprintf(str, "{\"claim\":\"Photon%s read \\\"%s\\\" on sensor %i\", \"retract\":\"$ $ Photon%s read $ on sensor %i\"}", (const char *)myID, sensorValue.c_str(), sensorId, (const char *)myID, sensorId);
+  Serial.println(str);
+  request.ip = {192, 168, 1, 12};
+  request.port = 5000;
+  request.path = "/cleanup-claim";
+  request.body = str;
+  Serial.println(request.body);
+  http.post(request, response, headers);
+  Serial.print("Application>\tResponse status: ");
+  Serial.println(response.status);
+}
+
+void publishValueMessages(String sensorValue1, String sensorValue2, String sensorValue3, String sensorValue4, String sensorValue5)
+{
+  char str[300];
+  sprintf(str, "{\"claim\":[\"Photon%s read \\\"%s\\\" on sensor %i\", \"Photon%s read \\\"%s\\\" on sensor %i\", \"Photon%s read \\\"%s\\\" on sensor %i\", \"Photon%s read \\\"%s\\\" on sensor %i\", \"Photon%s read \\\"%s\\\" on sensor %i\"], \"retract\":\"$ $ Photon%s read $ on sensor $\"}",
+          (const char *)myID,
+          sensorValue1.c_str(), 1,
+          sensorValue2.c_str(), 2,
+          sensorValue3.c_str(), 3,
+          sensorValue4.c_str(), 4,
+          sensorValue5.c_str(), 5,
+          (const char *)myID);
   Serial.println(str);
   request.ip = {192, 168, 1, 12};
   request.port = 5000;
@@ -129,7 +154,10 @@ String check_reader(MFRC522 reader)
 
 void loop()
 {
+  
   delay(50);
+
+  lastTime = millis();  
 
   String val_a = check_reader(mfrc522);
   String val_b = check_reader(mfrc522_b);
@@ -138,10 +166,18 @@ void loop()
   String val_e = check_reader(mfrc522_e);
   // String val_f = check_reader(mfrc522_f);
 
-  publishValueMessage(1, val_a);
-  publishValueMessage(2, val_b);
-  publishValueMessage(3, val_c);
-  publishValueMessage(4, val_d);
-  publishValueMessage(5, val_e);
+  now = millis();
+  Serial.printlnf("rfid read lag: %lu ms", (now - lastTime));
+  lastTime = millis();
+
+  publishValueMessages(val_a, val_b, val_c, val_d, val_e);
+  // publishValueMessage(1, val_a);
+  // publishValueMessage(2, val_b);
+  // publishValueMessage(3, val_c);
+  // publishValueMessage(4, val_d);
+  // publishValueMessage(5, val_e);
   // publishValueMessage(6, val_f);
+
+  now = millis();
+  Serial.printlnf("send lag: %lu ms", (now-lastTime));
 }
