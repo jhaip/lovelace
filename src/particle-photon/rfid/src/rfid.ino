@@ -1,4 +1,4 @@
-#include "SparkJson.h"
+// #include "SparkJson.h"
 #include "HttpClient.h"
 
 /*
@@ -84,14 +84,13 @@ void publishValueMessage(int sensorId, String sensorValue)
 
 void publishValueMessages(String sensorValue1, String sensorValue2, String sensorValue3, String sensorValue4, String sensorValue5)
 {
-  char str[300];
+  char str[400];
   sprintf(str, "{\"claim\":[\"Photon%s read \\\"%s\\\" on sensor %i\", \"Photon%s read \\\"%s\\\" on sensor %i\", \"Photon%s read \\\"%s\\\" on sensor %i\", \"Photon%s read \\\"%s\\\" on sensor %i\", \"Photon%s read \\\"%s\\\" on sensor %i\"], \"retract\":\"$ $ Photon%s read $ on sensor $\"}",
-          (const char *)myID,
-          sensorValue1.c_str(), 1,
-          sensorValue2.c_str(), 2,
-          sensorValue3.c_str(), 3,
-          sensorValue4.c_str(), 4,
-          sensorValue5.c_str(), 5,
+          (const char *)myID, sensorValue1.c_str(), 1,
+          (const char *)myID, sensorValue2.c_str(), 2,
+          (const char *)myID, sensorValue3.c_str(), 3,
+          (const char *)myID, sensorValue4.c_str(), 4,
+          (const char *)myID, sensorValue5.c_str(), 5,
           (const char *)myID);
   Serial.println(str);
   request.ip = {192, 168, 1, 12};
