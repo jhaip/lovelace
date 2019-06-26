@@ -14,7 +14,7 @@ function sendPing() {
     room.assert(`ping ${currentTimeMs}`)
     room.flush()
     setTimeout(() => {
-        if (lastSentPing <= currentTimeMs) {
+        if (((new Date()).getTime() - lastSentPing) > serverTimeoutMs) {
             console.error(`SERVER TIMEOUT - NO PING RESPONSE IN ${serverTimeoutMs} ms! ${(new Date()).toUTCString()}`)
         }
     }, serverTimeoutMs)
