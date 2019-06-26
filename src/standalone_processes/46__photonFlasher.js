@@ -5,7 +5,7 @@ const request = require('request');
 const fs = require('fs');
 const particle = new Particle();
 
-const LOGIN_INFO = { username: 'haipjacob@gmail.com', password: 'TODO FILL IN' };
+const LOGIN_INFO = { username: 'haipjacob@gmail.com', password: process.env.PARTICLE_PASSWORD };
 
 var token;
 
@@ -40,7 +40,7 @@ String myID = System.deviceID();
 
 void publishValueMessage(char body[])
 {
-    request.ip = {10, 0, 0, 185};
+    request.ip = {192, 168, 1, 12};
     request.port = 5000;
     request.path = "/cleanup-claim";
     request.body = body;
