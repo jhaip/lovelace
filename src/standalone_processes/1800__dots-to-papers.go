@@ -66,6 +66,13 @@ type BatchMessage struct {
 	Fact [][]string `json:"fact"`
 }
 
+func checkErr(err error) {
+	if err != nil {
+		zap.L().Fatal("FATAL ERROR", zap.Error(err))
+		panic(err)
+	}
+}
+
 func GetBasePath() string {
 	envBasePath := os.Getenv("DYNAMIC_ROOT")
 	if envBasePath != "" {
