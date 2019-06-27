@@ -62,7 +62,7 @@ class ShowCapture(wx.Panel):
         ]}]
         batch_claims.append({"type": "claim", "fact": [
             ["id", MY_ID_STR],
-            ["id", "0"]
+            ["id", "0"],
             ["text", "camera"],
             ["integer", "1"],
             ["text", "has"],
