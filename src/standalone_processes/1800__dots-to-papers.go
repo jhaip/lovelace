@@ -133,7 +133,7 @@ func main() {
 	count := 0
 
 	dot_sub_id := "f47ac10b-58cc-0372-8567-0e02b2c3d479"
-	dot_sub_query := map[string]interface{}{"id": dot_sub_id, "facts": []string{"$source dots $x $y color $r $g $b $t"}}
+	dot_sub_query := map[string]interface{}{"id": dot_sub_id, "facts": []string{"$source $ dots $x $y color $r $g $b $t"}}
 	dot_sub_query_msg, _ := json.Marshal(dot_sub_query)
 	dot_sub_msg := fmt.Sprintf("SUBSCRIBE%s%s", MY_ID_STR, dot_sub_query_msg)
 	client.SendMessage(dot_sub_msg)
@@ -693,6 +693,7 @@ func claimPapersAndCorners(client *zmq.Socket, MY_ID_STR string, papers []Paper,
 	for _, paper := range papers {
 		batch_claims = append(batch_claims, BatchMessage{"claim", [][]string{
 			[]string{"id", MY_ID_STR},
+			[]string{"id", "0"},
 			[]string{"text", "camera"},
 			[]string{"integer", "1"},
 			[]string{"text", "sees"},
@@ -730,6 +731,7 @@ func claimPapersAndCorners(client *zmq.Socket, MY_ID_STR string, papers []Paper,
 	for _, corner := range corners {
 		batch_claims = append(batch_claims, BatchMessage{"claim", [][]string{
 			[]string{"id", MY_ID_STR},
+			[]string{"id", "1"},
 			[]string{"text", "camera"},
 			[]string{"integer", "1"},
 			[]string{"text", "sees"},
@@ -750,6 +752,7 @@ func claimPapersAndCorners(client *zmq.Socket, MY_ID_STR string, papers []Paper,
 	}
 	batch_claims = append(batch_claims, BatchMessage{"claim", [][]string{
 		[]string{"id", MY_ID_STR},
+		[]string{"id", "2"},
 		[]string{"text", "dotsToPapers"},
 		[]string{"text", "update"},
 		[]string{"text", time.Now().String()},
