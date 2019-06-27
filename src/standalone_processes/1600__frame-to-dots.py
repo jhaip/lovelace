@@ -1,40 +1,22 @@
 # Example from https://stackoverflow.com/questions/14804741/opencv-integration-with-wxpython
+from helper2 import init, claim, retract, prehook, subscription, batch, MY_ID_STR, listen, check_server_connection, get_my_id_pre_init
 import wx
 from imutils.video import WebcamVideoStream
 import imutils
 import cv2
 import time
 import json
-# import RPCClient
 import zmq
 import logging
 import sys
 import os
 
-MY_ID_STR = None
 CAM_WIDTH = 1920
 CAM_HEIGHT = 1080
-
-def initLogToFile(root_filename):
-    global MY_ID_STR
-    scriptName = os.path.basename(root_filename)
-    scriptNameNoExtension = os.path.splitext(scriptName)[0]
-    fileDir = os.path.dirname(os.path.realpath(root_filename))
-    logPath = os.path.join(fileDir, 'logs/' + scriptNameNoExtension + '.log')
-    logging.basicConfig(filename=logPath, level=logging.INFO)
-    MY_ID = (scriptName.split(".")[0]).split("__")[0]
-    MY_ID_STR = str(MY_ID).zfill(4)
-    print("INSIDE INIT:")
-    print(MY_ID)
-    print(MY_ID_STR)
-    print(logPath)
 
 class ShowCapture(wx.Panel):
     def __init__(self, parent, capture, fps=1):
         wx.Panel.__init__(self, parent)
-
-        initLogToFile(__file__)
-        logging.error("begin")
 
         self.capture = capture
         ret, frame = (True, self.capture.read())
@@ -50,33 +32,15 @@ class ShowCapture(wx.Panel):
         self.projector_calibration_state = None
         self.blob_detector = self.createSimpleBlobDetector()
 
-        # self.M = RPCClient.RPCClient()
-        # self.M.set_pub_high_water_mark(0)
-
         self.projector_calibration = [(50, 50), (CAM_WIDTH-50, 50),
                                       (CAM_WIDTH-50, CAM_HEIGHT-50),
                                       (50, CAM_HEIGHT-50)]
         
-        logging.error("PRE ZMQ SETUP")
-
-        time.sleep(1.0)
-        context = zmq.Context()
-        rpc_url = "localhost"
-        self.pub_socket = context.socket(zmq.PUB)
-        self.pub_socket.connect("tcp://{0}:5556".format(rpc_url))
-        time.sleep(1.0)
-
-        logging.error("post connect")
-
         self.claimProjectorCalibration()
-        
-        logging.error("post claim")
 
-        self.timer = wx.Timer(self)
-        self.timer.Start(1000./fps)
+        self.MyListenDrawLoop()
 
         self.Bind(wx.EVT_PAINT, self.OnPaint)
-        self.Bind(wx.EVT_TIMER, self.NextFrame)
 
         self.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
         self.Bind(wx.EVT_KEY_UP, self.OnKeyDown)
@@ -84,20 +48,21 @@ class ShowCapture(wx.Panel):
         self.Bind(wx.EVT_LEFT_UP, self.onClick)
         self.SetFocus()
     
-    def claim(self, fact_string):
-        global MY_ID_STR
-        self.pub_socket.send_string("....CLAIM{}{}".format(
-            MY_ID_STR, fact_string), zmq.NOBLOCK)
+    def MyListenDrawLoop(self):
+        self.NextFrame(None)
+        wx.CallLater(1000, self.MyListenDrawLoop)
+        print("loop")
     
     def claimProjectorCalibration(self):
         global MY_ID_STR
         batch_claims = [{"type": "retract", "fact": [
             ["id", MY_ID_STR],
-            ["text", "camera"],
+            ["id", "0"],
             ["postfix", ""]
         ]}]
         batch_claims.append({"type": "claim", "fact": [
             ["id", MY_ID_STR],
+            ["id", "0"]
             ["text", "camera"],
             ["integer", "1"],
             ["text", "has"],
@@ -130,18 +95,7 @@ class ShowCapture(wx.Panel):
             ["text", "@"],
             ["integer", str(int(round(time.time() * 1000)))],
         ]})
-        self.batch(batch_claims)
-
-    def retract(self, fact_string):
-        global MY_ID_STR
-        print(fact_string)
-        self.pub_socket.send_string("..RETRACT{}{}".format(
-            MY_ID_STR, fact_string), zmq.NOBLOCK)
-    
-    def batch(self, batch_claims):
-        global MY_ID_STR
-        self.pub_socket.send_string("....BATCH{}{}".format(
-            MY_ID_STR, json.dumps(batch_claims)), zmq.NOBLOCK)
+        batch(batch_claims)
 
     def OnPaint(self, evt):
         dc = wx.BufferedPaintDC(self)
@@ -223,27 +177,21 @@ class ShowCapture(wx.Panel):
                 }
             self.dots = list(map(keypointMapFunc, keypoints))
             # print(self.dots)
-            # self.M.claim("global", "dots", self.dots)
 
-            
-            # self.retract("$z dots $x $y color $a $b $c $t")
-            # for dot in self.dots:
-            #     self.claim("dots {} {} color {} {} {} {}".format(
-            #         dot["x"], dot["y"], dot["color"][0], dot["color"][1], dot["color"][2], int(time.time()*1000.0)))
             batch_claims = [{"type": "retract", "fact": [
                             ["id", MY_ID_STR],
-                            ["text", "dots"],
+                            ["id", "22"],
                             ["postfix", ""]
                             ]}]
             for dot in self.dots:
                 batch_claims.append({"type": "claim", "fact": [
-                    ["id", MY_ID_STR], ["text", "dots"],
+                    ["id", MY_ID_STR], ["id", "22"], ["text", "dots"],
                     ["float", str(dot["x"])], ["float", str(dot["y"])],
                     ["text", "color"],
                     ["float", str(dot["color"][0])], ["float", str(dot["color"][1])], ["float", str(dot["color"][1])],
                     ["integer", str(int(time.time()*1000.0))]
                 ]})
-            self.batch(batch_claims)
+            batch(batch_claims)
 
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             self.bmp.CopyFromBuffer(frame)
@@ -339,10 +287,10 @@ time.sleep(2)
 # for i in range(10):
 #     capture.read()
 
-# initLogToFile(__file__)
-
-app = wx.App()
-frame = wx.Frame(None)
-cap = ShowCapture(frame, capture)
-frame.Show()
-app.MainLoop()
+if __name__ == '__main__':
+    init(__file__, skipListening=True)
+    app = wx.App()
+    frame = wx.Frame(None)
+    cap = ShowCapture(frame, capture)
+    frame.Show()
+    app.MainLoop()
