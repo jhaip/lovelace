@@ -1,5 +1,5 @@
 # Example from https://stackoverflow.com/questions/14804741/opencv-integration-with-wxpython
-from helper2 import init, claim, retract, prehook, subscription, batch, MY_ID_STR, listen, check_server_connection, get_my_id_pre_init
+from helper2 import init, claim, retract, prehook, subscription, batch, MY_ID_STR, listen, check_server_connection, get_my_id_str
 import wx
 from imutils.video import WebcamVideoStream
 import imutils
@@ -54,14 +54,13 @@ class ShowCapture(wx.Panel):
         print("loop")
     
     def claimProjectorCalibration(self):
-        global MY_ID_STR
         batch_claims = [{"type": "retract", "fact": [
-            ["id", MY_ID_STR],
+            ["id", get_my_id_str()],
             ["id", "0"],
             ["postfix", ""]
         ]}]
         batch_claims.append({"type": "claim", "fact": [
-            ["id", MY_ID_STR],
+            ["id", get_my_id_str()],
             ["id", "0"],
             ["text", "camera"],
             ["integer", "1"],
@@ -148,7 +147,6 @@ class ShowCapture(wx.Panel):
         return detector
 
     def NextFrame(self, event):
-        global MY_ID_STR
         start = time.time()
 
         ret, frame = (True, self.capture.read())
@@ -179,13 +177,13 @@ class ShowCapture(wx.Panel):
             # print(self.dots)
 
             batch_claims = [{"type": "retract", "fact": [
-                            ["id", MY_ID_STR],
+                            ["id", get_my_id_str()],
                             ["id", "22"],
                             ["postfix", ""]
                             ]}]
             for dot in self.dots:
                 batch_claims.append({"type": "claim", "fact": [
-                    ["id", MY_ID_STR], ["id", "22"], ["text", "dots"],
+                    ["id", get_my_id_str()], ["id", "22"], ["text", "dots"],
                     ["float", str(dot["x"])], ["float", str(dot["y"])],
                     ["text", "color"],
                     ["float", str(dot["color"][0])], ["float", str(dot["color"][1])], ["float", str(dot["color"][1])],
