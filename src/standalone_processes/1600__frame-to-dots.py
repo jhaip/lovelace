@@ -20,7 +20,8 @@ server_latency_ms = 0
 @subscription(["$ $ ping $ $latencyMs"])
 def sub_callback_papers(results):
     global server_latency_ms
-    server_latency_ms = results[0]["latencyMs"]
+    if results and len(results) > 0:
+        server_latency_ms = results[0]["latencyMs"]
 
 
 class ShowCapture(wx.Panel):
