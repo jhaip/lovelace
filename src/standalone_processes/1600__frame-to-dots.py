@@ -49,7 +49,7 @@ class ShowCapture(wx.Panel):
         self.claimProjectorCalibration()
 
         self.listenTimer = wx.Timer(self)
-        self.listenTimer.Start(latency_check_delay_s)
+        self.listenTimer.Start(int(latency_check_delay_s*1000))
         self.Bind(wx.EVT_TIMER, self.onLatencyCheckTimer)
 
         self.MyListenDrawLoop()
@@ -63,7 +63,7 @@ class ShowCapture(wx.Panel):
         self.SetFocus()
     
     def onLatencyCheckTimer(self, event):
-        # print("listening...")
+        print("listening...")
         listen(blocking=False)
     
     def MyListenDrawLoop(self):
