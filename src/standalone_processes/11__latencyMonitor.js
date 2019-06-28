@@ -6,12 +6,12 @@ const stream = fs.createWriteStream(path.join(__dirname, 'files', 'latency-ms-lo
 
 var lastSentPing
 const serverTimeoutMs = 10000
-const delayBetweenMeasurementsMs = 2000
+const delayBetweenMeasurementsMs = 5000
 
-function sendPing() {
+function sendPing(lastMeasuredLatency) {
     let currentTimeMs = (new Date()).getTime()
     lastSentPing = currentTimeMs
-    room.assert(`ping ${currentTimeMs}`)
+    room.assert(`ping ${currentTimeMs} ${lastMeasuredLatency}`)
     room.flush()
     setTimeout(() => {
         if (((new Date()).getTime() - lastSentPing) > serverTimeoutMs) {
@@ -21,7 +21,7 @@ function sendPing() {
 }
 
 room.on(
-    `ping $time`,
+    `ping $time $`,
     results => {
         if (!results || results.length === 0) {
             console.error("bad results", results);
@@ -33,9 +33,9 @@ room.on(
         room.cleanup()
         room.assert(`measured latency ${latencyMs} ms at`, ["text", (new Date()).toUTCString()])
         stream.write(`${(new Date()).toISOString()},${latencyMs}\n`);
-        setTimeout(sendPing, delayBetweenMeasurementsMs)
+        setTimeout(() => sendPing(latencyMs), delayBetweenMeasurementsMs)
     }
 )
 
 run()
-sendPing()
+sendPing(0)
