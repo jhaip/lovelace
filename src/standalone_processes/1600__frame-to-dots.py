@@ -13,7 +13,6 @@ import os
 
 CAM_WIDTH = 1920
 CAM_HEIGHT = 1080
-last_latency_check = time.time()
 latency_check_delay_s = 5
 server_latency_ms = 0
 
@@ -26,6 +25,7 @@ def sub_callback_papers(results):
 
 class ShowCapture(wx.Panel):
     def __init__(self, parent, capture, fps=1):
+        global latency_check_delay_s
         wx.Panel.__init__(self, parent)
 
         self.capture = capture
@@ -48,6 +48,10 @@ class ShowCapture(wx.Panel):
         
         self.claimProjectorCalibration()
 
+        self.listenTimer = wx.Timer(self)
+        self.listenTimer.Start(latency_check_delay_s)
+        self.Bind(wx.EVT_TIMER, self.onLatencyCheckTimer)
+
         self.MyListenDrawLoop()
 
         self.Bind(wx.EVT_PAINT, self.OnPaint)
@@ -58,14 +62,14 @@ class ShowCapture(wx.Panel):
         self.Bind(wx.EVT_LEFT_UP, self.onClick)
         self.SetFocus()
     
+    def onLatencyCheckTimer(self, event):
+        print("listening...")
+        listen(blocking=False)
+    
     def MyListenDrawLoop(self):
-        global last_latency_check, latency_check_delay_s
-        if time.time() - last_latency_check > latency_check_delay_s:
-            last_latency_check = time.time()
-            print("listening...")
-            listen(blocking=False)
+        global server_latency_ms
         self.NextFrame(None)
-        wx.CallLater(max(60, server_latency_ms*4.7 + 60), self.MyListenDrawLoop)
+        wx.CallLater(max(60, server_latency_ms*5 + 60), self.MyListenDrawLoop)
         print("loop with delay {}".format(server_latency_ms*4.7 + 60))
     
     def claimProjectorCalibration(self):
