@@ -63,7 +63,7 @@ class ShowCapture(wx.Panel):
         self.SetFocus()
     
     def onLatencyCheckTimer(self, event):
-        print("listening...")
+        # print("listening...")
         listen(blocking=False)
     
     def MyListenDrawLoop(self):
