@@ -133,7 +133,7 @@ def listen(blocking=True):
     try:
         raw_msg = client.recv_multipart(flags=flags)
     except zmq.Again:
-        return
+        return True
     string = raw_msg[0].decode()
     span = tracer.start_span('client-'+MY_ID+'-recv', references=opentracing.child_of(ROOM_SPAN_CONTEXT))
     # preSpan = tracer.start_span('client-'+MY_ID+'-prerecv', child_of=span)
@@ -162,6 +162,7 @@ def listen(blocking=True):
         logging.info("UNRECOGNIZED:")
         logging.info(string)
     # span.finish()
+    return False
 
 
 def check_server_connection():
