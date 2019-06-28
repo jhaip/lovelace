@@ -225,7 +225,14 @@ class Example(wx.Frame):
         deaths = []
         old_calibration = copy.deepcopy(projector_calibration)
 
-        listen(blocking=False)
+        received_msg = True
+        received_msg_count = 0
+        max_received_msg_in_loop = 20
+        while received_msg and received_msg_count < max_received_msg_in_loop:
+            received_msg = listen(blocking=False)
+            received_msg_count += 1
+            if received_msg_count > 1:
+                logging.info("received more than 1 message! {}".format(received_msg_count))
 
         if old_calibration != projector_calibration:
             if projector_calibration and len(projector_calibration) is 4:
