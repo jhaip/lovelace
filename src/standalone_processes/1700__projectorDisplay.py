@@ -227,7 +227,7 @@ class Example(wx.Frame):
 
         received_msg = True
         received_msg_count = 0
-        max_received_msg_in_loop = 20
+        max_received_msg_in_loop = 1000
         while received_msg and received_msg_count < max_received_msg_in_loop:
             received_msg = listen(blocking=False)
             received_msg_count += 1
