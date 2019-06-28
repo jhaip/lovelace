@@ -65,7 +65,7 @@ class ShowCapture(wx.Panel):
             listen(blocking=False)
         self.NextFrame(None)
         wx.CallLater(max(60, server_latency_ms*4.7 + 60), self.MyListenDrawLoop)
-        print("loop with delay {}".format(erver_latency_ms*4.7 + 60))
+        print("loop with delay {}".format(server_latency_ms*4.7 + 60))
     
     def claimProjectorCalibration(self):
         batch_claims = [{"type": "retract", "fact": [
