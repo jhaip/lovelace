@@ -133,7 +133,7 @@ def listen(blocking=True, logger=None):
     try:
         raw_msg = client.recv_multipart(flags=flags)
     except zmq.Again:
-        return True
+        return False
     string = raw_msg[0].decode()
     if logger:
         logger.info("RECV MSG {}".format(string))
@@ -164,7 +164,7 @@ def listen(blocking=True, logger=None):
         logging.info("UNRECOGNIZED:")
         logging.info(string)
     # span.finish()
-    return False
+    return True
 
 
 def check_server_connection():
