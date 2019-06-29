@@ -401,12 +401,12 @@ func identifyColorGroups(colors [][3]int, group P) string {
 	)
 	// log.Println(color_templates)
 
-	// calibration := [][3]int{[3]int{255, 0, 0}, [3]int{0, 255, 0}, [3]int{0, 0, 255}, [3]int{0, 0, 0}}
-	calibration := make([][3]int, 4)
-	calibration[0] = [3]int{183, 35, 77}   // red
-	calibration[1] = [3]int{114, 128, 106} // green
-	calibration[2] = [3]int{95, 116, 176}  // blue
-	calibration[3] = [3]int{22, 15, 39}    // dark
+	calibration := [][3]int{[3]int{255, 0, 0}, [3]int{0, 255, 0}, [3]int{0, 0, 255}, [3]int{0, 0, 0}}
+	// calibration := make([][3]int, 4)
+	// calibration[0] = [3]int{183, 35, 77}   // red
+	// calibration[1] = [3]int{114, 128, 106} // green
+	// calibration[2] = [3]int{95, 116, 176}  // blue
+	// calibration[3] = [3]int{22, 15, 39}    // dark
 
 	minScore := -1.0
 	var bestMatch []int // index = color, value = index of group in P that matches color
