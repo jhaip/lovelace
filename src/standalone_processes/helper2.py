@@ -136,7 +136,7 @@ def listen(blocking=True, logger=None):
         return True
     string = raw_msg[0].decode()
     if logger:
-        logger.info(string)
+        logger.info("RECV MSG {}".format(string))
     span = tracer.start_span('client-'+MY_ID+'-recv', references=opentracing.child_of(ROOM_SPAN_CONTEXT))
     # preSpan = tracer.start_span('client-'+MY_ID+'-prerecv', child_of=span)
     source_len = 4
