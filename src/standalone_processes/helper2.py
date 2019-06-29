@@ -125,7 +125,7 @@ def parse_results(val):
     return results
 
 
-def listen(blocking=True, logger=None):
+def listen(blocking=True):
     global server_listening, ROOM_SPAN_CONTEXT, tracer, MY_ID
     flags = 0
     if not blocking:
@@ -135,8 +135,6 @@ def listen(blocking=True, logger=None):
     except zmq.Again:
         return False
     string = raw_msg[0].decode()
-    if logger:
-        logger.info("RECV MSG {}".format(string))
     span = tracer.start_span('client-'+MY_ID+'-recv', references=opentracing.child_of(ROOM_SPAN_CONTEXT))
     # preSpan = tracer.start_span('client-'+MY_ID+'-prerecv', child_of=span)
     source_len = 4
