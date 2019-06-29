@@ -95,37 +95,37 @@ func generatePrintFile(sourceCode string, programId int, name string, code8400 [
 	pdf.TransformEnd()
 	pdf.ClipEnd()
 
-	// circleSpacing := circleRadius * 2.0 * 1.4
-	// for i := 0; i < 4; i++ {
-	// 	pdf.TransformBegin()
-	// 	pdf.SetFillColor(0, 0, 0)
-	// 	if i == 0 {
-	// 		pdf.TransformTranslate(circleMargin+0, circleMargin+0)
-	// 	} else if i == 3 {
-	// 		pdf.TransformTranslate(circleMargin, pageHeight-circleMargin)
-	// 	} else if i == 2 {
-	// 		pdf.TransformTranslate(pageWidth-circleMargin, pageHeight-circleMargin)
-	// 	} else {
-	// 		pdf.TransformTranslate(pageWidth-circleMargin, circleMargin)
-	// 	}
-	// 	pdf.TransformRotate(-90.0*float64(i), 0, 0)
-	// 	code := code8400[i*(8400/4)+programId]
-	// 	setFillColorFromDotCode(pdf, code[0])
-	// 	pdf.Circle(circleSpacing*0.0, circleSpacing*3.0, circleRadius, "F")
-	// 	setFillColorFromDotCode(pdf, code[1])
-	// 	pdf.Circle(circleSpacing*0.0, circleSpacing*2.0, circleRadius, "F")
-	// 	setFillColorFromDotCode(pdf, code[2])
-	// 	pdf.Circle(circleSpacing*0.0, circleSpacing*1.0, circleRadius, "F")
-	// 	setFillColorFromDotCode(pdf, code[3])
-	// 	pdf.Circle(circleSpacing*0.0, circleSpacing*0.0, circleRadius, "F")
-	// 	setFillColorFromDotCode(pdf, code[4])
-	// 	pdf.Circle(circleSpacing*1.0, circleSpacing*0.0, circleRadius, "F")
-	// 	setFillColorFromDotCode(pdf, code[5])
-	// 	pdf.Circle(circleSpacing*2.0, circleSpacing*0.0, circleRadius, "F")
-	// 	setFillColorFromDotCode(pdf, code[6])
-	// 	pdf.Circle(circleSpacing*3.0, circleSpacing*0.0, circleRadius, "F")
-	// 	pdf.TransformEnd()
-	// }
+	circleSpacing := circleRadius * 2.0 * 1.4
+	for i := 0; i < 4; i++ {
+		pdf.TransformBegin()
+		pdf.SetFillColor(0, 0, 0)
+		if i == 0 {
+			pdf.TransformTranslate(circleMargin+0, circleMargin+0)
+		} else if i == 3 {
+			pdf.TransformTranslate(circleMargin, pageHeight-circleMargin)
+		} else if i == 2 {
+			pdf.TransformTranslate(pageWidth-circleMargin, pageHeight-circleMargin)
+		} else {
+			pdf.TransformTranslate(pageWidth-circleMargin, circleMargin)
+		}
+		pdf.TransformRotate(-90.0*float64(i), 0, 0)
+		code := code8400[i*(8400/4)+programId]
+		setFillColorFromDotCode(pdf, code[0])
+		pdf.Circle(circleSpacing*0.0, circleSpacing*3.0, circleRadius, "F")
+		setFillColorFromDotCode(pdf, code[1])
+		pdf.Circle(circleSpacing*0.0, circleSpacing*2.0, circleRadius, "F")
+		setFillColorFromDotCode(pdf, code[2])
+		pdf.Circle(circleSpacing*0.0, circleSpacing*1.0, circleRadius, "F")
+		setFillColorFromDotCode(pdf, code[3])
+		pdf.Circle(circleSpacing*0.0, circleSpacing*0.0, circleRadius, "F")
+		setFillColorFromDotCode(pdf, code[4])
+		pdf.Circle(circleSpacing*1.0, circleSpacing*0.0, circleRadius, "F")
+		setFillColorFromDotCode(pdf, code[5])
+		pdf.Circle(circleSpacing*2.0, circleSpacing*0.0, circleRadius, "F")
+		setFillColorFromDotCode(pdf, code[6])
+		pdf.Circle(circleSpacing*3.0, circleSpacing*0.0, circleRadius, "F")
+		pdf.TransformEnd()
+	}
 
 	pdf.SetFont("Courier", "B", 10)
 	pdf.SetXY(0, pageHeight-topMargin*2-bottomMargin-circleRadius-2)
