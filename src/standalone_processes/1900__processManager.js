@@ -3,6 +3,8 @@ const process = require('process');
 const path = require('path');
 const { room, myId, run, MY_ID_STR, getIdFromProcessName, getIdStringFromId } = require('../helper2')(__filename);
 
+let nameToProcessIdCache = {};
+
 function runPaper(name) {
   console.error(`making ${name} be running!`)
   let languageProcess = 'node'
@@ -30,12 +32,14 @@ function runPaper(name) {
     console.error(name);
     console.error([["id", MY_ID_STR], ["text", name], `has process id $`])
     room.retractMine(["text", name], `has process id $`);
+    delete nameToProcessIdCache[name];
     room.flush();
     const dyingPaperIdString = getIdStringFromId(getIdFromProcessName(name))
     room.cleanupOtherSource(dyingPaperIdString)
   });
   const pid = child.pid;
   room.assert(["text", name], `has process id ${pid}`);
+  nameToProcessIdCache[name] = pid;
   console.error(pid);
 }
 
@@ -47,24 +51,23 @@ function stopPaper(name, pid) {
     console.error("UNABLE TO KILL", pid)
   }
   room.retractMine(["text", name], `has process id $`);
+  delete nameToProcessIdCache[name];
   const dyingPaperIdString = getIdStringFromId(getIdFromProcessName(name))
   console.log("done STOPPING PID", pid, "with ID", dyingPaperIdString)
   room.cleanupOtherSource(dyingPaperIdString)
 }
 
-let nameToProcessIdCache = {};
-
-room.on(
-  `$name has process id $pid`,
-  results => {
-    nameToProcessIdCache = {};
-    results.forEach(result => {
-      nameToProcessIdCache[result.name] = result.pid;
-    })
-    console.error("NEW name->PID map:")
-    console.error(nameToProcessIdCache);
-  }
-)
+// room.on(
+//   `$name has process id $pid`,
+//   results => {
+//     nameToProcessIdCache = {};
+//     results.forEach(result => {
+//       nameToProcessIdCache[result.name] = result.pid;
+//     })
+//     console.error("NEW name->PID map:")
+//     console.error(nameToProcessIdCache);
+//   }
+// )
 
 room.on(
   `wish $name would be running`,
@@ -90,6 +93,8 @@ room.on(
   }
 )
 
-room.assert(["text", path.basename(__filename)], `has process id ${process.pid}`);
+const myName = path.basename(__filename);
+room.assert(["text", myName], `has process id ${process.pid}`);
+nameToProcessIdCache[myName] = process.pid;
 
 run()
