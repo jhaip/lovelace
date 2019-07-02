@@ -128,6 +128,7 @@ func warmSubscriberCache(subscriptionData Subscription, preExistingFacts map[str
 	}
 	// claim each preExistingFact to warm this subscribers cache
 	subscriptionData.batch_messages <- dbAsBatchClaims
+	subscriptionData.warmed.Done()
 }
 
 func startSubscriber(subscriptionData Subscription, notifications chan<- Notification, preExistingFacts map[string]Fact) {

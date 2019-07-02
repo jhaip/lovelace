@@ -54,6 +54,7 @@ type Subscription struct {
 	Query          [][]Term
 	batch_messages chan []BatchMessage
 	dead           *sync.WaitGroup
+	warmed         *sync.WaitGroup
 }
 
 type Subscriptions struct {
@@ -164,8 +165,9 @@ func subscribe_worker(subscription_messages <-chan string,
 				}
 				batch_messages[i] = BatchMessage{"claim", batch_message_facts}
 			}
-			newSubscription := Subscription{source, subscription_data.Id, query, make(chan []BatchMessage, 1000), &sync.WaitGroup{}}
+			newSubscription := Subscription{source, subscription_data.Id, query, make(chan []BatchMessage, 1000), &sync.WaitGroup{}, &sync.WaitGroup{}}
 			newSubscription.dead.Add(1)
+			newSubscription.warmed.Add(1)
 			subscriberMutex.Lock()
 			(*subscriptions).Subscriptions = append(
 				(*subscriptions).Subscriptions,
@@ -248,6 +250,9 @@ func on_source_death(dying_source string, db *map[string]Fact, subscriptions *Su
 			subscription.batch_messages <- batch_messages
 		} else {
 			zap.L().Info("SOURCE DEATH - closing channel", zap.String("source", dying_source))
+			// Wait for subscriber to stop sending cache warming messages
+			// to itself to avoid error sending on a closed channel.
+			subscription.warmed.Wait()
 			close(subscription.batch_messages)
 			zap.L().Info("SOURCE DEATH - waiting for death signal", zap.String("source", dying_source))
 			subscription.dead.Wait()
