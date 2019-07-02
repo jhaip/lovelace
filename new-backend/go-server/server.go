@@ -250,13 +250,15 @@ func on_source_death(dying_source string, db *map[string]Fact, subscriptions *Su
 			subscription.batch_messages <- batch_messages
 		} else {
 			zap.L().Info("SOURCE DEATH - closing channel", zap.String("source", dying_source))
+			waitStart := time.Now()
 			// Wait for subscriber to stop sending cache warming messages
 			// to itself to avoid error sending on a closed channel.
 			subscription.warmed.Wait()
 			close(subscription.batch_messages)
 			zap.L().Info("SOURCE DEATH - waiting for death signal", zap.String("source", dying_source))
 			subscription.dead.Wait()
-			zap.L().Info("SOURCE DEATH - confirmed dead", zap.String("source", dying_source))
+			waitTimeElapsed := time.Since(waitStart)
+			zap.L().Info("SOURCE DEATH - confirmed dead", zap.String("source", dying_source), zap.Duration("timeToClose", waitTimeElapsed))
 			// SOMETHING BAD COULD HAPPEN IF A MESSAGE WAS RECEIVED AND SOMEONE TRIED TO
 			// ADD A MESSAGE TO THE SUBSCRIPTIONS QUEUE
 		}
