@@ -1,6 +1,7 @@
 const spawn = require('child_process').spawn;
 const process = require('process');
 const path = require('path');
+const pkill = require('pkill');
 const { room, myId, run, MY_ID_STR, getIdFromProcessName, getIdStringFromId } = require('../helper2')(__filename);
 
 let nameToProcessIdCache = {};
@@ -46,9 +47,9 @@ function runPaper(name) {
 function stopPaper(name, pid) {
   console.error(`making ${name} with PID ${pid} NOT be running`)
   try {
-    process.kill(pid, 'SIGKILL')
+    pkill.full(`${name}`)
   } catch {
-    console.error("UNABLE TO KILL", pid)
+    console.error("ERROR PKILLING", name)
   }
   room.retractMine(["text", name], `has process id $`);
   delete nameToProcessIdCache[name];
