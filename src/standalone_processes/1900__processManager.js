@@ -9,10 +9,14 @@ let nameToProcessIdCache = {};
 function runPaper(name) {
   console.error(`making ${name} be running!`)
   // kill any old processes that weren't correctly killed before
-  try {
-    pkill.full(`${name}`)
-  } catch {
-    console.error("ERROR PKILLING", name)
+  if (name !== '1900__processManager.js') {
+    try {
+      pkill.full(`${name}`)
+    } catch {
+      console.error("ERROR PKILLING", name)
+    }
+  } else {
+    console.error("skip killing 1900 itself")
   }
   let languageProcess = 'node'
   let programSource = `src/standalone_processes/${name}`
