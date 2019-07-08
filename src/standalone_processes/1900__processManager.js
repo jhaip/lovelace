@@ -7,13 +7,13 @@ const { room, myId, run, MY_ID_STR, getIdFromProcessName, getIdStringFromId } = 
 let nameToProcessIdCache = {};
 
 function runPaper(name) {
+  console.error(`making ${name} be running!`)
   // kill any old processes that weren't correctly killed before
   try {
     pkill.full(`${name}`)
   } catch {
     console.error("ERROR PKILLING", name)
   }
-  console.error(`making ${name} be running!`)
   let languageProcess = 'node'
   let programSource = `src/standalone_processes/${name}`
   let runArgs = [programSource];
