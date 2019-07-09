@@ -399,6 +399,7 @@ func identifyColorGroups(colors [][3]int, group P) string {
 	color_templates := listing.Permutations(
 		listing.IntReplacer([]int{0, 1, 2, 3}), 4, false, 4,
 	)
+	// all order-dependent unique combinations of 0-3
 	// log.Println(color_templates)
 
 	calibration := [][3]int{[3]int{255, 0, 0}, [3]int{0, 255, 0}, [3]int{0, 0, 255}, [3]int{0, 0, 0}}
@@ -442,6 +443,7 @@ func getGetPaperIdFromColors2(colors [][3]int, dotCodes8400 []string) (int, int,
 	color_combinations := listing.Combinations(
 		listing.IntReplacer([]int{0, 1, 2, 3, 4, 5, 6}), 4, false, 7,
 	)
+	// all order-indepent unique combinations of 0-6 such as [0 1 2 3], [3 4 5 6]
 	// log.Println(color_combinations)
 
 	minScore := -1.0
@@ -485,6 +487,81 @@ func getGetPaperIdFromColors2(colors [][3]int, dotCodes8400 []string) (int, int,
 	// log.Println("Best group", bestGroup)
 	colorString := identifyColorGroups(colors, bestGroup)
 
+	log.Printf("%v \n", colorString)
+	colors8400Index := indexOf(colorString, dotCodes8400)
+	if colors8400Index > 0 {
+		paperId := colors8400Index % (8400 / 4)
+		cornerId := colors8400Index / (8400 / 4)
+		return paperId, cornerId, colorString
+	}
+	return -1, -1, colorString
+}
+
+func getGetPaperIdFromColors3(colors [][3]int, dotCodes8400 []string) (int, int, string) {
+	idealColorsToDotIndex := []int{0, 0, 0, 0}
+	idealColorsToDotIndexMinScore := []float{99999.0, 99999.0, 99999.0, 99999.0}
+	calibrationColors := make([][3]int, 4)
+	calibrationColors[0] = [3]int{255, 0, 0}  // red
+	calibrationColors[1] = [3]int{0, 255, 0}  // green
+	calibrationColors[2] = [3]int{0, 0, 255}  // blue
+	calibrationColors[3] = [3]int{0, 0, 0}    // dark
+	matchedColors := []int{0, 0, 0, 0, 0, 0, 0}
+	// find darkest color
+	for i, colorData := range colors {
+		dotScore = getColorDistance(colors[i], calibrationColors[3])
+		if dotScore < idealColorsToDotIndexMinScore[3] {
+			idealColorsToDotIndexMinScore[3] = dotScore
+			idealColorsToDotIndex[3] = i
+		}
+	}
+	matchedColors[idealColorsToDotIndex[3]] = 3
+	// find most red remaining color
+	for i, colorData := range colors {
+		dotScore = getColorDistance(colors[i], calibrationColors[0])
+		if i != idealColorsToDotIndex[3] && dotScore < idealColorsToDotIndexMinScore[0] {
+			idealColorsToDotIndexMinScore[0] = dotScore
+			idealColorsToDotIndex[0] = i
+		}
+	}
+	matchedColors[idealColorsToDotIndex[0]] = 0
+	// find most green remaining color
+	for i, colorData := range colors {
+		dotScore = getColorDistance(colors[i], calibrationColors[1])
+		if i != idealColorsToDotIndex[3] && i != idealColorsToDotIndex[0] && dotScore < idealColorsToDotIndexMinScore[1] {
+			idealColorsToDotIndexMinScore[1] = dotScore
+			idealColorsToDotIndex[1] = i
+		}
+	}
+	matchedColors[idealColorsToDotIndex[1]] = 1
+	// find most blue remaining color
+	for i, colorData := range colors {
+		dotScore = getColorDistance(colors[i], calibrationColors[2])
+		if i != idealColorsToDotIndex[3] && i != idealColorsToDotIndex[0] && i != idealColorsToDotIndex[1] && dotScore < idealColorsToDotIndexMinScore[2] {
+			idealColorsToDotIndexMinScore[2] = dotScore
+			idealColorsToDotIndex[2] = i
+		}
+	}
+	matchedColors[idealColorsToDotIndex[2]] = 2
+	// group remaining 3 colors to closest other color
+	for i, colorData := range colors {
+		if i != idealColorsToDotIndex[0] && i != idealColorsToDotIndex[1] && i != idealColorsToDotIndex[2] && i != idealColorsToDotIndex[3] {
+			min := 99999.0
+			min_k = 0
+			for k, matchedColorIndex := range idealColorsToDotIndex {
+				d = getColorDistance(colors[i], colors[matchedColorIndex])
+				if d < min {
+					min = d
+					min_k = k
+				}
+			}
+			matchedColors[i] = min_k
+		}
+	}
+	// return results
+	var colorString string
+	for _, matchedColor := range matchedColors {
+		colorString += strconv.Itoa(matchedColor)
+	}
 	log.Printf("%v \n", colorString)
 	colors8400Index := indexOf(colorString, dotCodes8400)
 	if colors8400Index > 0 {
@@ -565,7 +642,7 @@ func doStep4CornersWithIds(nodes []Dot, corners []Corner, dotCodes8400 []string)
 	for _, corner := range corners {
 		newCorner := corner
 		rawColorsList := append(append(lineToColors(nodes, corner.sides[0], true), corner.Corner.Color), lineToColors(nodes, corner.sides[1], false)...)
-		paperId, cornerId, colorString := getGetPaperIdFromColors2(rawColorsList, dotCodes8400)
+		paperId, cornerId, colorString := getGetPaperIdFromColors3(rawColorsList, dotCodes8400)
 		newCorner.PaperId = paperId
 		newCorner.CornerId = cornerId
 		newCorner.ColorString = colorString
