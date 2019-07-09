@@ -499,7 +499,7 @@ func getGetPaperIdFromColors2(colors [][3]int, dotCodes8400 []string) (int, int,
 
 func getGetPaperIdFromColors3(colors [][3]int, dotCodes8400 []string) (int, int, string) {
 	idealColorsToDotIndex := []int{0, 0, 0, 0}
-	idealColorsToDotIndexMinScore := []float{99999.0, 99999.0, 99999.0, 99999.0}
+	idealColorsToDotIndexMinScore := []float64{99999.0, 99999.0, 99999.0, 99999.0}
 	calibrationColors := make([][3]int, 4)
 	calibrationColors[0] = [3]int{255, 0, 0}  // red
 	calibrationColors[1] = [3]int{0, 255, 0}  // green
@@ -508,7 +508,7 @@ func getGetPaperIdFromColors3(colors [][3]int, dotCodes8400 []string) (int, int,
 	matchedColors := []int{0, 0, 0, 0, 0, 0, 0}
 	// find darkest color
 	for i, colorData := range colors {
-		dotScore = getColorDistance(colors[i], calibrationColors[3])
+		dotScore := getColorDistance(colors[i], calibrationColors[3])
 		if dotScore < idealColorsToDotIndexMinScore[3] {
 			idealColorsToDotIndexMinScore[3] = dotScore
 			idealColorsToDotIndex[3] = i
@@ -517,7 +517,7 @@ func getGetPaperIdFromColors3(colors [][3]int, dotCodes8400 []string) (int, int,
 	matchedColors[idealColorsToDotIndex[3]] = 3
 	// find most red remaining color
 	for i, colorData := range colors {
-		dotScore = getColorDistance(colors[i], calibrationColors[0])
+		dotScore := getColorDistance(colors[i], calibrationColors[0])
 		if i != idealColorsToDotIndex[3] && dotScore < idealColorsToDotIndexMinScore[0] {
 			idealColorsToDotIndexMinScore[0] = dotScore
 			idealColorsToDotIndex[0] = i
@@ -526,7 +526,7 @@ func getGetPaperIdFromColors3(colors [][3]int, dotCodes8400 []string) (int, int,
 	matchedColors[idealColorsToDotIndex[0]] = 0
 	// find most green remaining color
 	for i, colorData := range colors {
-		dotScore = getColorDistance(colors[i], calibrationColors[1])
+		dotScore := getColorDistance(colors[i], calibrationColors[1])
 		if i != idealColorsToDotIndex[3] && i != idealColorsToDotIndex[0] && dotScore < idealColorsToDotIndexMinScore[1] {
 			idealColorsToDotIndexMinScore[1] = dotScore
 			idealColorsToDotIndex[1] = i
@@ -535,7 +535,7 @@ func getGetPaperIdFromColors3(colors [][3]int, dotCodes8400 []string) (int, int,
 	matchedColors[idealColorsToDotIndex[1]] = 1
 	// find most blue remaining color
 	for i, colorData := range colors {
-		dotScore = getColorDistance(colors[i], calibrationColors[2])
+		dotScore := getColorDistance(colors[i], calibrationColors[2])
 		if i != idealColorsToDotIndex[3] && i != idealColorsToDotIndex[0] && i != idealColorsToDotIndex[1] && dotScore < idealColorsToDotIndexMinScore[2] {
 			idealColorsToDotIndexMinScore[2] = dotScore
 			idealColorsToDotIndex[2] = i
