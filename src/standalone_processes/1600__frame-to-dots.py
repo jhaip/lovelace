@@ -205,7 +205,7 @@ class ShowCapture(wx.Panel):
                     ["id", get_my_id_str()], ["id", "22"], ["text", "dots"],
                     ["float", str(dot["x"])], ["float", str(dot["y"])],
                     ["text", "color"],
-                    ["float", str(dot["color"][0])], ["float", str(dot["color"][1])], ["float", str(dot["color"][1])],
+                    ["float", str(dot["color"][0])], ["float", str(dot["color"][1])], ["float", str(dot["color"][2])],
                     ["integer", str(int(time.time()*1000.0))]
                 ]})
             batch(batch_claims)
