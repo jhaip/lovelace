@@ -546,9 +546,9 @@ func getGetPaperIdFromColors3(colors [][3]int, dotCodes8400 []string) (int, int,
 	for i, colorData := range colors {
 		if i != idealColorsToDotIndex[0] && i != idealColorsToDotIndex[1] && i != idealColorsToDotIndex[2] && i != idealColorsToDotIndex[3] {
 			min := 99999.0
-			min_k = 0
+			min_k := 0
 			for k, matchedColorIndex := range idealColorsToDotIndex {
-				d = getColorDistance(colors[i], colors[matchedColorIndex])
+				d := getColorDistance(colors[i], colors[matchedColorIndex])
 				if d < min {
 					min = d
 					min_k = k
