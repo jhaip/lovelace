@@ -141,10 +141,11 @@ class ShowCapture(wx.Panel):
             s = 3
             dc.DrawEllipse(int(dot["x"])-s, int(dot["y"])-s, s*2, s*2)
         
-        for corner in corners:
-            dc.SetBrush(wx.Brush(wx.Colour(255, 0, 0)))
-            dc.SetPen(wx.Pen(wx.Colour(255, 0, 0)))
-            dc.DrawEllipse(int(corner["x"]), int(corner["y"]), 20, 20)
+        if corners:
+            for corner in corners:
+                dc.SetBrush(wx.Brush(wx.Colour(255, 0, 0)))
+                dc.SetPen(wx.Pen(wx.Colour(255, 0, 0)))
+                dc.DrawEllipse(int(corner["x"]), int(corner["y"]), 20, 20)
 
         dc.SetBrush(wx.Brush(wx.Colour(0,255,255), style=wx.BRUSHSTYLE_TRANSPARENT))
         dc.SetPen(wx.Pen(wx.Colour(0,0,255)))
