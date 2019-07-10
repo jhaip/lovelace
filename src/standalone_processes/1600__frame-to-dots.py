@@ -15,12 +15,19 @@ CAM_WIDTH = 1920
 CAM_HEIGHT = 1080
 latency_check_delay_s = 5
 server_latency_ms = 0
+corners = None
 
 @subscription(["$ $ ping $ $latencyMs"])
 def sub_callback_papers(results):
     global server_latency_ms
     if results and len(results) > 0:
         server_latency_ms = results[0]["latencyMs"]
+
+
+@subscription(["$ $ camera 1 sees corner $c of paper $p at ( $x , $y ) @ $"])
+def sub_callback_corners(results):
+    global corners
+    corners = results
 
 
 class ShowCapture(wx.Panel):
@@ -64,7 +71,9 @@ class ShowCapture(wx.Panel):
     
     def onLatencyCheckTimer(self, event):
         print("listening...")
-        listen(blocking=False)
+        more_messages_to_receive = True
+        while more_messages_to_receive:
+            more_messages_to_receive = listen(blocking=False)
     
     def MyListenDrawLoop(self):
         global server_latency_ms
@@ -116,6 +125,7 @@ class ShowCapture(wx.Panel):
         batch(batch_claims)
 
     def OnPaint(self, evt):
+        global corners
         dc = wx.BufferedPaintDC(self)
         dc.SetBrush(wx.Brush())
         font =  dc.GetFont()
@@ -130,6 +140,11 @@ class ShowCapture(wx.Panel):
             dc.SetPen(wx.Pen(wx.Colour(255, 0, 0)))
             s = 3
             dc.DrawEllipse(int(dot["x"])-s, int(dot["y"])-s, s*2, s*2)
+        
+        for corner in corners:
+            dc.SetBrush(wx.Brush(wx.Colour(255, 0, 0)))
+            dc.SetPen(wx.Pen(wx.Colour(255, 0, 0)))
+            dc.DrawEllipse(int(corner["x"]), int(corner["y"], 20, 20)
 
         dc.SetBrush(wx.Brush(wx.Colour(0,255,255), style=wx.BRUSHSTYLE_TRANSPARENT))
         dc.SetPen(wx.Pen(wx.Colour(0,0,255)))
