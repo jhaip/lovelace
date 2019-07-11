@@ -165,10 +165,10 @@ class ShowCapture(wx.Panel):
                 s = 5
                 dc.SetBrush(wx.Brush(wx.Colour(255, 0, 0)))
                 dc.SetPen(wx.Pen(wx.Colour(255, 0, 0)))
-                dc.DrawLine(cx-s, cy-s, cx+s, cy+s)
-                dc.DrawLine(cx+s, cy-s, cx-s, cy+s)
+                # dc.DrawLine(cx-s, cy-s, cx+s, cy+s)
+                # dc.DrawLine(cx+s, cy-s, cx-s, cy+s)
                 dc.DrawText("{}.{}".format(corner["p"], corner["c"]), cx+8, cy+8)
-                self.DrawCorner(dc, int(corner["p"]), int(corner["c"]), cx, cy+24)
+                self.DrawCorner(dc, int(corner["p"]), int(corner["c"]), cx+8, cy+24)
 
         dc.SetBrush(wx.Brush(wx.Colour(0,255,255), style=wx.BRUSHSTYLE_TRANSPARENT))
         dc.SetPen(wx.Pen(wx.Colour(0,0,255)))
