@@ -16,6 +16,7 @@ CAM_HEIGHT = 1080
 latency_check_delay_s = 5
 server_latency_ms = 0
 corners = None
+dot_codes = None
 
 @subscription(["$ $ ping $ $latencyMs"])
 def sub_callback_papers(results):
@@ -123,6 +124,22 @@ class ShowCapture(wx.Panel):
             ["integer", str(int(round(time.time() * 1000)))],
         ]})
         batch(batch_claims)
+    
+    def DrawCorner(self, dc, paper_id, corner_id, x, y):
+        global dot_codes
+        dot_codes_index = (8400/4)*corner_id + paper_id + 1
+        code = dot_codes[dot_codes_index]
+        dot_size = 10
+        for i, el in enumerate(code):
+            if int(el) == 0:
+                dc.SetBrush(wx.Brush(wx.Colour(255, 0, 0)))
+            elif int(el) == 1:
+                dc.SetBrush(wx.Brush(wx.Colour(0, 255, 0)))
+            elif int(el) == 2:
+                dc.SetBrush(wx.Brush(wx.Colour(0, 0, 255)))
+            else:
+                dc.SetBrush(wx.Brush(wx.Colour(0, 0, 0)))
+            dc.DrawEllipse(x+i*dot_size, y, dot_size, dot_size)
 
     def OnPaint(self, evt):
         global corners
@@ -151,6 +168,7 @@ class ShowCapture(wx.Panel):
                 dc.DrawLine(cx-s, cy-s, cx+s, cy+s)
                 dc.DrawLine(cx+s, cy-s, cx-s, cy+s)
                 dc.DrawText("{}.{}".format(corner["p"], corner["c"]), cx+8, cy+8)
+                self.DrawCorner(dc, int(corner["p"]), int(corner["c"]), cx, cy+16)
 
         dc.SetBrush(wx.Brush(wx.Colour(0,255,255), style=wx.BRUSHSTYLE_TRANSPARENT))
         dc.SetPen(wx.Pen(wx.Colour(0,0,255)))
@@ -326,6 +344,10 @@ time.sleep(2)
 #     capture.read()
 
 if __name__ == '__main__':
+    global dot_codes
+    dot_codes_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'files/dot-codes.txt')
+    with open(fileName) as f:
+        dot_codes = f.readlines()
     init(__file__, skipListening=True)
     app = wx.App()
     frame = wx.Frame(None)
