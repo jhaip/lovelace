@@ -127,7 +127,7 @@ class ShowCapture(wx.Panel):
     
     def DrawCorner(self, dc, paper_id, corner_id, x, y):
         global dot_codes
-        dot_codes_index = (8400/4)*corner_id + paper_id + 1
+        dot_codes_index = int(8400/4)*corner_id + paper_id + 1
         code = dot_codes[dot_codes_index]
         dot_size = 10
         for i, el in enumerate(code):
