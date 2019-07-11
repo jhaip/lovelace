@@ -127,9 +127,9 @@ class ShowCapture(wx.Panel):
     
     def DrawCorner(self, dc, paper_id, corner_id, x, y):
         global dot_codes
-        dot_codes_index = int(8400/4)*corner_id + paper_id + 1
+        dot_codes_index = int(8400/4)*corner_id + paper_id
         code = dot_codes[dot_codes_index]
-        dot_size = 10
+        dot_size = 8
         for i, el in enumerate(code):
             if int(el) == 0:
                 dc.SetBrush(wx.Brush(wx.Colour(255, 0, 0)))
@@ -168,7 +168,7 @@ class ShowCapture(wx.Panel):
                 dc.DrawLine(cx-s, cy-s, cx+s, cy+s)
                 dc.DrawLine(cx+s, cy-s, cx-s, cy+s)
                 dc.DrawText("{}.{}".format(corner["p"], corner["c"]), cx+8, cy+8)
-                self.DrawCorner(dc, int(corner["p"]), int(corner["c"]), cx, cy+16)
+                self.DrawCorner(dc, int(corner["p"]), int(corner["c"]), cx, cy+24)
 
         dc.SetBrush(wx.Brush(wx.Colour(0,255,255), style=wx.BRUSHSTYLE_TRANSPARENT))
         dc.SetPen(wx.Pen(wx.Colour(0,0,255)))
