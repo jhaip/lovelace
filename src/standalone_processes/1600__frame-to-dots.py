@@ -344,9 +344,8 @@ time.sleep(2)
 #     capture.read()
 
 if __name__ == '__main__':
-    global dot_codes
     dot_codes_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'files/dot-codes.txt')
-    with open(fileName) as f:
+    with open(dot_codes_path) as f:
         dot_codes = f.readlines()
     init(__file__, skipListening=True)
     app = wx.App()
