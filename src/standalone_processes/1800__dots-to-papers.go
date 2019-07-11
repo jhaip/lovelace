@@ -543,12 +543,27 @@ func getGetPaperIdFromColors3(colors [][3]int, dotCodes8400 []string) (int, int,
 	}
 	matchedColors[idealColorsToDotIndex[2]] = 2
 	// group remaining 3 colors to closest other color
+	// for i, colorData := range colors {
+	// 	if i != idealColorsToDotIndex[0] && i != idealColorsToDotIndex[1] && i != idealColorsToDotIndex[2] && i != idealColorsToDotIndex[3] {
+	// 		min := 99999.0
+	// 		min_k := 0
+	// 		for k, matchedColorIndex := range idealColorsToDotIndex {
+	// 			d := getColorDistance(colorData, colors[matchedColorIndex])
+	// 			if d < min {
+	// 				min = d
+	// 				min_k = k
+	// 			}
+	// 		}
+	// 		matchedColors[i] = min_k
+	// 	}
+	// }
+	// Assign 3 remaining colors
 	for i, colorData := range colors {
 		if i != idealColorsToDotIndex[0] && i != idealColorsToDotIndex[1] && i != idealColorsToDotIndex[2] && i != idealColorsToDotIndex[3] {
 			min := 99999.0
 			min_k := 0
-			for k, matchedColorIndex := range idealColorsToDotIndex {
-				d := getColorDistance(colorData, colors[matchedColorIndex])
+			for k, calibrationColor := range calibrationColors {
+				d := getColorDistance(colorData, calibrationColor)
 				if d < min {
 					min = d
 					min_k = k
