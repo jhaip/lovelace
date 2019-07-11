@@ -720,10 +720,11 @@ func getDots(client *zmq.Socket, MY_ID_STR string, dot_sub_id string, start time
 	// TODO: parse val
 	json.Unmarshal([]byte(val), &json_val)
 	log.Println("GET JSON RESULT:")
-	log.Println(len(json_val))
-	claimTime, _ := strconv.ParseFloat(json_val[0]["t"][1], 64)
-	claimTimeDiff := makeTimestampMillis() - int64(claimTime)
-	log.Printf("claim time diff: %v ms\n", claimTimeDiff)
+	if len(json_val) > 0 {
+		claimTime, _ := strconv.ParseFloat(json_val[0]["t"][1], 64)
+		claimTimeDiff := makeTimestampMillis() - int64(claimTime)
+		log.Printf("claim time diff: %v ms\n", claimTimeDiff)
+	}
 	res := make([]Dot, 0)
 	for _, json_result := range json_val {
 		x, _ := strconv.Atoi(json_result["x"][1])
