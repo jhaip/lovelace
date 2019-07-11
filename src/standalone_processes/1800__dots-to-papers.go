@@ -558,18 +558,34 @@ func getGetPaperIdFromColors3(colors [][3]int, dotCodes8400 []string) (int, int,
 	// 	}
 	// }
 	// Assign 3 remaining colors
+	darkLuminance := 0.2126*colors[idealColorsToDotIndex[3]][0] + 0.7152*colors[idealColorsToDotIndex[3]][1] + 0.0722*colors[idealColorsToDotIndex[3]][2]
+	minNonDarkLuminance := 99999.0
+	for i := 0; i < 3; i++ {
+		nonDarkLuminance := 0.2126*colors[idealColorsToDotIndex[i]][0] + 0.7152*colors[idealColorsToDotIndex[i]][1] + 0.0722*colors[idealColorsToDotIndex[i]][2]
+		if nonDarkLuminance < minNonDarkLuminance {
+			minNonDarkLuminance = nonDarkLuminance
+		}
+	}
+	luminanceThreshold := (darkLuminance + minNonDarkLuminance)/2.0
+	log.Printf("luminance -- dark: %f min color: %f difference: %f \n", darkLuminance, minNonDarkLuminance, minNonDarkLuminance-darkLuminance)
+
 	for i, colorData := range colors {
 		if i != idealColorsToDotIndex[0] && i != idealColorsToDotIndex[1] && i != idealColorsToDotIndex[2] && i != idealColorsToDotIndex[3] {
-			min := 99999.0
-			min_k := 0
-			for k, calibrationColor := range calibrationColors {
-				d := getColorDistance(colorData, calibrationColor)
-				if d < min {
-					min = d
-					min_k = k
+			luminance := 0.2126*colorData[0] + 0.7152*colorData[1] + 0.0722*colorData[2]
+			if luminance < luminanceThreshold {
+				matchedColors[i] = 3
+			} else {
+				min := 99999.0
+				min_k := 0
+				for k, matchedColorIndex := range idealColorsToDotIndex {
+					d := getColorDistance(colorData, colors[matchedColorIndex])
+					if d < min {
+						min = d
+						min_k = k
+					}
 				}
+				matchedColors[i] = min_k
 			}
-			matchedColors[i] = min_k
 		}
 	}
 	// return results
