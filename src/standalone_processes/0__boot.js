@@ -181,7 +181,7 @@ for (let x = 0; x < 3; x += 1) {
 // room.assert(`paper 1100 has width 1440 height 860 angle 0 at (0, 0)`)
 // room.assert(`wish RGB light strand is color 0 50 0`)
 // room.assert(`wish display 1700 only showed 1013`)
-room.assert(`wish display 1701 only showed 2000 2001 2002 2003 2004 2005 2006 2007 2008 2009 2010 2011 5 6 1100`)
+// room.assert(`wish display 1701 only showed 2000 2001 2002 2003 2004 2005 2006 2007 2008 2009 2010 2011 5 6 1100`)
 
 room.assert(`paper 2000 has RFID "f26a0c2e"`)
 room.assert(`paper 2001 has RFID "f238222e"`)
