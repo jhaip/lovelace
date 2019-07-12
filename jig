@@ -111,7 +111,7 @@ function cmd() {
     sleep 5
     python3 src/standalone_processes/648__keyboard.py &
     python3 src/standalone_processes/1700__projectorDisplay.py &
-    python3 src/standalone_processes/1701__projectorDisplay.py &
+    # python3 src/standalone_processes/1701__projectorDisplay.py &
     sleep 5
     keyboard_pid=$(pgrep -f 648__keyboard.py)
     echo "keyboard pid $keyboard_pid"
@@ -143,21 +143,21 @@ function cmd() {
     fi
     echo "display 1 id $display_window_id1"
     xdotool windowmove $display_window_id1 1921 0
-    display_pid2=$(pgrep -f 1701__projectorDisplay.py)
-    echo "display 2 pid $display_pid2"
-    if [ -z "$display_pid2" ]
-    then
-      echo "no display_pid2"
-      exit
-    fi
-    display_window_id2=$(xdotool search --onlyvisible --pid $display_pid2)
-    echo "display 2 id $display_window_id2"
-    if [ -z "$display_window_id2" ]
-    then
-      echo "no display_window_id2"
-      exit
-    fi
-    xdotool windowmove $display_window_id2 0 0
+    # display_pid2=$(pgrep -f 1701__projectorDisplay.py)
+    # echo "display 2 pid $display_pid2"
+    # if [ -z "$display_pid2" ]
+    # then
+    #  echo "no display_pid2"
+    #  exit
+    # fi
+    # display_window_id2=$(xdotool search --onlyvisible --pid $display_pid2)
+    # echo "display 2 id $display_window_id2"
+    # if [ -z "$display_window_id2" ]
+    # then
+    #   echo "no display_window_id2"
+    #   exit
+    # fi
+    # xdotool windowmove $display_window_id2 0 0
     xdotool windowactivate $keyboard_window_id
   else
     echo -e "UNKNOWN COMMAND"
