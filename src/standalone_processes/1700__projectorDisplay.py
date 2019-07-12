@@ -23,6 +23,7 @@ if len(sys.argv) >= 2:
 
 papers = []
 projector_calibration = None
+projection_matrix = None
 centered_labels = {}
 texts = {}
 lines = {}
@@ -90,13 +91,19 @@ def sub_callback_papers(results):
 
 @subscription(["$ $ camera $cameraId has projector calibration TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time"])
 def sub_callback_calibration(results):
-    global projector_calibration
+    global projector_calibration, projection_matrix, CAM_WIDTH, CAM_HEIGHT
     logging.info("sub_callback_calibration")
     logging.info(results)
     if results:
         projector_calibration = map_projector_calibration_to_legacy_data_format(
             results[0])
         logging.info(projector_calibration)
+        logging.error("RECAL PROJECTION MATRIX")
+        pts1 = np.float32(projector_calibration)
+        pts2 = np.float32(
+            [[0, 0], [CAM_WIDTH, 0], [CAM_WIDTH, CAM_HEIGHT], [0, CAM_HEIGHT]])
+        projection_matrix = cv2.getPerspectiveTransform(
+            pts1, pts2)
 
 
 @subscription(["$id $ draw graphics $graphics on $target"])
@@ -201,7 +208,6 @@ class Example(wx.Frame):
 
         self.lastPaint = time.time()
         self.bmp = None
-        self.projection_matrix = None
 
         self.drawingBuffer = wx.Bitmap(CAM_WIDTH, CAM_HEIGHT)
         self.background = (0, 0, 0)
@@ -223,7 +229,6 @@ class Example(wx.Frame):
         start = time.time()
         wishes = []
         deaths = []
-        old_calibration = copy.deepcopy(projector_calibration)
 
         received_msg = True
         received_msg_count = 0
@@ -233,15 +238,6 @@ class Example(wx.Frame):
             received_msg_count += 1
             if received_msg_count > 1:
                 logging.info("received more than 1 message! {}".format(received_msg_count))
-
-        if old_calibration != projector_calibration:
-            if projector_calibration and len(projector_calibration) is 4:
-                logging.error("RECAL PROJECTION MATRIX")
-                pts1 = np.float32(projector_calibration)
-                pts2 = np.float32(
-                    [[0, 0], [CAM_WIDTH, 0], [CAM_WIDTH, CAM_HEIGHT], [0, CAM_HEIGHT]])
-                self.projection_matrix = cv2.getPerspectiveTransform(
-                    pts1, pts2)
 
         end = time.time()
         # print(1000*(end - start), "ms", 1.0/(end - start), "fps")
@@ -499,17 +495,18 @@ class Example(wx.Frame):
         gc.EndLayer()
 
     def project2(self, _pt):
+        global projection_matrix
         pt = _pt.copy()
         # logging.error("1:")
         # logging.error(_pt)
         # logging.error("2:")
         # logging.error(pt)
         # return pt
-        if self.projection_matrix is not None:
+        if projection_matrix is not None:
             # return pts
             pts = [(pt["x"], pt["y"])]
             dst = cv2.perspectiveTransform(
-                np.array([np.float32(pts)]), self.projection_matrix)
+                np.array([np.float32(pts)]), projection_matrix)
             pt["x"] = int(dst[0][0][0])
             pt["y"] = int(dst[0][0][1])
             return pt
