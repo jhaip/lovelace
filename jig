@@ -142,7 +142,7 @@ function cmd() {
       exit
     fi
     echo "display 1 id $display_window_id1"
-    xdotool windowmove $display_window_id1 1921 0
+    xdotool windowmove $display_window_id1 0 0
     # display_pid2=$(pgrep -f 1701__projectorDisplay.py)
     # echo "display 2 pid $display_pid2"
     # if [ -z "$display_pid2" ]
@@ -157,7 +157,7 @@ function cmd() {
     #   echo "no display_window_id2"
     #   exit
     # fi
-    # xdotool windowmove $display_window_id2 0 0
+    # xdotool windowmove $display_window_id2 1921 0
     xdotool windowactivate $keyboard_window_id
   else
     echo -e "UNKNOWN COMMAND"
