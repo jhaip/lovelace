@@ -87,7 +87,7 @@ function cmd() {
       --set-ctrl=white_balance_temperature_auto=0 \
       --set-ctrl=gain=0 \
       --set-ctrl=power_line_frequency=2 \
-      --set-ctrl=white_balance_temperature=4000 \
+      --set-ctrl=white_balance_temperature=3000 \
       --set-ctrl=sharpness=128 \
       --set-ctrl=backlight_compensation=0 \
       --set-ctrl=exposure_auto=3 \
