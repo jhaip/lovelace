@@ -473,16 +473,22 @@ class Example(wx.Frame):
 
         gc.BeginLayer(1.0)
 
+        scale_down_percent = 0.7
+
         gc.PushState()
         gc.Translate(paper_origin["x"], paper_origin["y"])
         gc.Rotate(paper_angle)
+
+        gc.Translate(paper_width * (1.0 - scale_down_percent) * 0.5, paper_height * (1.0 - scale_down_percent) * 0.5)
+        paper_width = paper_width * scale_down_percent
+        paper_height = paper_height * scale_down_percent
 
         gc.SetPen(wx.Pen("red", 3))
         # gc.SetBrush(wx.Brush("blue"))
 
         # gc.DrawRectangle(0, 0, paper_width, paper_height)
         draw_commands = [
-            {"type": "stroke", "options": [255, 255, 255, 25]},
+            {"type": "stroke", "options": [255, 255, 255, 128]},
             {"type": "line", "options": [0, 0, paper_width, 0]},
             {"type": "line", "options": [0, 0, 0, paper_height]},
             {"type": "line", "options": [
