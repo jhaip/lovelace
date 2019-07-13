@@ -304,8 +304,12 @@ class Example(wx.Frame):
                     if PAPER_FILTER is not None and str(paper["id"]) not in PAPER_FILTER:
                         logging.error("skipping becuase " + str(paper["id"]) + " not in " + str(PAPER_FILTER))
                         continue
-                    self.draw_paper(
-                        gc, paper, paper_draw_wishes.get(paper["id"]))
+                    try:
+                        self.draw_paper(
+                            gc, paper, paper_draw_wishes.get(paper["id"]))
+                    except Exception as err:
+                        logging.error("ERROR WHEN DRAWING PAPER {}".format(paper["id"]))
+                        logging.error(err)
 
         end = time.time()
         # print(1000*(end - now), "ms", 1.0/(end - now), "fps to do paint stuff")
