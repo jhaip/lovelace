@@ -473,15 +473,15 @@ class Example(wx.Frame):
 
         gc.BeginLayer(1.0)
 
-        scale_down_percent = 0.7
+        paper_drawing_margin = 20 # roughly the size of a dot in pixels on the projector screen
 
         gc.PushState()
         gc.Translate(paper_origin["x"], paper_origin["y"])
         gc.Rotate(paper_angle)
 
-        gc.Translate(paper_width * (1.0 - scale_down_percent) * 0.5, paper_height * (1.0 - scale_down_percent) * 0.5)
-        paper_width = paper_width * scale_down_percent
-        paper_height = paper_height * scale_down_percent
+        gc.Translate(paper_drawing_margin, paper_drawing_margin)
+        paper_width = max(paper_width - 2 * paper_drawing_margin, 1)
+        paper_height = max(paper_height - 2 * paper_drawing_margin, 1)
 
         gc.SetPen(wx.Pen("red", 3))
         # gc.SetBrush(wx.Brush("blue"))
