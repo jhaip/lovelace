@@ -24,6 +24,7 @@ if len(sys.argv) >= 2:
 papers = []
 projector_calibration = None
 projection_matrix = None
+recal_count = 0
 centered_labels = {}
 texts = {}
 lines = {}
@@ -91,7 +92,7 @@ def sub_callback_papers(results):
 
 @subscription(["$ $ camera $cameraId has projector calibration TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time"])
 def sub_callback_calibration(results):
-    global projector_calibration, projection_matrix, CAM_WIDTH, CAM_HEIGHT
+    global projector_calibration, projection_matrix, CAM_WIDTH, CAM_HEIGHT, recal_count
     logging.info("sub_callback_calibration")
     logging.info(results)
     if results:
@@ -104,6 +105,8 @@ def sub_callback_calibration(results):
             [[0, 0], [CAM_WIDTH, 0], [CAM_WIDTH, CAM_HEIGHT], [0, CAM_HEIGHT]])
         projection_matrix = cv2.getPerspectiveTransform(
             pts1, pts2)
+        recal_count += 1
+        logging.error("RECAL PROJECTION MATRIX -- done {}".format(recal_count))
 
 
 @subscription(["$id $ draw graphics $graphics on $target"])
@@ -495,8 +498,9 @@ class Example(wx.Frame):
         gc.EndLayer()
 
     def project2(self, _pt):
-        global projection_matrix
+        global projection_matrix, recal_count
         pt = _pt.copy()
+        logging.error("project2 with recal count {}".format(recal_count))
         # logging.error("1:")
         # logging.error(_pt)
         # logging.error("2:")
