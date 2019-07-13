@@ -84,7 +84,7 @@ function cmd() {
       --set-ctrl=brightness=128 \
       --set-ctrl=contrast=128 \
       --set-ctrl=saturation=128 \
-      --set-ctrl=white_balance_temperature_auto=1 \
+      --set-ctrl=white_balance_temperature_auto=0 \
       --set-ctrl=gain=0 \
       --set-ctrl=power_line_frequency=2 \
       --set-ctrl=white_balance_temperature=4000 \
