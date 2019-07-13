@@ -336,9 +336,9 @@ capture.stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'P', 'E', 'G
 # capture.stream.set(cv2.CAP_PROP_HUE, TODO)
 # capture.stream.set(cv2.CAP_PROP_GAIN, TODO)
 # capture.stream.set(cv2.CAP_PROP_EXPOSURE, TODO)
-# time.sleep(2)
+time.sleep(2)
 capture.start()
-# time.sleep(2)
+time.sleep(2)
 
 # for i in range(10):
 #     capture.read()
