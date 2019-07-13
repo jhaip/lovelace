@@ -76,8 +76,8 @@ def map_projector_calibration_to_legacy_data_format(result):
     return [
         [result["x1"], result["y1"]],
         [result["x2"], result["y2"]],
-        [result["x3"], result["y3"]],
-        [result["x4"], result["y4"]]
+        [result["x4"], result["y4"]],
+        [result["x3"], result["y3"]] # notice the order is not clock-wise
     ]
 
 
@@ -102,7 +102,7 @@ def sub_callback_calibration(results):
         logging.error("RECAL PROJECTION MATRIX")
         pts1 = np.float32(projector_calibration)
         pts2 = np.float32(
-            [[0, 0], [CAM_WIDTH, 0], [CAM_WIDTH, CAM_HEIGHT], [0, CAM_HEIGHT]])
+            [[0, 0], [CAM_WIDTH, 0], [0, CAM_HEIGHT], [CAM_WIDTH, CAM_HEIGHT]])
         projection_matrix = cv2.getPerspectiveTransform(
             pts1, pts2)
         recal_count += 1
