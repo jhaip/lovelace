@@ -43,10 +43,10 @@
 
 // Create MFRC522 instances
 MFRC522 mfrc522(SS_PIN, RST_PIN);
-MFRC522 mfrc522_b(SS_PIN_B, RST_PIN);
-MFRC522 mfrc522_c(SS_PIN_C, RST_PIN);
-MFRC522 mfrc522_d(SS_PIN_D, RST_PIN);
-MFRC522 mfrc522_e(SS_PIN_E, RST_PIN);
+// MFRC522 mfrc522_b(SS_PIN_B, RST_PIN);
+// MFRC522 mfrc522_c(SS_PIN_C, RST_PIN);
+// MFRC522 mfrc522_d(SS_PIN_D, RST_PIN);
+// MFRC522 mfrc522_e(SS_PIN_E, RST_PIN);
 // MFRC522 mfrc522_f(SS_PIN_F, RST_PIN);
 
 HttpClient http;
@@ -72,7 +72,7 @@ void publishValueMessage(int sensorId, String sensorValue)
   char str[300];
   sprintf(str, "{\"claim\":\"Photon%s read \\\"%s\\\" on sensor %i\", \"retract\":\"$ $ Photon%s read $ on sensor %i\"}", (const char *)myID, sensorValue.c_str(), sensorId, (const char *)myID, sensorId);
   Serial.println(str);
-  request.ip = {192, 168, 1, 12};
+  request.ip = {10, 0, 0, 22};
   request.port = 5000;
   request.path = "/cleanup-claim";
   request.body = str;
@@ -93,7 +93,7 @@ void publishValueMessages(String sensorValue1, String sensorValue2, String senso
           (const char *)myID, sensorValue5.c_str(), 5,
           (const char *)myID);
   Serial.println(str);
-  request.ip = {192, 168, 1, 12};
+  request.ip = {10, 0, 0, 22};
   request.port = 5000;
   request.path = "/cleanup-claim";
   request.body = str;
@@ -107,16 +107,16 @@ void setup()
 {
   Serial.begin(9600); // Initialize serial communications with the PC
   mfrc522.setSPIConfig();
-  mfrc522_b.setSPIConfig();
-  mfrc522_c.setSPIConfig();
-  mfrc522_d.setSPIConfig();
-  mfrc522_e.setSPIConfig();
+  // mfrc522_b.setSPIConfig();
+  // mfrc522_c.setSPIConfig();
+  // mfrc522_d.setSPIConfig();
+  // mfrc522_e.setSPIConfig();
 
   mfrc522.PCD_Init();   // Init MFRC522 card
-  mfrc522_b.PCD_Init(); // Init MFRC522 card
-  mfrc522_c.PCD_Init(); // Init MFRC522 card
-  mfrc522_d.PCD_Init(); // Init MFRC522 card
-  mfrc522_e.PCD_Init(); // Init MFRC522 card
+  // mfrc522_b.PCD_Init(); // Init MFRC522 card
+  // mfrc522_c.PCD_Init(); // Init MFRC522 card
+  // mfrc522_d.PCD_Init(); // Init MFRC522 card
+  // mfrc522_e.PCD_Init(); // Init MFRC522 card
   Serial.println("Scan PICC to see UID and type...");
 }
 
@@ -159,18 +159,18 @@ void loop()
   lastTime = millis();  
 
   String val_a = check_reader(mfrc522);
-  String val_b = check_reader(mfrc522_b);
-  String val_c = check_reader(mfrc522_c);
-  String val_d = check_reader(mfrc522_d);
-  String val_e = check_reader(mfrc522_e);
+  // String val_b = check_reader(mfrc522_b);
+  // String val_c = check_reader(mfrc522_c);
+  // String val_d = check_reader(mfrc522_d);
+  // String val_e = check_reader(mfrc522_e);
   // String val_f = check_reader(mfrc522_f);
 
   now = millis();
   Serial.printlnf("rfid read lag: %lu ms", (now - lastTime));
   lastTime = millis();
 
-  publishValueMessages(val_a, val_b, val_c, val_d, val_e);
-  // publishValueMessage(1, val_a);
+  // publishValueMessages(val_a, val_b, val_c, val_d, val_e);
+  publishValueMessage(1, val_a);
   // publishValueMessage(2, val_b);
   // publishValueMessage(3, val_c);
   // publishValueMessage(4, val_d);
