@@ -1,0 +1,8 @@
+requests==2.19.1
+opencv-python==3.4
+pygame==1.9.5
+wxPython==4.0.3
+pyzmq==17.1.2
+zmq==0.0.0
+opentracing==2.2.0
+jaeger-client==4.0.0
