@@ -53,4 +53,4 @@ Particle Photon:
 Printing Papers:
 * [`lpr`](http://man7.org/linux/man-pages/man1/lpr.1.html) with a default printer configured.
 
-Opentracing?
+[Opentracing](https://opentracing.io/) & [Jaeger](https://www.jaegertracing.io/) - useful for debugging and tracing during low level development
