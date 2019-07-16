@@ -54,3 +54,44 @@ Printing Papers:
 * [`lpr`](http://man7.org/linux/man-pages/man1/lpr.1.html) with a default printer configured.
 
 [Opentracing](https://opentracing.io/) & [Jaeger](https://www.jaegertracing.io/) - useful for debugging and tracing during low level development
+
+## Building up the software of a room
+
+Every space is different and should be built to fit the needs, experience, and goals of the people that work within it. The room is not an app you download and run, but something that should be built by you. But spaces do have similar baseline needs:
+* A way to control what programs as running. This usually means some way for humans to understand what is running and some way for sensors to understand what should be running to match that.
+* Some sort of display that running programs can use for visual feedback
+* A way to edit programs and create new programs
+
+####  An example room:
+
+Programs are represented physically as papers with code written on them. When a paper is face-up, showing the code, then it is running. Projectors in the ceiling project graphics on the programs as the running programs instruct them to. To edit and create programs, there is a special piece of paper that edits the code of whatever paper it is pointing at. The code being edited is projected on to the text editor paper and a wireless keyboard associated with the text editor edits the text. When a new version of code is saved, a new version of the paper is printed out of a new sheet of paper to replace the old piece of paper. For the room to notice what papers are face-up, papers are marked with patterns of colored dots in their colors for identification. Cameras in the ceiling looking for these dots to figure out where papers are how coordinate with the projector to project the right graphics onto the right paper.
+
+Paper sensing:
+1. Camera
+2. Grab a frame from the webcam and find everything that looks like a dot
+3. Get the list of dots and figure out what papers they map to using the knowledge that papers have only certains patterns of dots in the four corners of a paper
+4. Get the list of visual papers and wish that the corresponding program stored on a computer was running.
+5. Get all wishes for programs that should be running and run them on a computer.
+
+Program editing:
+1. The input from a wireless keyboard is captured and claimed to the room
+2. On boot, a program reads the contents of all code files and claims them to the room
+3. The text editor paper:
+    a. Gets the source of the program it is editing
+    b. Listens for the latest key presses to control the text editor cursor
+    c. Wishes the text editor graphics would be projected on it
+4. When saving a program, the text editor wishes a program would be saved
+5. A program lists for wishes of edited programs, transforms the code from the room's domain specific language into, and then wishes that the files on disk would be edited and run.
+6. Simultaneously when saving a program, another program generates a PDF of a new piece of paper and then another program talks to the printer to print the PDF.
+7. A computer's files on disk are used as a local way to persist the contents of files and to send them to accesories like printers but this is an implementation choice and not something that someone in the room would see or need to care about.
+
+Projection:
+1. A process listens for the locations of all papers and each papers wishes for graphics to be drawn on them. Additionally it listens for a projector-camera calibration so the display is able to perform the projection mapping.
+
+### Alternative inputs
+
+Instead of sensing papers with cameras looking for colored dots, put a RFID card of the back of every paper and embedded RFID sensors in the room. A RFID sensor detecting a card is the equilalent of "the paper is in the room" and that is should be running.
+
+### Alternative outputs
+
+Sounds, Stands of light, physical movement of things in the rooom, smells.
