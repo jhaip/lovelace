@@ -24,32 +24,33 @@
 
 ## Software Requirements
 
-* [Node.js v10.6.0](https://nodejs.org/en/download/package-manager/)
-* [Golang 1.10+](https://golang.org/)
-* [Python 3.5+](https://www.python.org/downloads/)
+Operating system:
+* Tested with Ubuntu 16.04
+* Partial tests with MacOS High Sierra
 
-Node.js Requirements:
+Node.js:
+* [Node.js v10.6.0](https://nodejs.org/en/download/package-manager/)
 * `npm install`
 
-Python Requirements:
+Python:
+* [Python 3.5+](https://www.python.org/downloads/)
 * `pip3 install -r requirements.txt`
 * [wxPython4](https://wxpython.org/)
 * [pyGame 1.9.5+](https://www.pygame.org)
 * [OpenCV 3.4](https://opencv.org/)
 
-Golang Requirments:
-* TODO: Add Go.dep
+Golang:
+* [Golang 1.12](https://golang.org/)
+* Dependencies are tracked in the `go.mod` file and will be automatically downloaded and installed when running a Go program for the first time.
 
-Particle Photon
+Particle Photon:
 * [Particle Photon Workbench](https://www.particle.io/workbench/)
 * A [Particle.io account](https://login.particle.io/signup) with your Particle Photon boards assocaited to your account.
 * Particle Photon libraries:
     * [HttpClient](https://github.com/nmattisson/httpclient)
     * SparkJson
 
-Opentracing?
-
-Printing:
+Printing Papers:
 * [`lpr`](http://man7.org/linux/man-pages/man1/lpr.1.html) with a default printer configured.
 
-
+Opentracing?
