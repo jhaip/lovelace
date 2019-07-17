@@ -58,40 +58,44 @@ Printing Papers:
 ## Building up the software of a room
 
 Every space is different and should be built to fit the needs, experience, and goals of the people that work within it. The room is not an app you download and run, but something that should be built by you. But spaces do have similar baseline needs:
-* A way to control what programs as running. This usually means some way for humans to understand what is running and some way for sensors to understand what should be running to match that.
+* A way for humans and computers to understand what programs are running and which are not.
 * Some sort of display that running programs can use for visual feedback
 * A way to edit programs and create new programs
 
+After deciding on a way people will know what programs and running and which are not, an appropriate sensor can be chosen to detect that. For example if a program is represented by a piece of paper with code on it, then a running program could be when it is face-up and visible to everyone in the room. A sensor that could be used to detect face-up papers is a camera.
+
+It is convenient to think of computer programs as a mirror of the physical objects they represent. If a piece of paper has code on it and should be running, then a program on some computer should have a program with the same source code and should be running on that computer. In this way programs on a computer aren't started or stopped by interacting with a traditional computer desktop with a mouse, but by changing something physically in the room. The computer that is running the programs to match the physical world are just an implementation detail and not something that people in the space should need to think about.
+
 ####  An example room:
 
-Programs are represented physically as papers with code written on them. When a paper is face-up, showing the code, then it is running. Projectors in the ceiling project graphics on the programs as the running programs instruct them to. To edit and create programs, there is a special piece of paper that edits the code of whatever paper it is pointing at. The code being edited is projected on to the text editor paper and a wireless keyboard associated with the text editor edits the text. When a new version of code is saved, a new version of the paper is printed out of a new sheet of paper to replace the old piece of paper. For the room to notice what papers are face-up, papers are marked with patterns of colored dots in their colors for identification. Cameras in the ceiling looking for these dots to figure out where papers are how coordinate with the projector to project the right graphics onto the right paper.
+Programs are represented physically as papers with code written on them. When a paper is face-up, showing the code, then it is running. A camera is used as a sensor. Papers are marked with patterns of colored dots in their corners for identification. A camera frame can be process to figure out where the dots are, what papers they correspond to, and therefore where papers are visible in the space. Projectors in the ceiling project graphics on the programs as the running programs instruct them to.
 
 Paper sensing:
-1. Camera
-2. Grab a frame from the webcam and find everything that looks like a dot
-3. Get the list of dots and figure out what papers they map to using the knowledge that papers have only certains patterns of dots in the four corners of a paper
-4. Get the list of visual papers and wish that the corresponding program stored on a computer was running.
-5. Get all wishes for programs that should be running and run them on a computer.
+1. Grab a frame from the webcam and find everything that looks like a dot (#1600)
+2. Get the list of dots and figure out what papers they map to using the knowledge that papers have only certains patterns of dots in the four corners of a paper (#1800)
+3. Get the list of visual papers and wish that the corresponding program stored on a computer was running. (#826)
+4. Get all wishes for programs that should be running and run them on a computer. (#1900)
+
+Projection:
+1. A process listens for the locations of all papers and each papers wishes for graphics to be drawn on them. Additionally it listens for a projector-camera calibration so the display is able to perform the projection mapping. (#1700)
+
+To edit and create programs, there is a special piece of paper that edits the code of whatever paper it is pointing at. The code being edited is projected on to the text editor paper. A wireless keyboard associated with the text editor edits the text. When a new version of code is saved, a new version of the paper is printed out of a new sheet of paper to replace the old piece of paper.
 
 Program editing:
-1. The input from a wireless keyboard is captured and claimed to the room
-2. On boot, a program reads the contents of all code files and claims them to the room
-3. The text editor paper:
+1. The input from a wireless keyboard is captured and claimed to the room (#648)
+2. When the system starts, a program reads the contents of all code files and claims them to the room (#390)
+3. The text editor paper (#1013):
     a. Gets the source of the program it is editing
     b. Listens for the latest key presses to control the text editor cursor
     c. Wishes the text editor graphics would be projected on it
-4. When saving a program, the text editor wishes a program would be saved
-5. A program lists for wishes of edited programs, transforms the code from the room's domain specific language into, and then wishes that the files on disk would be edited and run.
-6. Simultaneously when saving a program, another program generates a PDF of a new piece of paper and then another program talks to the printer to print the PDF.
-7. A computer's files on disk are used as a local way to persist the contents of files and to send them to accesories like printers but this is an implementation choice and not something that someone in the room would see or need to care about.
+    d. When saving a program, the text editor wishes some other process would persist the new source code
+4. A program listens for wishes of edited programs, transforms the code from the room's domain specific language into, and then wishes that the files on disk would be edited and run (#40). Another program persists the changes to the source code to the computer's disk (#577) and then causes the process to be restarted (#1900).
+5. Simultaneously when saving a program, another program generates a PDF of a new piece of paper (#1382) and then another program talks to the printer to print the PDF (#498). 
 
-Projection:
-1. A process listens for the locations of all papers and each papers wishes for graphics to be drawn on them. Additionally it listens for a projector-camera calibration so the display is able to perform the projection mapping.
-
-### Alternative inputs
+### Alternative Inputs
 
 Instead of sensing papers with cameras looking for colored dots, put a RFID card of the back of every paper and embedded RFID sensors in the room. A RFID sensor detecting a card is the equilalent of "the paper is in the room" and that is should be running.
 
-### Alternative outputs
+### Alternative Outputs
 
 Sounds, Stands of light, physical movement of things in the rooom, smells.
