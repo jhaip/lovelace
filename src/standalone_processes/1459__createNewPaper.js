@@ -11,7 +11,7 @@ room.on(
   }
 )
 
-room.onGetSource('wisherId'
+room.onGetSource('wisherId',
   `wish a paper would be created in $language with source code $sourceCode @ $time`,
   results => {
     results.forEach(({ wisherId, language, sourceCode, time }) => {
