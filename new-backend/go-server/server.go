@@ -392,6 +392,7 @@ func main() {
 		rawMsg, recvErr := client.RecvMessage(zmq.DONTWAIT)
 		if recvErr != nil {
 			zmqClient.Unlock()
+			time.Sleep(time.Duration(1) * time.Millisecond)
 			continue;
 		}
 		rawMsgId := rawMsg[0]
