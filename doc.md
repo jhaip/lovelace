@@ -79,7 +79,7 @@ After deciding on a way people will know what programs and running and which are
 
 It is convenient to think of computer programs as a mirror of the physical objects they represent. If a piece of paper has code on it and should be running, then a program on some computer should have a program with the same source code and should be running on that computer. In this way programs on a computer aren't started or stopped by interacting with a traditional computer desktop with a mouse, but by changing something physically in the room. The computer that is running the programs to match the physical world are just an implementation detail and not something that people in the space should need to think about.
 
-####  An example room:
+#### An example room:
 
 Programs are represented physically as papers with code written on them. When a paper is face-up, showing the code, then it is running. A camera is used as a sensor. Papers are marked with patterns of colored dots in their corners for identification. A camera frame can be process to figure out where the dots are, what papers they correspond to, and therefore where papers are visible in the space. Projectors in the ceiling project graphics on the programs as the running programs instruct them to.
 
