@@ -12,6 +12,7 @@ PROXY_URL = "10.0.0.22"
 
 @subscription(["$ $ camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time"])
 def sub_callback_papers(results):
+    global proxy_client, proxy_connected, PROXY_URL
     if not proxy_connected:
         proxy_client.setsockopt(zmq.IDENTITY, get_my_id_str().encode())
         proxy_client.connect("tcp://{0}:5570".format(PROXY_URL))
