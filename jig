@@ -10,6 +10,17 @@ function cmd() {
     sleep 2
     node src/standalone_processes/0__boot.js &
     echo -e "booting"
+  elif [ "$1" == "cvstart" ]
+  then
+    cd new-backend/go-server
+    go run server.go parser2.go subscriber.go database.go &
+    echo -e "running server"
+    cd ../..
+    sleep 2
+    python3 src/standalone_processes/50__proxy.py &
+    go run src/standalone_processes/1800__dots-to-papers.go &
+    python3 src/standalone_processes/1600__frame-to-dots.py &
+    echo -e "booting"
   elif [ "$1" == "test" ]
   then
     cd new-backend/go-server
