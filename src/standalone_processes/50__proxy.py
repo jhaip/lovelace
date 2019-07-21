@@ -19,7 +19,7 @@ def sub_callback_papers(results):
         init_ping_id = str(uuid.uuid4())
         proxy_client.send_multipart([".....PING{}{}".format(get_my_id_str(), init_ping_id).encode()])
         # assume the first message recv'd will be the PING response
-        raw_msg = client.recv_multipart(flags=0)  # Blocks until a message is received
+        raw_msg = proxy_client.recv_multipart(flags=0)  # Blocks until a message is received
         proxy_connected = True
         logging.info("connected to proxy!")
     claims = []
