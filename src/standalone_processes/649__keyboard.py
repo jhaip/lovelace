@@ -1,0 +1,58 @@
+from helper2 import init, claim, retract, prehook, subscription, batch, get_my_id_str, check_server_connection
+import keyboard
+
+init(__file__, skipListening=True)
+batch([{"type": "retract", "fact": [["id", get_my_id_str()], ["postfix", ""]]}])
+
+def add_key(key, special_key):
+    timestamp = int(time.time()*1000.0)
+    claims = []
+    claims.append({"type": "retract", "fact": [
+        ["id", get_my_id_str()],
+        ["postfix", ""],
+    ]})
+    if special_key:
+        logging.info("ADDING SPECIAL KEY {}".format(special_key))
+        claims.append({"type": "claim", "fact": [
+            ["id", get_my_id_str()],
+            ["id", "0"],
+            ["text", "keyboard"],
+            ["text", get_my_id_str()],
+            ["text", "typed"],
+            ["text", "special"],
+            ["text", "key"],
+            ["text", str(special_key)],
+            ["text", "@"],
+            ["integer", str(timestamp)],
+        ]})
+    else:
+        logging.info("ADDING KEY {}".format(key))
+        claims.append({"type": "claim", "fact": [
+            ["id", get_my_id_str()],
+            ["id", "0"],
+            ["text", "keyboard"],
+            ["text", get_my_id_str()],
+            ["text", "typed"],
+            ["text", "key"],
+            ["text", str(key)],
+            ["text", "@"],
+            ["integer", str(timestamp)],
+        ]})
+    batch(claims)
+
+def handle_key_event(e):
+    ctrl_held = keyboard.is_pressed('ctrl')
+    if e.event_type == 'down':
+        if e.name == 'unknown':
+            return
+        if ctrl_held:
+            add_key(None, 'C-{}'.format(event.name))
+        else:
+            special_keys = ['backspace', 'enter', 'tab', 'space', 'left', 'right', 'up', 'down']
+            if event.name in special_keys:
+                add_key(None, event.name)
+            else:
+                add_key(event.name, None)
+
+keyboard.hook(handle_key_event)
+
