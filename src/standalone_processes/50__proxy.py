@@ -6,22 +6,40 @@ import zmq
 from helper2 import init, claim, retract, prehook, subscription, batch, get_my_id_str
 
 proxy_context = zmq.Context()
-proxy_client = proxy_context.socket(zmq.DEALER)
+proxy_client = None
 proxy_connected = False
+last_proxy_heartbeat = time.time()
+health_check_delay_s = 10
 PROXY_URL = "10.0.0.22"
 
 @subscription(["$ $ camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time"])
 def sub_callback_papers(results):
-    global proxy_client, proxy_connected, PROXY_URL
-    if not proxy_connected:
-        proxy_client.setsockopt(zmq.IDENTITY, get_my_id_str().encode())
-        proxy_client.connect("tcp://{0}:5570".format(PROXY_URL))
+    global proxy_context, proxy_client, proxy_connected, PROXY_URL, last_proxy_heartbeat, health_check_delay_s
+    if not proxy_connected or time.time() - last_proxy_heartbeat > health_check_delay_s:
+        if not proxy_connected:
+            proxy_context = zmq.Context()
+            proxy_client = proxy_context.socket(zmq.DEALER)
+            proxy_client.setsockopt(zmq.IDENTITY, get_my_id_str().encode())
+            proxy_client.connect("tcp://{0}:5570".format(PROXY_URL))
+        else:
+            print("checking if proxy server is still alive")
+        last_proxy_heartbeat = time.time()
         init_ping_id = str(uuid.uuid4())
         proxy_client.send_multipart([".....PING{}{}".format(get_my_id_str(), init_ping_id).encode()])
-        # assume the first message recv'd will be the PING response
-        raw_msg = proxy_client.recv_multipart(flags=0)  # Blocks until a message is received
-        proxy_connected = True
-        logging.info("connected to proxy!")
+        proxy_connected = False
+        proxy_server_timeout_s = 2
+        poll_start_time = time.time()
+        while time.time() - poll_start_time < proxy_server_timeout_s:
+            try:
+                raw_msg = proxy_client.recv_multipart(flags=zmq.zmq.NOBLOCK)
+                proxy_connected = True
+                break
+            except zmq.Again:
+                time.sleep(0.01)
+        if not proxy_connected:
+            print("proxy server died, message dropped")
+            proxy_context.destroy()
+            return
     claims = []
     claims.append({"type": "retract", "fact": [
         ["id", get_my_id_str()],
