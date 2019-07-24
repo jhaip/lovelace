@@ -30,7 +30,7 @@ def check_and_connect_proxy_server():
         poll_start_time = time.time()
         while time.time() - poll_start_time < proxy_server_timeout_s:
             try:
-                raw_msg = proxy_client.recv_multipart(flags=zmq.zmq.NOBLOCK)
+                raw_msg = proxy_client.recv_multipart(flags=zmq.NOBLOCK)
                 proxy_connected = True
                 break
             except zmq.Again:
