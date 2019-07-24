@@ -16,10 +16,11 @@ def check_and_connect_proxy_server():
     global proxy_context, proxy_client, proxy_connected, PROXY_URL, last_proxy_heartbeat, health_check_delay_s
     if not proxy_connected or time.time() - last_proxy_heartbeat > health_check_delay_s:
         if not proxy_connected:
-            proxy_context = zmq.Context()
+            logging.info("creating a new proxy_content")
             proxy_client = proxy_context.socket(zmq.DEALER)
             proxy_client.setsockopt(zmq.IDENTITY, get_my_id_str().encode())
             proxy_client.connect("tcp://{0}:5570".format(PROXY_URL))
+            logging.info("connection established")
         else:
             logging.info("checking if proxy server is still alive")
         last_proxy_heartbeat = time.time()
@@ -37,7 +38,10 @@ def check_and_connect_proxy_server():
                 time.sleep(0.01)
         if not proxy_connected:
             logging.info("proxy server died, message dropped")
-            proxy_context.destroy()
+            proxy_client.disconnect("tcp://{0}:5570".format(PROXY_URL))
+            logging.info("disconnected proxy_client")
+            proxy_client.close()
+            logging.info("closed proxy_client")
             return False
     return True
 
