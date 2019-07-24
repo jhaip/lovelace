@@ -22,7 +22,7 @@ def sub_callback_papers(results):
             proxy_client.setsockopt(zmq.IDENTITY, get_my_id_str().encode())
             proxy_client.connect("tcp://{0}:5570".format(PROXY_URL))
         else:
-            print("checking if proxy server is still alive")
+            logging.info("checking if proxy server is still alive")
         last_proxy_heartbeat = time.time()
         init_ping_id = str(uuid.uuid4())
         proxy_client.send_multipart([".....PING{}{}".format(get_my_id_str(), init_ping_id).encode()])
@@ -37,9 +37,10 @@ def sub_callback_papers(results):
             except zmq.Again:
                 time.sleep(0.01)
         if not proxy_connected:
-            print("proxy server died, message dropped")
+            logging.info("proxy server died, message dropped")
             proxy_context.destroy()
             return
+    logging.info("proxying message")
     claims = []
     claims.append({"type": "retract", "fact": [
         ["id", get_my_id_str()],

@@ -1,10 +1,12 @@
 from helper2 import init, claim, retract, prehook, subscription, batch, get_my_id_str, check_server_connection
 import keyboard
+import logging
 
 init(__file__, skipListening=True)
 batch([{"type": "retract", "fact": [["id", get_my_id_str()], ["postfix", ""]]}])
 
 def add_key(key, special_key):
+    logging.info("{} - {}".format(key, special_key))
     timestamp = int(time.time()*1000.0)
     claims = []
     claims.append({"type": "retract", "fact": [
