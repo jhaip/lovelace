@@ -39,7 +39,11 @@ def check_and_connect_proxy_server():
                 time.sleep(0.01)
         if not proxy_connected:
             logging.info("proxy server died, message dropped")
-            proxy_context.destroy()
+            proxy_client.disconnect("tcp://{0}:5570".format(PROXY_URL))
+            logging.info("disconnected proxy_client")
+            proxy_client.close()
+            logging.info("closed proxy_client")
+            proxy_context.term()
             logging.info("destroyed proxy_content")
             return False
     return True
