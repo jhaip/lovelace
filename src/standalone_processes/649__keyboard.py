@@ -48,13 +48,13 @@ def handle_key_event(e):
         if e.name == 'unknown':
             return
         if ctrl_held:
-            add_key(None, 'C-{}'.format(event.name))
+            add_key(None, 'C-{}'.format(e.name))
         else:
             special_keys = ['backspace', 'enter', 'tab', 'space', 'left', 'right', 'up', 'down']
-            if event.name in special_keys:
-                add_key(None, event.name)
+            if e.name in special_keys:
+                add_key(None, e.name)
             else:
-                add_key(event.name, None)
+                add_key(e.name, None)
 
 keyboard.hook(handle_key_event)
 
