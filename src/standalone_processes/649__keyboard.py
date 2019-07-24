@@ -58,4 +58,5 @@ def handle_key_event(e):
                 add_key(e.name, None)
 
 keyboard.hook(handle_key_event)
+keyboard.wait()
 
