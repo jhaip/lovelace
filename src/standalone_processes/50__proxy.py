@@ -12,8 +12,7 @@ last_proxy_heartbeat = time.time()
 health_check_delay_s = 10
 PROXY_URL = "10.0.0.22"
 
-@subscription(["$ $ camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time"])
-def sub_callback_papers(results):
+def check_and_connect_proxy_server():
     global proxy_context, proxy_client, proxy_connected, PROXY_URL, last_proxy_heartbeat, health_check_delay_s
     if not proxy_connected or time.time() - last_proxy_heartbeat > health_check_delay_s:
         if not proxy_connected:
@@ -39,7 +38,14 @@ def sub_callback_papers(results):
         if not proxy_connected:
             logging.info("proxy server died, message dropped")
             proxy_context.destroy()
-            return
+            return False
+    return True
+
+@subscription(["$ $ camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time"])
+def sub_callback_papers(results):
+    global proxy_client
+    if not check_and_connect_proxy_server():
+        return
     logging.info("proxying message")
     claims = []
     claims.append({"type": "retract", "fact": [
