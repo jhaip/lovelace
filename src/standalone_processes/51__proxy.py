@@ -17,7 +17,6 @@ def check_and_connect_proxy_server():
     if not proxy_connected or time.time() - last_proxy_heartbeat > health_check_delay_s:
         if not proxy_connected:
             logging.info("creating a new proxy_content")
-            proxy_context = zmq.Context()
             proxy_client = proxy_context.socket(zmq.DEALER)
             proxy_client.setsockopt(zmq.IDENTITY, get_my_id_str().encode())
             proxy_client.connect("tcp://{0}:5570".format(PROXY_URL))
@@ -43,8 +42,6 @@ def check_and_connect_proxy_server():
             logging.info("disconnected proxy_client")
             proxy_client.close()
             logging.info("closed proxy_client")
-            proxy_context.term()
-            logging.info("destroyed proxy_content")
             return False
     return True
 
