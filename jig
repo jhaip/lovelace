@@ -28,7 +28,7 @@ function cmd() {
     echo -e "running server"
     cd ../..
     sleep 2
-    python3 src/standalone_processes/50__proxy.py &
+    python3 src/standalone_processes/51__proxy.py &
     sudo python3 src/standalone_processes/649__keyboard.py &
     echo -e "booting"
   elif [ "$1" == "test" ]
