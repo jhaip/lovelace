@@ -10,7 +10,7 @@ room.onGetSource('wisherId',
                 const currentTargetName = '106__robotCode.py';
                 room.assert(
                     `wish`, ["text", currentTargetName],
-                    `has source code`, ["text", cleanSourceCode]);
+                    `has source code`, ["text", sourceCode]);
                 // claim it's not running to force the paper to be killed
                 // so the source code change is used when it starts again
                 let postCompiledTargetName = currentTargetName.replace(".prejs", ".js");
