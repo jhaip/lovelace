@@ -31,6 +31,17 @@ function cmd() {
     python3 src/standalone_processes/51__proxy.py &
     sudo python3 src/standalone_processes/649__keyboard.py &
     echo -e "booting"
+  elif [ "$1" == "robotstart" ]
+  then
+    cd new-backend/go-server
+    go run server.go parser2.go subscriber.go database.go &
+    echo -e "running server"
+    cd ../..
+    sleep 2
+    node src/standalone_processes/577__programEditor.js &
+    node src/standalone_processes/1900__processManager.js &
+    node src/standalone_processes/105__robotCodeRunner.js &
+    echo -e "booting"
   elif [ "$1" == "test" ]
   then
     cd new-backend/go-server
