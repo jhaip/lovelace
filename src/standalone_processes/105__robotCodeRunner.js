@@ -6,7 +6,7 @@ room.onGetSource('wisherId',
     results => {
         room.subscriptionPrefix(1);
         if (!!results) {
-            results.forEach(({ time }) => {
+            results.forEach(({ sourceCode }) => {
                 const currentTargetName = '106__robotCode.py';
                 room.assert(
                     `wish`, ["text", currentTargetName],
