@@ -41,6 +41,7 @@ function cmd() {
     node src/standalone_processes/577__programEditor.js &
     node src/standalone_processes/1900__processManager.js &
     node src/standalone_processes/105__robotCodeRunner.js &
+    node src/standalone_processes/10__debugViewer.js &
     echo -e "booting"
   elif [ "$1" == "test" ]
   then
