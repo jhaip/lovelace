@@ -1,6 +1,8 @@
 const fs = require('fs');
 const { room, myId, scriptName, run } = require('../helper2')(__filename);
 
+room.assert('wish', ["text", "1900__processManager.js"], 'would be running')
+
 room.onGetSource('wisherId',
     `wish $sourceCode runs on robot`,
     results => {
