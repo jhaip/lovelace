@@ -1,63 +1,27 @@
+from helper2 import init, subscription, batch, MY_ID_STR, check_server_connection, get_my_id_str
 from imutils.video import WebcamVideoStream
 import numpy as np
 import cv2
 import imutils
 import os
+import time
 
 capture = WebcamVideoStream(src=0)
 capture.start()
-image = capture.read()
-# image = imutils.resize(image, width=400)
 
-pts = np.array([(80*4.8, 4*4.8), (305*4.8, 1*4.8), (344*4.8, 224*4.8), (46*4.8, 225*4.8)], dtype = "float32")
-
-maxWidth = 1430
-maxHeight = 1086
+PERSPECTIVE_CALIBRATION = np.array([
+        (80*4.8, 4*4.8),
+        (305*4.8, 1*4.8),
+        (344*4.8, 224*4.8),
+        (46*4.8, 225*4.8)], dtype = "float32")
+PERSPECTIVE_IMAGE_WIDTH = 1430
+PERSPECTIVE_IMAGE_HEIGHT = 1086
 dst = np.array([
-		[0, 0],
-		[maxWidth - 1, 0],
-		[maxWidth - 1, maxHeight - 1],
-		[0, maxHeight - 1]], dtype = "float32")
-M = cv2.getPerspectiveTransform(pts, dst)
-warped = cv2.warpPerspective(image, M, (maxWidth, maxHeight))
-
-warped = cv2.flip( warped, -1 ) # flip both axes
-
-warped_grey = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
-# ret,thresh1 = cv2.threshold(warped_grey, 150, 255, cv2.THRESH_BINARY)
-# th2 = cv2.adaptiveThreshold(warped_grey, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 115, 1)
-# ret2,th3 = cv2.threshold(warped_grey,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-
-# th4 = cv2.adaptiveThreshold(warped_grey,255,cv2.ADAPTIVE_THRESH_MEAN_C,\
-#             cv2.THRESH_BINARY,11,2)
-
-cv2.imshow("Original", image)
-cv2.imshow("Warped", warped)
-# cv2.imshow("Threshold1", thresh1)
-# cv2.imshow("Threshold2", th2)
-# cv2.imshow("Threshold3", th3)
-# cv2.imshow("Threshold4", th4)
-
-def identify_tile(i):
-    best_score = None
-    best_sample = ""
-    for sample_image_name in SAMPLE_IMAGES:
-        image = cv2.imread(os.path.join(os.path.dirname(__file__), 'files/cv_tiles/{}.png'.format(sample_image_name)))
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        height, width = image.shape 
-        xor_image = cv2.bitwise_xor(image, i)
-        xor_sum = np.sum(xor_image == 255)
-        cv2.imshow(sample_image_name, xor_image)
-        percentage_correct = 1.0 - float(xor_sum) / float(height * width)
-        # print("-", sample_image_name, percentage_correct)
-        if best_score is None or percentage_correct > best_score:
-            best_score = percentage_correct
-            best_sample = sample_image_name
-    output = ""
-    if best_score > 0.8:
-        output = best_sample
-    return (output, best_sample, best_score)
-
+        [0, 0],
+        [PERSPECTIVE_IMAGE_WIDTH - 1, 0],
+        [PERSPECTIVE_IMAGE_WIDTH - 1, PERSPECTIVE_IMAGE_HEIGHT - 1],
+        [0, PERSPECTIVE_IMAGE_HEIGHT - 1]], dtype = "float32")
+PERSPECTIVE_MATRIX = cv2.getPerspectiveTransform(PERSPECTIVE_CALIBRATION, dst)
 GRID_WIDTH_CELLS = 6
 GRID_HEIGHT_CELLS = 4
 CELL_WIDTH_PX = 155
@@ -66,51 +30,118 @@ ORIGIN_X = 25
 ORIGIN_Y = 10
 CELL_X_PADDING_PX = 90
 CELL_Y_PADDING_PX = 148
+SAMPLE_IMAGE_MATCH_THRESHOLD = 0.8  # Value 0 (0% match) to 1.0 (100% match)
+TILES = ["up", "down", "left", "right", "loopstart", "loopstop"]
+SAMPLE_IMAGES = []
+for name in TILES:
+    sample_image = cv2.imread(os.path.join(os.path.dirname(__file__), 'files/cv_tiles/{}.png'.format(name)))
+    sample_image = cv2.cvtColor(sample_image, cv2.COLOR_BGR2GRAY)
+    SAMPLE_IMAGES.append(sample_image)
 
-SAMPLE_IMAGES = ["up", "down", "left", "right", "loopstart", "loopstop"]
+def identify_tile(image):
+    best_score = None
+    best_sample = ""
+    for i in range(len(TILES)):
+        same_image_name = TILES[i]
+        sample_image = SAMPLE_IMAGES[i]
+        # Use the count of while pixels in the XOR of the given image and the sample image
+        # as a measure for how difference the images are
+        xor_image = cv2.bitwise_xor(sample_image, image)
+        xor_sum = np.sum(xor_image == 255)
+        # cv2.imshow(same_image_name, xor_image)
+        percentage_correct = 1.0 - float(xor_sum) / float(CELL_WIDTH_PX * CELL_HEIGHT_PX)
+        if best_score is None or percentage_correct > best_score:
+            best_score = percentage_correct
+            best_sample = sample_image_name
+    output = ""
+    if best_score > SAMPLE_IMAGE_MATCH_THRESHOLD:
+        output = best_sample
+    return {"tile": output, "best_tile": best_sample, "score": best_score}
 
-threshold_arr = []
-for ix in range(GRID_WIDTH_CELLS):
-    for iy in range(GRID_HEIGHT_CELLS):
-        x = ORIGIN_X + ix * (CELL_WIDTH_PX + CELL_X_PADDING_PX)
-        y = ORIGIN_Y + iy * (CELL_HEIGHT_PX + CELL_Y_PADDING_PX)
-        x2 = x + CELL_WIDTH_PX
-        y2 = y + CELL_HEIGHT_PX
-        cv2.rectangle(warped,(x,y),(x2,y2),(0,255,0),3)
-        roi = warped_grey[y:y2, x:x2]
-        th2 = cv2.adaptiveThreshold(roi,255,cv2.ADAPTIVE_THRESH_MEAN_C,\
-            cv2.THRESH_BINARY,CELL_WIDTH_PX + CELL_HEIGHT_PX+1,2)
-        th4 = cv2.adaptiveThreshold(roi,255,cv2.ADAPTIVE_THRESH_MEAN_C,\
-            cv2.THRESH_BINARY,11,2)
-        v = np.median(roi)*1.2 # threshold the roi a little bit above the median
-        ret,thresh1 = cv2.threshold(roi, v, 255, cv2.THRESH_BINARY)
-        threshold_arr.append(thresh1)
-        # cv2.imshow("ROI", roi)
-        print(identify_tile(thresh1))
-        
+def detect():
+    image = capture.read()
+    # image = imutils.resize(image, width=400)
+    warped = cv2.warpPerspective(image, PERSPECTIVE_MATRIX, (PERSPECTIVE_IMAGE_WIDTH, PERSPECTIVE_IMAGE_HEIGHT))
+    warped = cv2.flip( warped, -1 )  # flip both axes
+    warped_grey = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
+    # cv2.imshow("Original", image)
+    # cv2.imshow("Warped", warped)
+    threshold_image_arr = []
+    tile_data = []
+    for ix in range(GRID_WIDTH_CELLS):
+        for iy in range(GRID_HEIGHT_CELLS):
+            x = ORIGIN_X + ix * (CELL_WIDTH_PX + CELL_X_PADDING_PX)
+            y = ORIGIN_Y + iy * (CELL_HEIGHT_PX + CELL_Y_PADDING_PX)
+            x2 = x + CELL_WIDTH_PX
+            y2 = y + CELL_HEIGHT_PX
+            cv2.rectangle(warped, (x, y), (x2, y2), (0, 255, 0), 3)
+            roi = warped_grey[y:y2, x:x2]
+            # cv2.imshow("ROI", roi)
+            th2 = cv2.adaptiveThreshold(roi, 255, cv2.ADAPTIVE_THRESH_MEAN_C, \
+                cv2.THRESH_BINARY,CELL_WIDTH_PX + CELL_HEIGHT_PX+1, 2)
+            th4 = cv2.adaptiveThreshold(roi, 255, cv2.ADAPTIVE_THRESH_MEAN_C, \
+                cv2.THRESH_BINARY, 11, 2)
+            threshold = np.median(roi) * 1.2 # threshold the roi a little bit above the median
+            ret, threshold_image = cv2.threshold(roi, threshold, 255, cv2.THRESH_BINARY)
+            threshold_image_arr.append(threshold_image)
+            tile_identifcation = identify_tile(threshold_image)
+            tile_identifcation["x"] = ix
+            tile_identifcation["y"] = iy
+            tile_data.append(tile_identifcation)
+    # Show images for debugging:
+    # tiles = np.concatenate(threshold_arr, axis=1)
+    # tiles = imutils.resize(tiles, width=1000)
+    # cv2.imshow("tiles", tiles)
+    # cv2.imwrite('left.png', threshold_arr[0])
+    # cv2.imwrite('right.png', threshold_arr[4])
+    # cv2.imwrite('down.png', threshold_arr[8])
+    # cv2.imwrite('up.png', threshold_arr[13])
+    # cv2.imwrite('loopstart.png', threshold_arr[17])
+    # cv2.imwrite('loopstop.png', threshold_arr[20])
+    return tile_data
 
-cv2.imshow("Warped2", warped)
+@subscription(["$ $ wish new tiles would be seen"])
+def sub_callback(results):
+    if not results:
+        return
+    tile_data = detect()
+    currentTimeMs = int(round(time.time() * 1000))
+    claims = [
+        {"type": "retract", "fact": [["id", get_my_id_str()], ["id", "0"], ["postfix", ""]]},
+        {"type": "retract", "fact": [["id", ""], ["id", ""],
+            ["text", "wish"], ["text", "new"], ["text", "tiles"],
+            ["text", "would"], ["text", "be"], ["text", "seen"]]}
+    ]
+    for datum in tile_data:
+        if datum["tile"] != "":
+            claims.append({"type": "claim", "fact": [
+                ["id", get_my_id_str()],
+                ["id", "0"]
+                ["text", "tile"],
+                ["text", datum["tile"]],
+                ["text", "seen"],
+                ["text", "at"],
+                ["integer", str(datum["x"])],
+                ["integer", str(datum["y"])],
+                ["text", "@"],
+                ["integer", str(currentTimeMs)]
+            ]})
+        else:
+            claims.append({"type": "claim", "fact": [
+                ["id", get_my_id_str()],
+                ["id", "0"]
+                ["text", "tile"],
+                ["text", datum["best_tile"]],
+                ["text", "maybe"],
+                ["float", str(datum["score"])],
+                ["text", "seen"],
+                ["text", "at"],
+                ["integer", str(datum["x"])],
+                ["integer", str(datum["y"])],
+                ["text", "@"],
+                ["integer", str(currentTimeMs)]
+            ]})
+    batch(claims)
 
-tiles = np.concatenate(threshold_arr, axis=1)
-tiles = imutils.resize(tiles, width=1000)
-cv2.imshow("tiles", tiles)
-# cv2.imshow("1", threshold_arr[0])
-# cv2.imwrite('left.png', threshold_arr[0])
-# cv2.imwrite('right.png', threshold_arr[4])
-# cv2.imwrite('down.png', threshold_arr[8])
-# cv2.imwrite('up.png', threshold_arr[13])
-# cv2.imwrite('loopstart.png', threshold_arr[17])
-# cv2.imwrite('loopstop.png', threshold_arr[20])
-# print(identify_tile(threshold_arr[10]))
-
-
-
-# w = 36*5
-# h = 31*5
-# x = 5*5
-# y = 20*5
-
-# roi = warped_grey[y:(y+h), x:(x+w)]
-# cv2.imshow("ROI", roi)
-
-cv2.waitKey(0)
+# cv2.waitKey(0)
+init(__file__)
