@@ -7,7 +7,11 @@ import os
 import time
 
 capture = WebcamVideoStream(src=0)
+capture.stream.set(cv2.CAP_PROP_FRAME_WIDTH, CAM_WIDTH)
+capture.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, CAM_HEIGHT)
+time.sleep(2)
 capture.start()
+time.sleep(2)
 
 PERSPECTIVE_CALIBRATION = np.array([
         (80*4.8, 4*4.8),
