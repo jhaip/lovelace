@@ -42,7 +42,7 @@ def identify_tile(image):
     best_score = None
     best_sample = ""
     for i in range(len(TILES)):
-        same_image_name = TILES[i]
+        sample_image_name = TILES[i]
         sample_image = SAMPLE_IMAGES[i]
         # Use the count of while pixels in the XOR of the given image and the sample image
         # as a measure for how difference the images are
