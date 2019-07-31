@@ -23,6 +23,16 @@ function cmd() {
     go run 1800__dots-to-papers.go &
     cd ../..
     echo -e "booting"
+  elif [ "$1" == "tilestart" ]
+  then
+    cd new-backend/go-server
+    go run server.go parser2.go subscriber.go database.go &
+    echo -e "running server"
+    cd ../..
+    sleep 2
+    python3 src/standalone_processes/53__tileProxy.py &
+    python3 src/standalone_processes/1610__seeCodeBlocks.py &
+    echo -e "booting"
   elif [ "$1" == "keyboardstart" ]
   then
     cd new-backend/go-server
