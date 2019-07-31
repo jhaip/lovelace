@@ -100,11 +100,7 @@ def detect():
     # cv2.imwrite('loopstop.png', threshold_arr[20])
     return tile_data
 
-@subscription(["$ $ wish new tiles would be seen"])
-def sub_callback(results):
-    if not results:
-        return
-    tile_data = detect()
+def claim_tile_data(tile_data):
     currentTimeMs = int(round(time.time() * 1000))
     claims = [
         {"type": "retract", "fact": [["id", get_my_id_str()], ["id", "0"], ["postfix", ""]]},
@@ -143,5 +139,18 @@ def sub_callback(results):
             ]})
     batch(claims)
 
+
+# @subscription(["$ $ wish new tiles would be seen"])
+# def sub_callback(results):
+#     if not results:
+#         return
+#     tile_data = detect()
+#     claim_tile_data(time_data)
+
 # cv2.waitKey(0)
-init(__file__)
+# init(__file__)
+init(__file__, skipListening=True)
+while True:
+    tile_data = detect()
+    claim_tile_data(time_data)
+    time.sleep(1)
