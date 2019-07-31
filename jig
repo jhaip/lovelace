@@ -18,8 +18,10 @@ function cmd() {
     cd ../..
     sleep 2
     python3 src/standalone_processes/50__proxy.py &
-    go run src/standalone_processes/1800__dots-to-papers.go &
-    python3 src/standalone_processes/1600__frame-to-dots.py &
+    python3 src/standalone_processes/1600__frame-to -dots.py &
+    cd src/standalone_processes
+    go run 1800__dots-to-papers.go &
+    cd ../..
     echo -e "booting"
   elif [ "$1" == "keyboardstart" ]
   then
