@@ -145,12 +145,12 @@ def claim_tile_data(tile_data):
 #     if not results:
 #         return
 #     tile_data = detect()
-#     claim_tile_data(time_data)
+#     claim_tile_data(tile_data)
 
 # cv2.waitKey(0)
 # init(__file__)
 init(__file__, skipListening=True)
 while True:
     tile_data = detect()
-    claim_tile_data(time_data)
+    claim_tile_data(tile_data)
     time.sleep(1)
