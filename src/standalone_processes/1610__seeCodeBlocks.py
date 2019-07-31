@@ -7,6 +7,8 @@ import os
 import time
 
 capture = WebcamVideoStream(src=0)
+CAM_WIDTH = 1920
+CAM_HEIGHT = 1080
 capture.stream.set(cv2.CAP_PROP_FRAME_WIDTH, CAM_WIDTH)
 capture.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, CAM_HEIGHT)
 time.sleep(2)
