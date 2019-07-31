@@ -112,7 +112,7 @@ def claim_tile_data(tile_data):
         if datum["tile"] != "":
             claims.append({"type": "claim", "fact": [
                 ["id", get_my_id_str()],
-                ["id", "0"]
+                ["id", "0"],
                 ["text", "tile"],
                 ["text", datum["tile"]],
                 ["text", "seen"],
@@ -125,7 +125,7 @@ def claim_tile_data(tile_data):
         else:
             claims.append({"type": "claim", "fact": [
                 ["id", get_my_id_str()],
-                ["id", "0"]
+                ["id", "0"],
                 ["text", "tile"],
                 ["text", datum["best_tile"]],
                 ["text", "maybe"],
