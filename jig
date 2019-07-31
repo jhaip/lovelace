@@ -30,6 +30,21 @@ function cmd() {
     echo -e "running server"
     cd ../..
     sleep 2
+    v4l2-ctl \
+      --set-ctrl=brightness=85 \
+      --set-ctrl=contrast=100 \
+      --set-ctrl=saturation=1 \
+      --set-ctrl=white_balance_temperature_auto=0 \
+      --set-ctrl=gain=0 \
+      --set-ctrl=power_line_frequency=2 \
+      --set-ctrl=white_balance_temperature=3000 \
+      --set-ctrl=sharpness=128 \
+      --set-ctrl=backlight_compensation=0 \
+      --set-ctrl=exposure_auto=3 \
+      --set-ctrl=exposure_auto_priority=0 \
+      --set-ctrl=focus_auto=1
+    v4l2-ctl --device /dev/video0 --set-fmt-video=width=1920,height=1080,pixelformat=MPEG
+    sleep 2
     python3 src/standalone_processes/53__tileProxy.py &
     python3 src/standalone_processes/1610__seeCodeBlocks.py &
     echo -e "booting"
