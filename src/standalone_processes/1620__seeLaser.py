@@ -5,83 +5,70 @@ import cv2
 import imutils
 import os
 import time
+import logging
 
-capture = WebcamVideoStream(src=1)
-CAM_WIDTH = 640
-CAM_HEIGHT = 480
+CAM_WIDTH = 1280
+CAM_HEIGHT = 720
+THRESHOLD = 75
+DEBUG = False
+last_data = []
+
+capture = WebcamVideoStream(src=0)
 capture.stream.set(cv2.CAP_PROP_FRAME_WIDTH, CAM_WIDTH)
 capture.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, CAM_HEIGHT)
-capture.stream.set(cv2.CAP_PROP_GAIN, 1)
-capture.stream.set(cv2.CAP_PROP_EXPOSURE, 1)
-capture.stream.set(cv2.CAP_PROP_BRIGHTNESS, 1)
 time.sleep(2)
 capture.start()
 time.sleep(2)
 
-def detect():
+def detect(background):
     image = capture.read()
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    # image = imutils.resize(image, width=400)
-    cv2.imshow("Original", image)
-    threshold = 200
-    ret, threshold_image = cv2.threshold(image, threshold, 255, cv2.THRESH_BINARY)
-    cv2.imshow("Threshold", threshold_image)
-    # TODO
-    
+    diff = cv2.subtract(image, background)
+    ret, threshold_image = cv2.threshold(diff, THRESHOLD, 255, cv2.THRESH_BINARY)
+    im2, contours, hierarchy = cv2.findContours(threshold_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    if DEBUG:
+        cv2.imshow("Original", image)
+        cv2.imshow("Subtract", diff)
+        cv2.imshow("Threshold", threshold_image)
+    return contours
 
-def claim_tile_data(tile_data):
+
+def claim_data(data):
+    global last_data
+    if len(last_data) == 0 and len(data) == 0:
+        if DEBUG:
+            logging.info("empty data again, skipping claim")
+        return
+    last_data = data
     currentTimeMs = int(round(time.time() * 1000))
     claims = [
-        {"type": "retract", "fact": [["id", get_my_id_str()], ["id", "0"], ["postfix", ""]]},
-        {"type": "retract", "fact": [["id", ""], ["id", ""],
-            ["text", "wish"], ["text", "new"], ["text", "tiles"],
-            ["text", "would"], ["text", "be"], ["text", "seen"]]}
+        {"type": "retract", "fact": [["id", get_my_id_str()], ["id", "0"], ["postfix", ""]]}
     ]
-    for datum in tile_data:
-        if datum["tile"] != "":
-            claims.append({"type": "claim", "fact": [
-                ["id", get_my_id_str()],
-                ["id", "0"],
-                ["text", "tile"],
-                ["text", datum["tile"]],
-                ["text", "seen"],
-                ["text", "at"],
-                ["integer", str(datum["x"])],
-                ["integer", str(datum["y"])],
-                ["text", "@"],
-                ["integer", str(currentTimeMs)]
-            ]})
-        else:
-            claims.append({"type": "claim", "fact": [
-                ["id", get_my_id_str()],
-                ["id", "0"],
-                ["text", "tile"],
-                ["text", datum["best_tile"]],
-                ["text", "maybe"],
-                ["float", str(datum["score"])],
-                ["text", "seen"],
-                ["text", "at"],
-                ["integer", str(datum["x"])],
-                ["integer", str(datum["y"])],
-                ["text", "@"],
-                ["integer", str(currentTimeMs)]
-            ]})
+    for datum in data:
+        x = int(sum([d[0][0] for d in data[0]])/len(data[0]))
+        y = int(sum([d[0][1] for d in data[0]])/len(data[0]))
+        if DEBUG:
+            logging.info((x, y))
+        claims.append({"type": "claim", "fact": [
+            ["id", get_my_id_str()],
+            ["id", "0"],
+            ["text", "laser"],
+            ["text", "seen"],
+            ["text", "at"],
+            ["integer", str(x)],
+            ["integer", str(y)],
+            ["text", "@"],
+            ["integer", str(currentTimeMs)]
+        ]})
     batch(claims)
 
-
-# @subscription(["$ $ wish new tiles would be seen"])
-# def sub_callback(results):
-#     if not results:
-#         return
-#     tile_data = detect()
-#     claim_tile_data(tile_data)
-
-# cv2.waitKey(0)
-# init(__file__)
-# init(__file__, skipListening=True)
-tile_data = detect()
-cv2.waitKey(0)
-# while True:
-#     tile_data = detect()
-#     claim_tile_data(tile_data)
-#     time.sleep(1)
+init(__file__, skipListening=True)
+background = capture.read()
+background = cv2.cvtColor(background, cv2.COLOR_BGR2GRAY)
+background = cv2.GaussianBlur(background, (3, 3), 0)
+while True:
+    dots = detect(background)
+    claim_data(dots)
+    if DEBUG:
+      cv2.waitKey(1)
+    time.sleep(0.1)
