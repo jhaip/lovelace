@@ -67,7 +67,7 @@ def sub_callback(results):
             ["integer", str(result["x"])],
             ["integer", str(result["y"])],
             ["text", "@"],
-            ["integer", str(currentTimeMs)]
+            ["integer", str(result["time"])]
         ]})
     proxy_client.send_multipart(["....BATCH{}{}".format(
         get_my_id_str(), json.dumps(claims)).encode()], zmq.NOBLOCK)
