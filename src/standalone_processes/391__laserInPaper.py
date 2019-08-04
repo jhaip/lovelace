@@ -62,8 +62,8 @@ def sub_callback_calibration(results):
             projection_matrix = cv2.getPerspectiveTransform(
                 pts1, pts2)
             logging.error("RECAL PROJECTION MATRIX -- done")
-            projector_calibrations[result["cameraId"]] = projector_calibration
-            projection_matrixes[result["cameraId"]] = projection_matrix
+            projector_calibrations[int(result["cameraId"])] = projector_calibration
+            projection_matrixes[int(result["cameraId"])] = projection_matrix
 
 
 @subscription(["$ $ laser seen at $x $y @ $t", "$ $ camera $ sees paper $paper at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $t2"])
