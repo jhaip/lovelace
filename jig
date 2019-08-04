@@ -23,6 +23,28 @@ function cmd() {
     go run 1800__dots-to-papers.go &
     cd ../..
     echo -e "booting"
+  elif [ "$1" == "laserstart" ]
+  then
+    cd new-backend/go-server
+    go run server.go parser2.go subscriber.go database.go &
+    echo -e "running server"
+    cd ../..
+    sleep 2
+    v4l2-ctl \
+      --set-ctrl=brightness=1 \
+      --set-ctrl=contrast=128 \
+      --set-ctrl=saturation=1 \
+      --set-ctrl=gain=0 \
+      --set-ctrl=white_balance_temperature_auto=0 \
+      --set-ctrl=white_balance_temperature=3000 \
+      --set-ctrl=sharpness=128 \
+      --set-ctrl=backlight_compensation=0 \
+      --set-ctrl=exposure_auto=0 \
+      --set-ctrl=exposure_absolute=50 \
+      --set-ctrl=focus_auto=0
+    python3 src/standalone_processes/54__laserProxy.py &
+    python3 src/standalone_processes/1620__seeLaser.py &
+    echo -e "booting"
   elif [ "$1" == "tilestart" ]
   then
     cd new-backend/go-server
