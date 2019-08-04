@@ -5,7 +5,7 @@ room.on(`laser seen at $x $y @ $t`,
     results => {
         room.subscriptionPrefix(1);
         if (!!results) {
-            results.forEach(({ color, source }) => {
+            results.forEach(({ x, y, t, paper, x1, y1, x2, y2, x3, y3, x4, y4, t2 }) => {
                 // Code from https://github.com/substack/point-in-polygon/blob/master/index.js
                 let inside = false;
                 let vs = [[x1, y1], [x2, y2], [x3, y3], [x4, y4]];
