@@ -64,8 +64,8 @@ def sub_callback(results):
             ["text", "laser"],
             ["text", "seen"],
             ["text", "at"],
-            ["integer", str(x)],
-            ["integer", str(y)],
+            ["integer", str(result["x"])],
+            ["integer", str(result["y"])],
             ["text", "@"],
             ["integer", str(currentTimeMs)]
         ]})
