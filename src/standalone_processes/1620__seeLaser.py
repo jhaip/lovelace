@@ -7,9 +7,9 @@ import os
 import time
 import logging
 
-CAM_WIDTH = 1280
-CAM_HEIGHT = 720
-THRESHOLD = 75
+CAM_WIDTH = 1920
+CAM_HEIGHT = 1080
+THRESHOLD = 20
 DEBUG = False
 last_data = []
 
