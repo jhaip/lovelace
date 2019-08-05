@@ -10,6 +10,8 @@ projector_calibrations = {}
 projection_matrixes = {}
 DOTS_CAMERA_ID = 1
 LASER_CAMERA_ID = 2
+# CAMERA 2 calibration:
+# camera 2 has projector calibration TL ( 512 , 282 ) TR ( 1712 , 229 ) BR ( 1788 , 961 ) BL ( 483 , 941 ) @ 2
 
 def project(calibration_id, x, y):
     global projection_matrixes
@@ -94,7 +96,7 @@ def sub_callback_laser_dots(results):
                 ["integer", str(result["paper"])],
             ]})
             ill = Illumination()
-            ill.fill(255, 255, 255)
+            ill.fill(255, 255, 255, 100)
             ill.rect(0, 0, 1000, 1000)
             claims.append(ill.to_batch_claim(get_my_id_str(), "1", result["paper"]))
         # else:
