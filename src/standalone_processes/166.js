@@ -1,15 +1,16 @@
 const { room, myId, run } = require('../helper2')(__filename);
 
-room.on(`measured latency $t ms at $`,
+data = []
+size = 40
+
+room.on(`time is $t`,
         results => {
   room.subscriptionPrefix(1);
   if (!!results) {
     results.forEach(({ t }) => {
-    let ill = room.newIllumination()
-    ill.fontsize(30)
-    ill.text(0, 0, `${t}ms\nLAG`)
-    room.draw(ill)
-
+    data.push(50 + 50*Math.sin(t/1000.0))
+    data = data.slice(-size)
+    room.assert(`"Sin wave" data is "${data.toString()}"`)
 
     });
   }

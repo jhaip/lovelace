@@ -1,8 +1,5 @@
-claim wish tablet would show How humid is it?
-
-when $ $photon says the humidity is $humidity and temp is $temp:
-    cleanup
-    claim wish tablet would show "Humidity is ${results[0].humidity}."
-otherwise:
-    cleanup
-    claim wish tablet would show How humid is it?
+when measured latency $t ms at $:
+    let ill = room.newIllumination()
+    ill.fontsize(30)
+    ill.text(0, 0, `${t}ms\nLAG`)
+    room.draw(ill)

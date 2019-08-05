@@ -3,8 +3,8 @@ const { room, myId, run } = require('../helper2')(__filename);
 let data = []
 const max_data = 10
 const OX = 120
-const W = 12
-const H = 10
+const W = 5
+const H = 5
 const C = 4
 
 room.on(`$ says the humidity is $H and temp is $T`,
