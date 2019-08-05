@@ -61,9 +61,9 @@ def sub_callback_calibration(results):
                 [[0, 0], [CAM_WIDTH, 0], [0, CAM_HEIGHT], [CAM_WIDTH, CAM_HEIGHT]])
             projection_matrix = cv2.getPerspectiveTransform(
                 pts1, pts2)
-            logging.error("RECAL PROJECTION MATRIX -- done")
             projector_calibrations[int(result["cameraId"])] = projector_calibration
             projection_matrixes[int(result["cameraId"])] = projection_matrix
+            logging.error("RECAL PROJECTION MATRIX -- done")
 
 
 @subscription(["$ $ laser seen at $x $y @ $t", "$ $ camera $ sees paper $paper at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $t2"])
@@ -97,6 +97,8 @@ def sub_callback_laser_dots(results):
             ill.fill(255, 255, 255)
             ill.rect(0, 0, 1000, 1000)
             claims.append(ill.to_batch_claim(get_my_id_str(), "1", "global"))
+        else:
+            logging.info("paper {} is not inside laser {} {}".format(result["paper"], result["x"], result["y"]))
     batch(claims)
 
 init(__file__)
