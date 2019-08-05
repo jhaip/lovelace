@@ -99,4 +99,4 @@ def sub_callback_laser_dots(results):
             claims.append(ill.to_batch_claim(get_my_id_str(), "1", "global"))
     batch(claims)
 
-
+init(__file__)
