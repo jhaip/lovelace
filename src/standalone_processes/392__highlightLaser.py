@@ -26,7 +26,7 @@ def project(calibration_id, x, y):
     return (int(dst[0][0][0]), int(dst[0][0][1]))
 
 
-@subscription(["$ $ camera 2 has projector calibration TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time"])
+@subscription(["$ $ camera $cameraId has projector calibration TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time"])
 def sub_callback_calibration(results):
     global projector_calibrations, projection_matrixes, CAM_WIDTH, CAM_HEIGHT
     logging.info("sub_callback_calibration")
