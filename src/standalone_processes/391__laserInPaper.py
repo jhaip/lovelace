@@ -1,4 +1,4 @@
-from helper2 import init, claim, retract, prehook, subscription, batch, MY_ID_STR, listen, check_server_connection, get_my_id_pre_init
+from helper2 import init, claim, retract, prehook, subscription, batch, MY_ID_STR, listen, check_server_connection, get_my_id_str
 from graphics import Illumination
 import numpy as np
 import cv2
@@ -70,7 +70,7 @@ def sub_callback_calibration(results):
 def sub_callback_laser_dots(results):
     claims = []
     claims.append({"type": "retract", "fact": [
-        ["id", get_my_id_pre_init()],
+        ["id", get_my_id_str()],
         ["id", "1"],
         ["postfix", ""],
     ]})
@@ -86,7 +86,7 @@ def sub_callback_laser_dots(results):
         if inside:
             logging.info("paper {} is inside laser {} {}".format(result["paper"], result["x"], result["y"]))
             claims.append({"type": "claim", "fact": [
-                ["id", get_my_id_pre_init()],
+                ["id", get_my_id_str()],
                 ["id", "1"],
                 ["text", "laser"],
                 ["text", "in"],
@@ -96,7 +96,7 @@ def sub_callback_laser_dots(results):
             ill = Illumination()
             ill.fill(255, 255, 255)
             ill.rect(0, 0, 1000, 1000)
-            claims.append(ill.to_batch_claim(get_my_id_pre_init(), "1", "global"))
+            claims.append(ill.to_batch_claim(get_my_id_str(), "1", "global"))
         else:
             logging.info("paper {} is not inside laser {} {}".format(result["paper"], result["x"], result["y"]))
     batch(claims)
