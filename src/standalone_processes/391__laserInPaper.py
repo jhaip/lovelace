@@ -11,7 +11,7 @@ projection_matrixes = {}
 DOTS_CAMERA_ID = 1
 LASER_CAMERA_ID = 2
 
-def project(self, calibration_id, x, y):
+def project(calibration_id, x, y):
     global projection_matrixes
     x = float(x)
     y = float(y)
