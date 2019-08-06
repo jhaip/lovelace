@@ -61,16 +61,16 @@ def sub_callback_keyboard(results):
     if results:
         if MODE == "IDLE":
             MODE = "0"
-        elif MODE == "0" && lastLastPosition != None:
+        elif MODE == "0" and lastLastPosition != None:
             MODE = "1"
             regionPoints[0] = lastLastPosition
-        elif MODE == "1" && lastLastPosition != None:
+        elif MODE == "1" and lastLastPosition != None:
             MODE = "2"
             regionPoints[1] = lastLastPosition
-        elif MODE == "2" && lastLastPosition != None:
+        elif MODE == "2" and lastLastPosition != None:
             MODE = "3"
             regionPoints[2] = lastLastPosition
-        elif MODE == "3" && lastLastPosition != None:
+        elif MODE == "3" and lastLastPosition != None:
             MODE = "IDLE"
             regionPoints[3] = lastLastPosition
             claims = []
