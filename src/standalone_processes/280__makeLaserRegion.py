@@ -55,7 +55,7 @@ def sub_callback_calibration(results):
     logging.error("RECAL PROJECTION MATRIX -- done")
 
 
-@subscription(["keyboard $ typed key \"1\" @ $t"])
+@subscription(["$ $ keyboard $ typed key \"1\" @ $t"])
 def sub_callback_keyboard(results):
     global MODE, lastLastPosition, regionPoints
     if results:
@@ -107,14 +107,14 @@ def sub_callback_laser_dots(results):
     })
     if results and len(results) > 0:
         result = results[0]
-        lastLastPosition = [result["x"], result["y"]]
+        lastLastPosition = [int(result["x"]), int(result["y"])]
         if MODE != "IDLE":
             ill = Illumination()
             ill.stroke(255, 0, 255, 128)
             ill.fill(255, 0, 255, 100)
             current_corner = int(MODE)
             poly = regionPoints[:current_corner] + [lastLastPosition]
-            projected_poly = list(map(lambda p: project(LASER_CAMERA_ID, p[0], [1]), poly))
+            projected_poly = list(map(lambda p: project(LASER_CAMERA_ID, p[0], p[1]), poly))
             ill.polygon(projected_poly)
             SIZE = 5
             for pt in projected_poly:
