@@ -98,7 +98,7 @@ def sub_callback_laser_dots(results):
             ill = Illumination()
             ill.fill(255, 255, 255, 100)
             ill.polygon(polygon)
-            claims.append(ill.to_batch_claim(get_my_id_str(), "1", "global")
+            claims.append(ill.to_batch_claim(get_my_id_str(), "1", "global"))
         # else:
         #     logging.info("paper {} is not inside laser {} {}".format(result["paper"], result["x"], result["y"]))
     batch(claims)
