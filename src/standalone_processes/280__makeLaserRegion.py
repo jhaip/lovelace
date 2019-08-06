@@ -21,8 +21,8 @@ def project(calibration_id, x, y):
     x = float(x)
     y = float(y)
     if calibration_id not in projection_matrixes:
-    logging.error("MISSING PROJECTION MATRIX FOR CALIBRATION {}".format(calibration_id))
-    return (x, y)
+        logging.error("MISSING PROJECTION MATRIX FOR CALIBRATION {}".format(calibration_id))
+        return (x, y)
     projection_matrix = projection_matrixes[calibration_id]
     pts = [(x, y)]
     dst = cv2.perspectiveTransform(
