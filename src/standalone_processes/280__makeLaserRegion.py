@@ -8,6 +8,7 @@ import logging
 MODE = "IDLE"
 lastLastPosition = None
 regionPoints = [None, None, None, None]
+ignore_key_press = True
 CAM_WIDTH = 1920
 CAM_HEIGHT = 1080
 projector_calibrations = {}
@@ -57,7 +58,10 @@ def sub_callback_calibration(results):
 
 @subscription(["$ $ keyboard $ typed key \"1\" @ $t"])
 def sub_callback_keyboard(results):
-    global MODE, lastLastPosition, regionPoints
+    global MODE, lastLastPosition, regionPoints, ignore_key_press
+    if ignore_key_press:
+        ignore_key_press = False
+        return
     if results:
         if MODE == "IDLE":
             MODE = "0"
