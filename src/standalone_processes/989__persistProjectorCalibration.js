@@ -19,14 +19,19 @@ fs.readFile(savedCalibrationLocation, 'utf8', function(err, contents) {
   }
   // Listen for calibration updates and save them
   console.log("listening for changes to calibration")
-  room.on(`camera $cameraId has projector calibration TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $`,
+  room..onGetSource('wisherId',
+    `camera $cameraId has projector calibration TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $`,
     results => {
       if (!!results) {
         let serializedData = "";
-        results.forEach(({ cameraId, x1, y1, x2, y2, x3, y3, x4, y4 }) => {
+        results.forEach(({ wisherId, cameraId, x1, y1, x2, y2, x3, y3, x4, y4 }) => {
           serializedData += `camera ${cameraId} has projector calibration TL (${x1}, ${y1}) TR (${x2}, ${y2}) BR (${x3}, ${y3}) BL (${x4}, ${y4}) @ 1`;
           serializedData += "\n";
-          room.retractMine(`camera ${cameraId} has projector calibration %`)
+          if (parseInt(wisherId) === parseInt(myId)) {
+            room.retractMine(`camera ${cameraId} has projector calibration %`)
+          } else {
+            console.log("skipping retract because it was my claim")
+          }
         });
         fs.writeFile(savedCalibrationLocation, serializedData, function (err) {
           if (err) return console.log(err)
