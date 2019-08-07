@@ -97,6 +97,7 @@ def sub_callback_laser_dots(results):
             ]})
             ill = Illumination()
             ill.fill(255, 255, 255, 100)
+            ill.nostroke()
             ill.polygon(polygon)
             claims.append(ill.to_batch_claim(get_my_id_str(), "1", "global"))
         # else:
