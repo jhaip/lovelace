@@ -42,18 +42,18 @@ def sub_callback_calibration(results):
                 [result["x1"], result["y1"]],
                 [result["x2"], result["y2"]],
                 [result["x4"], result["y4"]],
-                [result["x3"], result["y3"]]# notice the order is not clock - wise
+                [result["x3"], result["y3"]] # notice the order is not clock-wise
             ]
-    logging.info(projector_calibration)
-    logging.error("RECAL PROJECTION MATRIX")
-    pts1 = np.float32(projector_calibration)
-    pts2 = np.float32(
-        [[0, 0], [CAM_WIDTH, 0], [0, CAM_HEIGHT], [CAM_WIDTH, CAM_HEIGHT]])
-    projection_matrix = cv2.getPerspectiveTransform(
-        pts1, pts2)
-    projector_calibrations[int(result["cameraId"])] = projector_calibration
-    projection_matrixes[int(result["cameraId"])] = projection_matrix
-    logging.error("RECAL PROJECTION MATRIX -- done")
+            logging.info(projector_calibration)
+            logging.error("RECAL PROJECTION MATRIX")
+            pts1 = np.float32(projector_calibration)
+            pts2 = np.float32(
+                [[0, 0], [CAM_WIDTH, 0], [0, CAM_HEIGHT], [CAM_WIDTH, CAM_HEIGHT]])
+            projection_matrix = cv2.getPerspectiveTransform(
+                pts1, pts2)
+            projector_calibrations[int(result["cameraId"])] = projector_calibration
+            projection_matrixes[int(result["cameraId"])] = projection_matrix
+            logging.error("RECAL PROJECTION MATRIX -- done")
 
 
 @subscription(["$ $ keyboard $ typed key \"1\" @ $t"])
