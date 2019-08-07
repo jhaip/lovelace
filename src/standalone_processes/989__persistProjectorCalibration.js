@@ -26,6 +26,7 @@ fs.readFile(savedCalibrationLocation, 'utf8', function(err, contents) {
         results.forEach(({ cameraId, x1, y1, x2, y2, x3, y3, x4, y4 }) => {
           serializedData += `camera ${cameraId} has projector calibration TL (${x1}, ${y1}) TR (${x2}, ${y2}) BR (${x3}, ${y3}) BL (${x4}, ${y4}) @ 1`;
           serializedData += "\n";
+          room.retractMine(`camera ${cameraId} has projector calibration %`)
         });
         fs.writeFile(savedCalibrationLocation, serializedData, function (err) {
           if (err) return console.log(err)
