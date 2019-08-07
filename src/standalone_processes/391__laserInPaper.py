@@ -8,19 +8,23 @@ CAM_WIDTH = 1920
 CAM_HEIGHT = 1080
 projector_calibrations = {}
 projection_matrixes = {}
+inverse_projection_matrixes = {}
 DOTS_CAMERA_ID = 1
 LASER_CAMERA_ID = 2
 # CAMERA 2 calibration:
 # camera 2 has projector calibration TL ( 512 , 282 ) TR ( 1712 , 229 ) BR ( 1788 , 961 ) BL ( 483 , 941 ) @ 2
 
-def project(calibration_id, x, y):
+def project(calibration_id, x, y, inverse=False):
     global projection_matrixes
     x = float(x)
     y = float(y)
     if calibration_id not in projection_matrixes:
         logging.error("MISSING PROJECTION MATRIX FOR CALIBRATION {}".format(calibration_id))
         return (x, y)
-    projection_matrix = projection_matrixes[calibration_id]
+    if inverse:
+        projection_matrix = projection_matrixes[calibration_id]
+    else:
+        projection_matrix = inverse_projection_matrixes[calibration_id]
     pts = [(x, y)]
     dst = cv2.perspectiveTransform(
         np.array([np.float32(pts)]), projection_matrix)
@@ -63,8 +67,11 @@ def sub_callback_calibration(results):
                 [[0, 0], [CAM_WIDTH, 0], [0, CAM_HEIGHT], [CAM_WIDTH, CAM_HEIGHT]])
             projection_matrix = cv2.getPerspectiveTransform(
                 pts1, pts2)
+            inverse_projection_matrix = cv2.getPerspectiveTransform(
+                pts2, pts1)
             projector_calibrations[int(result["cameraId"])] = projector_calibration
             projection_matrixes[int(result["cameraId"])] = projection_matrix
+            inverse_projection_matrixes[int(result["cameraId"])] = inverse_projection_matrix
             logging.error("RECAL PROJECTION MATRIX -- done")
 
 
@@ -76,15 +83,19 @@ def sub_callback_laser_dots(results):
         ["id", "1"],
         ["postfix", ""],
     ]})
+    if results:
+        logging.info("checking laser {} {} in papers".format(results[0]["x"], results[0]["x"]))
     for result in results:
         polygon = [
-            project(DOTS_CAMERA_ID, result["x1"], result["y1"]),
-            project(DOTS_CAMERA_ID, result["x2"], result["y2"]),
-            project(DOTS_CAMERA_ID, result["x3"], result["y3"]),
-            project(DOTS_CAMERA_ID, result["x4"], result["y4"]),
+            [result["x1"], result["y1"]],
+            [result["x2"], result["y2"]],
+            [result["x3"], result["y3"]],
+            [result["x4"], result["y4"]],
         ]
-        laser_point = project(LASER_CAMERA_ID, result["x"], result["y"])
-        inside = point_inside_polygon(laser_point[0], laser_point[1], polygon)
+        laser_point_in_projector_space = project(LASER_CAMERA_ID, result["x"], result["y"])
+        laser_point_in_dot_camera_space = project(DOTS_CAMERA_ID,
+            laser_point_in_projector_space[0], laser_point_in_projector_space[1], inverse=True)
+        inside = point_inside_polygon(laser_point_in_dot_camera_space[0], laser_point_in_dot_camera_space[1], polygon)
         if inside:
             logging.info("paper {} is inside laser {} {}".format(result["paper"], result["x"], result["y"]))
             claims.append({"type": "claim", "fact": [
