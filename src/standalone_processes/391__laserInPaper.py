@@ -98,7 +98,10 @@ def sub_callback_laser_dots(results):
             laser_point_in_projector_space[0], laser_point_in_projector_space[1],
             laser_point_in_dot_camera_space[0], laser_point_in_dot_camera_space[1],
         ))
+    highlighted_papers = {}
     for result in results:
+        if result["paper"] in highlighted_papers"
+            continue # paper already highlighted
         polygon = [
             [result["x1"], result["y1"]],
             [result["x2"], result["y2"]],
@@ -116,6 +119,7 @@ def sub_callback_laser_dots(results):
                 ["text", "paper"],
                 ["integer", str(result["paper"])],
             ]})
+            highlighted_papers[result["paper"]] = True
             ill = Illumination()
             ill.fill(255, 255, 255, 100)
             ill.rect(0, 0, 1000, 1000)

@@ -76,7 +76,10 @@ def sub_callback_laser_dots(results):
         ["id", "1"],
         ["postfix", ""],
     ]})
+    highlighted_regions = {}
     for result in results:
+        if result["regionId"] in highlighted_regions:
+            continue # Region is already highlighted
         polygon = [
             project(LASER_CAMERA_ID, result["x1"], result["y1"]),
             project(LASER_CAMERA_ID, result["x2"], result["y2"]),
@@ -95,9 +98,9 @@ def sub_callback_laser_dots(results):
                 ["text", "region"],
                 ["integer", str(result["regionId"])],
             ]})
+            highlighted_regions[result["regionId"]] = True
             ill = Illumination()
-            ill.fill(255, 255, 255, 100)
-            ill.nostroke()
+            ill.fill(255, 128, 0, 100)
             ill.polygon(polygon)
             claims.append(ill.to_batch_claim(get_my_id_str(), "1", "global"))
         # else:
