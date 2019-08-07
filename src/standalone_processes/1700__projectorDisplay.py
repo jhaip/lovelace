@@ -325,7 +325,11 @@ class Example(wx.Frame):
     def draw_global_wishes(self, gc, commands):
         if not commands:
             return
+        gc.BeginLayer(1.0)
+        gc.PushState()
         self.draw_commands(gc, commands, CAM_WIDTH, CAM_HEIGHT)
+        gc.PopState()
+        gc.EndLayer()
 
     def draw_commands(self, gc, draw_commands, width, height):
         paper_font = wx.Font(
