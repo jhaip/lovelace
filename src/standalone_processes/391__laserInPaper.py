@@ -100,7 +100,7 @@ def sub_callback_laser_dots(results):
         ))
     highlighted_papers = {}
     for result in results:
-        if result["paper"] in highlighted_papers"
+        if result["paper"] in highlighted_papers:
             continue # paper already highlighted
         polygon = [
             [result["x1"], result["y1"]],
