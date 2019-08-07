@@ -10,6 +10,8 @@ import zmq
 import sys
 import copy
 
+logging.disable(logging.ERROR)  # Disable ERROR and below logs
+
 CAM_WIDTH = 1920
 CAM_HEIGHT = 1080
 DRAW_DEBUG_TEXT = False
