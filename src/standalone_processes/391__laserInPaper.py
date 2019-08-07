@@ -49,7 +49,7 @@ def point_inside_polygon(x, y, poly):
 
 @subscription(["$ $ camera $cameraId has projector calibration TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time"])
 def sub_callback_calibration(results):
-    global projector_calibrations, projection_matrixes, CAM_WIDTH, CAM_HEIGHT
+    global projector_calibrations, projection_matrixes, inverse_projection_matrixes, CAM_WIDTH, CAM_HEIGHT
     logging.info("sub_callback_calibration")
     logging.info(results)
     if results:
@@ -83,8 +83,17 @@ def sub_callback_laser_dots(results):
         ["id", "1"],
         ["postfix", ""],
     ]})
+    laser_point_in_projector_space = None
+    laser_point_in_dot_camera_space = None
     if results:
         logging.info("checking laser {} {} in papers".format(results[0]["x"], results[0]["x"]))
+        laser_point_in_projector_space = project(LASER_CAMERA_ID, results[0]["x"], results[0]["y"])
+        laser_point_in_dot_camera_space = project(DOTS_CAMERA_ID,
+            laser_point_in_projector_space[0], laser_point_in_projector_space[1], inverse=True)
+        logging.info("-- {} {} -> {} {} -> {} {}".format(results[0]["x"], results[0]["x"],
+            laser_point_in_projector_space[0], laser_point_in_projector_space[1],
+            laser_point_in_dot_camera_space[0], laser_point_in_dot_camera_space[1],
+        ))
     for result in results:
         polygon = [
             [result["x1"], result["y1"]],
@@ -92,9 +101,6 @@ def sub_callback_laser_dots(results):
             [result["x3"], result["y3"]],
             [result["x4"], result["y4"]],
         ]
-        laser_point_in_projector_space = project(LASER_CAMERA_ID, result["x"], result["y"])
-        laser_point_in_dot_camera_space = project(DOTS_CAMERA_ID,
-            laser_point_in_projector_space[0], laser_point_in_projector_space[1], inverse=True)
         inside = point_inside_polygon(laser_point_in_dot_camera_space[0], laser_point_in_dot_camera_space[1], polygon)
         if inside:
             logging.info("paper {} is inside laser {} {}".format(result["paper"], result["x"], result["y"]))
