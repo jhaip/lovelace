@@ -18,13 +18,17 @@ def project(calibration_id, x, y, inverse=False):
     global projection_matrixes
     x = float(x)
     y = float(y)
-    if calibration_id not in projection_matrixes:
-        logging.error("MISSING PROJECTION MATRIX FOR CALIBRATION {}".format(calibration_id))
-        return (x, y)
+    
     if inverse:
-        projection_matrix = projection_matrixes[calibration_id]
-    else:
+        if calibration_id not in inverse_projection_matrixes:
+            logging.error("MISSING INVERSE PROJECTION MATRIX FOR CALIBRATION {}".format(calibration_id))
+            return (x, y)
         projection_matrix = inverse_projection_matrixes[calibration_id]
+    else:
+        if calibration_id not in projection_matrixes:
+            logging.error("MISSING PROJECTION MATRIX FOR CALIBRATION {}".format(calibration_id))
+            return (x, y)
+        projection_matrix = projection_matrixes[calibration_id]
     pts = [(x, y)]
     dst = cv2.perspectiveTransform(
         np.array([np.float32(pts)]), projection_matrix)
