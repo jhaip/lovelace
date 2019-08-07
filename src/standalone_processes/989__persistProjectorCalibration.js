@@ -10,8 +10,11 @@ fs.readFile(savedCalibrationLocation, 'utf8', function(err, contents) {
   } else {
     console.log("loaded initial calibration:")
     console.log(contents);
+    console.log(contents.split(/\r?\n/))
     contents.split(/\r?\n/).forEach(line => {
-      room.assert(contents);
+      if (line) {
+        room.assert(line);
+      }
     });
   }
   // Listen for calibration updates and save them
