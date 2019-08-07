@@ -53,8 +53,6 @@ class ShowCapture(wx.Panel):
         self.projector_calibration = [(50, 50), (CAM_WIDTH-50, 50),
                                       (CAM_WIDTH-50, CAM_HEIGHT-50),
                                       (50, CAM_HEIGHT-50)]
-        
-        self.claimProjectorCalibration()
 
         self.listenTimer = wx.Timer(self)
         self.listenTimer.Start(int(latency_check_delay_s*1000))
