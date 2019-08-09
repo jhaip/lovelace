@@ -2,8 +2,10 @@ package main
 
 import (
 	"bufio"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"runtime"
@@ -243,8 +245,23 @@ func initZeroMQ(MY_ID_STR string) *zmq.Socket {
 	return client
 }
 
+// Copied from https://play.golang.org/p/4FkNSiUDMg
+func newUUID() (string, error) {
+	uuid := make([]byte, 16)
+	n, err := io.ReadFull(rand.Reader, uuid)
+	if n != len(uuid) || err != nil {
+		return "", err
+	}
+	// variant bits; see section 4.1.1
+	uuid[8] = uuid[8]&^0xc0 | 0x80
+	// version 4 (pseudo-random); see section 4.1.3
+	uuid[6] = uuid[6]&^0xf0 | 0x40
+	return fmt.Sprintf("%x-%x-%x-%x-%x", uuid[0:4], uuid[4:6], uuid[6:8], uuid[8:10], uuid[10:]), nil
+}
+
 func initWishSubscription(client *zmq.Socket, MY_ID_STR string) string {
-	subscription_id := "bf272176-2df5-4664-b2a1-f9c5628e1d9f"
+	subscription_id, sub_id_err := newUUID()
+	checkErr(sub_id_err)
 	sub_query := map[string]interface{}{
 		"id": subscription_id,
 		"facts": []string{

@@ -2,9 +2,11 @@ package main
 
 import (
 	"bufio"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"image/color"
+	"io"
 	"log"
 	"math"
 	"os"
@@ -105,6 +107,20 @@ func initZeroMQ(MY_ID_STR string) *zmq.Socket {
 	return client
 }
 
+// Copied from https://play.golang.org/p/4FkNSiUDMg
+func newUUID() (string, error) {
+	uuid := make([]byte, 16)
+	n, err := io.ReadFull(rand.Reader, uuid)
+	if n != len(uuid) || err != nil {
+		return "", err
+	}
+	// variant bits; see section 4.1.1
+	uuid[8] = uuid[8]&^0xc0 | 0x80
+	// version 4 (pseudo-random); see section 4.1.3
+	uuid[6] = uuid[6]&^0xf0 | 0x40
+	return fmt.Sprintf("%x-%x-%x-%x-%x", uuid[0:4], uuid[4:6], uuid[6:8], uuid[8:10], uuid[10:]), nil
+}
+
 func main() {
 	BASE_PATH := GetBasePath()
 
@@ -132,7 +148,8 @@ func main() {
 	defer client.Close()
 	count := 0
 
-	dot_sub_id := "f47ac10b-58cc-0372-8567-0e02b2c3d479"
+	dot_sub_id, dot_side_id_err := newUUID()
+	checkErr(dot_side_id_err)
 	dot_sub_query := map[string]interface{}{"id": dot_sub_id, "facts": []string{"$source $ dots $x $y color $r $g $b $t"}}
 	dot_sub_query_msg, _ := json.Marshal(dot_sub_query)
 	dot_sub_msg := fmt.Sprintf("SUBSCRIBE%s%s", MY_ID_STR, dot_sub_query_msg)
