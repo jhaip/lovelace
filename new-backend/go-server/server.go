@@ -267,6 +267,39 @@ func on_source_death(dying_source string, db *map[string]Fact, subscriptions *Su
 	subscriberMutex.Unlock()
 }
 
+func on_subscription_death(source string, subscriptionId string, db *map[string]Fact, subscriptions *Subscriptions) {
+	zap.L().Info("SUBSCRIPTION DEATH - recv", zap.String("source", source), zap.String("subscriptionId", subscriptionId))
+	dbMutex.Lock()
+	retract(db, Fact{[]Term{Term{"text", "subscription"}, Term{"id", source}, Term{"text", subscriptionId}, Term{"postfix", ""}}})
+	dbMutex.Unlock()
+	subscriberMutex.Lock()
+	newSubscriptions := make([]Subscription, 0)
+	for _, subscription := range (*subscriptions).Subscriptions {
+		if subscription.Id != subscriptionId {
+			newSubscriptions = append(newSubscriptions, subscription)
+			batch_messages := []BatchMessage{
+				BatchMessage{"retract", [][]string{[]string{"text", "subscription"}, []string{"id", source}, []string{"text", subscriptionId}, []string{"postfix", ""}}},
+			}
+			subscription.batch_messages <- batch_messages
+		} else {
+			zap.L().Info("SUBSCRIPTION DEATH - closing channel", zap.String("source", source), zap.String("subscriptionId", subscriptionId))
+			waitStart := time.Now()
+			// Wait for subscriber to stop sending cache warming messages
+			// to itself to avoid error sending on a closed channel.
+			subscription.warmed.Wait()
+			close(subscription.batch_messages)
+			zap.L().Info("SUBSCRIPTION DEATH - waiting for death signal", zap.String("source", source), zap.String("subscriptionId", subscriptionId))
+			subscription.dead.Wait()
+			waitTimeElapsed := time.Since(waitStart)
+			zap.L().Info("SUBSCRIPTION DEATH - confirmed dead", zap.String("source", source), zap.String("subscriptionId", subscriptionId), zap.Duration("timeToClose", waitTimeElapsed))
+			// SOMETHING BAD COULD HAPPEN IF A MESSAGE WAS RECEIVED AND SOMEONE TRIED TO
+			// ADD A MESSAGE TO THE SUBSCRIPTIONS QUEUE
+		}
+	}
+	(*subscriptions).Subscriptions = newSubscriptions
+	subscriberMutex.Unlock()
+}
+
 func batch_worker(batch_messages <-chan string, subscriptions_notifications chan<- bool, db *map[string]Fact, subscriptions *Subscriptions) {
 	event_type_len := 9
 	source_len := 4
@@ -302,6 +335,13 @@ func batch_worker(batch_messages <-chan string, subscriptions_notifications chan
 				// This a blocking call that does a couple retracts and waits for a goroutine to die
 				// There is a potential for slowdown or blocking the whole server if a subscriber won't die
 				on_source_death(dying_source, db, subscriptions)
+			} else if batch_message.Type == "subscriptiondeath" {
+				// Assume Fact = [["id", "0004"], ["text", ..subscription id..]]
+				source := batch_message.Fact[0][1]
+				dying_subscription_id := batch_message.Fact[1][1]
+				// This a blocking call that does a couple retracts and waits for a goroutine to die
+				// There is a potential for slowdown or blocking the whole server if a subscriber won't die
+				on_subscription_death(source, dying_subscription_id, db, subscriptions)
 			}
 		}
 		// subscriptions_notifications <- true
