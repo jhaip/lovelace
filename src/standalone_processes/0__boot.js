@@ -63,7 +63,7 @@ room.assert(`camera 99 sees paper 45 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) 
 // Photon Flasher
 room.assert(`camera 99 sees paper 46 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Pointing At
-// room.assert(`camera 99 sees paper 277 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+room.assert(`camera 99 sees paper 277 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // RFID Paper Map
 room.assert(`camera 99 sees paper 30 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 
