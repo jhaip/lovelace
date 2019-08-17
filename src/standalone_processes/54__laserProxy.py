@@ -73,4 +73,61 @@ def sub_callback(results):
         get_my_id_str(), json.dumps(claims)).encode()], zmq.NOBLOCK)
 
 
+@subscription(["$ $ keyboard $keyboardId typed special key $key @ $time"])
+def sub_callback_papers(results):
+    global proxy_client
+    if not check_and_connect_proxy_server():
+        return
+    logging.info("proxying message")
+    claims = []
+    claims.append({"type": "retract", "fact": [
+        ["id", get_my_id_str()],
+        ["id", "1"],
+        ["postfix", ""],
+    ]})
+    for result in results:
+        claims.append({"type": "claim", "fact": [
+            ["id", get_my_id_str()],
+            ["id", "1"],
+            ["text", "keyboard"],
+            ["text", str(result["keyboardId"])],
+            ["text", "typed"],
+            ["text", "special"],
+            ["text", "key"],
+            ["text", str(result["key"])],
+            ["text", "@"],
+            ["integer", str(result["time"])],
+        ]})
+    proxy_client.send_multipart(["....BATCH{}{}".format(
+        get_my_id_str(), json.dumps(claims)).encode()], zmq.NOBLOCK)
+
+
+@subscription(["$ $ keyboard $keyboardId typed key $key @ $time"])
+def sub_callback_papers(results):
+    global proxy_client
+    if not check_and_connect_proxy_server():
+        return
+    logging.info("proxying message")
+    claims = []
+    claims.append({"type": "retract", "fact": [
+        ["id", get_my_id_str()],
+        ["id", "2"],
+        ["postfix", ""],
+    ]})
+    for result in results:
+        claims.append({"type": "claim", "fact": [
+            ["id", get_my_id_str()],
+            ["id", "2"],
+            ["text", "keyboard"],
+            ["text", str(result["keyboardId"])],
+            ["text", "typed"],
+            ["text", "key"],
+            ["text", str(result["key"])],
+            ["text", "@"],
+            ["integer", str(result["time"])],
+        ]})
+    proxy_client.send_multipart(["....BATCH{}{}".format(
+        get_my_id_str(), json.dumps(claims)).encode()], zmq.NOBLOCK)
+
+
 init(__file__)
