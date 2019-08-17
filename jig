@@ -33,18 +33,19 @@ function cmd() {
     v4l2-ctl \
       --set-ctrl=brightness=1 \
       --set-ctrl=contrast=128 \
-      --set-ctrl=saturation=1 \
+      --set-ctrl=saturation=0 \
       --set-ctrl=gain=0 \
       --set-ctrl=white_balance_temperature_auto=0 \
       --set-ctrl=white_balance_temperature=3000 \
       --set-ctrl=sharpness=128 \
       --set-ctrl=backlight_compensation=0 \
-      --set-ctrl=exposure_auto=0 \
-      --set-ctrl=exposure_absolute=50 \
+      --set-ctrl=exposure_auto=1 \
+      --set-ctrl=exposure_absolute=150 \
       --set-ctrl=focus_auto=0
     v4l2-ctl --device /dev/video0 --set-fmt-video=width=1920,height=1080,pixelformat=MPEG
     python3 src/standalone_processes/54__laserProxy.py &
     python3 src/standalone_processes/1620__seeLaser.py &
+    sudo python3 src/standalone_processes/649__keyboard.py &
     echo -e "booting"
   elif [ "$1" == "tilestart" ]
   then
