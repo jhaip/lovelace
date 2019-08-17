@@ -45,8 +45,8 @@ def claim_data(data):
         {"type": "retract", "fact": [["id", get_my_id_str()], ["id", "0"], ["postfix", ""]]}
     ]
     for datum in data:
-        x = int(sum([d[0][0] for d in data[0]])/len(data[0]))
-        y = int(sum([d[0][1] for d in data[0]])/len(data[0]))
+        x = int(sum([d[0][0] for d in datum])/len(datum))
+        y = int(sum([d[0][1] for d in datum])/len(datum))
         if DEBUG:
             logging.info((x, y))
         claims.append({"type": "claim", "fact": [
