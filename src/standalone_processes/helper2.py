@@ -266,8 +266,9 @@ def subscription(expr):
 
 def tracer_cleanup():
     global tracer
-    time.sleep(2)   # yield to IOLoop to flush the spans - https://github.com/jaegertracing/jaeger-client-python/issues/50
-    tracer.close()  # flush any buffered spans
+    if tracer is not None:
+        time.sleep(2)   # yield to IOLoop to flush the spans - https://github.com/jaegertracing/jaeger-client-python/issues/50
+        tracer.close()  # flush any buffered spans
 
 import atexit
 atexit.register(tracer_cleanup)
