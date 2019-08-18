@@ -4,50 +4,53 @@ import logging
 
 is_selecting = True
 
-@subscription(["$ $ laser in region $region", "$ $ region $region is toggleable"])
+@subscription(["$ $ laser in region $regionId", "$ $ region $regionId is toggleable"])
 def sub_callback_calibration(results):
     global is_selecting
     claims = []
-    claims.append({"type": "retract", "fact": [
-        ["id", get_my_id_str()],
-        ["id", "1"],
-        ["postfix", ""],
-    ]})
-    logging.error("GOT RESULTS", results)
     if results:
-        logging.error("Got results", is_selecting)
         for result in results:
             if is_selecting:
                 claims.append({"type": "claim", "fact": [
-                        ["id", get_my_id_str()],
+                        ["id", "0"],
                         ["id", "1"],
                         ["text", "region"],
                         ["text", str(result["regionId"])],
                         ["text", "is"],
                         ["text", "toggled"],
                     ]})
+                logging.error("region {} is on".format(result["regionId"]))
             else:
                 claims.append({"type": "retract", "fact": [
-                        ["id", get_my_id_str()],
+                        ["id", "0"],
                         ["id", "1"],
                         ["text", "region"],
                         ["text", str(result["regionId"])],
                         ["text", "is"],
                         ["text", "toggled"],
                     ]})
-    batch(claims)
+                logging.error("region {} is OFF".format(result["regionId"]))
+        batch(claims)
 
 
 @subscription(["#0054 $ keyboard $ typed special key $key @ $t"])
 def sub_callback_keyboard(results):
     global is_selecting
+    claims = []
+    claims.append({"type": "retract", "fact": [
+        ["id", get_my_id_str()],
+        ["id", "2"],
+        ["postfix", ""],
+    ]})
+    ill = Illumination()
     if results:
-        logging.error("checking key", results)
         key = str(results[0]["key"])
-        logging.error(key)
         if key == "up" and is_selecting:
             is_selecting = False
+            ill.text(0, 0, "selecting")
         else:
             is_selecting = True
+            ill.text(0, 0, "deselecting")
+    claims.append(ill.to_batch_claim(get_my_id_str(), "2"))
 
 init(__file__)
