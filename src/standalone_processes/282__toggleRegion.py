@@ -13,6 +13,7 @@ def sub_callback_calibration(results):
         ["id", "1"],
         ["postfix", ""],
     ]})
+    logging.error("GOT RESULTS", results)
     if results:
         logging.error("Got results", is_selecting)
         for result in results:
@@ -41,8 +42,9 @@ def sub_callback_calibration(results):
 def sub_callback_keyboard(results):
     global is_selecting
     if results:
+        logging.error("checking key", results)
         key = str(results[0]["key"])
-        logging.error("checking key", key)
+        logging.error(key)
         if key == "up" and is_selecting:
             is_selecting = False
         else:

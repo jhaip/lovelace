@@ -94,12 +94,12 @@ def highlight_regions(results, subscription_id, r, g, b):
 
 
 @subscription(["$ $ laser in region $regionId", "$ $ region $regionId at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4"])
-def sub_callback_laser_dots(results):
+def sub_callback_highlight_region(results):
     highlight_regions(results, "1", 255, 128, 0)
 
 
 @subscription(["$ $ region $regionId is toggled", "$ $ region $regionId at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4"])
-def sub_callback_laser_dots(results):
+def sub_callback_toggle_regions(results):
     highlight_regions(results, "2", 0, 128, 255)
 
 init(__file__)
