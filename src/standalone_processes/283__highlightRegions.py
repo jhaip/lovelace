@@ -68,35 +68,38 @@ def sub_callback_calibration(results):
             logging.error("RECAL PROJECTION MATRIX -- done")
 
 
-@subscription(["$ $ laser seen at $x $y @ $t", "$ $ region $regionId at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4"])
-def sub_callback_laser_dots(results):
+def highlight_regions(results, subscription_id, r, g, b):
     claims = []
     claims.append({"type": "retract", "fact": [
         ["id", get_my_id_str()],
-        ["id", "1"],
+        ["id", subscription_id],
         ["postfix", ""],
     ]})
+    highlighted_regions = {}
     for result in results:
+        if result["regionId"] in highlighted_regions:
+            continue # Region is already highlighted
         polygon = [
             project(LASER_CAMERA_ID, result["x1"], result["y1"]),
             project(LASER_CAMERA_ID, result["x2"], result["y2"]),
             project(LASER_CAMERA_ID, result["x3"], result["y3"]),
             project(LASER_CAMERA_ID, result["x4"], result["y4"]),
         ]
-        laser_point = project(LASER_CAMERA_ID, result["x"], result["y"])
-        inside = point_inside_polygon(laser_point[0], laser_point[1], polygon)
-        if inside:
-            logging.info("laser {} {} inside region {}".format(result["x"], result["y"], result["regionId"]))
-            claims.append({"type": "claim", "fact": [
-                ["id", get_my_id_str()],
-                ["id", "1"],
-                ["text", "laser"],
-                ["text", "in"],
-                ["text", "region"],
-                ["integer", str(result["regionId"])],
-            ]})
-        # else:
-        #     logging.info("paper {} is not inside laser {} {}".format(result["paper"], result["x"], result["y"]))
+        highlighted_regions[result["regionId"]] = True
+        ill = Illumination()
+        ill.fill(r, g, b, 100)
+        ill.polygon(polygon)
+        claims.append(ill.to_batch_claim(get_my_id_str(), subscription_id, "global"))
     batch(claims)
+
+
+@subscription(["$ $ laser in region $regionId", "$ $ region $regionId at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4"])
+def sub_callback_laser_dots(results):
+    highlight_regions(results, "1", 255, 128, 0)
+
+
+@subscription(["$ $ region $regionId is toggled", "$ $ region $regionId at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4"])
+def sub_callback_laser_dots(results):
+    highlight_regions(results, "2", 0, 128, 255)
 
 init(__file__)
