@@ -52,5 +52,6 @@ def sub_callback_keyboard(results):
             is_selecting = True
             ill.text(0, 0, "deselecting")
     claims.append(ill.to_batch_claim(get_my_id_str(), "2"))
+    batch(claims)
 
 init(__file__)
