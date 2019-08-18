@@ -56,7 +56,7 @@ def sub_callback_calibration(results):
             logging.error("RECAL PROJECTION MATRIX -- done")
 
 
-@subscription(["$ $ keyboard $ typed key \"1\" @ $t"])
+@subscription(["#0054 $ keyboard $ typed special key down @ $t"])
 def sub_callback_keyboard(results):
     global MODE, lastLastPosition, regionPoints, ignore_key_press
     if ignore_key_press:
@@ -79,7 +79,7 @@ def sub_callback_keyboard(results):
             regionPoints[3] = lastLastPosition
             claims = []
             claims.append({"type": "claim", "fact": [
-                ["id", get_my_id_str()],
+                ["id", "0"], # Claim regions on #0 instead of get_my_id_str() so they are persisted
                 ["id", "1"],
                 ["text", "region"],
                 ["text", str(uuid.uuid4())],
