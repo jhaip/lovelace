@@ -2,6 +2,7 @@ from helper2 import init, claim, retract, prehook, subscription, batch, MY_ID_ST
 from graphics import Illumination
 import logging
 
+ignore_key_press = True
 is_selecting = True
 
 @subscription(["$ $ laser in region $regionId", "$ $ region $regionId is toggleable"])
@@ -35,23 +36,25 @@ def sub_callback_calibration(results):
 
 @subscription(["#0054 $ keyboard $ typed special key $key @ $t"])
 def sub_callback_keyboard(results):
-    global is_selecting
+    global is_selecting, ignore_key_press
+    if ignore_key_press:
+        ignore_key_press = False
+        return
     claims = []
     claims.append({"type": "retract", "fact": [
         ["id", get_my_id_str()],
         ["id", "2"],
         ["postfix", ""],
     ]})
-    ill = Illumination()
     if results:
         key = str(results[0]["key"])
         if key == "up" and is_selecting:
             is_selecting = False
-            ill.text(0, 0, "selecting")
+            ill = Illumination()
+            ill.text(0, 0, "clearing\ntoggle")
+            claims.append(ill.to_batch_claim(get_my_id_str(), "2"))
         else:
             is_selecting = True
-            ill.text(0, 0, "deselecting")
-    claims.append(ill.to_batch_claim(get_my_id_str(), "2"))
     batch(claims)
 
 init(__file__)
