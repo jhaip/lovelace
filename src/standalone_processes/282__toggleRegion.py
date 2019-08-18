@@ -14,6 +14,7 @@ def sub_callback_calibration(results):
         ["postfix", ""],
     ]})
     if results:
+        logging.error("Got results", is_selecting)
         for result in results:
             if is_selecting:
                 claims.append({"type": "claim", "fact": [
@@ -36,11 +37,12 @@ def sub_callback_calibration(results):
     batch(claims)
 
 
-@subscription(["#0054 $ keyboard $ typed special $key up @ $t"])
+@subscription(["#0054 $ keyboard $ typed special key $key @ $t"])
 def sub_callback_keyboard(results):
     global is_selecting
     if results:
         key = str(results[0]["key"])
+        logging.error("checking key", key)
         if key == "up" and is_selecting:
             is_selecting = False
         else:
