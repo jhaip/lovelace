@@ -93,7 +93,7 @@ def sub_callback_laser_dots(results):
                 ["text", "laser"],
                 ["text", "in"],
                 ["text", "region"],
-                ["integer", str(result["regionId"])],
+                ["text", str(result["regionId"])],
             ]})
         # else:
         #     logging.info("paper {} is not inside laser {} {}".format(result["paper"], result["x"], result["y"]))

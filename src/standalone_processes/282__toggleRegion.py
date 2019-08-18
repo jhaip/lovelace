@@ -20,7 +20,7 @@ def sub_callback_calibration(results):
                         ["id", get_my_id_str()],
                         ["id", "1"],
                         ["text", "region"],
-                        ["integer", str(result["regionId"])],
+                        ["text", str(result["regionId"])],
                         ["text", "is"],
                         ["text", "toggled"],
                     ]})
@@ -29,7 +29,7 @@ def sub_callback_calibration(results):
                         ["id", get_my_id_str()],
                         ["id", "1"],
                         ["text", "region"],
-                        ["integer", str(result["regionId"])],
+                        ["text", str(result["regionId"])],
                         ["text", "is"],
                         ["text", "toggled"],
                     ]})
