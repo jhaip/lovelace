@@ -93,7 +93,7 @@ def render_mode():
 def sub_callback_normal_key(results):
     global MODE, is_toggleable, region_name, region_id
     if results:
-        key = lower(results[0]["key"])
+        key = str(results[0]["key"]).lower()
         if MODE == "is_toggleable":
             region_name = ""
             if key == "n" or key == "y":
