@@ -88,6 +88,7 @@ def highlight_regions(results, subscription_id, r, g, b):
         highlighted_regions[result["regionId"]] = True
         ill = Illumination()
         ill.fill(r, g, b, 100)
+        ill.nostroke()
         ill.polygon(polygon)
         claims.append(ill.to_batch_claim(get_my_id_str(), subscription_id, "global"))
     batch(claims)
