@@ -10,8 +10,8 @@ lastLastPosition = None
 regionPoints = [None, None, None, None]
 region_id = None
 ignore_key_press = True
-is_toggleable = None
-region_name = None
+is_toggleable = True
+region_name = ""
 CAM_WIDTH = 1920
 CAM_HEIGHT = 1080
 projector_calibrations = {}
@@ -151,6 +151,7 @@ def sub_callback_keyboard(results):
         logging.info("MODE: {}, region points: {}".format(MODE, regionPoints))
     elif MODE == "is_toggleable" and key == "enter":
         MODE = "naming"
+        region_name = ""
         if is_toggleable:
             claims.append({"type": "claim", "fact": [
                 ["id", "0"], # Claim regions on #0 instead of get_my_id_str() so they are persisted
