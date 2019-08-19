@@ -59,7 +59,7 @@ def sub_callback_calibration(results):
             logging.error("RECAL PROJECTION MATRIX -- done")
 
 
-def render_mode(subscription_id):
+def render_mode():
     global MODE, is_toggleable, region_name
     RENDER_MODE_SUBSCRIPTION_ID = "99"
     claims = []
@@ -113,7 +113,7 @@ def sub_callback_keyboard(results):
         return
     if not results:
         return
-    claims = []:
+    claims = []
     key = results[0]["key"]
     if key == "down":
         if MODE == "IDLE":
