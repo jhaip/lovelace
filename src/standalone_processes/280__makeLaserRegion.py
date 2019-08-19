@@ -195,7 +195,7 @@ def sub_callback_laser_dots(results):
     if results and len(results) > 0:
         result = results[0]
         lastLastPosition = [int(result["x"]), int(result["y"])]
-        if MODE != "IDLE":
+        if MODE in ["0", "1", "2", "3"]:
             ill = Illumination()
             ill.stroke(255, 0, 255, 128)
             ill.fill(255, 0, 255, 100)
