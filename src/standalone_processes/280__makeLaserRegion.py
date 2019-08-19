@@ -8,7 +8,10 @@ import logging
 MODE = "IDLE"
 lastLastPosition = None
 regionPoints = [None, None, None, None]
+region_id = None
 ignore_key_press = True
+is_toggleable = None
+region_name = None
 CAM_WIDTH = 1920
 CAM_HEIGHT = 1080
 projector_calibrations = {}
@@ -56,13 +59,63 @@ def sub_callback_calibration(results):
             logging.error("RECAL PROJECTION MATRIX -- done")
 
 
-@subscription(["#0054 $ keyboard $ typed special key down @ $t"])
+def render_mode(subscription_id):
+    global MODE, is_toggleable, region_name
+    RENDER_MODE_SUBSCRIPTION_ID = "99"
+    claims = []
+    claims.append({
+        "type": "retract", "fact": [
+            ["id", get_my_id_str()],
+            ["id", RENDER_MODE_SUBSCRIPTION_ID],
+            ["postfix", ""],
+        ]
+    })
+    ill = Illumination()
+    if MODE == "IDLE":
+        ill.text(0, 0, "idle\npress down\nto define\na region")
+    elif MODE in ["0", "1", "2", "3"]:
+        ill.text(0, 0, "setting\ncorner\n{}/4".format(int(MODE) + 1))
+    elif MODE == "is_toggleable":
+        is_toggleable_text = "no"
+        if is_toggleable:
+            is_toggleable_text = "yes"
+        ill.text(0, 0, "Should region\nbe a toggle?\ny/n -> {}\npress enter\nto accept".format(is_toggleable_text))
+    elif MODE == "naming":
+        region_name_text = "..."
+        if region_name:
+            region_name_text = region_name
+        ill.text(0, 0, "region name:\n{}\npress enter\nto accept".format(region_name_text))
+    claims.append(ill.to_batch_claim(get_my_id_str(), RENDER_MODE_SUBSCRIPTION_ID))
+    return claims
+
+
+@subscription(["#0054 $ keyboard $ typed key $key @ $t"])
+def sub_callback_normal_key(results):
+    global MODE, is_toggleable, region_name, region_id
+    if results:
+        key = lower(results[0]["key"])
+        if MODE == "is_toggleable":
+            region_name = ""
+            if key == "n" or key == "y":
+                is_toggleable = key == "y"
+                batch(render_mode())
+        elif MODE == "naming":
+            if key.isalpha() or key.isdigit() or key == " ":
+                region_name += key
+                batch(render_mode())
+
+
+@subscription(["#0054 $ keyboard $ typed special key $key @ $t"])
 def sub_callback_keyboard(results):
-    global MODE, lastLastPosition, regionPoints, ignore_key_press
+    global MODE, lastLastPosition, regionPoints, ignore_key_press, region_name, region_id, is_toggleable
     if ignore_key_press:
         ignore_key_press = False
         return
-    if results:
+    if not results:
+        return
+    claims = []:
+    key = results[0]["key"]
+    if key == "down":
         if MODE == "IDLE":
             MODE = "0"
         elif MODE == "0" and lastLastPosition != None:
@@ -75,14 +128,15 @@ def sub_callback_keyboard(results):
             MODE = "3"
             regionPoints[2] = lastLastPosition
         elif MODE == "3" and lastLastPosition != None:
-            MODE = "IDLE"
+            is_toggleable = True
+            MODE = "is_toggleable"
             regionPoints[3] = lastLastPosition
-            claims = []
+            region_id = str(uuid.uuid4())
             claims.append({"type": "claim", "fact": [
                 ["id", "0"], # Claim regions on #0 instead of get_my_id_str() so they are persisted
                 ["id", "1"],
                 ["text", "region"],
-                ["text", str(uuid.uuid4())],
+                ["text", region_id],
                 ["text", "at"],
                 ["integer", str(regionPoints[0][0])],
                 ["integer", str(regionPoints[0][1])],
@@ -93,9 +147,38 @@ def sub_callback_keyboard(results):
                 ["integer", str(regionPoints[3][0])],
                 ["integer", str(regionPoints[3][1])],
             ]})
-            batch(claims)
             regionPoints = [None, None, None, None]
         logging.info("MODE: {}, region points: {}".format(MODE, regionPoints))
+    elif MODE == "is_toggleable" and key == "enter":
+        MODE = "naming"
+        if is_toggleable:
+            claims.append({"type": "claim", "fact": [
+                ["id", "0"], # Claim regions on #0 instead of get_my_id_str() so they are persisted
+                ["id", "1"],
+                ["text", "region"],
+                ["text", region_id],
+                ["text", "is"],
+                ["text", "toggleable"],
+            ]})
+    elif MODE == "naming":
+        if key == "space":
+            region_name += " "
+        elif key == "backspace":
+            region_name = region_name[:-1]  # remove last character
+        elif key == "enter":
+            MODE = "IDLE"
+            if len(region_name) > 0:
+                claims.append({"type": "claim", "fact": [
+                    ["id", "0"], # Claim regions on #0 instead of get_my_id_str() so they are persisted
+                    ["id", "1"],
+                    ["text", "region"],
+                    ["text", region_id],
+                    ["text", "has"],
+                    ["text", "name"],
+                    ["text", region_name],
+                ]})
+    claims.extend(render_mode())
+    batch(claims)
 
 
 @subscription(["$ $ laser seen at $x $y @ $t"])
