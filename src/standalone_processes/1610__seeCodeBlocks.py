@@ -3,6 +3,7 @@ from imutils.video import WebcamVideoStream
 import numpy as np
 import cv2
 import imutils
+import pytesseract
 import os
 import time
 
@@ -69,6 +70,16 @@ def identify_tile(image):
     if best_score > SAMPLE_IMAGE_MATCH_THRESHOLD:
         output = best_sample
     return {"tile": output, "best_tile": best_sample, "score": best_score}
+
+def identify_number_tile(image):
+    return pytesseract.image_to_string(cv2.bitwise_not(image), config='-l eng --oem 3 --psm 7')
+    # return pytesseract.image_to_data(image, lang=None, config='--oem 3 --psm 7', nice=0)
+    # return pytesseract.image_to_data(image)
+
+def image_median_color(image):
+    median_color_per_row = np.median(image, axis=0)
+    median_color = np.median(median_color_per_row, axis=0)
+    return cv2.cvtColor(np.uint8([[[median_color[0], median_color[1], median_color[2]]]]),cv2.COLOR_BGR2HSV)[0][0]
 
 def detect():
     image = capture.read()
@@ -146,7 +157,7 @@ def detect():
             if DEBUG:
                 cv2.rectangle(warped, (x, y), (x2, y2), (0, 0, 255), 3)
             roi = warped_grey[y:y2, x:x2]
-            color_roi = cv2.cvtColor(roi, cv2.COLOR_GRAY2BGR)
+            color_roi = warped[y:y2, x:x2]
             # cv2.imshow("ROI", roi)
             threshold = np.median(roi) * 1.2 # threshold the roi a little bit above the median
             ret, threshold_image = cv2.threshold(roi, threshold, 255, cv2.THRESH_BINARY)
@@ -157,19 +168,26 @@ def detect():
             erosion_number_image_arr.append(erosion)
             
             cimg, contours, hierarchy = cv2.findContours(threshold_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-            biggest_contours = sorted(contours, key=cv2.contourArea, reverse=True)[:1]
+            biggest_contours = []
+            for contour in contours:
+                cx, cy, cw, ch = cv2.boundingRect(contour)
+                if cw > 5 and cw < 60 and ch > 30 and ch < 60:
+                    biggest_contours.append(contour)
             # print(contours)
-            color_roi = cv2.drawContours(color_roi, biggest_contours, -1, (255, 0, 0), 3)
-            contour_number_image_arr.append(color_roi)
+            color_roi_with_contours = cv2.drawContours(color_roi, biggest_contours, -1, (255, 0, 0), 3)
+            contour_number_image_arr.append(color_roi_with_contours)
             
             mask = np.zeros(roi.shape, np.uint8)
             cv2.drawContours(mask, biggest_contours, -1, (255), -1)
-            masked_roi = cv2.bitwise_and(threshold_image, mask)
-            if len(biggest_contours) > 0:
-                cx,cy,cw,ch = cv2.boundingRect(biggest_contours[0])
-                final_image = masked_roi[cy:(cy+ch), cx:(cx+cw)]
-                final_image = cv2.resize(final_image, (100, 100), interpolation=cv2.INTER_NEAREST)
-                final_number_image_arr.append(final_image)
+            masked_roi = cv2.bitwise_and(erosion, mask)
+            
+            median_hsl_color = image_median_color(color_roi)
+            print(ix, iy, median_hsl_color)
+            saturation = median_hsl_color[1]
+            luminance = median_hsl_color[2]
+            if saturation > 80 and luminance > 150:
+                final_number_image_arr.append(masked_roi)
+                print("recognized number:", identify_number_tile(masked_roi))
             # tile_identifcation = {} # identify_tile(threshold_image)
             # tile_identifcation["x"] = ix
             # tile_identifcation["y"] = iy
@@ -192,7 +210,14 @@ def detect():
         erosion_number_tiles = np.concatenate(erosion_number_image_arr, axis=1)
         erosion_number_tiles = imutils.resize(erosion_number_tiles, width=1600)
         cv2.imshow("number erosion tiles", erosion_number_tiles)
-        cv2.imwrite('numbers.png', cv2.cvtColor(cv2.bitwise_not(erosion_number_image_arr[18]), cv2.COLOR_GRAY2BGR))
+        contour_number_tiles = np.concatenate(contour_number_image_arr, axis=1)
+        contour_number_tiles = imutils.resize(contour_number_tiles, width=1600)
+        cv2.imshow("number contour tiles", contour_number_tiles)
+        final_number_tiles = np.concatenate(final_number_image_arr, axis=1)
+        final_number_tiles = imutils.resize(final_number_tiles, width=1600)
+        cv2.imshow("number final tiles", final_number_tiles)
+        # cv2.imwrite('numbers.png', cv2.cvtColor(cv2.bitwise_not(erosion_number_image_arr[18]), cv2.COLOR_GRAY2BGR))
+        cv2.imwrite('numbers.png', cv2.cvtColor(cv2.bitwise_not(final_number_tiles), cv2.COLOR_GRAY2BGR))
 
         # cv2.imwrite('left.png', threshold_arr[0])
         # cv2.imwrite('right.png', threshold_arr[4])
