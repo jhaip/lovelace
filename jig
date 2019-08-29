@@ -55,7 +55,7 @@ function cmd() {
     cd ../..
     sleep 2
     v4l2-ctl \
-      --set-ctrl=brightness=85 \
+      --set-ctrl=brightness=50 \
       --set-ctrl=contrast=150 \
       --set-ctrl=saturation=128 \
       --set-ctrl=white_balance_temperature_auto=0 \
