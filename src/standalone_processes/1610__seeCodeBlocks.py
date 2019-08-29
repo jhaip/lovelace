@@ -6,6 +6,7 @@ import imutils
 import pytesseract
 import os
 import time
+import re
 
 # Note in installing Tesseract:
 # Tesseract 4+ recommended
@@ -60,6 +61,7 @@ for name in TILES:
 def identify_tile(image):
     best_score = None
     best_sample = ""
+    sample_image_size = 100
     for i in range(len(TILES)):
         sample_image_name = TILES[i]
         sample_image = SAMPLE_IMAGES[i]
@@ -68,7 +70,7 @@ def identify_tile(image):
         xor_image = cv2.bitwise_xor(sample_image, image)
         xor_sum = np.sum(xor_image == 255)
         # cv2.imshow(same_image_name, xor_image)
-        percentage_correct = 1.0 - float(xor_sum) / float(CELL_WIDTH_PX * CELL_HEIGHT_PX)
+        percentage_correct = 1.0 - float(xor_sum) / float(sample_image_size * sample_image_size)
         if best_score is None or percentage_correct > best_score:
             best_score = percentage_correct
             best_sample = sample_image_name
@@ -78,9 +80,11 @@ def identify_tile(image):
     return {"tile": output, "best_tile": best_sample, "score": best_score}
 
 def identify_number_tile(image):
-    return pytesseract.image_to_string(cv2.bitwise_not(image), config='-l eng --oem 3 --psm 7')
     # return pytesseract.image_to_data(image, lang=None, config='--oem 3 --psm 7', nice=0)
     # return pytesseract.image_to_data(image)
+    text = pytesseract.image_to_string(cv2.bitwise_not(image), config='-l eng --oem 3 --psm 7')
+    number_text = re.sub("[^0-9]", "", text)
+    return {"tile": number_text, "best_tile": number_text, "score": 0}
 
 def image_median_color(image):
     median_color_per_row = np.median(image, axis=0)
@@ -150,10 +154,12 @@ def detect():
                 final_image = cv2.resize(final_image, (100, 100), interpolation=cv2.INTER_NEAREST)
                 final_image_arr.append(final_image)
             
-            tile_identifcation = {} # identify_tile(threshold_image)
-            tile_identifcation["x"] = ix
-            tile_identifcation["y"] = iy
-            tile_data.append(tile_identifcation)
+                tile_identifcation = identify_tile(final_image)
+                if DEBUG:
+                    print("recognized tile at ({}, {}) [{}]:".format(ix, iy, tile_identifcation["score"]), tile_identifcation["tile"])
+                tile_identifcation["x"] = ix
+                tile_identifcation["y"] = iy * 2  # evens are big tiles, odds are numbers
+                tile_data.append(tile_identifcation)
     for ix in range(GRID_WIDTH_CELLS):
         for iy in range(GRID_HEIGHT_CELLS):
             x = ORIGIN_X + ix * (CELL_WIDTH_PX + CELL_X_PADDING_PX) + NUMBER_CELL_OFFSET_X_PX
@@ -188,40 +194,49 @@ def detect():
             masked_roi = cv2.bitwise_and(erosion, mask)
             
             median_hsl_color = image_median_color(color_roi)
-            print(ix, iy, median_hsl_color)
+            # print(ix, iy, median_hsl_color)
             saturation = median_hsl_color[1]
             luminance = median_hsl_color[2]
             if saturation > 80 and luminance > 150:
                 final_number_image_arr.append(masked_roi)
-                print("recognized number:", identify_number_tile(masked_roi))
-            # tile_identifcation = {} # identify_tile(threshold_image)
-            # tile_identifcation["x"] = ix
-            # tile_identifcation["y"] = iy
-            # tile_data.append(tile_identifcation)
+                number_tile_data = identify_number_tile(masked_roi)
+                if DEBUG:
+                    print("recognized number tile at ({}, {}):".format(ix, iy), number_tile_data["tile"])
+                tile_identifcation = number_tile_data
+                tile_identifcation["x"] = ix
+                tile_identifcation["y"] = iy * 2 + 1  # evens are big tiles, odds are numbers
+                tile_data.append(tile_identifcation)
     if DEBUG:
         cv2.imshow("Original", image)
         cv2.imshow("Warped", warped)
-        tiles = np.concatenate(threshold_image_arr, axis=1)
-        tiles = imutils.resize(tiles, width=1600)
-        cv2.imshow("tiles", tiles)
-        contour_tiles = np.concatenate(contour_image_arr, axis=1)
-        contour_tiles = imutils.resize(contour_tiles, width=1600)
-        cv2.imshow("contour tiles", contour_tiles)
-        final_tiles = np.concatenate(final_image_arr, axis=1)
-        final_tiles = imutils.resize(final_tiles, width=1600)
-        cv2.imshow("final tiles", final_tiles)
-        threshold_number_tiles = np.concatenate(threshold_number_image_arr, axis=1)
-        threshold_number_tiles = imutils.resize(threshold_number_tiles, width=1600)
-        cv2.imshow("number theshold tiles", threshold_number_tiles)
-        erosion_number_tiles = np.concatenate(erosion_number_image_arr, axis=1)
-        erosion_number_tiles = imutils.resize(erosion_number_tiles, width=1600)
-        cv2.imshow("number erosion tiles", erosion_number_tiles)
-        contour_number_tiles = np.concatenate(contour_number_image_arr, axis=1)
-        contour_number_tiles = imutils.resize(contour_number_tiles, width=1600)
-        cv2.imshow("number contour tiles", contour_number_tiles)
-        final_number_tiles = np.concatenate(final_number_image_arr, axis=1)
-        final_number_tiles = imutils.resize(final_number_tiles, width=1600)
-        cv2.imshow("number final tiles", final_number_tiles)
+        if threshold_image_arr:
+            tiles = np.concatenate(threshold_image_arr, axis=1)
+            tiles = imutils.resize(tiles, width=1600)
+            cv2.imshow("tiles", tiles)
+        if contour_image_arr:
+            contour_tiles = np.concatenate(contour_image_arr, axis=1)
+            contour_tiles = imutils.resize(contour_tiles, width=1600)
+            cv2.imshow("contour tiles", contour_tiles)
+        if final_image_arr:
+            final_tiles = np.concatenate(final_image_arr, axis=1)
+            final_tiles = imutils.resize(final_tiles, width=1600)
+            cv2.imshow("final tiles", final_tiles)
+        if threshold_number_image_arr:
+            threshold_number_tiles = np.concatenate(threshold_number_image_arr, axis=1)
+            threshold_number_tiles = imutils.resize(threshold_number_tiles, width=1600)
+            cv2.imshow("number theshold tiles", threshold_number_tiles)
+        if erosion_number_image_arr:
+            erosion_number_tiles = np.concatenate(erosion_number_image_arr, axis=1)
+            erosion_number_tiles = imutils.resize(erosion_number_tiles, width=1600)
+            cv2.imshow("number erosion tiles", erosion_number_tiles)
+        if contour_number_image_arr:
+            contour_number_tiles = np.concatenate(contour_number_image_arr, axis=1)
+            contour_number_tiles = imutils.resize(contour_number_tiles, width=1600)
+            cv2.imshow("number contour tiles", contour_number_tiles)
+        if final_number_image_arr:
+            final_number_tiles = np.concatenate(final_number_image_arr, axis=1)
+            final_number_tiles = imutils.resize(final_number_tiles, width=1600)
+            cv2.imshow("number final tiles", final_number_tiles)
         # cv2.imwrite('numbers.png', cv2.cvtColor(cv2.bitwise_not(erosion_number_image_arr[18]), cv2.COLOR_GRAY2BGR))
         # cv2.imwrite('numbers.png', cv2.cvtColor(cv2.bitwise_not(final_number_tiles), cv2.COLOR_GRAY2BGR))
         # for i, t in enumerate(final_image_arr):
@@ -281,13 +296,12 @@ def claim_tile_data(tile_data):
 #     tile_data = detect()
 #     claim_tile_data(tile_data)
 
-detect()
-cv2.waitKey(0)
-# init(__file__)
-"""
-init(__file__, skipListening=True)
-while True:
-    tile_data = detect()
-    claim_tile_data(tile_data)
-    time.sleep(1)
-"""
+if DEBUG:
+    detect()
+    cv2.waitKey(0)
+else:
+    init(__file__, skipListening=True)
+    while True:
+        tile_data = detect()
+        claim_tile_data(tile_data)
+        time.sleep(1)
