@@ -56,8 +56,8 @@ function cmd() {
     sleep 2
     v4l2-ctl \
       --set-ctrl=brightness=85 \
-      --set-ctrl=contrast=100 \
-      --set-ctrl=saturation=1 \
+      --set-ctrl=contrast=150 \
+      --set-ctrl=saturation=128 \
       --set-ctrl=white_balance_temperature_auto=0 \
       --set-ctrl=gain=0 \
       --set-ctrl=power_line_frequency=2 \

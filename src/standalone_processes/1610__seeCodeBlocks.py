@@ -223,14 +223,15 @@ def detect():
         final_number_tiles = imutils.resize(final_number_tiles, width=1600)
         cv2.imshow("number final tiles", final_number_tiles)
         # cv2.imwrite('numbers.png', cv2.cvtColor(cv2.bitwise_not(erosion_number_image_arr[18]), cv2.COLOR_GRAY2BGR))
-        cv2.imwrite('numbers.png', cv2.cvtColor(cv2.bitwise_not(final_number_tiles), cv2.COLOR_GRAY2BGR))
-
-        # cv2.imwrite('left.png', threshold_arr[0])
-        # cv2.imwrite('right.png', threshold_arr[4])
-        # cv2.imwrite('down.png', threshold_arr[8])
-        # cv2.imwrite('up.png', threshold_arr[13])
-        # cv2.imwrite('loopstart.png', threshold_arr[17])
-        # cv2.imwrite('loopstop.png', threshold_arr[20])
+        # cv2.imwrite('numbers.png', cv2.cvtColor(cv2.bitwise_not(final_number_tiles), cv2.COLOR_GRAY2BGR))
+        # for i, t in enumerate(final_image_arr):
+        #     cv2.imwrite("tile{}.png".format(i), t)
+        # cv2.imwrite('left.png', final_tiles[2])
+        # cv2.imwrite('right.png', final_tiles[4])
+        # cv2.imwrite('down.png', final_tiles[3])
+        # cv2.imwrite('up.png', final_tiles[1])
+        # cv2.imwrite('loopstart.png', final_tiles[5])
+        # cv2.imwrite('loopstop.png', final_tiles[6])
     return tile_data
 
 def claim_tile_data(tile_data):
