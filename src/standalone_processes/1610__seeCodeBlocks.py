@@ -7,6 +7,12 @@ import pytesseract
 import os
 import time
 
+# Note in installing Tesseract:
+# Tesseract 4+ recommended
+# On a Raspberry Pi if an older version of Tesseract is install, you need to install it from source
+# Source installation instructions: https://raspberrypi.stackexchange.com/questions/89231/tesseract-ocr-4-x-beta-for-raspberry-pi
+# pip3 install pytesseract
+
 DEBUG = True
 
 capture = WebcamVideoStream(src=0)
