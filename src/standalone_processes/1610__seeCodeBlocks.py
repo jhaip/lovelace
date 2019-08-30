@@ -14,7 +14,7 @@ import re
 # Source installation instructions: https://raspberrypi.stackexchange.com/questions/89231/tesseract-ocr-4-x-beta-for-raspberry-pi
 # pip3 install pytesseract
 
-DEBUG = True
+DEBUG = False
 
 capture = WebcamVideoStream(src=0)
 CAM_WIDTH = 1920
@@ -302,6 +302,9 @@ if DEBUG:
 else:
     init(__file__, skipListening=True)
     while True:
+        start = time.time()
         tile_data = detect()
         claim_tile_data(tile_data)
+        end = time.time()
+        print("{} s".format(end - start))
         time.sleep(1)
