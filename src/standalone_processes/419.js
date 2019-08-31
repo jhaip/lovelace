@@ -16,23 +16,26 @@ def move(c1, c2, t):
     motor_1.throttle = speed_1 * c1
     motor_2.throttle = speed_2 * c2
     time.sleep(t)
+    motor_1.throttle = 0
+    motor_2.throttle = 0
+    time.sleep(0.1)
 
 move(0, 0, 1)
 `;
 
 const forward_time = 0.8;
-const turn_time = 0.62;
+const turn_time = 0.61;
 const tile_code = {
-  'up': n => `move(1, 1, ${forward_time})\n`.repeat(n),
-  'down': n => `move(-1, -1, ${forward_time})\n`.repeat(n),
-  'left': n => `move(-1, 1, ${turn_time})\n`.repeat(n),
-  'right': n => `move(1, -1, ${turn_time})\n`.repeat(n),
-  'loopstart': n => `for i in range(${n}):\n`,
-  'loopstop': n => `\n`,
-  'stop': n => `move(0, 0, 1)\n`
+  'up': (s,n) => `${s}move(1, 1, ${forward_time})\n`.repeat(n),
+  'down': (s,n) => `${s}move(-1, -1, ${forward_time})\n`.repeat(n),
+  'left': (s,n) => `${s}move(-1, 1, ${turn_time})\n`.repeat(n),
+  'right': (s,n) => `${s}move(1, -1, ${turn_time})\n`.repeat(n),
+  'loopstart': (s,n) => `${s}for i in range(${n}):\n`,
+  'loopstop': (s,n) => `\n`,
+  'stop': (s,n) => `${s}move(0, 0, 1)\n`
 }
 const W = 6
-const H = 4
+const H = 8
 let code = "";
 
 
@@ -47,7 +50,7 @@ room.on(`tile $tile seen at $x $y @ $t`,
   code = BOILERPLATE;
   stack_level = 0;
   list.forEach((tile, i) => {
-    if (tile !== "") {
+    if (tile !== "" && tile in tile_code) {
       if (tile === 'loopstop') {
         if (stack_level <= 0) {
           return;
@@ -56,18 +59,22 @@ room.on(`tile $tile seen at $x $y @ $t`,
         }
       }
       let indent = " ".repeat(4 * stack_level);
-      let N = 1; // TODO, support repeating tiles N times
-      code += indent + (tile_code[tile])(N);
+      let N = 1;
+      let maybe_number_tile = list[i+W] // look at tile 1 row below
+      if (maybe_number_tile !== "" && parseInt(maybe_number_tile) > 0) {
+        N = parseInt(maybe_number_tile)
+      }
+      code += (tile_code[tile])(indent, N);
       if (tile === 'loopstart') {
         stack_level += 1;
       }
     }
   });
   while (stack_level > 0) {
-    code += "}\n";
+    code += "\n";
     stack_level -= 1;
   }
-  code += tile_code['stop'](1);
+  code += tile_code['stop']("", 1);
   room.assert(`block code`, ["text", code], `wip`)
 
 })
