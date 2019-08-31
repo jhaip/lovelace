@@ -44,12 +44,12 @@ CELL_WIDTH_PX = 174
 CELL_HEIGHT_PX = 150
 ORIGIN_X = 0
 ORIGIN_Y = 0
-CELL_X_PADDING_PX = 77
+CELL_X_PADDING_PX = 75
 CELL_Y_PADDING_PX = 138
 NUMBER_CELL_OFFSET_X_PX = 0
-NUMBER_CELL_OFFSET_Y_PX = CELL_HEIGHT_PX + 10
+NUMBER_CELL_OFFSET_Y_PX = CELL_HEIGHT_PX + 20
 NUMBER_CELL_WIDTH_PX = CELL_WIDTH_PX
-NUMBER_CELL_HEIGHT_PX = 60
+NUMBER_CELL_HEIGHT_PX = 52
 SAMPLE_IMAGE_MATCH_THRESHOLD = 0.8  # Value 0 (0% match) to 1.0 (100% match)
 TILES = ["up", "down", "left", "right", "loopstart", "loopstop"]
 SAMPLE_IMAGES = []
@@ -108,8 +108,10 @@ def detect():
     KERNEL_SIZE = 7
     DILATIONS = 3
     kernel = np.ones((KERNEL_SIZE, KERNEL_SIZE), np.uint8)
+    # print("TILES")
     for ix in range(GRID_WIDTH_CELLS):
         for iy in range(GRID_HEIGHT_CELLS):
+            # print("TILE {} {}".format(ix, iy))
             x = ORIGIN_X + ix * (CELL_WIDTH_PX + CELL_X_PADDING_PX)
             y = ORIGIN_Y + iy * (CELL_HEIGHT_PX + CELL_Y_PADDING_PX)
             x2 = x + CELL_WIDTH_PX
@@ -160,8 +162,11 @@ def detect():
                 tile_identifcation["x"] = ix
                 tile_identifcation["y"] = iy * 2  # evens are big tiles, odds are numbers
                 tile_data.append(tile_identifcation)
+    # print("NUMBERS")
     for ix in range(GRID_WIDTH_CELLS):
         for iy in range(GRID_HEIGHT_CELLS):
+            s = time.time()
+            # print("NUMBER {} {}".format(ix, iy))
             x = ORIGIN_X + ix * (CELL_WIDTH_PX + CELL_X_PADDING_PX) + NUMBER_CELL_OFFSET_X_PX
             y = ORIGIN_Y + iy * (CELL_HEIGHT_PX + CELL_Y_PADDING_PX) + NUMBER_CELL_OFFSET_Y_PX
             x2 = x + NUMBER_CELL_WIDTH_PX
@@ -186,18 +191,23 @@ def detect():
                 if cw > 5 and cw < 60 and ch > 30 and ch < 60:
                     biggest_contours.append(contour)
             # print(contours)
-            color_roi_with_contours = cv2.drawContours(color_roi, biggest_contours, -1, (255, 0, 0), 3)
-            contour_number_image_arr.append(color_roi_with_contours)
+            if DEBUG:
+                color_roi_with_contours = cv2.drawContours(color_roi, biggest_contours, -1, (255, 0, 0), 3)
+                contour_number_image_arr.append(color_roi_with_contours)
             
             mask = np.zeros(roi.shape, np.uint8)
             cv2.drawContours(mask, biggest_contours, -1, (255), -1)
             masked_roi = cv2.bitwise_and(erosion, mask)
             
+            
             median_hsl_color = image_median_color(color_roi)
+            e = time.time()
+            # print("med time {} s".format(e - s))
             # print(ix, iy, median_hsl_color)
+            s2 = time.time()
             saturation = median_hsl_color[1]
             luminance = median_hsl_color[2]
-            if saturation > 80 and luminance > 150:
+            if saturation > 60 and luminance > 100:
                 final_number_image_arr.append(masked_roi)
                 number_tile_data = identify_number_tile(masked_roi)
                 if DEBUG:
@@ -206,9 +216,14 @@ def detect():
                 tile_identifcation["x"] = ix
                 tile_identifcation["y"] = iy * 2 + 1  # evens are big tiles, odds are numbers
                 tile_data.append(tile_identifcation)
+            elif DEBUG:
+                print("skipping {} {}".format(saturation, luminance))
+            e2 = time.time()
+            # print("end time {} s".format(e2 - s2))
     if DEBUG:
         cv2.imshow("Original", image)
-        cv2.imshow("Warped", warped)
+        warped_small = imutils.resize(warped, width=1000)
+        cv2.imshow("Warped", warped_small)
         if threshold_image_arr:
             tiles = np.concatenate(threshold_image_arr, axis=1)
             tiles = imutils.resize(tiles, width=1600)
@@ -307,4 +322,6 @@ else:
         claim_tile_data(tile_data)
         end = time.time()
         print("{} s".format(end - start))
-        time.sleep(1)
+        time.sleep(0.2)
+        # cv2.waitKey(0)
+        # break
