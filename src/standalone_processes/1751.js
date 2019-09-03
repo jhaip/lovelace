@@ -8,15 +8,14 @@ room.onRaw(`$ $ paper ${myId} is pointing at paper $id`,
   if (!!results) {
     results.forEach(({ title, x }) => {
     data = x.toString().split(" , ").map(v => parseFloat(v))
+    const rollingAvg = data.reduce((acc, v) => acc + v * 1.0 / data.length, 0);
     ill = room.newIllumination()
-    ill.nostroke()
-    ill.fill(200, 100, 100)
-    data.forEach((d, i) => {
-      ill.rect(0, 10*i, d, 10)
-    })
-    ill.translate(20, 0)
-    ill.rotate(Math.PI/2.0)
+    ill.fontcolor(255, 255, 0)
     ill.text(0, 0, title);
+    ill.text(0, 14, "rolling\naverage")
+    ill.fontcolor(255, 255, 255)
+    ill.fontsize(25)
+    ill.text(0, 50, `${rollingAvg.toFixed(2)}`)
     room.draw(ill)
 
     });
@@ -31,3 +30,4 @@ room.onRaw(`$ $ paper ${myId} is pointing at paper $id`,
 
 
 run();
+
