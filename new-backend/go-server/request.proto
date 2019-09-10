@@ -1,0 +1,31 @@
+message RoomUpdate {
+  enum UpdateType {
+    PING = 0;
+    CLAIM = 1;
+    RETRACT = 2;
+    SUBSCRIBE = 3;
+    DEATH = 4;
+    SUBSCRIPTION_DEATH = 5;
+  }
+  UpdateType type = 1;
+  string source = 2;
+  string subscription_id = 3; // used by PING and SUBSCRIPTION
+  message Fact {
+      string type = 1;
+      bytes value = 2;
+  }
+  repeated Fact facts = 4;
+}
+
+message RoomUpdates {
+  repeated RoomUpdate updates = 1;
+}
+
+message RoomResponse {
+  string source = 1;
+  string subscription_id = 2;
+  message Result {
+    map<string, bytes> result = 1;
+  }
+  repeated Result results = 3;
+}
