@@ -37,6 +37,11 @@ type Term struct {
 	Value string
 }
 
+type BinaryTerm struct {
+	Type string
+	Value []byte
+}
+
 type SelectQueryVariable struct {
 	Fact     int
 	Position int
@@ -71,6 +76,14 @@ type BatchMessage struct {
 	Type string     `json:"type"`
 	Fact [][]string `json:"fact"`
 }
+
+type RoomUpdate struct {
+	Type uint8
+	Source string
+	SubscriptionId string
+	Facts [][]BinaryTerm
+}
+
 
 // initJaeger returns an instance of Jaeger Tracer that samples 100% of traces and logs all spans to stdout.
 func initJaeger(service string) (opentracing.Tracer, io.Closer) {
@@ -376,6 +389,62 @@ func NewLogger() (*zap.Logger, error) {
 	return cfg.Build()
 }
 
+func parse_room_update(source string, msg string) []RoomUpdate {
+	event_type_len := 9
+	source_len := 4
+	event_type := msg[0:event_type_len]
+	val := msg[(event_type_len + source_len):]
+	if event_type == ".....PING" {
+		return []RoomUpdate{{0, source, val, make([][]BinaryTerm, 0)}}
+	} else if event_type == "SUBSCRIBE" {
+		subscription_data := SubscriptionData{}
+		err := json.Unmarshal([]byte(val), &subscription_data)
+		checkErr(err)
+		query := make([][]BinaryTerm, 0)
+		for _, fact_string := range subscription_data.Facts {
+			fact := parse_fact_string(fact_string)
+			binaryFact := make([]BinaryTerm, len(fact))
+			for k, StringFact := range fact {
+				binaryFact[k] = BinaryTerm{StringFact.Type, []byte(StringFact.Value)}
+			}
+			query = append(query, binaryFact)
+		}
+		return []RoomUpdate{{3, source, subscription_data.Id, query}}
+	} else if event_type == "....BATCH" {
+		var batch_messages []BatchMessage
+		err := json.Unmarshal([]byte(val), &batch_messages)
+		checkErr(err)
+		updates := make([]RoomUpdate, len(batch_messages))
+		for i, batch_message := range batch_messages {
+			terms := make([]BinaryTerm, len(batch_message.Fact))
+			for j, term := range batch_message.Fact {
+				terms[j] = BinaryTerm{term[0], []byte(term[1])}
+			}
+			if batch_message.Type == "claim" {
+				updates[i] = RoomUpdate{1, source, "", [][]BinaryTerm{terms}}
+			} else if batch_message.Type == "retract" {
+				updates[i] = RoomUpdate{2, source, "", [][]BinaryTerm{terms}}
+			} else if batch_message.Type == "death" {
+				// Assume Fact = [["id", "0004"]]
+				dying_source := batch_message.Fact[0][1]
+				facts := [][]BinaryTerm{[]BinaryTerm{BinaryTerm{"id", []byte(dying_source)}}}
+				updates[i] = RoomUpdate{4, source, "", facts}
+			} else if batch_message.Type == "subscriptiondeath" {
+				// Assume Fact = [["id", "0004"], ["text", ..subscription id..]]
+				source := batch_message.Fact[0][1]
+				dying_subscription_id := batch_message.Fact[1][1]
+				facts := [][]BinaryTerm{[]BinaryTerm{
+					BinaryTerm{"id", []byte(source)},
+					BinaryTerm{"text", []byte(dying_subscription_id)},
+				}}
+				updates[i] = RoomUpdate{4, source, "", facts}
+			}
+		}
+		return updates
+	}
+	return make([]RoomUpdate, 0)
+}
+
 func main() {
 	// tracer, closer := initJaeger("room-service")
 	// defer closer.Close()
@@ -442,6 +511,20 @@ func main() {
 		// 	"zmq-recv-loop",
 		// 	opentracing.ChildOf(rootSpan.Context()),
 		// )
+
+		// updates := parse_room_update(rawMsgId, msg)
+		// for _, update := range updates {
+		// 	if update.Type == 0 {
+		// 		zap.L().Debug("got PING", zap.String("source", update.Source), zap.String("value", update.SubscriptionId))
+		// 		// notifications <- Notification{source, val, mapc["uber-trace-id"]}
+		// 		notifications <- Notification{update.Source, update.SubscriptionId, ""}
+		// 	} else if update.Type == 3 {
+		// 		subscription_messages <- update
+		// 	} else {
+		// 		batch_messages <- update
+		// 	}
+		// }
+
 		event_type := msg[0:event_type_len]
 		// source := msg[event_type_len:(event_type_len + source_len)]
 		source := rawMsgId
