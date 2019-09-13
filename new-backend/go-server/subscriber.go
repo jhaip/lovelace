@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/json"
 	"sort"
 	"strconv"
@@ -134,7 +135,15 @@ func marshal_query_result(query_results []QueryResult) string {
 		encoded_result := make(map[string][]string)
 		for variable_name, term := range query_result.Result {
 			// TODO: eventually support encoding at binary here
-			encoded_result[variable_name] = []string{term.Type, string(term.Value[:])}
+			if term.Type == "integer" {
+				intValue := int(int32(binary.LittleEndian.Uint32(term.Value)))
+				encoded_result[variable_name] = []string{term.Type, strconv.Itoa(intValue)}
+			} else if term.Type == "float" {
+				floatValue := float64(float32(binary.LittleEndian.Uint32(term.Value)))
+				encoded_result[variable_name] = []string{term.Type, strconv.FormatFloat(floatValue, 'f', -1, 32)}
+			} else {
+				encoded_result[variable_name] = []string{term.Type, string(term.Value[:])}
+			}
 		}
 		encoded_results = append(encoded_results, encoded_result)
 	}
