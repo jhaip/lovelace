@@ -41,7 +41,7 @@ func getVariableTermNames(terms []Term) []string {
 	variableTermNames := make([]string, 0)
 
 	for _, term := range terms {
-		if (term.Type == "variable" || term.Type == "postfix") && bytes.Equal(term.Value, []byte("")) {
+		if (term.Type == "variable" || term.Type == "postfix") && !bytes.Equal(term.Value, []byte("")) {
 			variableTermNames = append(variableTermNames, string(term.Value[:]))
 		}
 	}
