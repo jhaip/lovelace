@@ -335,15 +335,20 @@ func batch_worker(batch_messages <-chan string, subscriptions_notifications chan
 		// event_type := msg[0:event_type_len]
 		// source := msg[event_type_len:(event_type_len + source_len)]
 		val := msg[(event_type_len + source_len):]
-		var batch_messages []BatchMessage
-		err := json.Unmarshal([]byte(val), &batch_messages)
+		var batch_messages_json []BatchMessageJSON
+		err := json.Unmarshal([]byte(val), &batch_messages_json)
 		if err != nil {
 			zap.L().Info("BATCH MESSAGE BODY:")
 			zap.L().Info(val)
 		}
 		checkErr(err)
-		for _, batch_message := range batch_messages {
-			terms := batch_message.Fact
+		batch_messages := make([]BatchMessage, len(batch_messages_json))
+		for i, batch_message := range batch_messages_json {
+			terms := make([]Term, len(batch_message.Fact))
+			for j, term := range batch_message.Fact {
+				terms[j] = json_term_to_binary_term(term[0], term[1])
+			}
+			batch_messages[i] = BatchMessage{batch_message.Type, terms}
 			if batch_message.Type == "claim" {
 				// claims <- terms
 				dbMutex.Lock()
@@ -356,14 +361,14 @@ func batch_worker(batch_messages <-chan string, subscriptions_notifications chan
 				dbMutex.Unlock()
 			} else if batch_message.Type == "death" {
 				// Assume Fact = [["id", "0004"]]
-				dying_source := string(batch_message.Fact[0].Value[:])
+				dying_source := batch_message.Fact[0][1]
 				// This a blocking call that does a couple retracts and waits for a goroutine to die
 				// There is a potential for slowdown or blocking the whole server if a subscriber won't die
 				on_source_death(dying_source, db, subscriptions)
 			} else if batch_message.Type == "subscriptiondeath" {
 				// Assume Fact = [["id", "0004"], ["text", ..subscription id..]]
-				source := string(batch_message.Fact[0].Value[:])
-				dying_subscription_id := string(batch_message.Fact[1].Value[:])
+				source := batch_message.Fact[0][1]
+				dying_subscription_id := batch_message.Fact[1][1]
 				// This a blocking call that does a couple retracts and waits for a goroutine to die
 				// There is a potential for slowdown or blocking the whole server if a subscriber won't die
 				on_subscription_death(source, dying_subscription_id, db, subscriptions)
@@ -401,6 +406,20 @@ func NewLogger() (*zap.Logger, error) {
 	return cfg.Build()
 }
 
+func json_term_to_binary_term(term_type, value string) Term {
+	if term_type == "integer" {
+		intTermValue, err := strconv.Atoi(value)
+		checkErr(err)
+		return Term{term_type, intToBinary(intTermValue)}
+	} else if term_type == "float" {
+		floatTermValue64, err := strconv.ParseFloat(value, 32)
+		floatTermValue32 := float32(floatTermValue64)
+		checkErr(err)
+		return Term{term_type, floatToBinary(floatTermValue32)}
+	}
+	return Term{term_type, []byte(value)}
+}
+
 func parse_room_update(source string, msg string) []RoomUpdate {
 	event_type_len := 9
 	source_len := 4
@@ -426,19 +445,7 @@ func parse_room_update(source string, msg string) []RoomUpdate {
 		for i, batch_message := range batch_messages {
 			terms := make([]Term, len(batch_message.Fact))
 			for j, term := range batch_message.Fact {
-				term_type := term[0]
-				if term_type == "integer" {
-					intTermValue, err := strconv.Atoi(term[1])
-					checkErr(err)
-					terms[j] = Term{term_type, intToBinary(intTermValue)}
-				} else if term_type == "float" {
-					floatTermValue64, err := strconv.ParseFloat(term[1], 32)
-					floatTermValue32 := float32(floatTermValue64)
-					checkErr(err)
-					terms[j] = Term{term_type, floatToBinary(floatTermValue32)}
-				} else {
-					terms[j] = Term{term_type, []byte(term[1])}
-				}
+				terms[j] = json_term_to_binary_term(term[0], term[1])
 			}
 			if batch_message.Type == "claim" {
 				updates[i] = RoomUpdate{1, source, "", [][]Term{terms}}
