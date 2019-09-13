@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	// "log"
+	"math"
 	"os"
 	"io"
 	"io/ioutil"
@@ -34,11 +36,6 @@ var zmqClient sync.Mutex
 
 type Term struct {
 	Type  string
-	Value string
-}
-
-type BinaryTerm struct {
-	Type string
 	Value []byte
 }
 
@@ -72,16 +69,21 @@ type Notification struct {
 	Result string
 }
 
-type BatchMessage struct {
+type BatchMessageJSON struct {
 	Type string     `json:"type"`
 	Fact [][]string `json:"fact"`
+}
+
+type BatchMessage struct {
+	Type string
+	Fact []Term
 }
 
 type RoomUpdate struct {
 	Type uint8
 	Source string
 	SubscriptionId string
-	Facts [][]BinaryTerm
+	Facts [][]Term
 }
 
 
@@ -131,18 +133,16 @@ func notification_worker(notifications <-chan Notification, client *zmq.Socket) 
 	}
 }
 
-func marshal_query_result(query_results []QueryResult) string {
-	encoded_results := make([]map[string][]string, 0)
-	for _, query_result := range query_results {
-		encoded_result := make(map[string][]string)
-		for variable_name, term := range query_result.Result {
-			encoded_result[variable_name] = []string{term.Type, term.Value}
-		}
-		encoded_results = append(encoded_results, encoded_result)
-	}
-	marshalled_results, err := json.Marshal(encoded_results)
-	checkErr(err)
-	return string(marshalled_results)
+func intToBinary(x int) []byte {
+	b := make([]byte, 4)
+	binary.LittleEndian.PutUint32(b, uint32(x))
+	return b
+}
+
+func floatToBinary(x float32) []byte {
+	b := make([]byte, 4)
+	binary.LittleEndian.PutUint32(b, math.Float32bits(x))
+	return b
 }
 
 func subscribe_worker(subscription_messages <-chan string,
@@ -167,14 +167,19 @@ func subscribe_worker(subscription_messages <-chan string,
 			for i, fact_string := range subscription_data.Facts {
 				fact := parse_fact_string(fact_string)
 				query = append(query, fact)
-				subscription_fact := append([]Term{Term{"text", "subscription"}, Term{"id", source}, Term{"text", subscription_data.Id}, Term{"integer", strconv.Itoa(i)}}, fact...)
+				subscription_fact := append([]Term{
+					Term{"text", []byte("subscription")},
+					Term{"id", []byte(source)},
+					Term{"text", []byte(subscription_data.Id)},
+					Term{"integer", intToBinary(i)},
+				}, fact...)
 				dbMutex.Lock()
 				claim(db, Fact{subscription_fact})
 				dbMutex.Unlock()
 				// prepare a batch message for the new subscription fact
-				batch_message_facts := make([][]string, len(subscription_fact))
+				batch_message_facts := make([]Term, len(subscription_fact))
 				for k, subscription_fact_term := range subscription_fact {
-					batch_message_facts[k] = []string{subscription_fact_term.Type, subscription_fact_term.Value}
+					batch_message_facts[k] = Term{subscription_fact_term.Type, subscription_fact_term.Value}
 				}
 				batch_messages[i] = BatchMessage{"claim", batch_message_facts}
 			}
@@ -248,8 +253,8 @@ func on_source_death(dying_source string, db *map[string]Fact, subscriptions *Su
 	zap.L().Info("SOURCE DEATH - recv", zap.String("source", dying_source))
 	// Retract all facts by source and facts about the source's subscriptions
 	dbMutex.Lock()
-	retract(db, Fact{[]Term{Term{"id", dying_source}, Term{"postfix", ""}}})
-	retract(db, Fact{[]Term{Term{"text", "subscription"}, Term{"id", dying_source}, Term{"postfix", ""}}})
+	retract(db, Fact{[]Term{Term{"id", []byte(dying_source)}, Term{"postfix", []byte("")}}})
+	retract(db, Fact{[]Term{Term{"text", []byte("subscription")}, Term{"id", []byte(dying_source)}, Term{"postfix", []byte("")}}})
 	dbMutex.Unlock()
 	subscriberMutex.Lock()
 	newSubscriptions := make([]Subscription, 0)
@@ -257,8 +262,8 @@ func on_source_death(dying_source string, db *map[string]Fact, subscriptions *Su
 		if subscription.Source != dying_source {
 			newSubscriptions = append(newSubscriptions, subscription)
 			batch_messages := []BatchMessage{
-				BatchMessage{"retract", [][]string{[]string{"id", dying_source}, []string{"postfix", ""}}},
-				BatchMessage{"retract", [][]string{[]string{"text", "subscription"}, []string{"id", dying_source}, []string{"postfix", ""}}},
+				BatchMessage{"retract", []Term{Term{"id", []byte(dying_source)}, Term{"postfix", []byte("")}}},
+				BatchMessage{"retract", []Term{Term{"text", []byte("subscription")}, Term{"id", []byte(dying_source)}, Term{"postfix", []byte("")}}},
 			}
 			subscription.batch_messages <- batch_messages
 		} else {
@@ -283,7 +288,12 @@ func on_source_death(dying_source string, db *map[string]Fact, subscriptions *Su
 func on_subscription_death(source string, subscriptionId string, db *map[string]Fact, subscriptions *Subscriptions) {
 	zap.L().Info("SUBSCRIPTION DEATH - recv", zap.String("source", source), zap.String("subscriptionId", subscriptionId))
 	dbMutex.Lock()
-	retract(db, Fact{[]Term{Term{"text", "subscription"}, Term{"id", source}, Term{"text", subscriptionId}, Term{"postfix", ""}}})
+	retract(db, Fact{[]Term{
+		Term{"text", []byte("subscription")},
+		Term{"id", []byte(source)},
+		Term{"text", []byte(subscriptionId)},
+		Term{"postfix", []byte("")},
+	}})
 	dbMutex.Unlock()
 	subscriberMutex.Lock()
 	newSubscriptions := make([]Subscription, 0)
@@ -291,7 +301,12 @@ func on_subscription_death(source string, subscriptionId string, db *map[string]
 		if subscription.Id != subscriptionId {
 			newSubscriptions = append(newSubscriptions, subscription)
 			batch_messages := []BatchMessage{
-				BatchMessage{"retract", [][]string{[]string{"text", "subscription"}, []string{"id", source}, []string{"text", subscriptionId}, []string{"postfix", ""}}},
+				BatchMessage{"retract", []Term{
+					Term{"text", []byte("subscription")},
+					Term{"id", []byte(source)},
+					Term{"text", []byte(subscriptionId)},
+					Term{"postfix", []byte("")},
+				}},
 			}
 			subscription.batch_messages <- batch_messages
 		} else {
@@ -328,10 +343,7 @@ func batch_worker(batch_messages <-chan string, subscriptions_notifications chan
 		}
 		checkErr(err)
 		for _, batch_message := range batch_messages {
-			terms := make([]Term, len(batch_message.Fact))
-			for j, term := range batch_message.Fact {
-				terms[j] = Term{term[0], term[1]}
-			}
+			terms := batch_message.Fact
 			if batch_message.Type == "claim" {
 				// claims <- terms
 				dbMutex.Lock()
@@ -344,14 +356,14 @@ func batch_worker(batch_messages <-chan string, subscriptions_notifications chan
 				dbMutex.Unlock()
 			} else if batch_message.Type == "death" {
 				// Assume Fact = [["id", "0004"]]
-				dying_source := batch_message.Fact[0][1]
+				dying_source := string(batch_message.Fact[0].Value[:])
 				// This a blocking call that does a couple retracts and waits for a goroutine to die
 				// There is a potential for slowdown or blocking the whole server if a subscriber won't die
 				on_source_death(dying_source, db, subscriptions)
 			} else if batch_message.Type == "subscriptiondeath" {
 				// Assume Fact = [["id", "0004"], ["text", ..subscription id..]]
-				source := batch_message.Fact[0][1]
-				dying_subscription_id := batch_message.Fact[1][1]
+				source := string(batch_message.Fact[0].Value[:])
+				dying_subscription_id := string(batch_message.Fact[1].Value[:])
 				// This a blocking call that does a couple retracts and waits for a goroutine to die
 				// There is a potential for slowdown or blocking the whole server if a subscriber won't die
 				on_subscription_death(source, dying_subscription_id, db, subscriptions)
@@ -395,47 +407,55 @@ func parse_room_update(source string, msg string) []RoomUpdate {
 	event_type := msg[0:event_type_len]
 	val := msg[(event_type_len + source_len):]
 	if event_type == ".....PING" {
-		return []RoomUpdate{{0, source, val, make([][]BinaryTerm, 0)}}
+		return []RoomUpdate{{0, source, val, make([][]Term, 0)}}
 	} else if event_type == "SUBSCRIBE" {
 		subscription_data := SubscriptionData{}
 		err := json.Unmarshal([]byte(val), &subscription_data)
 		checkErr(err)
-		query := make([][]BinaryTerm, 0)
+		query := make([][]Term, 0)
 		for _, fact_string := range subscription_data.Facts {
 			fact := parse_fact_string(fact_string)
-			binaryFact := make([]BinaryTerm, len(fact))
-			for k, StringFact := range fact {
-				binaryFact[k] = BinaryTerm{StringFact.Type, []byte(StringFact.Value)}
-			}
-			query = append(query, binaryFact)
+			query = append(query, fact)
 		}
 		return []RoomUpdate{{3, source, subscription_data.Id, query}}
 	} else if event_type == "....BATCH" {
-		var batch_messages []BatchMessage
+		var batch_messages []BatchMessageJSON
 		err := json.Unmarshal([]byte(val), &batch_messages)
 		checkErr(err)
 		updates := make([]RoomUpdate, len(batch_messages))
 		for i, batch_message := range batch_messages {
-			terms := make([]BinaryTerm, len(batch_message.Fact))
+			terms := make([]Term, len(batch_message.Fact))
 			for j, term := range batch_message.Fact {
-				terms[j] = BinaryTerm{term[0], []byte(term[1])}
+				term_type := term[0]
+				if term_type == "integer" {
+					intTermValue, err := strconv.Atoi(term[1])
+					checkErr(err)
+					terms[j] = Term{term_type, intToBinary(intTermValue)}
+				} else if term_type == "float" {
+					floatTermValue64, err := strconv.ParseFloat(term[1], 32)
+					floatTermValue32 := float32(floatTermValue64)
+					checkErr(err)
+					terms[j] = Term{term_type, floatToBinary(floatTermValue32)}
+				} else {
+					terms[j] = Term{term_type, []byte(term[1])}
+				}
 			}
 			if batch_message.Type == "claim" {
-				updates[i] = RoomUpdate{1, source, "", [][]BinaryTerm{terms}}
+				updates[i] = RoomUpdate{1, source, "", [][]Term{terms}}
 			} else if batch_message.Type == "retract" {
-				updates[i] = RoomUpdate{2, source, "", [][]BinaryTerm{terms}}
+				updates[i] = RoomUpdate{2, source, "", [][]Term{terms}}
 			} else if batch_message.Type == "death" {
 				// Assume Fact = [["id", "0004"]]
 				dying_source := batch_message.Fact[0][1]
-				facts := [][]BinaryTerm{[]BinaryTerm{BinaryTerm{"id", []byte(dying_source)}}}
+				facts := [][]Term{[]Term{Term{"id", []byte(dying_source)}}}
 				updates[i] = RoomUpdate{4, source, "", facts}
 			} else if batch_message.Type == "subscriptiondeath" {
 				// Assume Fact = [["id", "0004"], ["text", ..subscription id..]]
 				source := batch_message.Fact[0][1]
 				dying_subscription_id := batch_message.Fact[1][1]
-				facts := [][]BinaryTerm{[]BinaryTerm{
-					BinaryTerm{"id", []byte(source)},
-					BinaryTerm{"text", []byte(dying_subscription_id)},
+				facts := [][]Term{[]Term{
+					Term{"id", []byte(source)},
+					Term{"text", []byte(dying_subscription_id)},
 				}}
 				updates[i] = RoomUpdate{4, source, "", facts}
 			}

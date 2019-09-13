@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"sort"
 	// "time"
 )
@@ -21,13 +22,13 @@ type QueryResult struct {
 func term_to_string(term Term) string {
 	switch term.Type {
 	case "id":
-		return "#" + term.Value
+		return "#" + string(term.Value[:])
 	case "variable":
-		return "$" + term.Value
+		return "$" + string(term.Value[:])
 	case "postfix":
-		return "%" + term.Value
+		return "%" + string(term.Value[:])
 	default:
-		return term.Value
+		return string(term.Value[:])
 	}
 }
 
@@ -75,9 +76,9 @@ func fact_match(A Fact, B Fact, env QueryResult) (bool, QueryResult) {
 		}
 		new_env = tmp_new_env
 		if A_term.Type == "postfix" {
-			postfix_variable_name := A_term.Value
+			postfix_variable_name := string(A_term.Value[:])
 			if postfix_variable_name != "" {
-				new_env.Result[postfix_variable_name] = Term{"text", terms_to_string(B.Terms[i:])}
+				new_env.Result[postfix_variable_name] = Term{"text", []byte(terms_to_string(B.Terms[i:]))}
 			}
 			break
 		}
@@ -87,7 +88,7 @@ func fact_match(A Fact, B Fact, env QueryResult) (bool, QueryResult) {
 
 func term_match(A Term, B Term, env QueryResult) (bool, QueryResult) {
 	if A.Type == "variable" || A.Type == "postfix" {
-		variable_name := A.Value
+		variable_name := string(A.Value[:])
 		// "Wilcard" matches all but doesn't have a result
 		if variable_name == "" {
 			return true, env
@@ -103,7 +104,7 @@ func term_match(A Term, B Term, env QueryResult) (bool, QueryResult) {
 			new_env.Result[variable_name] = B
 			return true, new_env
 		}
-	} else if A.Type == B.Type && A.Value == B.Value {
+	} else if A.Type == B.Type && bytes.Equal(A.Value, B.Value) {
 		return true, env
 	}
 	return false, QueryResult{}

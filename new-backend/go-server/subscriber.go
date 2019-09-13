@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"sort"
 	"strconv"
 	"strings"
@@ -39,8 +41,8 @@ func getVariableTermNames(terms []Term) []string {
 	variableTermNames := make([]string, 0)
 
 	for _, term := range terms {
-		if (term.Type == "variable" || term.Type == "postfix") && term.Value != "" {
-			variableTermNames = append(variableTermNames, term.Value)
+		if (term.Type == "variable" || term.Type == "postfix") && bytes.Equal(term.Value, []byte("")) {
+			variableTermNames = append(variableTermNames, string(term.Value[:]))
 		}
 	}
 	sort.Strings(variableTermNames)
@@ -118,17 +120,27 @@ func warmSubscriberCache(subscriptionData Subscription, preExistingFacts map[str
 	dbAsBatchClaims := make([]BatchMessage, len(preExistingFacts))
 	i := 0
 	for _, fact := range preExistingFacts {
-		// transformt the data into a different format
-		batchMessageFact := make([][]string, len(fact.Terms))
-		for k, term := range fact.Terms {
-			batchMessageFact[k] = []string{term.Type, term.Value}
-		}
-		dbAsBatchClaims[i] = BatchMessage{"claim", batchMessageFact}
+		dbAsBatchClaims[i] = BatchMessage{"claim", fact.Terms}
 		i++
 	}
 	// claim each preExistingFact to warm this subscribers cache
 	subscriptionData.batch_messages <- dbAsBatchClaims
 	subscriptionData.warmed.Done()
+}
+
+func marshal_query_result(query_results []QueryResult) string {
+	encoded_results := make([]map[string][]string, 0)
+	for _, query_result := range query_results {
+		encoded_result := make(map[string][]string)
+		for variable_name, term := range query_result.Result {
+			// TODO: eventually support encoding at binary here
+			encoded_result[variable_name] = []string{term.Type, string(term.Value[:])}
+		}
+		encoded_results = append(encoded_results, encoded_result)
+	}
+	marshalled_results, err := json.Marshal(encoded_results)
+	checkErr(err)
+	return string(marshalled_results)
 }
 
 func startSubscriber(subscriptionData Subscription, notifications chan<- Notification, preExistingFacts map[string]Fact) {
@@ -262,7 +274,7 @@ func addQueryResultToWholeVariableCache(queryPartIndex int, subscriptionUpdateOp
 			_, matchResultsHasSourceVariable := matchResults.Result[sourceVariableName]
 			if matchResultsHasSourceVariable {
 				if matchResults.Result[sourceVariableName].Type != sourceVariableCache[i].terms[0].Type ||
-					matchResults.Result[sourceVariableName].Value != sourceVariableCache[i].terms[0].Value {
+					!bytes.Equal(matchResults.Result[sourceVariableName].Value, sourceVariableCache[i].terms[0].Value) {
 					elementAtOffsetHasNoOverlapOrMatchingOverlap = false
 					break
 				}
@@ -366,10 +378,7 @@ func subscriberRetractUpdate(sub Subscription2, query []Term) (Subscription2, bo
 func subscriberBatchUpdate(sub Subscription2, batch_messages []BatchMessage) (Subscription2, bool) {
 	updatedSubscriberOutput := false
 	for _, batch_message := range batch_messages {
-		terms := make([]Term, len(batch_message.Fact))
-		for j, term := range batch_message.Fact {
-			terms[j] = Term{term[0], term[1]}
-		}
+		terms := batch_message.Fact
 		batchMessageUpdatedSubscriberOutput := false
 		if batch_message.Type == "claim" {
 			sub, batchMessageUpdatedSubscriberOutput = subscriberClaimUpdate(sub, terms)
@@ -377,8 +386,8 @@ func subscriberBatchUpdate(sub Subscription2, batch_messages []BatchMessage) (Su
 			sub, batchMessageUpdatedSubscriberOutput = subscriberRetractUpdate(sub, terms)
 		} else if batch_message.Type == "death" {
 			// TODO: don't reply logic from server.go that also does this retract
-			dying_source := batch_message.Fact[0][1]
-			clearSourceClaims := []Term{Term{"id", dying_source}, Term{"postfix", ""}}
+			dying_source := string(batch_message.Fact[0].Value[:])
+			clearSourceClaims := []Term{Term{"id", []byte(dying_source)}, Term{"postfix", []byte("")}}
 			// TODO: clearSourceSubscriptions := []Term{Term{"text", "subscription"}, Term{"id", dying_source}, Term{"postfix", ""}}
 			sub, batchMessageUpdatedSubscriberOutput = subscriberRetractUpdate(sub, clearSourceClaims)
 		}

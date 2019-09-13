@@ -607,7 +607,7 @@ var g = &grammar{
 }
 
 func (c *current) onFactOrPatterm8() (interface{}, error) {
-	return Term{"id", string(c.text[1:])}, nil
+	return Term{"id", []byte(string(c.text[1:]))}, nil
 }
 
 func (p *parser) callonFactOrPatterm8() (interface{}, error) {
@@ -627,7 +627,7 @@ func (p *parser) callonFactOrPatterm23() (interface{}, error) {
 }
 
 func (c *current) onFactOrPatterm13() (interface{}, error) {
-	return Term{"variable", string(c.text[1:])}, nil
+	return Term{"variable", []byte(string(c.text[1:]))}, nil
 }
 
 func (p *parser) callonFactOrPatterm13() (interface{}, error) {
@@ -647,7 +647,7 @@ func (p *parser) callonFactOrPatterm41() (interface{}, error) {
 }
 
 func (c *current) onFactOrPatterm31() (interface{}, error) {
-	return Term{"postfix", string(c.text[1:])}, nil
+	return Term{"postfix", []byte(string(c.text[1:]))}, nil
 }
 
 func (p *parser) callonFactOrPatterm31() (interface{}, error) {
@@ -717,14 +717,14 @@ func (p *parser) callonFactOrPatterm98() (interface{}, error) {
 func (c *current) onFactOrPatterm49(val interface{}) (interface{}, error) {
 	valAsFloat, isFloat := val.(float64)
 	if isFloat {
-		return Term{"float", strconv.FormatFloat(valAsFloat, 'f', 6, 64)}, nil
+		return Term{"float", floatToBinary(float32(valAsFloat))}, nil
 	}
 	valAsInt, isInt := val.(int)
 	if isInt {
-		return Term{"integer", strconv.Itoa(valAsInt)}, nil
+		return Term{"integer", intToBinary(valAsInt)}, nil
 	}
 	valAsString, _ := val.(string)
-	return Term{"text", valAsString}, nil
+	return Term{"text", []byte(valAsString)}, nil
 }
 
 func (p *parser) callonFactOrPatterm49() (interface{}, error) {
@@ -744,7 +744,7 @@ func (p *parser) callonFactOrPatterm100() (interface{}, error) {
 }
 
 func (c *current) onFactOrPatterm108() (interface{}, error) {
-	return Term{"whitespace", ""}, nil
+	return Term{"whitespace", []byte("")}, nil
 }
 
 func (p *parser) callonFactOrPatterm108() (interface{}, error) {
@@ -763,7 +763,7 @@ func (c *current) onFactOrPatterm5(val interface{}) (interface{}, error) {
 	}
 	// return val, nil
 	valAsString, _ := val.(string)
-	return Term{"text", valAsString}, nil
+	return Term{"text", []byte(valAsString)}, nil
 }
 
 func (p *parser) callonFactOrPatterm5() (interface{}, error) {
