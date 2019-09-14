@@ -79,8 +79,18 @@ type BatchMessage struct {
 	Fact []Term
 }
 
+type RoomUpdateType uint8
+const (
+	PING RoomUpdateType = 0
+	CLAIM RoomUpdateType = 1
+    RETRACT RoomUpdateType = 2
+    SUBSCRIBE RoomUpdateType = 3
+    DEATH RoomUpdateType = 4
+    SUBSCRIPTION_DEATH RoomUpdateType = 5
+)
+
 type RoomUpdate struct {
-	Type uint8
+	Type RoomUpdateType
 	Source string
 	SubscriptionId string
 	Facts [][]Term
@@ -145,59 +155,48 @@ func floatToBinary(x float32) []byte {
 	return b
 }
 
-func subscribe_worker(subscription_messages <-chan string,
+func subscribe_worker(subscription_messages <-chan RoomUpdate,
 	subscriptions_notifications chan<- bool,
 	subscriptions *Subscriptions,
 	notifications chan<- Notification,
 	db *map[string]Fact) {
 
-	event_type_len := 9
-	source_len := 4
-	for msg := range subscription_messages {
-		zap.L().Debug("SUBSCRIPTION SHOULD PARSE MESSAGE", zap.String("msg", msg))
-		event_type := msg[0:event_type_len]
-		source := msg[event_type_len:(event_type_len + source_len)]
-		val := msg[(event_type_len + source_len):]
-		if event_type == "SUBSCRIBE" {
-			subscription_data := SubscriptionData{}
-			err := json.Unmarshal([]byte(val), &subscription_data)
-			checkErr(err)
-			query := make([][]Term, 0)
-			batch_messages := make([]BatchMessage, len(subscription_data.Facts))
-			for i, fact_string := range subscription_data.Facts {
-				fact := parse_fact_string(fact_string)
-				query = append(query, fact)
-				subscription_fact := append([]Term{
-					Term{"text", []byte("subscription")},
-					Term{"id", []byte(source)},
-					Term{"text", []byte(subscription_data.Id)},
-					Term{"integer", intToBinary(i)},
-				}, fact...)
-				dbMutex.Lock()
-				claim(db, Fact{subscription_fact})
-				dbMutex.Unlock()
-				// prepare a batch message for the new subscription fact
-				batch_message_facts := make([]Term, len(subscription_fact))
-				for k, subscription_fact_term := range subscription_fact {
-					batch_message_facts[k] = Term{subscription_fact_term.Type, subscription_fact_term.Value}
-				}
-				batch_messages[i] = BatchMessage{"claim", batch_message_facts}
-			}
-			newSubscription := Subscription{source, subscription_data.Id, query, make(chan []BatchMessage, 1000), &sync.WaitGroup{}, &sync.WaitGroup{}}
-			newSubscription.dead.Add(1)
-			newSubscription.warmed.Add(1)
-			subscriberMutex.Lock()
-			(*subscriptions).Subscriptions = append(
-				(*subscriptions).Subscriptions,
-				newSubscription,
-			)
-			for _, subscription := range (*subscriptions).Subscriptions {
-				subscription.batch_messages <- batch_messages
-			}
-			subscriberMutex.Unlock()
-			go startSubscriber(newSubscription, notifications, copyDatabase(db))
-			// subscriptions_notifications <- true // is this still needed?
+	for room_update := range subscription_messages {
+		batch_messages := make([]BatchMessage, len(room_update.Facts))
+		for i, fact := range room_update.Facts {
+			subscription_fact := append([]Term{
+				Term{"text", []byte("subscription")},
+				Term{"id", []byte(room_update.Source)},
+				Term{"text", []byte(room_update.SubscriptionId)},
+				Term{"integer", intToBinary(i)},
+			}, fact...)
+			dbMutex.Lock()
+			claim(db, Fact{subscription_fact})
+			dbMutex.Unlock()
+			// prepare a batch message for the new subscription fact
+			batch_messages[i] = BatchMessage{"claim", subscription_fact}
 		}
+		newSubscription := Subscription{
+			room_update.Source,
+			room_update.SubscriptionId,
+			room_update.Facts,
+			make(chan []BatchMessage, 1000),
+			&sync.WaitGroup{},
+			&sync.WaitGroup{},
+		}
+		newSubscription.dead.Add(1)
+		newSubscription.warmed.Add(1)
+		subscriberMutex.Lock()
+		(*subscriptions).Subscriptions = append(
+			(*subscriptions).Subscriptions,
+			newSubscription,
+		)
+		for _, subscription := range (*subscriptions).Subscriptions {
+			subscription.batch_messages <- batch_messages
+		}
+		subscriberMutex.Unlock()
+		go startSubscriber(newSubscription, notifications, copyDatabase(db))
+		// subscriptions_notifications <- true // is this still needed?
 	}
 }
 
@@ -328,47 +327,29 @@ func on_subscription_death(source string, subscriptionId string, db *map[string]
 	subscriberMutex.Unlock()
 }
 
-func batch_worker(batch_messages <-chan string, subscriptions_notifications chan<- bool, db *map[string]Fact, subscriptions *Subscriptions) {
-	event_type_len := 9
-	source_len := 4
-	for msg := range batch_messages {
-		// event_type := msg[0:event_type_len]
-		// source := msg[event_type_len:(event_type_len + source_len)]
-		val := msg[(event_type_len + source_len):]
-		var batch_messages_json []BatchMessageJSON
-		err := json.Unmarshal([]byte(val), &batch_messages_json)
-		if err != nil {
-			zap.L().Info("BATCH MESSAGE BODY:")
-			zap.L().Info(val)
-		}
-		checkErr(err)
-		batch_messages := make([]BatchMessage, len(batch_messages_json))
-		for i, batch_message := range batch_messages_json {
-			terms := make([]Term, len(batch_message.Fact))
-			for j, term := range batch_message.Fact {
-				terms[j] = json_term_to_binary_term(term[0], term[1])
-			}
-			batch_messages[i] = BatchMessage{batch_message.Type, terms}
+func batch_worker(batch_messages_chan <-chan []BatchMessage, subscriptions_notifications chan<- bool, db *map[string]Fact, subscriptions *Subscriptions) {
+	for batch_messages := range batch_messages_chan {
+		for _, batch_message := range batch_messages {
 			if batch_message.Type == "claim" {
 				// claims <- terms
 				dbMutex.Lock()
-				claim(db, Fact{terms})
+				claim(db, Fact{batch_message.Fact})
 				dbMutex.Unlock()
 			} else if batch_message.Type == "retract" {
 				// retractions <- terms
 				dbMutex.Lock()
-				retract(db, Fact{terms})
+				retract(db, Fact{batch_message.Fact})
 				dbMutex.Unlock()
 			} else if batch_message.Type == "death" {
 				// Assume Fact = [["id", "0004"]]
-				dying_source := batch_message.Fact[0][1]
+				dying_source := string(batch_message.Fact[0].Value[:])
 				// This a blocking call that does a couple retracts and waits for a goroutine to die
 				// There is a potential for slowdown or blocking the whole server if a subscriber won't die
 				on_source_death(dying_source, db, subscriptions)
 			} else if batch_message.Type == "subscriptiondeath" {
 				// Assume Fact = [["id", "0004"], ["text", ..subscription id..]]
-				source := batch_message.Fact[0][1]
-				dying_subscription_id := batch_message.Fact[1][1]
+				source := string(batch_message.Fact[0].Value[:])
+				dying_subscription_id := string(batch_message.Fact[1].Value[:])
 				// This a blocking call that does a couple retracts and waits for a goroutine to die
 				// There is a potential for slowdown or blocking the whole server if a subscriber won't die
 				on_subscription_death(source, dying_subscription_id, db, subscriptions)
@@ -420,13 +401,17 @@ func json_term_to_binary_term(term_type, value string) Term {
 	return Term{term_type, []byte(value)}
 }
 
+
 func parse_room_update(source string, msg string) []RoomUpdate {
+	// This function can break apart messages into a list,
+	// but it should be handed to a subscriber as a batch of messages
+	// because a subscriber will only attempt to notify subscribers at the end of a batch
 	event_type_len := 9
 	source_len := 4
 	event_type := msg[0:event_type_len]
 	val := msg[(event_type_len + source_len):]
 	if event_type == ".....PING" {
-		return []RoomUpdate{{0, source, val, make([][]Term, 0)}}
+		return []RoomUpdate{{PING, source, val, make([][]Term, 0)}}
 	} else if event_type == "SUBSCRIBE" {
 		subscription_data := SubscriptionData{}
 		err := json.Unmarshal([]byte(val), &subscription_data)
@@ -436,7 +421,7 @@ func parse_room_update(source string, msg string) []RoomUpdate {
 			fact := parse_fact_string(fact_string)
 			query = append(query, fact)
 		}
-		return []RoomUpdate{{3, source, subscription_data.Id, query}}
+		return []RoomUpdate{{SUBSCRIBE, source, subscription_data.Id, query}}
 	} else if event_type == "....BATCH" {
 		var batch_messages []BatchMessageJSON
 		err := json.Unmarshal([]byte(val), &batch_messages)
@@ -448,14 +433,14 @@ func parse_room_update(source string, msg string) []RoomUpdate {
 				terms[j] = json_term_to_binary_term(term[0], term[1])
 			}
 			if batch_message.Type == "claim" {
-				updates[i] = RoomUpdate{1, source, "", [][]Term{terms}}
+				updates[i] = RoomUpdate{CLAIM, source, "", [][]Term{terms}}
 			} else if batch_message.Type == "retract" {
-				updates[i] = RoomUpdate{2, source, "", [][]Term{terms}}
+				updates[i] = RoomUpdate{RETRACT, source, "", [][]Term{terms}}
 			} else if batch_message.Type == "death" {
 				// Assume Fact = [["id", "0004"]]
 				dying_source := batch_message.Fact[0][1]
 				facts := [][]Term{[]Term{Term{"id", []byte(dying_source)}}}
-				updates[i] = RoomUpdate{4, source, "", facts}
+				updates[i] = RoomUpdate{DEATH, source, "", facts}
 			} else if batch_message.Type == "subscriptiondeath" {
 				// Assume Fact = [["id", "0004"], ["text", ..subscription id..]]
 				source := batch_message.Fact[0][1]
@@ -464,7 +449,7 @@ func parse_room_update(source string, msg string) []RoomUpdate {
 					Term{"id", []byte(source)},
 					Term{"text", []byte(dying_subscription_id)},
 				}}
-				updates[i] = RoomUpdate{4, source, "", facts}
+				updates[i] = RoomUpdate{SUBSCRIPTION_DEATH, source, "", facts}
 			}
 		}
 		return updates
@@ -497,13 +482,10 @@ func main() {
 	client.Bind("tcp://*:5570")
 	zap.L().Info("Connecting to ZMQ")
 
-	event_type_len := 9
-	source_len := 4
-
-	subscription_messages := make(chan string, 1000)
+	subscription_messages := make(chan RoomUpdate, 1000)
 	subscriptions_notifications := make(chan bool, 1000)
 	notifications := make(chan Notification, 1000)
-	batch_messages := make(chan string, 1000)
+	batch_messages := make(chan []BatchMessage, 1000)
 
 	go subscribe_worker(subscription_messages, subscriptions_notifications, &subscriptions, notifications, &factDatabase)
 	go notification_worker(notifications, client)
@@ -516,6 +498,14 @@ func main() {
 	// err := tracer.Inject(rootSpan.Context(), opentracing.TextMap, mapc)
 	// checkErr(err)
 	// zap.L().Info(mapc["uber-trace-id"])
+
+	// TODO: switch to RoomUpdateType every where
+	roomUpdateTypeToTypeString := map[RoomUpdateType]string{
+		CLAIM: "claim",
+		RETRACT: "retract",
+		DEATH: "death",
+		SUBSCRIPTION_DEATH: "subscriptiondeath",
+	}
 	
 	// go func() {
 	// 	time.Sleep(time.Duration(40) * time.Second)
@@ -539,19 +529,26 @@ func main() {
 		// 	opentracing.ChildOf(rootSpan.Context()),
 		// )
 
-		// updates := parse_room_update(rawMsgId, msg)
-		// for _, update := range updates {
-		// 	if update.Type == 0 {
-		// 		zap.L().Debug("got PING", zap.String("source", update.Source), zap.String("value", update.SubscriptionId))
-		// 		// notifications <- Notification{source, val, mapc["uber-trace-id"]}
-		// 		notifications <- Notification{update.Source, update.SubscriptionId, ""}
-		// 	} else if update.Type == 3 {
-		// 		subscription_messages <- update
-		// 	} else {
-		// 		batch_messages <- update
-		// 	}
-		// }
-
+		updates := parse_room_update(rawMsgId, msg)
+		if len(updates) == 1 && updates[0].Type == PING {
+			update := updates[0]
+			zap.L().Debug("got PING", zap.String("source", update.Source), zap.String("value", update.SubscriptionId))
+			// notifications <- Notification{source, val, mapc["uber-trace-id"]}
+			notifications <- Notification{update.Source, update.SubscriptionId, ""}
+		} else if len(updates) == 1 && updates[0].Type == SUBSCRIBE {
+			subscription_messages <- updates[0]
+		} else {
+			update_batch_messages := make([]BatchMessage, len(updates))
+			for i, update := range updates {
+				update_batch_messages[i] = BatchMessage{
+					roomUpdateTypeToTypeString[update.Type],
+					update.Facts[0], // update.Facts should always have length 1
+				}
+			}
+			batch_messages <- update_batch_messages
+		}
+		
+		/*
 		event_type := msg[0:event_type_len]
 		// source := msg[event_type_len:(event_type_len + source_len)]
 		source := rawMsgId
@@ -565,6 +562,8 @@ func main() {
 		} else if event_type == "....BATCH" {
 			batch_messages <- msg
 		}
+		*/
+
 		time.Sleep(time.Duration(1) * time.Microsecond)
 		// span.Finish()
 	}
