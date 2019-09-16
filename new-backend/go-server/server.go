@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	// "log"
-	"bytes"
 	"math"
 	"os"
 	"io"
@@ -151,10 +150,36 @@ func testRoomUpdateSerialization() []byte {
 	facts.Set(0, fact)
 	roomUpdatesList.Set(0, update)
 
-	var buf bytes.Buffer
-	err = capnp.NewEncoder(&buf).Encode(msg)
+	msg_bytes, err := msg.Marshal()
 	checkErr(err)
-	return buf.Bytes()
+	return msg_bytes
+}
+
+func testRoomUpdateDeserialization(data []byte) {
+	msg, err := capnp.Unmarshal(data)
+	checkErr(err)
+	updates, err := roomupdate.ReadRootRoomUpdates(msg)
+	checkErr(err)
+	updatesList, err := updates.Updates()
+	checkErr(err)
+	update := updatesList.At(0)
+	fmt.Println(update.Type())
+	update_source, err := update.Source()
+	checkErr(err)
+	fmt.Println(update_source)
+	update_sub_id, err := update.SubscriptionId()
+	checkErr(err)
+	fmt.Println(update_sub_id)
+	facts, err := update.Facts()
+	checkErr(err)
+	fact := facts.At(0)
+	fact_type, err := fact.Type()
+	checkErr(err)
+	fmt.Println(fact_type)
+	fact_value, err := fact.Value()
+	checkErr(err)
+	fmt.Println(string(fact_value[:]))
+	fmt.Println("done")
 }
 
 func marshal_query_result(query_results []QueryResult) string {
@@ -562,7 +587,9 @@ func main() {
 		SUBSCRIPTION_DEATH: "subscriptiondeath",
 	}
 
-	fmt.Print(testRoomUpdateSerialization())
+	s := testRoomUpdateSerialization()
+	fmt.Println(s)
+	testRoomUpdateDeserialization(s)
 	
 	// go func() {
 	// 	time.Sleep(time.Duration(40) * time.Second)
