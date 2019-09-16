@@ -66,7 +66,7 @@ type Subscriptions struct {
 type Notification struct {
 	Source string
 	Id     string
-	Result string
+	Result []QueryResult
 }
 
 type BatchMessageJSON struct {
@@ -126,15 +126,39 @@ func makeTimestampMillis() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
 }
 
+func marshal_query_result(query_results []QueryResult) string {
+	encoded_results := make([]map[string][]string, 0)
+	for _, query_result := range query_results {
+		encoded_result := make(map[string][]string)
+		for variable_name, term := range query_result.Result {
+			// TODO: eventually support encoding at binary here
+			if term.Type == "integer" {
+				intValue := int(int32(binary.LittleEndian.Uint32(term.Value)))
+				encoded_result[variable_name] = []string{term.Type, strconv.Itoa(intValue)}
+			} else if term.Type == "float" {
+				floatValue := float64(float32(binary.LittleEndian.Uint32(term.Value)))
+				encoded_result[variable_name] = []string{term.Type, strconv.FormatFloat(floatValue, 'f', -1, 32)}
+			} else {
+				encoded_result[variable_name] = []string{term.Type, string(term.Value[:])}
+			}
+		}
+		encoded_results = append(encoded_results, encoded_result)
+	}
+	marshalled_results, err := json.Marshal(encoded_results)
+	checkErr(err)
+	return string(marshalled_results)
+}
+
 func notification_worker(notifications <-chan Notification, client *zmq.Socket) {
 	cache := make(map[string]string)
 	for notification := range notifications {
-		msg := fmt.Sprintf("%s%s%s", notification.Source, notification.Id, notification.Result)
+		notification_result_as_str := marshal_query_result(notification.Result)
+		msg := fmt.Sprintf("%s%s%s", notification.Source, notification.Id, notification_result_as_str)
 		cache_key := fmt.Sprintf("%s%s", notification.Source, notification.Id)
 		cache_value, cache_hit := cache[cache_key]
 		if cache_hit == false || cache_value != msg {
 			cache[cache_key] = msg
-			msgWithTime := fmt.Sprintf("%s%s%v%s", notification.Source, notification.Id, makeTimestampMillis(), notification.Result)
+			msgWithTime := fmt.Sprintf("%s%s%v%s", notification.Source, notification.Id, makeTimestampMillis(), notification_result_as_str)
 			zmqClient.Lock()
 			_, sendErr := client.SendMessage(notification.Source, msgWithTime)
 			checkErr(sendErr)
@@ -534,7 +558,7 @@ func main() {
 			update := updates[0]
 			zap.L().Debug("got PING", zap.String("source", update.Source), zap.String("value", update.SubscriptionId))
 			// notifications <- Notification{source, val, mapc["uber-trace-id"]}
-			notifications <- Notification{update.Source, update.SubscriptionId, ""}
+			notifications <- Notification{update.Source, update.SubscriptionId, make([]QueryResult, 0)}
 		} else if len(updates) == 1 && updates[0].Type == SUBSCRIBE {
 			subscription_messages <- updates[0]
 		} else {

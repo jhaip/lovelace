@@ -2,8 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/binary"
-	"encoding/json"
 	"sort"
 	"strconv"
 	"strings"
@@ -129,29 +127,6 @@ func warmSubscriberCache(subscriptionData Subscription, preExistingFacts map[str
 	subscriptionData.warmed.Done()
 }
 
-func marshal_query_result(query_results []QueryResult) string {
-	encoded_results := make([]map[string][]string, 0)
-	for _, query_result := range query_results {
-		encoded_result := make(map[string][]string)
-		for variable_name, term := range query_result.Result {
-			// TODO: eventually support encoding at binary here
-			if term.Type == "integer" {
-				intValue := int(int32(binary.LittleEndian.Uint32(term.Value)))
-				encoded_result[variable_name] = []string{term.Type, strconv.Itoa(intValue)}
-			} else if term.Type == "float" {
-				floatValue := float64(float32(binary.LittleEndian.Uint32(term.Value)))
-				encoded_result[variable_name] = []string{term.Type, strconv.FormatFloat(floatValue, 'f', -1, 32)}
-			} else {
-				encoded_result[variable_name] = []string{term.Type, string(term.Value[:])}
-			}
-		}
-		encoded_results = append(encoded_results, encoded_result)
-	}
-	marshalled_results, err := json.Marshal(encoded_results)
-	checkErr(err)
-	return string(marshalled_results)
-}
-
 func startSubscriber(subscriptionData Subscription, notifications chan<- Notification, preExistingFacts map[string]Fact) {
 	subscriber := makeSubscriber(subscriptionData.Query)
 	var updatedResults bool
@@ -161,8 +136,11 @@ func startSubscriber(subscriptionData Subscription, notifications chan<- Notific
 		updatedResults = false
 		subscriber, updatedResults = subscriberBatchUpdate(subscriber, batch_messages)
 		if updatedResults {
-			results_as_str := marshal_query_result(getQueryResultsForSubscriber(subscriber))
-			notifications <- Notification{subscriptionData.Source, subscriptionData.Id, results_as_str}
+			notifications <- Notification{
+				subscriptionData.Source,
+				subscriptionData.Id,
+				getQueryResultsForSubscriber(subscriber),
+			}
 		}
 	}
 	subscriptionData.dead.Done()
