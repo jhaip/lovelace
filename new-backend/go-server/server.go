@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	// "log"
+	"bytes"
 	"math"
 	"os"
 	"io"
@@ -28,6 +29,9 @@ import (
 	opentracing "github.com/opentracing/opentracing-go"
 	jaeger "github.com/uber/jaeger-client-go"
 	config "github.com/uber/jaeger-client-go/config"
+
+	roomupdate "room/roomupdate"
+	"zombiezen.com/go/capnproto2"
 )
 
 var dbMutex sync.RWMutex
@@ -124,6 +128,33 @@ func checkErr(err error) {
 
 func makeTimestampMillis() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
+}
+
+func testRoomUpdateSerialization() []byte {
+	// Make a brand new empty message.  A Message allocates Cap'n Proto structs.
+	msg, seg, err := capnp.NewMessage(capnp.SingleSegment(nil))
+	checkErr(err)
+	roomUpdates, err := roomupdate.NewRootRoomUpdates(seg)
+	checkErr(err)
+	roomUpdatesList, err := roomUpdates.NewUpdates(1)
+	checkErr(err)
+	update, err := roomupdate.NewRoomUpdates_RoomUpdate(seg)
+	checkErr(err)
+	update.SetType(roomupdate.RoomUpdates_RoomUpdate_UpdateType_claim)
+	update.SetSource("1234")
+	update.SetSubscriptionId("asdf")
+	facts, err := update.NewFacts(1)
+	checkErr(err)
+	fact, err := roomupdate.NewRoomUpdates_RoomUpdate_Fact(seg)
+	fact.SetType("text")
+	fact.SetValue([]byte("Hello World!"))
+	facts.Set(0, fact)
+	roomUpdatesList.Set(0, update)
+
+	var buf bytes.Buffer
+	err = capnp.NewEncoder(&buf).Encode(msg)
+	checkErr(err)
+	return buf.Bytes()
 }
 
 func marshal_query_result(query_results []QueryResult) string {
@@ -530,6 +561,8 @@ func main() {
 		DEATH: "death",
 		SUBSCRIPTION_DEATH: "subscriptiondeath",
 	}
+
+	fmt.Print(testRoomUpdateSerialization())
 	
 	// go func() {
 	// 	time.Sleep(time.Duration(40) * time.Second)
