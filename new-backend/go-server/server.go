@@ -165,32 +165,24 @@ func testRoomUpdateSerialization() []byte {
 	return msg_buf
 }
 
-// func testRoomUpdateDeserialization(data []byte) {
-// 	msg, err := capnp.Unmarshal(data)
-// 	checkErr(err)
-// 	updates, err := roomupdate.ReadRootRoomUpdates(msg)
-// 	checkErr(err)
-// 	updatesList, err := updates.Updates()
-// 	checkErr(err)
-// 	update := updatesList.At(0)
-// 	fmt.Println(update.Type())
-// 	update_source, err := update.Source()
-// 	checkErr(err)
-// 	fmt.Println(update_source)
-// 	update_sub_id, err := update.SubscriptionId()
-// 	checkErr(err)
-// 	fmt.Println(update_sub_id)
-// 	facts, err := update.Facts()
-// 	checkErr(err)
-// 	fact := facts.At(0)
-// 	fact_type, err := fact.Type()
-// 	checkErr(err)
-// 	fmt.Println(fact_type)
-// 	fact_value, err := fact.Value()
-// 	checkErr(err)
-// 	fmt.Println(string(fact_value[:]))
-// 	fmt.Println("done")
-// }
+func testRoomUpdateDeserialization(data []byte) {
+	room_updates_obj := roomupdate.GetRootAsRoomUpdates(data, 0)
+	updates_length := room_updates_obj.UpdatesLength()
+	fmt.Println(updates_length)
+	update := new(roomupdate.RoomUpdate)
+	room_updates_obj.Updates(update, 0)
+	fmt.Println(update.Type())
+	source := string(update.Source())
+	sub_id := string(update.SubscriptionId())
+	fmt.Println(source)
+	fmt.Println(sub_id)
+	facts_length := update.FactsLength()
+	fmt.Println(facts_length)
+	fact := new(roomupdate.Fact)
+	update.Facts(fact, 0)
+	fmt.Println(fact.Type())
+	fmt.Println(string(fact.ValueBytes()))
+}
 
 func marshal_query_result(query_results []QueryResult) string {
 	encoded_results := make([]map[string][]string, 0)
@@ -599,7 +591,7 @@ func main() {
 
 	s := testRoomUpdateSerialization()
 	fmt.Println(s)
-	// testRoomUpdateDeserialization(s)
+	testRoomUpdateDeserialization(s)
 	
 	// go func() {
 	// 	time.Sleep(time.Duration(40) * time.Second)
