@@ -49,10 +49,30 @@ function testRoomUpdateSerialization() {
     return msg_buf
 }
 
+function testRoomUpdateDeserialization(data) {
+    var buf = new flatbuffers.ByteBuffer(data);
+    var room_updates_obj = roomupdatefbs.RoomUpdates.getRootAsRoomUpdates(buf)
+    var updates_length = room_updates_obj.updatesLength()
+    console.log(updates_length)
+    update = room_updates_obj.updates(0)
+    console.log(update.type())
+    var source = update.source()
+    var sub_id = update.subscriptionId()
+    console.log(source)
+    console.log(sub_id)
+    facts_length = update.factsLength()
+    console.log(facts_length)
+    fact = update.facts(0)
+    console.log(fact.type())
+    console.log(fact.valueArray())
+    console.log(uintToString(fact.valueArray()))
+}
+
 var s = testRoomUpdateSerialization()
 console.log(s)
 console.log(s.join(' '))
 console.log(s.length)
+console.log(testRoomUpdateDeserialization(s))
 
 /*
 JS:
