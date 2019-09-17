@@ -1,0 +1,36 @@
+namespace roomupdatefbs;
+
+enum UpdateType:byte {
+    Ping = 0,
+    Claim,
+    Retract,
+    Subscribe,
+    Death,
+    SubscriptionDeath
+}
+
+enum FactType:byte {
+    Id = 0,
+    Text,
+    Integer,
+    Float,
+    Binary
+}
+
+table Fact {
+    type:FactType;
+    value:[ubyte];
+}
+
+table RoomUpdate {
+    type:UpdateType;
+    source:string;
+    subscriptionId:string;
+    facts:[Fact];
+}
+
+table RoomUpdates {
+    updates:[RoomUpdate];
+}
+
+root_type RoomUpdates;

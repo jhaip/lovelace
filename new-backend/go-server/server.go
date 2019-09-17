@@ -29,8 +29,8 @@ import (
 	jaeger "github.com/uber/jaeger-client-go"
 	config "github.com/uber/jaeger-client-go/config"
 
-	roomupdate "room/roomupdate"
-	"zombiezen.com/go/capnproto2"
+	flatbuffers "github.com/google/flatbuffers/go"
+	roomupdate "room/roomupdatefbs"
 )
 
 var dbMutex sync.RWMutex
@@ -130,57 +130,67 @@ func makeTimestampMillis() int64 {
 }
 
 func testRoomUpdateSerialization() []byte {
-	// Make a brand new empty message.  A Message allocates Cap'n Proto structs.
-	msg, seg, err := capnp.NewMessage(capnp.SingleSegment(nil))
-	checkErr(err)
-	roomUpdates, err := roomupdate.NewRootRoomUpdates(seg)
-	checkErr(err)
-	roomUpdatesList, err := roomUpdates.NewUpdates(1)
-	checkErr(err)
-	update, err := roomupdate.NewRoomUpdates_RoomUpdate(seg)
-	checkErr(err)
-	update.SetType(roomupdate.RoomUpdates_RoomUpdate_UpdateType_claim)
-	update.SetSource("1234")
-	update.SetSubscriptionId("asdf")
-	facts, err := update.NewFacts(1)
-	checkErr(err)
-	fact, err := roomupdate.NewRoomUpdates_RoomUpdate_Fact(seg)
-	fact.SetType("text")
-	fact.SetValue([]byte("Hello World!"))
-	facts.Set(0, fact)
-	roomUpdatesList.Set(0, update)
+	builder := flatbuffers.NewBuilder(1024)
 
-	msg_bytes, err := msg.Marshal()
-	checkErr(err)
-	return msg_bytes
+	factValue := builder.CreateByteVector([]byte("Hello World!"))
+
+	roomupdate.FactStart(builder)
+	roomupdate.FactAddType(builder, roomupdate.FactTypeText)
+	roomupdate.FactAddValue(builder, factValue)
+	fact := roomupdate.FactEnd(builder)
+
+	updateSource := builder.CreateString("1234")
+	updateSubId := builder.CreateString("asdf")
+	roomupdate.RoomUpdateStartFactsVector(builder, 1)
+	builder.PrependUOffsetT(fact)
+	facts := builder.EndVector(1)  // 1 == 1 from roomupdate.RoomUpdateStartFactsVector(builder, 1)
+
+	roomupdate.RoomUpdateStart(builder)
+	roomupdate.RoomUpdateAddType(builder, roomupdate.UpdateTypeClaim)
+	roomupdate.RoomUpdateAddSource(builder, updateSource)
+	roomupdate.RoomUpdateAddSubscriptionId(builder, updateSubId)	
+	roomupdate.RoomUpdateAddFacts(builder, facts)
+	update := roomupdate.RoomUpdateEnd(builder)
+
+	roomupdate.RoomUpdatesStartUpdatesVector(builder, 1)
+	builder.PrependUOffsetT(update)
+	updates := builder.EndVector(1)
+
+	roomupdate.RoomUpdatesStart(builder)
+	roomupdate.RoomUpdatesAddUpdates(builder, updates)
+	full_updates_msg := roomupdate.RoomUpdatesEnd(builder)
+	
+	builder.Finish(full_updates_msg)
+	msg_buf := builder.FinishedBytes()
+	return msg_buf
 }
 
-func testRoomUpdateDeserialization(data []byte) {
-	msg, err := capnp.Unmarshal(data)
-	checkErr(err)
-	updates, err := roomupdate.ReadRootRoomUpdates(msg)
-	checkErr(err)
-	updatesList, err := updates.Updates()
-	checkErr(err)
-	update := updatesList.At(0)
-	fmt.Println(update.Type())
-	update_source, err := update.Source()
-	checkErr(err)
-	fmt.Println(update_source)
-	update_sub_id, err := update.SubscriptionId()
-	checkErr(err)
-	fmt.Println(update_sub_id)
-	facts, err := update.Facts()
-	checkErr(err)
-	fact := facts.At(0)
-	fact_type, err := fact.Type()
-	checkErr(err)
-	fmt.Println(fact_type)
-	fact_value, err := fact.Value()
-	checkErr(err)
-	fmt.Println(string(fact_value[:]))
-	fmt.Println("done")
-}
+// func testRoomUpdateDeserialization(data []byte) {
+// 	msg, err := capnp.Unmarshal(data)
+// 	checkErr(err)
+// 	updates, err := roomupdate.ReadRootRoomUpdates(msg)
+// 	checkErr(err)
+// 	updatesList, err := updates.Updates()
+// 	checkErr(err)
+// 	update := updatesList.At(0)
+// 	fmt.Println(update.Type())
+// 	update_source, err := update.Source()
+// 	checkErr(err)
+// 	fmt.Println(update_source)
+// 	update_sub_id, err := update.SubscriptionId()
+// 	checkErr(err)
+// 	fmt.Println(update_sub_id)
+// 	facts, err := update.Facts()
+// 	checkErr(err)
+// 	fact := facts.At(0)
+// 	fact_type, err := fact.Type()
+// 	checkErr(err)
+// 	fmt.Println(fact_type)
+// 	fact_value, err := fact.Value()
+// 	checkErr(err)
+// 	fmt.Println(string(fact_value[:]))
+// 	fmt.Println("done")
+// }
 
 func marshal_query_result(query_results []QueryResult) string {
 	encoded_results := make([]map[string][]string, 0)
@@ -589,7 +599,7 @@ func main() {
 
 	s := testRoomUpdateSerialization()
 	fmt.Println(s)
-	testRoomUpdateDeserialization(s)
+	// testRoomUpdateDeserialization(s)
 	
 	// go func() {
 	// 	time.Sleep(time.Duration(40) * time.Second)
