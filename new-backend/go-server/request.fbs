@@ -33,4 +33,19 @@ table RoomUpdates {
     updates:[RoomUpdate];
 }
 
+table RoomResult {
+    variableName:string;
+    value:[ubyte];
+}
+
+table ResultSet {
+    resultSet:[RoomResult];
+}
+
+table RoomResponse {
+    source:string;
+    subscriptionId:string;
+    results:[ResultSet];
+}
+
 root_type RoomUpdates;

@@ -503,5 +503,423 @@ roomupdatefbs.RoomUpdates.createRoomUpdates = function(builder, updatesOffset) {
   return roomupdatefbs.RoomUpdates.endRoomUpdates(builder);
 }
 
+/**
+ * @constructor
+ */
+roomupdatefbs.RoomResult = function() {
+  /**
+   * @type {flatbuffers.ByteBuffer}
+   */
+  this.bb = null;
+
+  /**
+   * @type {number}
+   */
+  this.bb_pos = 0;
+};
+
+/**
+ * @param {number} i
+ * @param {flatbuffers.ByteBuffer} bb
+ * @returns {roomupdatefbs.RoomResult}
+ */
+roomupdatefbs.RoomResult.prototype.__init = function(i, bb) {
+  this.bb_pos = i;
+  this.bb = bb;
+  return this;
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {roomupdatefbs.RoomResult=} obj
+ * @returns {roomupdatefbs.RoomResult}
+ */
+roomupdatefbs.RoomResult.getRootAsRoomResult = function(bb, obj) {
+  return (obj || new roomupdatefbs.RoomResult).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {roomupdatefbs.RoomResult=} obj
+ * @returns {roomupdatefbs.RoomResult}
+ */
+roomupdatefbs.RoomResult.getSizePrefixedRootAsRoomResult = function(bb, obj) {
+  return (obj || new roomupdatefbs.RoomResult).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.Encoding=} optionalEncoding
+ * @returns {string|Uint8Array|null}
+ */
+roomupdatefbs.RoomResult.prototype.variableName = function(optionalEncoding) {
+  var offset = this.bb.__offset(this.bb_pos, 4);
+  return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
+};
+
+/**
+ * @param {number} index
+ * @returns {number}
+ */
+roomupdatefbs.RoomResult.prototype.value = function(index) {
+  var offset = this.bb.__offset(this.bb_pos, 6);
+  return offset ? this.bb.readUint8(this.bb.__vector(this.bb_pos + offset) + index) : 0;
+};
+
+/**
+ * @returns {number}
+ */
+roomupdatefbs.RoomResult.prototype.valueLength = function() {
+  var offset = this.bb.__offset(this.bb_pos, 6);
+  return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
+};
+
+/**
+ * @returns {Uint8Array}
+ */
+roomupdatefbs.RoomResult.prototype.valueArray = function() {
+  var offset = this.bb.__offset(this.bb_pos, 6);
+  return offset ? new Uint8Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ */
+roomupdatefbs.RoomResult.startRoomResult = function(builder) {
+  builder.startObject(2);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @param {flatbuffers.Offset} variableNameOffset
+ */
+roomupdatefbs.RoomResult.addVariableName = function(builder, variableNameOffset) {
+  builder.addFieldOffset(0, variableNameOffset, 0);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @param {flatbuffers.Offset} valueOffset
+ */
+roomupdatefbs.RoomResult.addValue = function(builder, valueOffset) {
+  builder.addFieldOffset(1, valueOffset, 0);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @param {Array.<number>} data
+ * @returns {flatbuffers.Offset}
+ */
+roomupdatefbs.RoomResult.createValueVector = function(builder, data) {
+  builder.startVector(1, data.length, 1);
+  for (var i = data.length - 1; i >= 0; i--) {
+    builder.addInt8(data[i]);
+  }
+  return builder.endVector();
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @param {number} numElems
+ */
+roomupdatefbs.RoomResult.startValueVector = function(builder, numElems) {
+  builder.startVector(1, numElems, 1);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @returns {flatbuffers.Offset}
+ */
+roomupdatefbs.RoomResult.endRoomResult = function(builder) {
+  var offset = builder.endObject();
+  return offset;
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @param {flatbuffers.Offset} variableNameOffset
+ * @param {flatbuffers.Offset} valueOffset
+ * @returns {flatbuffers.Offset}
+ */
+roomupdatefbs.RoomResult.createRoomResult = function(builder, variableNameOffset, valueOffset) {
+  roomupdatefbs.RoomResult.startRoomResult(builder);
+  roomupdatefbs.RoomResult.addVariableName(builder, variableNameOffset);
+  roomupdatefbs.RoomResult.addValue(builder, valueOffset);
+  return roomupdatefbs.RoomResult.endRoomResult(builder);
+}
+
+/**
+ * @constructor
+ */
+roomupdatefbs.ResultSet = function() {
+  /**
+   * @type {flatbuffers.ByteBuffer}
+   */
+  this.bb = null;
+
+  /**
+   * @type {number}
+   */
+  this.bb_pos = 0;
+};
+
+/**
+ * @param {number} i
+ * @param {flatbuffers.ByteBuffer} bb
+ * @returns {roomupdatefbs.ResultSet}
+ */
+roomupdatefbs.ResultSet.prototype.__init = function(i, bb) {
+  this.bb_pos = i;
+  this.bb = bb;
+  return this;
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {roomupdatefbs.ResultSet=} obj
+ * @returns {roomupdatefbs.ResultSet}
+ */
+roomupdatefbs.ResultSet.getRootAsResultSet = function(bb, obj) {
+  return (obj || new roomupdatefbs.ResultSet).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {roomupdatefbs.ResultSet=} obj
+ * @returns {roomupdatefbs.ResultSet}
+ */
+roomupdatefbs.ResultSet.getSizePrefixedRootAsResultSet = function(bb, obj) {
+  return (obj || new roomupdatefbs.ResultSet).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {number} index
+ * @param {roomupdatefbs.RoomResult=} obj
+ * @returns {roomupdatefbs.RoomResult}
+ */
+roomupdatefbs.ResultSet.prototype.resultSet = function(index, obj) {
+  var offset = this.bb.__offset(this.bb_pos, 4);
+  return offset ? (obj || new roomupdatefbs.RoomResult).__init(this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4), this.bb) : null;
+};
+
+/**
+ * @returns {number}
+ */
+roomupdatefbs.ResultSet.prototype.resultSetLength = function() {
+  var offset = this.bb.__offset(this.bb_pos, 4);
+  return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ */
+roomupdatefbs.ResultSet.startResultSet = function(builder) {
+  builder.startObject(1);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @param {flatbuffers.Offset} resultSetOffset
+ */
+roomupdatefbs.ResultSet.addResultSet = function(builder, resultSetOffset) {
+  builder.addFieldOffset(0, resultSetOffset, 0);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @param {Array.<flatbuffers.Offset>} data
+ * @returns {flatbuffers.Offset}
+ */
+roomupdatefbs.ResultSet.createResultSetVector = function(builder, data) {
+  builder.startVector(4, data.length, 4);
+  for (var i = data.length - 1; i >= 0; i--) {
+    builder.addOffset(data[i]);
+  }
+  return builder.endVector();
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @param {number} numElems
+ */
+roomupdatefbs.ResultSet.startResultSetVector = function(builder, numElems) {
+  builder.startVector(4, numElems, 4);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @returns {flatbuffers.Offset}
+ */
+roomupdatefbs.ResultSet.endResultSet = function(builder) {
+  var offset = builder.endObject();
+  return offset;
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @param {flatbuffers.Offset} resultSetOffset
+ * @returns {flatbuffers.Offset}
+ */
+roomupdatefbs.ResultSet.createResultSet = function(builder, resultSetOffset) {
+  roomupdatefbs.ResultSet.startResultSet(builder);
+  roomupdatefbs.ResultSet.addResultSet(builder, resultSetOffset);
+  return roomupdatefbs.ResultSet.endResultSet(builder);
+}
+
+/**
+ * @constructor
+ */
+roomupdatefbs.RoomResponse = function() {
+  /**
+   * @type {flatbuffers.ByteBuffer}
+   */
+  this.bb = null;
+
+  /**
+   * @type {number}
+   */
+  this.bb_pos = 0;
+};
+
+/**
+ * @param {number} i
+ * @param {flatbuffers.ByteBuffer} bb
+ * @returns {roomupdatefbs.RoomResponse}
+ */
+roomupdatefbs.RoomResponse.prototype.__init = function(i, bb) {
+  this.bb_pos = i;
+  this.bb = bb;
+  return this;
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {roomupdatefbs.RoomResponse=} obj
+ * @returns {roomupdatefbs.RoomResponse}
+ */
+roomupdatefbs.RoomResponse.getRootAsRoomResponse = function(bb, obj) {
+  return (obj || new roomupdatefbs.RoomResponse).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {roomupdatefbs.RoomResponse=} obj
+ * @returns {roomupdatefbs.RoomResponse}
+ */
+roomupdatefbs.RoomResponse.getSizePrefixedRootAsRoomResponse = function(bb, obj) {
+  return (obj || new roomupdatefbs.RoomResponse).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {flatbuffers.Encoding=} optionalEncoding
+ * @returns {string|Uint8Array|null}
+ */
+roomupdatefbs.RoomResponse.prototype.source = function(optionalEncoding) {
+  var offset = this.bb.__offset(this.bb_pos, 4);
+  return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
+};
+
+/**
+ * @param {flatbuffers.Encoding=} optionalEncoding
+ * @returns {string|Uint8Array|null}
+ */
+roomupdatefbs.RoomResponse.prototype.subscriptionId = function(optionalEncoding) {
+  var offset = this.bb.__offset(this.bb_pos, 6);
+  return offset ? this.bb.__string(this.bb_pos + offset, optionalEncoding) : null;
+};
+
+/**
+ * @param {number} index
+ * @param {roomupdatefbs.ResultSet=} obj
+ * @returns {roomupdatefbs.ResultSet}
+ */
+roomupdatefbs.RoomResponse.prototype.results = function(index, obj) {
+  var offset = this.bb.__offset(this.bb_pos, 8);
+  return offset ? (obj || new roomupdatefbs.ResultSet).__init(this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4), this.bb) : null;
+};
+
+/**
+ * @returns {number}
+ */
+roomupdatefbs.RoomResponse.prototype.resultsLength = function() {
+  var offset = this.bb.__offset(this.bb_pos, 8);
+  return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ */
+roomupdatefbs.RoomResponse.startRoomResponse = function(builder) {
+  builder.startObject(3);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @param {flatbuffers.Offset} sourceOffset
+ */
+roomupdatefbs.RoomResponse.addSource = function(builder, sourceOffset) {
+  builder.addFieldOffset(0, sourceOffset, 0);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @param {flatbuffers.Offset} subscriptionIdOffset
+ */
+roomupdatefbs.RoomResponse.addSubscriptionId = function(builder, subscriptionIdOffset) {
+  builder.addFieldOffset(1, subscriptionIdOffset, 0);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @param {flatbuffers.Offset} resultsOffset
+ */
+roomupdatefbs.RoomResponse.addResults = function(builder, resultsOffset) {
+  builder.addFieldOffset(2, resultsOffset, 0);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @param {Array.<flatbuffers.Offset>} data
+ * @returns {flatbuffers.Offset}
+ */
+roomupdatefbs.RoomResponse.createResultsVector = function(builder, data) {
+  builder.startVector(4, data.length, 4);
+  for (var i = data.length - 1; i >= 0; i--) {
+    builder.addOffset(data[i]);
+  }
+  return builder.endVector();
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @param {number} numElems
+ */
+roomupdatefbs.RoomResponse.startResultsVector = function(builder, numElems) {
+  builder.startVector(4, numElems, 4);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @returns {flatbuffers.Offset}
+ */
+roomupdatefbs.RoomResponse.endRoomResponse = function(builder) {
+  var offset = builder.endObject();
+  return offset;
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @param {flatbuffers.Offset} sourceOffset
+ * @param {flatbuffers.Offset} subscriptionIdOffset
+ * @param {flatbuffers.Offset} resultsOffset
+ * @returns {flatbuffers.Offset}
+ */
+roomupdatefbs.RoomResponse.createRoomResponse = function(builder, sourceOffset, subscriptionIdOffset, resultsOffset) {
+  roomupdatefbs.RoomResponse.startRoomResponse(builder);
+  roomupdatefbs.RoomResponse.addSource(builder, sourceOffset);
+  roomupdatefbs.RoomResponse.addSubscriptionId(builder, subscriptionIdOffset);
+  roomupdatefbs.RoomResponse.addResults(builder, resultsOffset);
+  return roomupdatefbs.RoomResponse.endRoomResponse(builder);
+}
+
 // Exports for Node.js and RequireJS
 this.roomupdatefbs = roomupdatefbs;
