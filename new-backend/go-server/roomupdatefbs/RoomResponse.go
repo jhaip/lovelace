@@ -42,7 +42,7 @@ func (rcv *RoomResponse) SubscriptionId() []byte {
 	return nil
 }
 
-func (rcv *RoomResponse) Results(obj *ResultSet, j int) bool {
+func (rcv *RoomResponse) ResultSets(obj *ResultSet, j int) bool {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(8))
 	if o != 0 {
 		x := rcv._tab.Vector(o)
@@ -54,7 +54,7 @@ func (rcv *RoomResponse) Results(obj *ResultSet, j int) bool {
 	return false
 }
 
-func (rcv *RoomResponse) ResultsLength() int {
+func (rcv *RoomResponse) ResultSetsLength() int {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(8))
 	if o != 0 {
 		return rcv._tab.VectorLen(o)
@@ -71,10 +71,10 @@ func RoomResponseAddSource(builder *flatbuffers.Builder, source flatbuffers.UOff
 func RoomResponseAddSubscriptionId(builder *flatbuffers.Builder, subscriptionId flatbuffers.UOffsetT) {
 	builder.PrependUOffsetTSlot(1, flatbuffers.UOffsetT(subscriptionId), 0)
 }
-func RoomResponseAddResults(builder *flatbuffers.Builder, results flatbuffers.UOffsetT) {
-	builder.PrependUOffsetTSlot(2, flatbuffers.UOffsetT(results), 0)
+func RoomResponseAddResultSets(builder *flatbuffers.Builder, resultSets flatbuffers.UOffsetT) {
+	builder.PrependUOffsetTSlot(2, flatbuffers.UOffsetT(resultSets), 0)
 }
-func RoomResponseStartResultsVector(builder *flatbuffers.Builder, numElems int) flatbuffers.UOffsetT {
+func RoomResponseStartResultSetsVector(builder *flatbuffers.Builder, numElems int) flatbuffers.UOffsetT {
 	return builder.StartVector(4, numElems, 4)
 }
 func RoomResponseEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {

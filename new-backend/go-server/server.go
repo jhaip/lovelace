@@ -184,6 +184,59 @@ func testRoomUpdateDeserialization(data []byte) {
 	fmt.Println(string(fact.ValueBytes()))
 }
 
+func testRoomUpdateSerializationResult() []byte {
+	builder := flatbuffers.NewBuilder(1024)
+
+	resultVariableName := builder.CreateString("X")
+	resultValue := builder.CreateByteVector([]byte("blue"))
+
+	roomupdate.RoomResultStart(builder)
+	roomupdate.RoomResultAddVariableName(builder, resultVariableName)
+	roomupdate.RoomResultAddValue(builder, resultValue)
+	room_result := roomupdate.FactEnd(builder)
+
+	roomupdate.ResultSetStartResultsVector(builder, 1)
+	builder.PrependUOffsetT(room_result)
+	results := builder.EndVector(1)
+
+	roomupdate.ResultSetStart(builder)
+	roomupdate.ResultSetAddResults(builder, results)
+	result_set := roomupdate.ResultSetEnd(builder)
+
+	roomResponseSource := builder.CreateString("1234")
+	roomResponseSubscriptionId := builder.CreateString("asdf")
+
+	roomupdate.RoomResponseStartResultSetsVector(builder, 1)
+	builder.PrependUOffsetT(result_set)
+	result_sets := builder.EndVector(1)
+
+	roomupdate.RoomResponseStart(builder)
+	roomupdate.RoomResponseAddSource(builder, roomResponseSource)
+	roomupdate.RoomResponseAddSubscriptionId(builder, roomResponseSubscriptionId)
+	roomupdate.RoomResponseAddResultSets(builder, result_sets)
+	full_response_msg := roomupdate.RoomResponseEnd(builder)
+
+	builder.Finish(full_response_msg)
+	msg_buf := builder.FinishedBytes()
+	return msg_buf
+}
+
+func testRoomUpdateDeserializationResult(data []byte) {
+	room_response_obj := roomupdate.GetRootAsRoomResponse(data, 0)
+	fmt.Println(string(room_response_obj.Source()))
+	fmt.Println(string(room_response_obj.SubscriptionId()))
+	result_sets_length := room_response_obj.ResultSetsLength()
+	fmt.Println(result_sets_length)
+	result_set := new(roomupdate.ResultSet)
+	room_response_obj.ResultSets(result_set, 0)
+	results_length := result_set.ResultsLength()
+	fmt.Println(results_length)
+	result := new(roomupdate.RoomResult)
+	result_set.Results(result, 0)
+	fmt.Println(string(result.VariableName()))
+	fmt.Println(string(result.ValueBytes()))
+}
+
 func marshal_query_result(query_results []QueryResult) string {
 	encoded_results := make([]map[string][]string, 0)
 	for _, query_result := range query_results {
@@ -592,6 +645,10 @@ func main() {
 	s := testRoomUpdateSerialization()
 	fmt.Println(s)
 	testRoomUpdateDeserialization(s)
+
+	s2 := testRoomUpdateSerializationResult()
+	fmt.Println(s2)
+	testRoomUpdateDeserializationResult(s2)
 	
 	// go func() {
 	// 	time.Sleep(time.Duration(40) * time.Second)

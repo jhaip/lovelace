@@ -696,7 +696,7 @@ roomupdatefbs.ResultSet.getSizePrefixedRootAsResultSet = function(bb, obj) {
  * @param {roomupdatefbs.RoomResult=} obj
  * @returns {roomupdatefbs.RoomResult}
  */
-roomupdatefbs.ResultSet.prototype.resultSet = function(index, obj) {
+roomupdatefbs.ResultSet.prototype.results = function(index, obj) {
   var offset = this.bb.__offset(this.bb_pos, 4);
   return offset ? (obj || new roomupdatefbs.RoomResult).__init(this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4), this.bb) : null;
 };
@@ -704,7 +704,7 @@ roomupdatefbs.ResultSet.prototype.resultSet = function(index, obj) {
 /**
  * @returns {number}
  */
-roomupdatefbs.ResultSet.prototype.resultSetLength = function() {
+roomupdatefbs.ResultSet.prototype.resultsLength = function() {
   var offset = this.bb.__offset(this.bb_pos, 4);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
@@ -718,10 +718,10 @@ roomupdatefbs.ResultSet.startResultSet = function(builder) {
 
 /**
  * @param {flatbuffers.Builder} builder
- * @param {flatbuffers.Offset} resultSetOffset
+ * @param {flatbuffers.Offset} resultsOffset
  */
-roomupdatefbs.ResultSet.addResultSet = function(builder, resultSetOffset) {
-  builder.addFieldOffset(0, resultSetOffset, 0);
+roomupdatefbs.ResultSet.addResults = function(builder, resultsOffset) {
+  builder.addFieldOffset(0, resultsOffset, 0);
 };
 
 /**
@@ -729,7 +729,7 @@ roomupdatefbs.ResultSet.addResultSet = function(builder, resultSetOffset) {
  * @param {Array.<flatbuffers.Offset>} data
  * @returns {flatbuffers.Offset}
  */
-roomupdatefbs.ResultSet.createResultSetVector = function(builder, data) {
+roomupdatefbs.ResultSet.createResultsVector = function(builder, data) {
   builder.startVector(4, data.length, 4);
   for (var i = data.length - 1; i >= 0; i--) {
     builder.addOffset(data[i]);
@@ -741,7 +741,7 @@ roomupdatefbs.ResultSet.createResultSetVector = function(builder, data) {
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-roomupdatefbs.ResultSet.startResultSetVector = function(builder, numElems) {
+roomupdatefbs.ResultSet.startResultsVector = function(builder, numElems) {
   builder.startVector(4, numElems, 4);
 };
 
@@ -756,12 +756,12 @@ roomupdatefbs.ResultSet.endResultSet = function(builder) {
 
 /**
  * @param {flatbuffers.Builder} builder
- * @param {flatbuffers.Offset} resultSetOffset
+ * @param {flatbuffers.Offset} resultsOffset
  * @returns {flatbuffers.Offset}
  */
-roomupdatefbs.ResultSet.createResultSet = function(builder, resultSetOffset) {
+roomupdatefbs.ResultSet.createResultSet = function(builder, resultsOffset) {
   roomupdatefbs.ResultSet.startResultSet(builder);
-  roomupdatefbs.ResultSet.addResultSet(builder, resultSetOffset);
+  roomupdatefbs.ResultSet.addResults(builder, resultsOffset);
   return roomupdatefbs.ResultSet.endResultSet(builder);
 }
 
@@ -832,7 +832,7 @@ roomupdatefbs.RoomResponse.prototype.subscriptionId = function(optionalEncoding)
  * @param {roomupdatefbs.ResultSet=} obj
  * @returns {roomupdatefbs.ResultSet}
  */
-roomupdatefbs.RoomResponse.prototype.results = function(index, obj) {
+roomupdatefbs.RoomResponse.prototype.resultSets = function(index, obj) {
   var offset = this.bb.__offset(this.bb_pos, 8);
   return offset ? (obj || new roomupdatefbs.ResultSet).__init(this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4), this.bb) : null;
 };
@@ -840,7 +840,7 @@ roomupdatefbs.RoomResponse.prototype.results = function(index, obj) {
 /**
  * @returns {number}
  */
-roomupdatefbs.RoomResponse.prototype.resultsLength = function() {
+roomupdatefbs.RoomResponse.prototype.resultSetsLength = function() {
   var offset = this.bb.__offset(this.bb_pos, 8);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
@@ -870,10 +870,10 @@ roomupdatefbs.RoomResponse.addSubscriptionId = function(builder, subscriptionIdO
 
 /**
  * @param {flatbuffers.Builder} builder
- * @param {flatbuffers.Offset} resultsOffset
+ * @param {flatbuffers.Offset} resultSetsOffset
  */
-roomupdatefbs.RoomResponse.addResults = function(builder, resultsOffset) {
-  builder.addFieldOffset(2, resultsOffset, 0);
+roomupdatefbs.RoomResponse.addResultSets = function(builder, resultSetsOffset) {
+  builder.addFieldOffset(2, resultSetsOffset, 0);
 };
 
 /**
@@ -881,7 +881,7 @@ roomupdatefbs.RoomResponse.addResults = function(builder, resultsOffset) {
  * @param {Array.<flatbuffers.Offset>} data
  * @returns {flatbuffers.Offset}
  */
-roomupdatefbs.RoomResponse.createResultsVector = function(builder, data) {
+roomupdatefbs.RoomResponse.createResultSetsVector = function(builder, data) {
   builder.startVector(4, data.length, 4);
   for (var i = data.length - 1; i >= 0; i--) {
     builder.addOffset(data[i]);
@@ -893,7 +893,7 @@ roomupdatefbs.RoomResponse.createResultsVector = function(builder, data) {
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-roomupdatefbs.RoomResponse.startResultsVector = function(builder, numElems) {
+roomupdatefbs.RoomResponse.startResultSetsVector = function(builder, numElems) {
   builder.startVector(4, numElems, 4);
 };
 
@@ -910,14 +910,14 @@ roomupdatefbs.RoomResponse.endRoomResponse = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} sourceOffset
  * @param {flatbuffers.Offset} subscriptionIdOffset
- * @param {flatbuffers.Offset} resultsOffset
+ * @param {flatbuffers.Offset} resultSetsOffset
  * @returns {flatbuffers.Offset}
  */
-roomupdatefbs.RoomResponse.createRoomResponse = function(builder, sourceOffset, subscriptionIdOffset, resultsOffset) {
+roomupdatefbs.RoomResponse.createRoomResponse = function(builder, sourceOffset, subscriptionIdOffset, resultSetsOffset) {
   roomupdatefbs.RoomResponse.startRoomResponse(builder);
   roomupdatefbs.RoomResponse.addSource(builder, sourceOffset);
   roomupdatefbs.RoomResponse.addSubscriptionId(builder, subscriptionIdOffset);
-  roomupdatefbs.RoomResponse.addResults(builder, resultsOffset);
+  roomupdatefbs.RoomResponse.addResultSets(builder, resultSetsOffset);
   return roomupdatefbs.RoomResponse.endRoomResponse(builder);
 }
 

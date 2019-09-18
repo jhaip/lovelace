@@ -39,13 +39,13 @@ table RoomResult {
 }
 
 table ResultSet {
-    resultSet:[RoomResult];
+    results:[RoomResult];
 }
 
 table RoomResponse {
     source:string;
     subscriptionId:string;
-    results:[ResultSet];
+    resultSets:[ResultSet];
 }
 
 root_type RoomUpdates;
