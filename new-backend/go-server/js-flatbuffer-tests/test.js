@@ -69,16 +69,83 @@ function testRoomUpdateDeserialization(data) {
 }
 
 var s = testRoomUpdateSerialization()
-console.log(s)
+// console.log(s)
 console.log(s.join(' '))
 console.log(s.length)
-console.log(testRoomUpdateDeserialization(s))
+testRoomUpdateDeserialization(s)
+
+console.log("--------------")
+
+function testRoomUpdateSerializationResult() {
+    var builder = new flatbuffers.Builder(1024);
+
+    var resultVariableName = builder.createString("X")
+    var resultValue = roomupdatefbs.RoomResult.createValueVector(builder, stringToUint("blue"))
+
+    roomupdatefbs.RoomResult.startRoomResult(builder)
+    roomupdatefbs.RoomResult.addVariableName(builder, resultVariableName)
+    roomupdatefbs.RoomResult.addValue(builder, resultValue)
+    var room_result = roomupdatefbs.RoomResult.endRoomResult(builder)
+
+    var results = roomupdatefbs.ResultSet.createResultsVector(builder, [room_result])
+
+    roomupdatefbs.ResultSet.startResultSet(builder)
+    roomupdatefbs.ResultSet.addResults(builder, results)
+    var result_set = roomupdatefbs.ResultSet.endResultSet(builder)
+
+    var roomResponseSource = builder.createString("1234")
+    var roomResponseSubscriptionId = builder.createString("asdf")
+
+    var result_sets = roomupdatefbs.RoomResponse.createResultSetsVector(builder, [result_set])
+
+    roomupdatefbs.RoomResponse.startRoomResponse(builder)
+    roomupdatefbs.RoomResponse.addSource(builder, roomResponseSource)
+    roomupdatefbs.RoomResponse.addSubscriptionId(builder, roomResponseSubscriptionId)
+    roomupdatefbs.RoomResponse.addResultSets(builder, result_sets)
+    var full_updates_msg = roomupdatefbs.RoomResponse.endRoomResponse(builder)
+
+    builder.finish(full_updates_msg)
+    var msg_buf = builder.asUint8Array(); // Of type `Uint8Array`.
+    return msg_buf
+}
+
+function testRoomUpdateDeserializationResult(data) {
+    var buf = new flatbuffers.ByteBuffer(data);
+    var room_response_obj = roomupdatefbs.RoomResponse.getRootAsRoomResponse(buf)
+    console.log(room_response_obj.source())
+    console.log(room_response_obj.subscriptionId())
+    var result_sets_length = room_response_obj.resultSetsLength()
+    console.log(result_sets_length)
+
+    var result_set = room_response_obj.resultSets(0)
+    var results_length = result_set.resultsLength()
+    console.log(results_length)
+    var result = result_set.results(0)
+    console.log(result.variableName())
+    console.log(uintToString(result.valueArray()))
+}
+
+var s2 = testRoomUpdateSerializationResult()
+// console.log(s2)
+console.log(s2.join(' '))
+console.log(s2.length)
+testRoomUpdateDeserializationResult(s2)
 
 /*
+RoomUpdate
 JS:
-12 0 0 0 0 0 6 0 8 0 4 0 6 0 0 0 4 0 0 0 1 0 0 0 16 0 0 0 12 0 20 0 19 0 12 0 8 0 4 0 12 0 0 0 16 0 0 0 20 0 0 0 28 0 0 0 0 0 0 1 1 0 0 0 36 0 0 0 4 0 0 0 97 115 100 102 0 0 0 0 4 0 0 0 49 50 51 52 0 0 0 0 8 0 12 0 11 0 4 0 8 0 0 0 8 0 0 0 0 0 0 1 12 0 0 0 72 101 108 108 111 32 87 111 114 108 100 33
-Golang:
 12 0 0 0 0 0 6 0 8 0 4 0 6 0 0 0 4 0 0 0 1 0 0 0 16 0 0 0 12 0 20 0 19 0 12 0 8 0 4 0 12 0 0 0 16 0 0 0 20 0 0 0 28 0 0 0 0 0 0 0 1 0 0 0 36 0 0 0 4 0 0 0 97 115 100 102 0 0 0 0 4 0 0 0 49 50 51 52 0 0 0 0 8 0 12 0 11 0 4 0 8 0 0 0 8 0 0 0 0 0 0 0 12 0 0 0 72 101 108 108 111 32 87 111 114 108 100 33
+Golang:
+12 0 0 0 0 0 6 0 8 0 4 0 6 0 0 0 4 0 0 0 1 0 0 0 16 0 0 0 12 0 20 0 19 0 12 0 8 0 4 0 12 0 0 0 16 0 0 0 20 0 0 0 28 0 0 0 0 0 0 1 1 0 0 0 36 0 0 0 4 0 0 0 97 115 100 102 0 0 0 0 4 0 0 0 49 50 51 52 0 0 0 0 8 0 12 0 11 0 4 0 8 0 0 0 8 0 0 0 0 0 0 1 12 0 0 0 72 101 108 108 111 32 87 111 114 108 100 33
 Difference:
 --------------------------------------------------------------------------------------------------------------------------------1---------------------------------------------------------------------------------------------------------------------1-----------------------------------------------------
 */
+
+/*
+RoomResult:
+JS:
+16 0 0 0 0 0 10 0 16 0 12 0 8 0 4 0 10 0 0 0 12 0 0 0 16 0 0 0 24 0 0 0 1 0 0 0 32 0 0 0 4 0 0 0 97 115 100 102 0 0 0 0 4 0 0 0 49 50 51 52 0 0 6 0 8 0 4 0 6 0 0 0 4 0 0 0 1 0 0 0 12 0 0 0 8 0 12 0 8 0 4 0 8 0 0 0 8 0 0 0 12 0 0 0 4 0 0 0 98 108 117 101 1 0 0 0 88 0 0 0
+Golang:
+16 0 0 0 0 0 10 0 16 0 12 0 8 0 4 0 10 0 0 0 12 0 0 0 16 0 0 0 24 0 0 0 1 0 0 0 32 0 0 0 4 0 0 0 97 115 100 102 0 0 0 0 4 0 0 0 49 50 51 52 0 0 6 0 8 0 4 0 6 0 0 0 4 0 0 0 1 0 0 0 12 0 0 0 8 0 12 0 8 0 4 0 8 0 0 0 8 0 0 0 12 0 0 0 4 0 0 0 98 108 117 101 1 0 0 0 88 0 0 0
+Difference:
+None
