@@ -23,7 +23,7 @@ function testRoomUpdateSerialization() {
     var factValue = roomupdatefbs.Fact.createValueVector(builder, stringToUint("Hello World!"))
 
     roomupdatefbs.Fact.startFact(builder)
-    roomupdatefbs.Fact.addType(builder, roomupdatefbs.FactTypeText)
+    roomupdatefbs.Fact.addType(builder, roomupdatefbs.FactType.Text)
     roomupdatefbs.Fact.addValue(builder, factValue)
     var fact = roomupdatefbs.Fact.endFact(builder)
 
@@ -32,7 +32,7 @@ function testRoomUpdateSerialization() {
     var facts = roomupdatefbs.RoomUpdate.createFactsVector(builder, [fact])
 
     roomupdatefbs.RoomUpdate.startRoomUpdate(builder)
-    roomupdatefbs.RoomUpdate.addType(builder, roomupdatefbs.UpdateTypeClaim)
+    roomupdatefbs.RoomUpdate.addType(builder, roomupdatefbs.UpdateType.Claim)
     roomupdatefbs.RoomUpdate.addSource(builder, updateSource)
     roomupdatefbs.RoomUpdate.addSubscriptionId(builder, updateSubId)
     roomupdatefbs.RoomUpdate.addFacts(builder, facts)
@@ -134,7 +134,7 @@ testRoomUpdateDeserializationResult(s2)
 /*
 RoomUpdate
 JS:
-12 0 0 0 0 0 6 0 8 0 4 0 6 0 0 0 4 0 0 0 1 0 0 0 16 0 0 0 12 0 20 0 19 0 12 0 8 0 4 0 12 0 0 0 16 0 0 0 20 0 0 0 28 0 0 0 0 0 0 0 1 0 0 0 36 0 0 0 4 0 0 0 97 115 100 102 0 0 0 0 4 0 0 0 49 50 51 52 0 0 0 0 8 0 12 0 11 0 4 0 8 0 0 0 8 0 0 0 0 0 0 0 12 0 0 0 72 101 108 108 111 32 87 111 114 108 100 33
+12 0 0 0 0 0 6 0 8 0 4 0 6 0 0 0 4 0 0 0 1 0 0 0 16 0 0 0 12 0 20 0 19 0 12 0 8 0 4 0 12 0 0 0 16 0 0 0 20 0 0 0 28 0 0 0 0 0 0 1 1 0 0 0 36 0 0 0 4 0 0 0 97 115 100 102 0 0 0 0 4 0 0 0 49 50 51 52 0 0 0 0 8 0 12 0 11 0 4 0 8 0 0 0 8 0 0 0 0 0 0 1 12 0 0 0 72 101 108 108 111 32 87 111 114 108 100 33
 Golang:
 12 0 0 0 0 0 6 0 8 0 4 0 6 0 0 0 4 0 0 0 1 0 0 0 16 0 0 0 12 0 20 0 19 0 12 0 8 0 4 0 12 0 0 0 16 0 0 0 20 0 0 0 28 0 0 0 0 0 0 1 1 0 0 0 36 0 0 0 4 0 0 0 97 115 100 102 0 0 0 0 4 0 0 0 49 50 51 52 0 0 0 0 8 0 12 0 11 0 4 0 8 0 0 0 8 0 0 0 0 0 0 1 12 0 0 0 72 101 108 108 111 32 87 111 114 108 100 33
 Difference:
@@ -149,3 +149,4 @@ Golang:
 16 0 0 0 0 0 10 0 16 0 12 0 8 0 4 0 10 0 0 0 12 0 0 0 16 0 0 0 24 0 0 0 1 0 0 0 32 0 0 0 4 0 0 0 97 115 100 102 0 0 0 0 4 0 0 0 49 50 51 52 0 0 6 0 8 0 4 0 6 0 0 0 4 0 0 0 1 0 0 0 12 0 0 0 8 0 12 0 8 0 4 0 8 0 0 0 8 0 0 0 12 0 0 0 4 0 0 0 98 108 117 101 1 0 0 0 88 0 0 0
 Difference:
 None
+*/
