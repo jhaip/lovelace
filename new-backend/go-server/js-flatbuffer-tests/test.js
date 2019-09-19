@@ -221,6 +221,35 @@ function testRoomUpdateDeserializationResult(data) {
 }
 
 var s2 = testRoomUpdateSerializationResult()
+function deserializeRoomUpdateMessage(data) {
+    /*
+    Return something like:
+    {
+        "source": ...
+        "subscriptionId": ...
+        "results": [{"x": 5, "y": 3.002, "z": "Hello"}, {"x": 3, "y": 0.0, "z": "Two"}]
+    }
+    */
+    var buf = new flatbuffers.ByteBuffer(data);
+    var room_response_obj = roomupdatefbs.RoomResponse.getRootAsRoomResponse(buf)
+    let returnObj = {
+        "source": room_response_obj.source(),
+        "subscriptionId": room_response_obj.subscriptionId(),
+        "results": new Array(room_response_obj.resultSetsLength())
+    }
+    for (let i = 0; i < returnObj.results.length; i += 1) {
+        let returnObjResult = {};
+        var result_set = room_response_obj.resultSets(i)
+        for (let k = 0; k < result_set.resultsLength(); k += 1) {
+            var result = result_set.results(k)
+            // TODO: catch the variable to it's appropriate type in JS
+            returnObjResult[result.variableName()] = uintToString(result.valueArray())
+        }
+        returnObj.results[i] = returnObjResult;
+    }
+    return returnObj;
+}
+
 // console.log(s2)
 console.log(s2.join(' '))
 console.log(s2.length)
