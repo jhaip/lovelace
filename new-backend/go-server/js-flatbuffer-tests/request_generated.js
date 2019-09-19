@@ -557,11 +557,19 @@ roomupdatefbs.RoomResult.prototype.variableName = function(optionalEncoding) {
 };
 
 /**
+ * @returns {roomupdatefbs.FactType}
+ */
+roomupdatefbs.RoomResult.prototype.type = function() {
+  var offset = this.bb.__offset(this.bb_pos, 6);
+  return offset ? /** @type {roomupdatefbs.FactType} */ (this.bb.readInt8(this.bb_pos + offset)) : roomupdatefbs.FactType.Id;
+};
+
+/**
  * @param {number} index
  * @returns {number}
  */
 roomupdatefbs.RoomResult.prototype.value = function(index) {
-  var offset = this.bb.__offset(this.bb_pos, 6);
+  var offset = this.bb.__offset(this.bb_pos, 8);
   return offset ? this.bb.readUint8(this.bb.__vector(this.bb_pos + offset) + index) : 0;
 };
 
@@ -569,7 +577,7 @@ roomupdatefbs.RoomResult.prototype.value = function(index) {
  * @returns {number}
  */
 roomupdatefbs.RoomResult.prototype.valueLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 6);
+  var offset = this.bb.__offset(this.bb_pos, 8);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
 
@@ -577,7 +585,7 @@ roomupdatefbs.RoomResult.prototype.valueLength = function() {
  * @returns {Uint8Array}
  */
 roomupdatefbs.RoomResult.prototype.valueArray = function() {
-  var offset = this.bb.__offset(this.bb_pos, 6);
+  var offset = this.bb.__offset(this.bb_pos, 8);
   return offset ? new Uint8Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
 };
 
@@ -585,7 +593,7 @@ roomupdatefbs.RoomResult.prototype.valueArray = function() {
  * @param {flatbuffers.Builder} builder
  */
 roomupdatefbs.RoomResult.startRoomResult = function(builder) {
-  builder.startObject(2);
+  builder.startObject(3);
 };
 
 /**
@@ -598,10 +606,18 @@ roomupdatefbs.RoomResult.addVariableName = function(builder, variableNameOffset)
 
 /**
  * @param {flatbuffers.Builder} builder
+ * @param {roomupdatefbs.FactType} type
+ */
+roomupdatefbs.RoomResult.addType = function(builder, type) {
+  builder.addFieldInt8(1, type, roomupdatefbs.FactType.Id);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} valueOffset
  */
 roomupdatefbs.RoomResult.addValue = function(builder, valueOffset) {
-  builder.addFieldOffset(1, valueOffset, 0);
+  builder.addFieldOffset(2, valueOffset, 0);
 };
 
 /**
@@ -637,12 +653,14 @@ roomupdatefbs.RoomResult.endRoomResult = function(builder) {
 /**
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} variableNameOffset
+ * @param {roomupdatefbs.FactType} type
  * @param {flatbuffers.Offset} valueOffset
  * @returns {flatbuffers.Offset}
  */
-roomupdatefbs.RoomResult.createRoomResult = function(builder, variableNameOffset, valueOffset) {
+roomupdatefbs.RoomResult.createRoomResult = function(builder, variableNameOffset, type, valueOffset) {
   roomupdatefbs.RoomResult.startRoomResult(builder);
   roomupdatefbs.RoomResult.addVariableName(builder, variableNameOffset);
+  roomupdatefbs.RoomResult.addType(builder, type);
   roomupdatefbs.RoomResult.addValue(builder, valueOffset);
   return roomupdatefbs.RoomResult.endRoomResult(builder);
 }

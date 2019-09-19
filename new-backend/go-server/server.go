@@ -193,6 +193,7 @@ func testRoomUpdateSerializationResult() []byte {
 
 	roomupdate.RoomResultStart(builder)
 	roomupdate.RoomResultAddVariableName(builder, resultVariableName)
+	roomupdate.RoomResultAddType(builder, roomupdate.FactTypeText)
 	roomupdate.RoomResultAddValue(builder, resultValue)
 	room_result := roomupdate.FactEnd(builder)
 
@@ -235,6 +236,7 @@ func testRoomUpdateDeserializationResult(data []byte) {
 	result := new(roomupdate.RoomResult)
 	result_set.Results(result, 0)
 	fmt.Println(string(result.VariableName()))
+	fmt.Println(result.Type())
 	fmt.Println(string(result.ValueBytes()))
 }
 

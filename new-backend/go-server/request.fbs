@@ -35,6 +35,7 @@ table RoomUpdates {
 
 table RoomResult {
     variableName:string;
+    type:FactType;
     value:[ubyte];
 }
 

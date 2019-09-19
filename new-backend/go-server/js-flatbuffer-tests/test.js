@@ -179,6 +179,7 @@ function testRoomUpdateSerializationResult() {
 
     roomupdatefbs.RoomResult.startRoomResult(builder)
     roomupdatefbs.RoomResult.addVariableName(builder, resultVariableName)
+    roomupdatefbs.RoomResult.addType(builder, roomupdatefbs.FactType.Text)
     roomupdatefbs.RoomResult.addValue(builder, resultValue)
     var room_result = roomupdatefbs.RoomResult.endRoomResult(builder)
 
@@ -217,6 +218,7 @@ function testRoomUpdateDeserializationResult(data) {
     console.log(results_length)
     var result = result_set.results(0)
     console.log(result.variableName())
+    console.log(result.type())
     console.log(uintToString(result.valueArray()))
 }
 
@@ -242,7 +244,16 @@ function deserializeRoomUpdateMessage(data) {
         for (let k = 0; k < result_set.resultsLength(); k += 1) {
             var result = result_set.results(k)
             // TODO: catch the variable to it's appropriate type in JS
-            returnObjResult[result.variableName()] = uintToString(result.valueArray())
+            if (
+                result.type() === roomupdatefbs.FactType.Integer ||
+                result.type() === roomupdatefbs.FactType.Float
+            ) {
+                returnObjResult[result.variableName()] = +uintToString(result.valueArray())
+            } else if (result.type() === roomupdatefbs.FactType.Binary) {
+                returnObjResult[result.variableName()] = result.valueArray()
+            } else {
+                returnObjResult[result.variableName()] = uintToString(result.valueArray())
+            }
         }
         returnObj.results[i] = returnObjResult;
     }

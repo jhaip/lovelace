@@ -34,8 +34,20 @@ func (rcv *RoomResult) VariableName() []byte {
 	return nil
 }
 
-func (rcv *RoomResult) Value(j int) byte {
+func (rcv *RoomResult) Type() FactType {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
+	if o != 0 {
+		return FactType(rcv._tab.GetInt8(o + rcv._tab.Pos))
+	}
+	return 0
+}
+
+func (rcv *RoomResult) MutateType(n FactType) bool {
+	return rcv._tab.MutateInt8Slot(6, int8(n))
+}
+
+func (rcv *RoomResult) Value(j int) byte {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(8))
 	if o != 0 {
 		a := rcv._tab.Vector(o)
 		return rcv._tab.GetByte(a + flatbuffers.UOffsetT(j*1))
@@ -44,7 +56,7 @@ func (rcv *RoomResult) Value(j int) byte {
 }
 
 func (rcv *RoomResult) ValueLength() int {
-	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(8))
 	if o != 0 {
 		return rcv._tab.VectorLen(o)
 	}
@@ -52,7 +64,7 @@ func (rcv *RoomResult) ValueLength() int {
 }
 
 func (rcv *RoomResult) ValueBytes() []byte {
-	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(8))
 	if o != 0 {
 		return rcv._tab.ByteVector(o + rcv._tab.Pos)
 	}
@@ -60,7 +72,7 @@ func (rcv *RoomResult) ValueBytes() []byte {
 }
 
 func (rcv *RoomResult) MutateValue(j int, n byte) bool {
-	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(8))
 	if o != 0 {
 		a := rcv._tab.Vector(o)
 		return rcv._tab.MutateByte(a+flatbuffers.UOffsetT(j*1), n)
@@ -69,13 +81,16 @@ func (rcv *RoomResult) MutateValue(j int, n byte) bool {
 }
 
 func RoomResultStart(builder *flatbuffers.Builder) {
-	builder.StartObject(2)
+	builder.StartObject(3)
 }
 func RoomResultAddVariableName(builder *flatbuffers.Builder, variableName flatbuffers.UOffsetT) {
 	builder.PrependUOffsetTSlot(0, flatbuffers.UOffsetT(variableName), 0)
 }
+func RoomResultAddType(builder *flatbuffers.Builder, type_ FactType) {
+	builder.PrependInt8Slot(1, int8(type_), 0)
+}
 func RoomResultAddValue(builder *flatbuffers.Builder, value flatbuffers.UOffsetT) {
-	builder.PrependUOffsetTSlot(1, flatbuffers.UOffsetT(value), 0)
+	builder.PrependUOffsetTSlot(2, flatbuffers.UOffsetT(value), 0)
 }
 func RoomResultStartValueVector(builder *flatbuffers.Builder, numElems int) flatbuffers.UOffsetT {
 	return builder.StartVector(1, numElems, 1)
