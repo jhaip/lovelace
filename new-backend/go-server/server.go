@@ -240,6 +240,11 @@ func testRoomUpdateDeserializationResult(data []byte) {
 	fmt.Println(string(result.ValueBytes()))
 }
 
+func serialize_query_result(notification Notification, timestamp int64) ([]byte, []byte) {
+	// TODO
+	return make([]byte, 0), make([]byte, 0)
+}
+
 func marshal_query_result(query_results []QueryResult) string {
 	encoded_results := make([]map[string][]string, 0)
 	for _, query_result := range query_results {
@@ -264,17 +269,15 @@ func marshal_query_result(query_results []QueryResult) string {
 }
 
 func notification_worker(notifications <-chan Notification, client *zmq.Socket) {
-	cache := make(map[string]string)
+	cache := make(map[string][]byte)
 	for notification := range notifications {
-		notification_result_as_str := marshal_query_result(notification.Result)
-		msg := fmt.Sprintf("%s%s%s", notification.Source, notification.Id, notification_result_as_str)
+		msg, msgWithTimestamp := serialize_query_result(notification, makeTimestampMillis())
 		cache_key := fmt.Sprintf("%s%s", notification.Source, notification.Id)
 		cache_value, cache_hit := cache[cache_key]
-		if cache_hit == false || cache_value != msg {
+		if cache_hit == false || !bytes.Equal(cache_value, msg) {
 			cache[cache_key] = msg
-			msgWithTime := fmt.Sprintf("%s%s%v%s", notification.Source, notification.Id, makeTimestampMillis(), notification_result_as_str)
 			zmqClient.Lock()
-			_, sendErr := client.SendMessage(notification.Source, msgWithTime)
+			_, sendErr := client.SendMessage(notification.Source, msgWithTimestamp)
 			checkErr(sendErr)
 			zmqClient.Unlock()
 		}
@@ -540,7 +543,73 @@ func json_term_to_binary_term(term_type, value string) Term {
 }
 
 
-func parse_room_update(source string, msg string) []RoomUpdate {
+func parse_room_update(source string, data []byte) []RoomUpdate {
+	termTypeEnumToString := map[roomupdate.FactType]string{
+		roomupdate.FactTypeId: "id",
+		roomupdate.FactTypeText: "text",
+		roomupdate.FactTypeInteger: "integer",
+		roomupdate.FactTypeFloat: "float",
+		roomupdate.FactTypeBinary: "binary",
+	}
+	updateTypeMsgEnumToGoRoomUpdateType := map[roomupdate.UpdateType]RoomUpdateType {
+		roomupdate.UpdateTypePing: PING,
+		roomupdate.UpdateTypeClaim: CLAIM,
+		roomupdate.UpdateTypeRetract: RETRACT,
+		roomupdate.UpdateTypeSubscribe: SUBSCRIBE,
+		roomupdate.UpdateTypeDeath: DEATH,
+		roomupdate.UpdateTypeSubscriptionDeath: SUBSCRIPTION_DEATH,
+	}
+	room_updates_obj := roomupdate.GetRootAsRoomUpdates(data, 0)
+	returnUpdates := make([]RoomUpdate, room_updates_obj.UpdatesLength())
+	for i, _ := range returnUpdates {
+		update := new(roomupdate.RoomUpdate)
+		room_updates_obj.Updates(update, i)
+
+		updateType, updateTypeExists := updateTypeMsgEnumToGoRoomUpdateType[update.Type()]
+		if updateTypeExists == false {
+			zap.L().Fatal("unknown update type")
+			panic("unknown update type")
+		}
+
+		returnUpdateFacts := make([][]Term, 0)
+
+		if updateType == PING {
+			// do nothing special
+		} else if updateType == SUBSCRIBE {
+			for k := 0; k < update.FactsLength(); k += 1 {
+				roomUpdateFact := new(roomupdate.Fact)
+				update.Facts(roomUpdateFact, k)
+				// subscription query parts are encoded as ["text", "$ $ $x ..."]
+				fact := parse_fact_string(string(roomUpdateFact.ValueBytes()))
+				returnUpdateFacts = append(returnUpdateFacts, fact)
+			}
+		} else {
+			terms := make([]Term, update.FactsLength())
+			for k, _ := range terms {
+				fact := new(roomupdate.Fact)
+				update.Facts(fact, k)
+				termType, termTypeExists := termTypeEnumToString[fact.Type()]
+				if termTypeExists == false {
+					zap.L().Fatal("unknown term type")
+					panic("unknown term type")
+				}
+				terms[k] = Term{termType, fact.ValueBytes()}
+			}
+			returnUpdateFacts = append(returnUpdateFacts, terms)
+		}
+		
+		returnUpdates[i] = RoomUpdate{
+			updateType,
+			string(update.Source()),
+			string(update.SubscriptionId()),
+			[][]Term{terms},
+		}
+	}
+	
+}
+
+
+func parse_room_update_json(source string, msg string) []RoomUpdate {
 	// This function can break apart messages into a list,
 	// but it should be handed to a subscriber as a batch of messages
 	// because a subscriber will only attempt to notify subscribers at the end of a batch
@@ -676,7 +745,8 @@ func main() {
 			time.Sleep(time.Duration(1) * time.Millisecond)
 			continue;
 		}
-		msg := string(rawMsg[1])
+		// msg := string(rawMsg[1])
+		msg := rawMsg[1]
 		zmqClient.Unlock()
 		// span := rootSpan.Tracer().StartSpan(
 		// 	"zmq-recv-loop",
