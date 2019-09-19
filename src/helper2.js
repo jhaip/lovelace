@@ -160,6 +160,10 @@ function init(filename) {
         return new Promise(async resolve => {
             if (server_listening === false) {
                 if (sent_ping == false) {
+                    var s2 = new Uint8Array(2)
+                    s2[0] = 9
+                    s2[1] = 254
+                    client.send(Buffer.from(s2))
                     client.send([`.....PING${MY_ID_STR}${init_ping_id}`])
                     sent_ping = true;
                 }

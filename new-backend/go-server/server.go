@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"bytes"
 
 	// "net/http"
 	_ "net/http/pprof"
@@ -658,14 +659,20 @@ func main() {
 	// }()
 	for {
 		zmqClient.Lock()
-		rawMsg, recvErr := client.RecvMessage(zmq.DONTWAIT)
+		rawMsg, recvErr := client.RecvMessageBytes(zmq.DONTWAIT)
 		if recvErr != nil {
 			zmqClient.Unlock()
 			time.Sleep(time.Duration(1) * time.Millisecond)
 			continue;
 		}
-		rawMsgId := rawMsg[0]
-		msg := rawMsg[1]
+		rawMsgId := string(rawMsg[0])
+		if (bytes.Equal(rawMsg[1], []byte{9, 254})) {
+			fmt.Println("receiving special bytes!")
+			zmqClient.Unlock()
+			time.Sleep(time.Duration(1) * time.Millisecond)
+			continue;
+		}
+		msg := string(rawMsg[1])
 		zmqClient.Unlock()
 		// span := rootSpan.Tracer().StartSpan(
 		// 	"zmq-recv-loop",
