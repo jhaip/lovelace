@@ -316,6 +316,8 @@ function init(filename) {
     }
 
     client.on('message', (request) => {
+        console.log("RAW RECV:");
+        console.log(request); // a buffer
         const span = tracer.startSpan(`client-${myId}-recv`, { childOf: room.wireCtx() });
         const msg = request.toString();
         // console.log(msg)

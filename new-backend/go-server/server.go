@@ -668,6 +668,8 @@ func main() {
 		rawMsgId := string(rawMsg[0])
 		if (bytes.Equal(rawMsg[1], []byte{9, 254})) {
 			fmt.Println("receiving special bytes!")
+			_, sendErr := client.SendMessage("1200", []byte{254, 9})
+			checkErr(sendErr)
 			zmqClient.Unlock()
 			time.Sleep(time.Duration(1) * time.Millisecond)
 			continue;
