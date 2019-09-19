@@ -142,7 +142,6 @@ function init(filename) {
     client.connect(`tcp://${rpc_url}:5570`);
 
     let init_ping_id = randomId()
-    let select_ids = {}
     let subscription_ids = {}
     let server_listening = false
     let sent_ping = false;
@@ -325,10 +324,6 @@ function init(filename) {
             server_listening = true
             console.log(`SERVER LISTENING!! ${MY_ID_STR} ${val}`)
             room.setCtx(tracer.extract(opentracing.FORMAT_TEXT_MAP, {"uber-trace-id": val}));
-        } else if (id in select_ids) {
-            const callback = select_ids[id]
-            delete select_ids[id]
-            callback(val)
         } else if (id in subscription_ids) {
             callback = subscription_ids[id]
             // room.cleanup()
