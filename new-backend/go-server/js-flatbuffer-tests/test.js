@@ -222,7 +222,7 @@ function testRoomUpdateDeserializationResult(data) {
     console.log(uintToString(result.valueArray()))
 }
 
-function deserializeRoomUpdateMessage(data) {
+function deserializeRoomResponseMessage(data) {
     /*
     Return something like:
     {
@@ -231,6 +231,9 @@ function deserializeRoomUpdateMessage(data) {
         "results": [{"x": 5, "y": 3.002, "z": "Hello"}, {"x": 3, "y": 0.0, "z": "Two"}]
     }
     */
+    if (Buffer.isBuffer(data)) {
+        data = new Uint8Array(data)
+    }
     var buf = new flatbuffers.ByteBuffer(data);
     var room_response_obj = roomupdatefbs.RoomResponse.getRootAsRoomResponse(buf)
     let returnObj = {
