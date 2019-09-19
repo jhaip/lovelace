@@ -46,7 +46,7 @@ function testRoomUpdateSerialization() {
 
     builder.finish(full_updates_msg)
     var msg_buf = builder.asUint8Array(); // Of type `Uint8Array`.
-    return msg_buf
+    return Buffer.from(msg_buf)
 }
 
 function makeSubscriptionMessage(source, subscriptionId, subscriptionQueryParts) {
@@ -83,9 +83,8 @@ function makeSubscriptionMessage(source, subscriptionId, subscriptionQueryParts)
 
     builder.finish(full_updates_msg)
     var msg_buf = builder.asUint8Array(); // Of type `Uint8Array`.
-    return msg_buf
+    return Buffer.from(msg_buf)
 }
-
 
 
 function makeBatchMessage(source, batched_calls) {
@@ -141,7 +140,7 @@ function makeBatchMessage(source, batched_calls) {
 
     builder.finish(full_updates_msg)
     var msg_buf = builder.asUint8Array(); // Of type `Uint8Array`.
-    return msg_buf
+    return Buffer.from(msg_buf)
 }
 
 function testRoomUpdateDeserialization(data) {
@@ -163,7 +162,8 @@ function testRoomUpdateDeserialization(data) {
     console.log(uintToString(fact.valueArray()))
 }
 
-var s = testRoomUpdateSerialization()
+var sRaw = testRoomUpdateSerialization()
+var s = new Uint8Array(sRaw)
 // console.log(s)
 console.log(s.join(' '))
 console.log(s.length)
@@ -201,7 +201,7 @@ function testRoomUpdateSerializationResult() {
 
     builder.finish(full_updates_msg)
     var msg_buf = builder.asUint8Array(); // Of type `Uint8Array`.
-    return msg_buf
+    return Buffer.from(msg_buf)
 }
 
 function testRoomUpdateDeserializationResult(data) {
@@ -220,7 +220,6 @@ function testRoomUpdateDeserializationResult(data) {
     console.log(uintToString(result.valueArray()))
 }
 
-var s2 = testRoomUpdateSerializationResult()
 function deserializeRoomUpdateMessage(data) {
     /*
     Return something like:
@@ -250,9 +249,12 @@ function deserializeRoomUpdateMessage(data) {
     return returnObj;
 }
 
+var s2Raw = testRoomUpdateSerializationResult()
+var s2 = new Uint8Array(s2Raw)
 // console.log(s2)
 console.log(s2.join(' '))
 console.log(s2.length)
+console.log(Buffer.isBuffer(s2Raw))
 testRoomUpdateDeserializationResult(s2)
 
 /*
