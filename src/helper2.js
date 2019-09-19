@@ -206,19 +206,6 @@ function init(filename) {
             const callback = args[args.length - 1]
             room.onRaw(...query_strings, callback)
         },
-        select: async (...args) => {
-            await waitForServerListening();
-            const query_strings = args.slice(0, -1)
-            const callback = args[args.length - 1]
-            const select_id = randomId()
-            const query_msg = {
-                "id": select_id,
-                "facts": query_strings
-            }
-            const query_msg_str = JSON.stringify(query_msg)
-            select_ids[select_id] = callback
-            client.send([`...SELECT${MY_ID_STR}${query_msg_str}`]);
-        },
         assertNow: (fact) => {
             client.send([`....CLAIM${MY_ID_STR}${fact}`]);
         },
