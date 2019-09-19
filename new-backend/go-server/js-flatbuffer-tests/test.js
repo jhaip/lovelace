@@ -49,6 +49,101 @@ function testRoomUpdateSerialization() {
     return msg_buf
 }
 
+function makeSubscriptionMessage(source, subscriptionId, subscriptionQueryParts) {
+    var builder = new flatbuffers.Builder(1024);
+
+    var subscriptionFactArray = new Array(subscriptionQueryParts.length);
+    for (let i = 0; i < subscriptionQueryParts.length; i+=1) {
+        var factValue = roomupdatefbs.Fact.createValueVector(
+            builder,
+            stringToUint(subscriptionQueryParts[i])
+        )
+        roomupdatefbs.Fact.startFact(builder)
+        roomupdatefbs.Fact.addType(builder, roomupdatefbs.FactType.Text)
+        roomupdatefbs.Fact.addValue(builder, factValue)
+        subscriptionFactArray[i] = roomupdatefbs.Fact.endFact(builder)
+    }    
+    var facts = roomupdatefbs.RoomUpdate.createFactsVector(builder, subscriptionFactArray)
+
+    var updateSource = builder.createString(source)
+    var updateSubId = builder.createString(subscriptionId)
+
+    roomupdatefbs.RoomUpdate.startRoomUpdate(builder)
+    roomupdatefbs.RoomUpdate.addType(builder, roomupdatefbs.UpdateType.Subscribe)
+    roomupdatefbs.RoomUpdate.addSource(builder, updateSource)
+    roomupdatefbs.RoomUpdate.addSubscriptionId(builder, updateSubId)
+    roomupdatefbs.RoomUpdate.addFacts(builder, facts)
+    var update = roomupdatefbs.RoomUpdate.endRoomUpdate(builder)
+
+    // Subscription only has 1 RoomUpdate
+    var updates = roomupdatefbs.RoomUpdates.createUpdatesVector(builder, [update])
+    roomupdatefbs.RoomUpdates.startRoomUpdates(builder)
+    roomupdatefbs.RoomUpdates.addUpdates(builder, updates)
+    var full_updates_msg = roomupdatefbs.RoomUpdates.endRoomUpdates(builder)
+
+    builder.finish(full_updates_msg)
+    var msg_buf = builder.asUint8Array(); // Of type `Uint8Array`.
+    return msg_buf
+}
+
+
+
+function makeBatchMessage(source, batched_calls) {
+    var builder = new flatbuffers.Builder(1024);
+    const batchMessageTypeToMessageTypeEnum = {
+        "claim": roomupdatefbs.UpdateType.Claim,
+        "retract": roomupdatefbs.UpdateType.Retract,
+        "death": roomupdatefbs.UpdateType.Death
+    }
+    const factTypeStringToTypeEnum = {
+        "id": roomupdatefbs.FactType.Id,
+        "text": roomupdatefbs.FactType.Text,
+        "integer": roomupdatefbs.FactType.Integer,
+        "float": roomupdatefbs.FactType.Float,
+        "binary": roomupdatefbs.FactType.Binary
+    }
+
+    var batchedUpdatesArray = new Array(batched_calls.length);
+    for (let i = 0; i < batched_calls.length; i += 1) {
+        var factArray = new Array(batched_calls[i].fact.length);
+        for (let k = 0; k < factArray.length; k += 1) {
+            let factPart = batched_calls[i].fact[k];
+            var factValue = roomupdatefbs.Fact.createValueVector(
+                builder,
+                stringToUint(factPart[1])
+            )
+            var factType = factTypeStringToTypeEnum[factPart[0]];
+            
+            roomupdatefbs.Fact.startFact(builder)
+            roomupdatefbs.Fact.addType(builder, factType)
+            roomupdatefbs.Fact.addValue(builder, factValue)
+            factArray[k] = roomupdatefbs.Fact.endFact(builder)
+        }
+        var facts = roomupdatefbs.RoomUpdate.createFactsVector(builder, factArray)
+
+        var updateType = batchMessageTypeToMessageTypeEnum[batched_calls[i].type];
+        var updateSource = builder.createString(source)
+        var updateSubId = builder.createString("") // batch calls don't have subscription IDs
+
+        roomupdatefbs.RoomUpdate.startRoomUpdate(builder)
+        roomupdatefbs.RoomUpdate.addType(builder, updateType)
+        roomupdatefbs.RoomUpdate.addSource(builder, updateSource)
+        roomupdatefbs.RoomUpdate.addSubscriptionId(builder, updateSubId)
+        roomupdatefbs.RoomUpdate.addFacts(builder, facts)
+        batchedUpdatesArray[i] = roomupdatefbs.RoomUpdate.endRoomUpdate(builder)
+    }
+
+    // Subscription only has 1 RoomUpdate
+    var updates = roomupdatefbs.RoomUpdates.createUpdatesVector(builder, [update])
+    roomupdatefbs.RoomUpdates.startRoomUpdates(builder)
+    roomupdatefbs.RoomUpdates.addUpdates(builder, batchedUpdatesArray)
+    var full_updates_msg = roomupdatefbs.RoomUpdates.endRoomUpdates(builder)
+
+    builder.finish(full_updates_msg)
+    var msg_buf = builder.asUint8Array(); // Of type `Uint8Array`.
+    return msg_buf
+}
+
 function testRoomUpdateDeserialization(data) {
     var buf = new flatbuffers.ByteBuffer(data);
     var room_updates_obj = roomupdatefbs.RoomUpdates.getRootAsRoomUpdates(buf)
