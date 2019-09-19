@@ -243,7 +243,6 @@ function deserializeRoomUpdateMessage(data) {
         var result_set = room_response_obj.resultSets(i)
         for (let k = 0; k < result_set.resultsLength(); k += 1) {
             var result = result_set.results(k)
-            // TODO: catch the variable to it's appropriate type in JS
             if (
                 result.type() === roomupdatefbs.FactType.Integer ||
                 result.type() === roomupdatefbs.FactType.Float
