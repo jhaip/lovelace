@@ -277,8 +277,7 @@ function init(filename) {
             room.retractMine(`%`)
         },
         cleanupOtherSource: (otherSource) => {
-            const fact_str = JSON.stringify([{ "type": "death", "fact": [["id", otherSource]] }])
-            client.send([`....BATCH${MY_ID_STR}${fact_str}`]);
+            room.batch([{ "type": "death", "fact": [["id", otherSource]] }])
         },
         draw: (illumination, target) => {
             target = typeof target === 'undefined' ? myId : target;
