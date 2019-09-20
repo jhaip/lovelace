@@ -241,8 +241,68 @@ func testRoomUpdateDeserializationResult(data []byte) {
 }
 
 func serialize_query_result(notification Notification, timestamp int64) ([]byte, []byte) {
-	// TODO
-	return make([]byte, 0), make([]byte, 0)
+	termTypeToRoomResultTypeEnum := map[string]roomupdate.FactType {
+		"id": roomupdate.FactTypeId,
+		"text": roomupdate.FactTypeText,
+		"integer": roomupdate.FactTypeInteger,
+		"float": roomupdate.FactTypeFloat,
+		"binary": roomupdate.FactTypeBinary,
+	}
+
+	builder := flatbuffers.NewBuilder(1024)
+
+	n_results := len(notification.Result)
+	result_sets_tmp := make([]flatbuffers.UOffsetT, n_results)
+
+	for i := 0; i < n_results; i += 1 {
+		n_room_results := len(notification.Result[i].Result)
+		room_results_tmp := make([]flatbuffers.UOffsetT, n_room_results)
+
+		z := 0
+		for variableName, term := range notification.Result[i].Result {
+			resultVariableName := builder.CreateString(variableName)
+			resultValue := builder.CreateByteVector(term.Value)
+			resultValueType := termTypeToRoomResultTypeEnum[term.Type]
+
+			roomupdate.RoomResultStart(builder)
+			roomupdate.RoomResultAddVariableName(builder, resultVariableName)
+			roomupdate.RoomResultAddType(builder, resultValueType)
+			roomupdate.RoomResultAddValue(builder, resultValue)
+			room_results_tmp[z] = roomupdate.FactEnd(builder)
+			z += 1
+		}
+
+		roomupdate.ResultSetStartResultsVector(builder, n_room_results)
+		for k := 0; k < n_room_results; k += 1 {
+			builder.PrependUOffsetT(room_results_tmp[k])
+		}
+		results := builder.EndVector(n_room_results)
+
+		roomupdate.ResultSetStart(builder)
+		roomupdate.ResultSetAddResults(builder, results)
+		result_sets_tmp[i] = roomupdate.ResultSetEnd(builder)
+	}
+	
+	roomupdate.RoomResponseStartResultSetsVector(builder, n_results)
+	for i := 0; i < n_results; i += 1 {
+		builder.PrependUOffsetT(result_sets_tmp[i])
+	}
+	result_sets := builder.EndVector(n_results)
+
+	roomResponseSource := builder.CreateString(notification.Source)
+	roomResponseSubscriptionId := builder.CreateString(notification.Id)
+
+	roomupdate.RoomResponseStart(builder)
+	roomupdate.RoomResponseAddSource(builder, roomResponseSource)
+	roomupdate.RoomResponseAddSubscriptionId(builder, roomResponseSubscriptionId)
+	roomupdate.RoomResponseAddResultSets(builder, result_sets)
+	full_response_msg := roomupdate.RoomResponseEnd(builder)
+
+	builder.Finish(full_response_msg)
+	msg_buf := builder.FinishedBytes()
+
+	// for now, don't return a version with a timestamp
+	return msg_buf, msg_buf
 }
 
 func marshal_query_result(query_results []QueryResult) string {
@@ -559,8 +619,14 @@ func parse_room_update(source string, data []byte) []RoomUpdate {
 		roomupdate.UpdateTypeDeath: DEATH,
 		roomupdate.UpdateTypeSubscriptionDeath: SUBSCRIPTION_DEATH,
 	}
+	fmt.Println("parse_room_update RAW:")
+	fmt.Println(source)
+	fmt.Println(len(data))
+	fmt.Println(data)
 	room_updates_obj := roomupdate.GetRootAsRoomUpdates(data, 0)
 	returnUpdates := make([]RoomUpdate, room_updates_obj.UpdatesLength())
+	fmt.Println("N upates:")
+	fmt.Println(room_updates_obj.UpdatesLength())
 	for i, _ := range returnUpdates {
 		update := new(roomupdate.RoomUpdate)
 		room_updates_obj.Updates(update, i)
@@ -597,15 +663,21 @@ func parse_room_update(source string, data []byte) []RoomUpdate {
 			}
 			returnUpdateFacts = append(returnUpdateFacts, terms)
 		}
+
+		// fmt.Println("SUB ID:")
+		// fmt.Println(update.SubscriptionId())
+		// fmt.Println("--")
 		
 		returnUpdates[i] = RoomUpdate{
 			updateType,
 			string(update.Source()),
 			string(update.SubscriptionId()),
-			[][]Term{terms},
+			returnUpdateFacts,
 		}
 	}
-	
+	fmt.Println("PARSED:")
+	fmt.Println(returnUpdates)
+	return returnUpdates
 }
 
 

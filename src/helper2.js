@@ -126,6 +126,48 @@ class Illumination {
     toString() { return JSON.stringify(this.illuminations) }
 }
 
+function stringToUint(string) {
+    var string = unescape(encodeURIComponent(string)),
+        charList = string.split(''),
+        uintArray = [];
+    for (var i = 0; i < charList.length; i++) {
+        uintArray.push(charList[i].charCodeAt(0));
+    }
+    return new Uint8Array(uintArray);
+}
+
+function uintToString(uintArray) {
+    var encodedString = String.fromCharCode.apply(null, uintArray),
+        decodedString = decodeURIComponent(escape(encodedString));
+    return decodedString;
+}
+
+function makePingMessage(source, pingId) {
+    var builder = new flatbuffers.Builder(1024);
+
+    var facts = roomupdatefbs.RoomUpdate.createFactsVector(builder, [])
+
+    var updateSource = builder.createString(source)
+    var updateSubId = builder.createString(pingId)
+
+    roomupdatefbs.RoomUpdate.startRoomUpdate(builder)
+    roomupdatefbs.RoomUpdate.addType(builder, roomupdatefbs.UpdateType.Ping)
+    roomupdatefbs.RoomUpdate.addSource(builder, updateSource)
+    roomupdatefbs.RoomUpdate.addSubscriptionId(builder, updateSubId)
+    roomupdatefbs.RoomUpdate.addFacts(builder, facts)
+    var update = roomupdatefbs.RoomUpdate.endRoomUpdate(builder)
+
+    // Ping only has 1 RoomUpdate
+    var updates = roomupdatefbs.RoomUpdates.createUpdatesVector(builder, [update])
+    roomupdatefbs.RoomUpdates.startRoomUpdates(builder)
+    roomupdatefbs.RoomUpdates.addUpdates(builder, updates)
+    var full_updates_msg = roomupdatefbs.RoomUpdates.endRoomUpdates(builder)
+
+    builder.finish(full_updates_msg)
+    var msg_buf = builder.asUint8Array(); // Of type `Uint8Array`.
+    return Buffer.from(msg_buf)
+}
+
 function makeSubscriptionMessage(source, subscriptionId, subscriptionQueryParts) {
     var builder = new flatbuffers.Builder(1024);
 
@@ -163,8 +205,19 @@ function makeSubscriptionMessage(source, subscriptionId, subscriptionQueryParts)
     return Buffer.from(msg_buf)
 }
 
+function checkEndian() {
+    var arrayBuffer = new ArrayBuffer(2);
+    var uint8Array = new Uint8Array(arrayBuffer);
+    var uint16array = new Uint16Array(arrayBuffer);
+    uint8Array[0] = 0xAA; // set first byte
+    uint8Array[1] = 0xBB; // set second byte
+    if (uint16array[0] === 0xBBAA) return "little endian";
+    if (uint16array[0] === 0xAABB) return "big endian";
+    else throw new Error("Something crazy just happened");
+}
+
 function makeBatchMessage(source, batched_calls) {
-    var builder = new flatbuffers.Builder(1024);
+    var builder = new flatbuffers.Builder(1024*8);
     const batchMessageTypeToMessageTypeEnum = {
         "claim": roomupdatefbs.UpdateType.Claim,
         "retract": roomupdatefbs.UpdateType.Retract,
@@ -183,11 +236,36 @@ function makeBatchMessage(source, batched_calls) {
         var factArray = new Array(batched_calls[i].fact.length);
         for (let k = 0; k < factArray.length; k += 1) {
             let factPart = batched_calls[i].fact[k];
-            var factValue = roomupdatefbs.Fact.createValueVector(
-                builder,
-                stringToUint(factPart[1])
-            )
-            var factType = factTypeStringToTypeEnum[factPart[0]];
+            let factType = factTypeStringToTypeEnum[factPart[0]];
+            // should the value value be encoded differently depending on the type?
+            let factValue;
+            if (
+                factType == roomupdatefbs.FactType.Integer ||
+                factType == roomupdatefbs.FactType.Float
+            ) {
+                // encode integer or float
+                // using little endian
+                // buf.writeUInt32LE(+factPart[1])
+                // TODO: handle float
+                const buf = Buffer.allocUnsafe (4);
+                console.log("writing int")
+                console.log(factPart[1])
+                buf.writeUInt32LE(+factPart[1])
+                factValue = roomupdatefbs.Fact.createValueVector(
+                    builder,
+                    buf.readUInt8(0)
+                )
+            } else if (factType == roomupdatefbs.FactType.Binary) {
+                factValue = roomupdatefbs.Fact.createValueVector(
+                    builder,
+                    factPart[1]
+                )
+            } else {
+                factValue = roomupdatefbs.Fact.createValueVector(
+                    builder,
+                    stringToUint(factPart[1])
+                )
+            }
 
             roomupdatefbs.Fact.startFact(builder)
             roomupdatefbs.Fact.addType(builder, factType)
@@ -209,13 +287,16 @@ function makeBatchMessage(source, batched_calls) {
     }
 
     // Subscription only has 1 RoomUpdate
-    var updates = roomupdatefbs.RoomUpdates.createUpdatesVector(builder, [update])
+    var updates = roomupdatefbs.RoomUpdates.createUpdatesVector(builder, batchedUpdatesArray)
     roomupdatefbs.RoomUpdates.startRoomUpdates(builder)
-    roomupdatefbs.RoomUpdates.addUpdates(builder, batchedUpdatesArray)
+    roomupdatefbs.RoomUpdates.addUpdates(builder, updates)
     var full_updates_msg = roomupdatefbs.RoomUpdates.endRoomUpdates(builder)
 
     builder.finish(full_updates_msg)
     var msg_buf = builder.asUint8Array(); // Of type `Uint8Array`.
+    console.log("BATCH MESSAGE:")
+    console.log(msg_buf.length)
+    console.log(msg_buf.join(' '))
     return Buffer.from(msg_buf)
 }
 
@@ -255,11 +336,11 @@ function init(filename) {
         return new Promise(async resolve => {
             if (server_listening === false) {
                 if (sent_ping == false) {
-                    var s2 = new Uint8Array(2)
-                    s2[0] = 9
-                    s2[1] = 254
-                    client.send(Buffer.from(s2))
-                    client.send([`.....PING${MY_ID_STR}${init_ping_id}`])
+                    // var s2 = new Uint8Array(2)
+                    // s2[0] = 9
+                    // s2[1] = 254
+                    // client.send(Buffer.from(s2))
+                    client.send(makePingMessage(MY_ID_STR, init_ping_id))
                     sent_ping = true;
                 }
                 while (server_listening === false) {
