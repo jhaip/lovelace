@@ -623,14 +623,14 @@ func parse_room_update(source string, data []byte) []RoomUpdate {
 		roomupdate.UpdateTypeDeath: DEATH,
 		roomupdate.UpdateTypeSubscriptionDeath: SUBSCRIPTION_DEATH,
 	}
-	fmt.Println("parse_room_update RAW:")
-	fmt.Println(source)
-	fmt.Println(len(data))
-	fmt.Println(data)
+	// fmt.Println("parse_room_update RAW:")
+	// fmt.Println(source)
+	// fmt.Println(len(data))
+	// fmt.Println(data)
 	room_updates_obj := roomupdate.GetRootAsRoomUpdates(data, 0)
 	returnUpdates := make([]RoomUpdate, room_updates_obj.UpdatesLength())
-	fmt.Println("N upates:")
-	fmt.Println(room_updates_obj.UpdatesLength())
+	// fmt.Println("N upates:")
+	// fmt.Println(room_updates_obj.UpdatesLength())
 	for i, _ := range returnUpdates {
 		update := new(roomupdate.RoomUpdate)
 		room_updates_obj.Updates(update, i)
@@ -679,8 +679,8 @@ func parse_room_update(source string, data []byte) []RoomUpdate {
 			returnUpdateFacts,
 		}
 	}
-	fmt.Println("PARSED:")
-	fmt.Println(returnUpdates)
+	// fmt.Println("PARSED:")
+	// fmt.Println(returnUpdates)
 	return returnUpdates
 }
 
@@ -772,7 +772,7 @@ func main() {
 
 	go subscribe_worker(subscription_messages, subscriptions_notifications, &subscriptions, notifications, &factDatabase)
 	go notification_worker(notifications, client)
-	go debug_database_observer(&factDatabase)
+	// go debug_database_observer(&factDatabase)
 	go batch_worker(batch_messages, subscriptions_notifications, &factDatabase, &subscriptions)
 
 	zap.L().Info("listening...")

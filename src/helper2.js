@@ -298,9 +298,9 @@ function makeBatchMessage(source, batched_calls) {
 
     builder.finish(full_updates_msg)
     var msg_buf = builder.asUint8Array(); // Of type `Uint8Array`.
-    console.log("BATCH MESSAGE:")
-    console.log(msg_buf.length)
-    console.log(msg_buf.join(' '))
+    // console.log("BATCH MESSAGE:")
+    // console.log(msg_buf.length)
+    // console.log(msg_buf.join(' '))
     return Buffer.from(msg_buf)
 }
 
@@ -532,10 +532,10 @@ function init(filename) {
 
     client.on('message', (request) => {
         const span = tracer.startSpan(`client-${myId}-recv`, { childOf: room.wireCtx() });
-        console.log("RAW RECV:");
-        console.log(request); // a buffer
+        // console.log("RAW RECV:");
+        // console.log(request); // a buffer
         const roomResponse = deserializeRoomResponseMessage(request);
-        console.log(roomResponse);
+        // console.log(roomResponse);
         const id = roomResponse.subscriptionId;
         if (id == init_ping_id) {
             const val = roomResponse.results;
