@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	// "log"
-	"math"
+	// "math"
 	"os"
 	"io"
 	"io/ioutil"
@@ -345,15 +345,19 @@ func notification_worker(notifications <-chan Notification, client *zmq.Socket) 
 }
 
 func intToBinary(x int) []byte {
-	b := make([]byte, 4)
-	binary.LittleEndian.PutUint32(b, uint32(x))
-	return b
+	// b := make([]byte, 4)
+	// binary.LittleEndian.PutUint32(b, uint32(x))
+	// return b
+	str := strconv.Itoa(x)
+	return []byte(str)
 }
 
 func floatToBinary(x float32) []byte {
-	b := make([]byte, 4)
-	binary.LittleEndian.PutUint32(b, math.Float32bits(x))
-	return b
+	// b := make([]byte, 4)
+	// binary.LittleEndian.PutUint32(b, math.Float32bits(x))
+	// return b
+	str := strconv.FormatFloat(float64(x), 'f', -1, 32)
+	return []byte(str)
 }
 
 func subscribe_worker(subscription_messages <-chan RoomUpdate,

@@ -247,13 +247,17 @@ function makeBatchMessage(source, batched_calls) {
                 // using little endian
                 // buf.writeUInt32LE(+factPart[1])
                 // TODO: handle float
-                const buf = Buffer.allocUnsafe (4);
-                console.log("writing int")
-                console.log(factPart[1])
-                buf.writeUInt32LE(+factPart[1])
+                // const buf = Buffer.allocUnsafe(4);
+                // console.log("writing int")
+                // console.log(factPart[1])
+                // buf.writeUInt32LE(+factPart[1])
+                // factValue = roomupdatefbs.Fact.createValueVector(
+                //     builder,
+                //     buf.readUInt8(0)
+                // )
                 factValue = roomupdatefbs.Fact.createValueVector(
                     builder,
-                    buf.readUInt8(0)
+                    stringToUint(`${factPart[1]}`)
                 )
             } else if (factType == roomupdatefbs.FactType.Binary) {
                 factValue = roomupdatefbs.Fact.createValueVector(
