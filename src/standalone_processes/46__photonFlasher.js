@@ -132,7 +132,7 @@ room.onRaw(
         if (!!results) {
             results.forEach(({ code, photonId }) => {
                 handleRequest(code, photonId)
-            }
+            });
         }
         room.subscriptionPostfix();
     })
