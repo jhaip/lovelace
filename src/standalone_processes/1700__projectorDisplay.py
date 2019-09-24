@@ -9,6 +9,8 @@ import json
 import zmq
 import sys
 import copy
+import base64
+import io
 
 logging.disable(logging.ERROR)  # Disable ERROR and below logs
 
