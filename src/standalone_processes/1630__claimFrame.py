@@ -38,7 +38,7 @@ while True:
         ["text", "camera"],
         ["text", "sees"],
         ["text", "frame"],
-        ["text", str(jpg_as_text)],
+        ["text", str(jpg_as_text, "utf-8")],
         ["text", "@"],
         ["integer", str(currentTimeMs)]
     ]})
