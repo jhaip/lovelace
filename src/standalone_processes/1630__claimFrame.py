@@ -6,6 +6,7 @@ import imutils
 import os
 import time
 import logging
+import base64
 
 rpc_url = "10.0.0.22"
 
@@ -37,7 +38,7 @@ while True:
         ["text", "camera"],
         ["text", "sees"],
         ["text", "frame"],
-        ["text", jpg_as_text],
+        ["text", str(jpg_as_text)],
         ["text", "@"],
         ["integer", str(currentTimeMs)]
     ]})
