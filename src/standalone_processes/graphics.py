@@ -27,6 +27,9 @@ class Illumination:
     # point format: [[x1, y1], [x2, y2], ...]
     def polygon(self, points):
         self.add("polygon", points)
+    
+    def image(self, x, y, w, h, base64image):
+        self.add("image", {"x": x, "y": y, "w": w, "h": h, "bitmap_image_base64": base64image})
 
     #  color format: string, [r, g, b], or [r, g, b, a]
     def fill(self, *args):
