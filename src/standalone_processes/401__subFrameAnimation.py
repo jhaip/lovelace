@@ -1,5 +1,6 @@
 from helper2 import init, claim, retract, prehook, subscription, batch, MY_ID_STR, listen, check_server_connection, get_my_id_str
 from graphics import Illumination
+import time
 
 FRAMES = []
 FRAME_INDEX = 0
