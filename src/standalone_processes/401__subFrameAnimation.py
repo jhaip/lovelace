@@ -29,6 +29,7 @@ while True:
         ["postfix", ""]
     ]}]
     if len(FRAMES) > 0:
+        FRAME_INDEX += 1
         if FRAME_INDEX >= len(FRAMES):
             FRAME_INDEX = 0
         ill = Illumination()
