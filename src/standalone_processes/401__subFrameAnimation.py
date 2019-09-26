@@ -9,7 +9,7 @@ DELAY_S_BETWEEN_FRAMES = 0.25
 @subscription(["$ $ camera sees subframe $frameNumber $frame @ $"])
 def sub_callback_frames(results):
     global FRAMES
-    if FRAMES and len(FRAMES) > 0:
+    if results and len(results) > 0:
         FRAMES = list(map(lambda x: x["frame"], results))
     else:
         FRAMES = 0
