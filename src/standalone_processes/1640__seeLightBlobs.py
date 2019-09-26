@@ -34,6 +34,7 @@ dst = np.array([
         [PERSPECTIVE_IMAGE_WIDTH - 1, PERSPECTIVE_IMAGE_HEIGHT - 1],
         [0, PERSPECTIVE_IMAGE_HEIGHT - 1]], dtype = "float32")
 PERSPECTIVE_MATRIX = cv2.getPerspectiveTransform(PERSPECTIVE_CALIBRATION, dst)
+MIN_CONTOUR_AREA = 50*50
 MAX_N_IMAGES = 12
 CONTOUR_PERSPECTIVE_IMAGE_WIDTH = 100
 CONTOUR_PERSPECTIVE_IMAGE_HEIGHT = 200
@@ -83,7 +84,7 @@ def detect():
     im2, raw_contours, hierarchy = cv2.findContours(threshold_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     contours = []
     for (i, c) in enumerate(raw_contours):
-        if hierarchy[0,i,3] == -1:
+        if hierarchy[0,i,3] == -1 and cv2.contourArea(c) > MIN_CONTOUR_AREA:
             contours.append(c)
     contours = sorted(contours, key=lambda ctr: cv2.boundingRect(ctr)[0])
     blob_images = []
