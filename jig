@@ -94,6 +94,16 @@ function cmd() {
     node src/standalone_processes/105__robotCodeRunner.js &
     node src/standalone_processes/10__debugViewer.js &
     echo -e "booting"
+  elif [ "$1" == "camerastart" ]
+  then
+    cd new-backend/go-server
+    go run server.go parser2.go subscriber.go database.go &
+    echo -e "running server"
+    cd ../..
+    sleep 2
+    python3 src/standalone_processes/55__frameProxy.py &
+    python3 src/standalone_processes/1630__claimFrame.py &
+    echo -e "booting"
   elif [ "$1" == "test" ]
   then
     cd new-backend/go-server
