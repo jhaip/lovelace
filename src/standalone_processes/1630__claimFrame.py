@@ -8,16 +8,14 @@ import time
 import logging
 import base64
 
-rpc_url = "10.0.0.22"
-
-CAM_WIDTH = 1920
-CAM_HEIGHT = 1080
+# CAM_WIDTH = 1920
+# CAM_HEIGHT = 1080
 DEBUG = False
 
 capture = WebcamVideoStream(src=0)
-capture.stream.set(cv2.CAP_PROP_FRAME_WIDTH, CAM_WIDTH)
-capture.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, CAM_HEIGHT)
-time.sleep(2)
+# capture.stream.set(cv2.CAP_PROP_FRAME_WIDTH, CAM_WIDTH)
+# capture.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, CAM_HEIGHT)
+# time.sleep(2)
 capture.start()
 time.sleep(2)
 
