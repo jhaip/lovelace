@@ -11,7 +11,7 @@ projection_matrixes = {}
 DOTS_CAMERA_ID = 1
 LASER_CAMERA_ID = 2
 BLANK_SCORES = {"1": 0, "2": 0}
-SCORES = BLANK_SCORES
+SCORES = BLANK_SCORES.copy()
 PLAYER_REGIONS = {"1": None, "2": None}
 MAX_SCORE = 100
 # CAMERA 2 calibration:
@@ -123,7 +123,7 @@ def sub_callback_player_scores(results):
             if result_player_id in SCORES:
                 SCORES[result_player_id] += 1
                 if SCORES[result_player_id] > MAX_SCORE:
-                    SCORES = BLANK_SCORES
+                    SCORES = BLANK_SCORES.copy()
             else:
                 logging.error("unrecognized player id {}".format(result["playerId"]))
         show_scores()
