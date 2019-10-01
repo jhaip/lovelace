@@ -109,7 +109,7 @@ def show_scores():
                 g = 0
                 b = 255
             score_percentage = (1.0 * SCORES[player_id]) / (1.0 * MAX_SCORE)
-            draw_score_on_region(PLAYER_REGIONS[player_id], score_percentage, r, g, b, "1")
+            claims.extend(draw_score_on_region(PLAYER_REGIONS[player_id], score_percentage, r, g, b, "1"))
             PLAYER_REGIONS[player_id]
     batch(claims)
 
