@@ -116,9 +116,10 @@ def sub_callback_player_scores(results):
     global SCORES, BLANK_SCORES
     if results:
         for result in results:
-            if result["playerId"] in SCORES:
-                SCORES[result["playerId"]] += 1
-                if SCORES[result["playerId"]] > MAX_SCORE:
+            result_player_id = str(result["playerId"])
+            if result_player_id in SCORES:
+                SCORES[result_player_id] += 1
+                if SCORES[result_player_id] > MAX_SCORE:
                     SCORES = BLANK_SCORES
         show_scores()
 
