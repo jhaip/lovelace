@@ -72,7 +72,7 @@ def sub_callback_calibration(results):
             logging.error("RECAL PROJECTION MATRIX -- done")
 
 
-def draw_score_on_region(result, percentage, r, g, b):
+def draw_score_on_region(result, percentage, r, g, b, subscription_id):
     polygon = [
         project(LASER_CAMERA_ID, result["x1"], result["y1"]),
         project(LASER_CAMERA_ID, result["x2"], result["y2"]),
@@ -106,7 +106,7 @@ def show_scores():
                 g = 0
                 b = 255
             score_percentage = (1.0 * SCORES[player_id]) / (1.0 * MAX_SCORE)
-            draw_score_on_region(PLAYER_REGIONS[player_id], score_percentage, r, g, b)
+            draw_score_on_region(PLAYER_REGIONS[player_id], score_percentage, r, g, b, "1")
             PLAYER_REGIONS[player_id]
     batch(claims)
 
