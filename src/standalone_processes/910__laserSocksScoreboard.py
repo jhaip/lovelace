@@ -128,9 +128,9 @@ def sub_callback_toggle(results):
     global PLAYER_REGIONS
     if results:
         for result in results:
-            if result["name"] === "p1health":
+            if result["name"] == "p1health":
                 PLAYER_REGIONS["1"] = result
-            elif result["name"] === "p2health":
+            elif result["name"] == "p2health":
                 PLAYER_REGIONS["2"] = result
 
 init(__file__)
