@@ -90,6 +90,9 @@ def draw_score_on_region(result, percentage, r, g, b, subscription_id):
 
 def show_scores():
     global PLAYER_REGIONS, SCORES
+    logging.error("SHOWING SCORES")
+    logging.error(SCORES)
+    logging.error(PLAYER_REGIONS)
     claims = []
     claims.append({"type": "retract", "fact": [
         ["id", get_my_id_str()],
@@ -121,6 +124,8 @@ def sub_callback_player_scores(results):
                 SCORES[result_player_id] += 1
                 if SCORES[result_player_id] > MAX_SCORE:
                     SCORES = BLANK_SCORES
+            else:
+                logging.error("unrecognized player id {}".format(result["playerId"]))
         show_scores()
 
 
