@@ -1,6 +1,6 @@
 const { room, myId, run } = require('../helper2')(__filename);
 
-room.onRaw(`#0910 $ draw graphics $graphics on $`,
+room.onRaw(`#0280 $ draw graphics $graphics on $`,
     results => {
         room.subscriptionPrefix(1);
         if (!!results) {
