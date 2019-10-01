@@ -8,7 +8,7 @@ room.onRaw(`#0280 $ draw graphics $graphics on $`,
                 let parsedGraphics = JSON.parse(graphics)
                 parsedGraphics.forEach(g => {
                     if (g["type"] === "text") {
-                        console.log(g["text"])
+                        console.log(g.options.text)
                     }
                 })
             });
