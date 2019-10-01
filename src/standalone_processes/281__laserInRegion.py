@@ -95,6 +95,16 @@ def sub_callback_laser_dots(results):
                 ["text", "region"],
                 ["text", str(result["regionId"])],
             ]})
+            claims.append({"type": "claim", "fact": [
+                ["id", get_my_id_str()],
+                ["id", "1"],
+                ["text", "laser"],
+                ["text", "in"],
+                ["text", "region"],
+                ["text", str(result["regionId"])],
+                ["text", "@"],
+                ["text", str(result["t"])],
+            ]})
         # else:
         #     logging.info("paper {} is not inside laser {} {}".format(result["paper"], result["x"], result["y"]))
     batch(claims)
