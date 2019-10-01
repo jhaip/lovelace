@@ -7,9 +7,9 @@ room.on(`laser in region $regionId @ $t`,
         if (!!results) {
             results.forEach(({ regionId, t, regionName }) => {
                 if (regionName === "p1area") {
-                    room.claim(`player 1 scored @ ${t}`)
+                    room.assert(`player 1 scored @ ${t}`)
                 } else if (regionName === "p2area") {
-                    room.claim(`player 2 scored @ ${t}`)
+                    room.assert(`player 2 scored @ ${t}`)
                 }
             });
         }
