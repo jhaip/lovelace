@@ -97,7 +97,7 @@ def show_scores():
         ["postfix", ""],
     ]})
     for player_id in SCORES:
-        if player_id in PLAYER_REGIONS:
+        if player_id in PLAYER_REGIONS and PLAYER_REGIONS[player_id] is not None:
             r = 255
             g = 0
             b = 0
