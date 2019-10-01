@@ -72,7 +72,7 @@ def sub_callback_calibration(results):
             logging.error("RECAL PROJECTION MATRIX -- done")
 
 
-def draw_score_on_region(region_data, percentage, r, g, b):
+def draw_score_on_region(result, percentage, r, g, b):
     polygon = [
         project(LASER_CAMERA_ID, result["x1"], result["y1"]),
         project(LASER_CAMERA_ID, result["x2"], result["y2"]),
