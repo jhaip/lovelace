@@ -3,6 +3,9 @@ from graphics import Illumination
 import numpy as np
 import cv2
 import logging
+import math
+import time
+import random
 
 CAM_WIDTH = 1920
 CAM_HEIGHT = 1080
@@ -14,6 +17,9 @@ BLANK_SCORES = {"1": 0, "2": 0}
 SCORES = BLANK_SCORES.copy()
 PLAYER_REGIONS = {"1": None, "2": None}
 MAX_SCORE = 100
+WINNER = None
+WIN_TIME = None
+WIN_RESET_TIME = 10
 # CAMERA 2 calibration:
 # camera 2 has projector calibration TL ( 512 , 282 ) TR ( 1712 , 229 ) BR ( 1788 , 961 ) BL ( 483 , 941 ) @ 2
 
@@ -114,19 +120,50 @@ def show_scores():
     batch(claims)
 
 
+def show_winner():
+    global PLAYER_REGIONS, WINNER
+    claims = []
+    claims.append({"type": "retract", "fact": [
+        ["id", get_my_id_str()],
+        ["id", "1"],
+        ["postfix", ""],
+    ]})
+    if WINNER in PLAYER_REGIONS and PLAYER_REGIONS[WINNER] is not None:
+        p1 = project(LASER_CAMERA_ID, result["x1"], result["y1"]),
+        p2 = project(LASER_CAMERA_ID, result["x2"], result["y2"]),
+        ill = Illumination()
+        ill.push()
+        ill.translate(p1[0], p1[1])
+        ill.rotate(math.atan2(p2[1] - p1[1], p2[0] - p1[0]) + random.uniform(-0.1, 0.1))
+        ill.fontsize(40)
+        ill.fontcolor(255, 255, 0)
+        ill.text(0, 0, "WINNER!")
+        ill.pop()
+        claims.append(ill.to_batch_claim(get_my_id_str(), "1", "global"))
+    batch(claims)
+
+
 @subscription(["$ $ player $playerId scored @ $time"])
 def sub_callback_player_scores(results):
-    global SCORES, BLANK_SCORES
+    global SCORES, BLANK_SCORES, WINNER
     if results:
-        for result in results:
-            result_player_id = str(result["playerId"])
-            if result_player_id in SCORES:
-                SCORES[result_player_id] += 1
-                if SCORES[result_player_id] > MAX_SCORE:
-                    SCORES = BLANK_SCORES.copy()
+        if WINNER is not None:
+            if time.time() - WIN_TIME > WIN_RESET_TIME:
+                WINNER = None
             else:
-                logging.error("unrecognized player id {}".format(result["playerId"]))
-        show_scores()
+                show_winner()
+        else:
+            for result in results:
+                result_player_id = str(result["playerId"])
+                if result_player_id in SCORES:
+                    SCORES[result_player_id] += 1
+                    if SCORES[result_player_id] > MAX_SCORE:
+                        WINNER = result_player_id
+                        WIN_TIME = time.time()
+                        SCORES = BLANK_SCORES.copy()
+                else:
+                    logging.error("unrecognized player id {}".format(result["playerId"]))
+            show_scores()
 
 
 @subscription(["$ $ region $regionId has name $name", "$ $ region $regionId at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4"])
