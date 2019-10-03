@@ -110,7 +110,7 @@ function makeRegion(data) {
   let $name = document.createElement('input')
   $name.setAttribute("type", "text")
   $name.setAttribute("placeholder", "Region name")
-  $name.value = `${data.name}`;
+  $name.value = date.name ? `${data.name}` : '';
   let $toggleableGroup = document.createElement('div');
   let $toggleable = document.createElement('input')
   $toggleable.setAttribute("type", "checkbox");
