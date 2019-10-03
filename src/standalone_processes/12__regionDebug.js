@@ -59,19 +59,21 @@ room.on(`region $id at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4`,
     results => {
         room.subscriptionPrefix(2);
         if (!!results) {
+            let seenRegions = {};
             results.forEach(result => {
                 let regionUpdated = false;
                 for (let i = 0; i < regionData.length; i+=1) {
+                    seenRegions[regionData[i].id] = true;
                     if (regionData[i].id === result.id) {
                         regionData[i] = Object.assign(regionData[i], result)
                         regionUpdated = true;
-                        break;
                     }
                 }
                 if (!regionUpdated) {
                     regionData.push(result);
                 }
             });
+            regionData = regionData.filter(r => !!seenRegions[r.id]);
         }
         room.subscriptionPostfix();
     })
