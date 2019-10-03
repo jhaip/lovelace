@@ -1,7 +1,7 @@
 var longPollingActive = true;
 var SCALE_FACTOR = 6;
 
-let sketchMaker = function (regionData) {
+let sketchMaker = function (regionData, regionPointChanged) {
   let sketch = function (p) {
     // console.log(p)
     let CANVAS_WIDTH = 1920 / SCALE_FACTOR;
@@ -29,6 +29,7 @@ let sketchMaker = function (regionData) {
         if (i === draggingIndex) {
           locations[i][0] = p.mouseX + offsetX;
           locations[i][1] = p.mouseY + offsetY;
+          regionPointChanged(regionData.id, locations);
         }
         p.noStroke();
         if (i === draggingIndex) {
@@ -68,6 +69,35 @@ let sketchMaker = function (regionData) {
   return sketch;
 };
 
+var lastLoggedRegionTime = (new Date()).getTime();
+var THROTTLE_TIME_MS = 1000 * 0.5;
+
+function regionPointChanged(regionId, regionPoints) {
+  let currentTime = (new Date()).getTime();
+  if (currentTime - lastLoggedRegionTime > THROTTLE_TIME_MS) {
+    lastLoggedRegionTime = currentTime;
+    fetch(`/region/${regionId}`, {
+      method: 'put',
+      headers: {
+        'Content-Type': 'application/json'
+        // 'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: JSON.stringify({
+        'x1': regionPoints[0][0],
+        'y1': regionPoints[0][1],
+        'x2': regionPoints[1][0],
+        'y2': regionPoints[1][1],
+        'x3': regionPoints[2][0],
+        'y3': regionPoints[2][1],
+        'x4': regionPoints[3][0],
+        'y4': regionPoints[3][1]
+      })
+    }).then(
+      response => console.log(response)
+    );
+  }
+}
+
 function makeRegion(data) {
   let $parent = document.createElement('div');
   $parent.setAttribute("class", "parent");
@@ -97,8 +127,30 @@ function makeRegion(data) {
   $leftCol.appendChild($deleteButton);
   $parent.appendChild($el);
   $parent.appendChild($leftCol);
-  document.body.appendChild($parent)
-  let myp5_c1 = new p5(sketchMaker(data), data.id);
+  document.body.appendChild($parent);
+  $deleteButton.onclick = (evt) => {
+    evt.preventDefault();
+    fetch(`/region/${data.id}`, {
+      method: 'delete'
+    }).then(
+      response => console.log(response)
+    );
+  }
+  $toggleable.onchanged = (evt) => {
+    fetch(`/region/${data.id}`, {
+      method: 'put',
+      headers: {
+        'Content-Type': 'application/json'
+        // 'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: JSON.stringify({
+        'toggleable': $toggleable.checked
+      })
+    }).then(
+      response => console.log(response)
+    );
+  }
+  let myp5_c1 = new p5(sketchMaker(data, regionPointChanged), data.id);
 }
 
 function update(data) {
