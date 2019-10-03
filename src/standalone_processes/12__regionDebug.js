@@ -36,8 +36,6 @@ app.delete('/region/:regionId', (req, res) => {
 
 app.put('/region/:regionId', (req, res) => {
     const regionId = req.params.regionId;
-    console.log(req);
-    console.log(req.body);
     const data = req.body;
     if (typeof data.name !== "undefined") {
         room.retractAll(`region "${regionId}" has name $`);
