@@ -136,7 +136,7 @@ function makeRegion(data) {
       response => console.log(response)
     );
   }
-  $toggleable.onchanged = (evt) => {
+  $toggleable.onclick = (evt) => {
     fetch(`/region/${data.id}`, {
       method: 'put',
       headers: {
