@@ -83,14 +83,14 @@ function regionPointChanged(regionId, regionPoints) {
         // 'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: JSON.stringify({
-        'x1': regionPoints[0][0] * SCALE_FACTOR,
-        'y1': regionPoints[0][1] * SCALE_FACTOR,
-        'x2': regionPoints[1][0] * SCALE_FACTOR,
-        'y2': regionPoints[1][1] * SCALE_FACTOR,
-        'x3': regionPoints[2][0] * SCALE_FACTOR,
-        'y3': regionPoints[2][1] * SCALE_FACTOR,
-        'x4': regionPoints[3][0] * SCALE_FACTOR,
-        'y4': regionPoints[3][1] * SCALE_FACTOR
+        'x1': Math.floor(regionPoints[0][0] * SCALE_FACTOR),
+        'y1': Math.floor(regionPoints[0][1] * SCALE_FACTOR),
+        'x2': Math.floor(regionPoints[1][0] * SCALE_FACTOR),
+        'y2': Math.floor(regionPoints[1][1] * SCALE_FACTOR),
+        'x3': Math.floor(regionPoints[2][0] * SCALE_FACTOR),
+        'y3': Math.floor(regionPoints[2][1] * SCALE_FACTOR),
+        'x4': Math.floor(regionPoints[3][0] * SCALE_FACTOR),
+        'y4': Math.floor(regionPoints[3][1] * SCALE_FACTOR)
       })
     }).then(
       response => console.log(response)
