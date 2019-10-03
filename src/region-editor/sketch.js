@@ -125,6 +125,7 @@ function makeRegion(data) {
   $deleteButton.innerHTML = 'Delete Region'
   $leftCol.appendChild($id);
   $leftCol.appendChild($name);
+  $leftCol.appendChild($saveNameButton);
   $leftCol.appendChild($toggleableGroup);
   $leftCol.appendChild($deleteButton);
   $parent.appendChild($el);
@@ -160,7 +161,7 @@ function makeRegion(data) {
         // 'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: JSON.stringify({
-        'name': $name.value;
+        'name': $name.value
       })
     }).then(
       response => console.log(response)
