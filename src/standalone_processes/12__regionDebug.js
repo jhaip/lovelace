@@ -31,7 +31,7 @@ app.delete('/region/:regionId', (req, res) => {
     const regionId = req.params.regionId;
     room.retractAll(`region "${regionId}" %`);
     room.flush();
-    res.status(200);
+    res.status(200).send('OK');
 })
 
 app.put('/region/:regionId', (req, res) => {
@@ -52,7 +52,7 @@ app.put('/region/:regionId', (req, res) => {
         room.assert(`region "${regionId}" at ${data.x1} ${data.y1} ${data.x2} ${data.y2} ${data.x3} ${data.y3} ${data.x4} ${data.y4}`);
     }
     room.flush();
-    res.status(200);
+    res.status(200).send('OK');
 })
 
 room.on(`region $id at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4`,
