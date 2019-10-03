@@ -29,7 +29,7 @@ app.get('/status', (req, res) => {
 
 app.delete('/region/:regionId', (req, res) => {
     const regionId = req.params.regionId;
-    room.retract(`region "${regionId}" %`);
+    room.retractAll(`region "${regionId}" %`);
     room.flush();
     res.status(200);
 })
@@ -38,17 +38,17 @@ app.put('/region/:regionId', (req, res) => {
     const regionId = req.params.regionId;
     const data = req.body.data;
     if (typeof data.name !== "undefined") {
-        room.retract(`region "${regionId}" has name $`);
+        room.retractAll(`region "${regionId}" has name $`);
         room.assert(`region "${regionId}" has name "${data.name}"`);
     }
     if (typeof data.toggleable !== "undefined") {
-        room.retract(`region "${regionId}" is toggleable`);
+        room.retractAll(`region "${regionId}" is toggleable`);
         if (data.toggleable) {
             room.assert(`region "${regionId}" is toggleable`);
         }
     }
     if (typeof data.x1 !== "undefined") {
-        room.retract(`region "${regionId}" at %`);
+        room.retractAll(`region "${regionId}" at %`);
         room.assert(`region "${regionId}" at ${data.x1} ${data.y1} ${data.x2} ${data.y2} ${data.x3} ${data.y3} ${data.x4} ${data.y4}`);
     }
     room.flush();
