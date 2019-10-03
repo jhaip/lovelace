@@ -111,12 +111,14 @@ function makeRegion(data) {
   $name.setAttribute("type", "text")
   $name.setAttribute("placeholder", "Region name")
   $name.value = data.name ? `${data.name}` : '';
+  let $saveNameButton = document.createElement('button');
+  $saveNameButton.innerHTML = 'Update name';
   let $toggleableGroup = document.createElement('div');
   let $toggleable = document.createElement('input')
   $toggleable.setAttribute("type", "checkbox");
   $toggleable.checked = data.toggleable;
   let $toggleLabel = document.createElement('label');
-  $toggleLabel.innerHTML = 'Toggeable region?'
+  $toggleLabel.innerHTML = 'Toggleable region?'
   $toggleableGroup.appendChild($toggleable);
   $toggleableGroup.appendChild($toggleLabel);
   let $deleteButton = document.createElement('button');
@@ -150,6 +152,20 @@ function makeRegion(data) {
       response => console.log(response)
     );
   }
+  $saveNameButton.onclick = (evt) => {
+    fetch(`/region/${data.id}`, {
+      method: 'put',
+      headers: {
+        'Content-Type': 'application/json'
+        // 'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: JSON.stringify({
+        'name': $name.value;
+      })
+    }).then(
+      response => console.log(response)
+    );
+  }
   let myp5_c1 = new p5(sketchMaker(data, regionPointChanged), data.id);
 }
 
@@ -167,7 +183,7 @@ function update(data) {
       'y3': datum.y3 / SCALE_FACTOR,
       'x4': datum.x4 / SCALE_FACTOR,
       'y4': datum.y4 / SCALE_FACTOR,
-      'toggleable': true
+      'toggleable': datum.toggleable
     });
   })
   // makeRegion({
