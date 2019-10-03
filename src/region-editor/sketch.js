@@ -1,5 +1,6 @@
 var longPollingActive = true;
 var SCALE_FACTOR = 6;
+var ignore_next_update = false;
 
 let sketchMaker = function (regionData, regionPointChanged) {
   let sketch = function (p) {
@@ -76,6 +77,7 @@ function regionPointChanged(regionId, regionPoints) {
   let currentTime = (new Date()).getTime();
   if (currentTime - lastLoggedRegionTime > THROTTLE_TIME_MS) {
     lastLoggedRegionTime = currentTime;
+    ignore_next_update = true;
     fetch(`/region/${regionId}`, {
       method: 'put',
       headers: {
@@ -140,6 +142,7 @@ function makeRegion(data) {
     );
   }
   $toggleable.onclick = (evt) => {
+    ignore_next_update = true;
     fetch(`/region/${data.id}`, {
       method: 'put',
       headers: {
@@ -154,6 +157,7 @@ function makeRegion(data) {
     );
   }
   $saveNameButton.onclick = (evt) => {
+    ignore_next_update = true;
     fetch(`/region/${data.id}`, {
       method: 'put',
       headers: {
@@ -208,7 +212,11 @@ async function loop() {
   try {
     const response = await fetch('/status')
     const myJson = await response.json();
-    update(myJson);
+    if (ignore_next_update) {
+      ignore_next_update = false;
+    } else {
+      update(myJson);
+    }
     if (longPollingActive) {
       setTimeout(function () {
         loop();
