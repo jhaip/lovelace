@@ -179,7 +179,7 @@ function update(regions, newRegionStatus) {
 
   let $newRegionStatus = document.createElement('div');
   $newRegionStatus.setAttribute("class", "new-region");
-  $newRegionStatus.innerHTML = `<h5>New Region Status:</h5><br>${newRegionStatus}`;
+  $newRegionStatus.innerHTML = `<strong>New Region Status:</strong><br>${newRegionStatus}`;
   document.body.appendChild($newRegionStatus);
 
   regions.forEach(datum => {
