@@ -22,9 +22,13 @@ var regionData = [{
     'y4': 100 * 6,
     'toggleable': true
 }];
+var newRegionStatus = '';
 
 app.get('/status', (req, res) => {
-    res.status(200).send(regionData);
+    res.status(200).send({
+        'regions': regionData,
+        'new_region_status': newRegionStatus
+    });
 })
 
 app.delete('/region/:regionId', (req, res) => {
@@ -83,7 +87,9 @@ room.on(`region $id is toggleable`,
     results => {
         room.subscriptionPrefix(3);
         if (!!results) {
+            let seenRegions = {};
             results.forEach(result => {
+                seenRegions[result.id] = true;
                 let regionUpdated = false;
                 result.toggleable = true;
                 for (let i = 0; i < regionData.length; i += 1) {
@@ -96,6 +102,9 @@ room.on(`region $id is toggleable`,
                 if (!regionUpdated) {
                     regionData.push(result);
                 }
+            });
+            regionData = regionData.map(r => {
+                return Object.assign(r, {'toggleable': !!seenRegions[r.id] ? r.toggleable : false })
             });
         }
         room.subscriptionPostfix();
@@ -117,6 +126,22 @@ room.on(`region $id has name $name`,
                 if (!regionUpdated) {
                     regionData.push(result);
                 }
+            });
+        }
+        room.subscriptionPostfix();
+    })
+
+room.onRaw(`#0280 $ draw graphics $graphics on $`,
+    results => {
+        room.subscriptionPrefix(1);
+        if (!!results) {
+            results.forEach(({ graphics }) => {
+                let parsedGraphics = JSON.parse(graphics)
+                parsedGraphics.forEach(g => {
+                    if (g["type"] === "text") {
+                        newRegionStatus = g.options.text;
+                    }
+                })
             });
         }
         room.subscriptionPostfix();

@@ -174,9 +174,15 @@ function makeRegion(data) {
   let myp5_c1 = new p5(sketchMaker(data, regionPointChanged), data.id);
 }
 
-function update(data) {
+function update(regions, newRegionStatus) {
   document.body.innerHTML = '';
-  data.forEach(datum => {
+
+  let $newRegionStatus = document.createElement('div');
+  $newRegionStatus.setAttribute("class", "new-region");
+  $newRegionStatus.innerHTML = `<h5>New Region Status:</h5><br>${newRegionStatus}`;
+  document.body.appendChild($newRegionStatus);
+
+  regions.forEach(datum => {
     makeRegion({
       'id': datum.id,
       'name': datum.name,
@@ -190,7 +196,7 @@ function update(data) {
       'y4': datum.y4 / SCALE_FACTOR,
       'toggleable': datum.toggleable
     });
-  })
+  });
   // makeRegion({
   //   'id': '9df78dc0-9e97-4a63-851e-b5bd61ba55c6',
   //   'name': 'pl1health',
@@ -215,7 +221,7 @@ async function loop() {
     if (ignore_next_update) {
       ignore_next_update = false;
     } else {
-      update(myJson);
+      update(myJson.regions, myJson.new_region_status);
     }
     if (longPollingActive) {
       setTimeout(function () {
