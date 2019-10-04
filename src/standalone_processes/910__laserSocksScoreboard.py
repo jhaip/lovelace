@@ -130,8 +130,8 @@ def show_winner():
         ["postfix", ""],
     ]})
     if WINNER in PLAYER_REGIONS and PLAYER_REGIONS[WINNER] is not None:
-        p1 = project(LASER_CAMERA_ID, PLAYER_REGIONS[WINNER]["x1"], PLAYER_REGIONS[WINNER]["y1"])
-        p2 = project(LASER_CAMERA_ID, PLAYER_REGIONS[WINNER]["x2"], PLAYER_REGIONS[WINNER]["y2"])
+        p1 = project(LASER_CAMERA_ID, PLAYER_REGIONS[WINNER]["x2"], PLAYER_REGIONS[WINNER]["y2"])
+        p2 = project(LASER_CAMERA_ID, PLAYER_REGIONS[WINNER]["x3"], PLAYER_REGIONS[WINNER]["y3"])
         logging.error("P1 P2")
         logging.error(p1)
         logging.error(p2)
@@ -179,5 +179,6 @@ def sub_callback_toggle(results):
                 PLAYER_REGIONS["1"] = result
             elif result["name"] == "p2health":
                 PLAYER_REGIONS["2"] = result
+        show_scores()
 
 init(__file__)
