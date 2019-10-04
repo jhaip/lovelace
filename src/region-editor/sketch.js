@@ -214,15 +214,23 @@ function update(regions, newRegionStatus) {
 
 // update([]);
 
+var previousResultJSONString;
+
 async function loop() {
   try {
     const response = await fetch('/status')
     const myJson = await response.json();
-    if (ignore_next_update) {
-      ignore_next_update = false;
+    const myJsonString = JSON.stringify(myJson)
+    if (myJsonString !== previousResultJSONString) {
+      if (ignore_next_update) {
+        ignore_next_update = false;
+      } else {
+        update(myJson.regions, myJson.new_region_status);
+      }
     } else {
-      update(myJson.regions, myJson.new_region_status);
+      console.log("ignoring update because nothing changed");
     }
+    previousResultJSONString = myJsonString;
     if (longPollingActive) {
       setTimeout(function () {
         loop();
