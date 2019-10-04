@@ -89,7 +89,7 @@ def draw_score_on_region(result, percentage, r, g, b, subscription_id):
                                  result["y1"] + (result["y4"] - result["y1"])*percentage),
     ]
     ill = Illumination()
-    ill.fill(r, g, b, 100)
+    ill.fill(r, g, b)
     ill.nostroke()
     ill.polygon(polygon)
     return ill.to_batch_claim(get_my_id_str(), subscription_id, "global")
