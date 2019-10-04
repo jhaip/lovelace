@@ -145,7 +145,7 @@ def show_winner():
 
 @subscription(["$ $ player $playerId scored @ $time"])
 def sub_callback_player_scores(results):
-    global SCORES, BLANK_SCORES, WINNER
+    global SCORES, BLANK_SCORES, WINNER, WIN_TIME
     if results:
         if WINNER is not None:
             if time.time() - WIN_TIME > WIN_RESET_TIME:
