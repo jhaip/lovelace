@@ -130,8 +130,11 @@ def show_winner():
         ["postfix", ""],
     ]})
     if WINNER in PLAYER_REGIONS and PLAYER_REGIONS[WINNER] is not None:
-        p1 = project(LASER_CAMERA_ID, PLAYER_REGIONS[WINNER]["x1"], PLAYER_REGIONS[WINNER]["y1"]),
-        p2 = project(LASER_CAMERA_ID, PLAYER_REGIONS[WINNER]["x2"], PLAYER_REGIONS[WINNER]["y2"]),
+        p1 = project(LASER_CAMERA_ID, PLAYER_REGIONS[WINNER]["x1"], PLAYER_REGIONS[WINNER]["y1"])
+        p2 = project(LASER_CAMERA_ID, PLAYER_REGIONS[WINNER]["x2"], PLAYER_REGIONS[WINNER]["y2"])
+        logging.error("P1 P2")
+        logging.error(p1)
+        logging.error(p2)
         ill = Illumination()
         ill.push()
         ill.translate(p1[0], p1[1])
