@@ -76,6 +76,7 @@ def sub_callback_calibration(results):
             projector_calibrations[int(result["cameraId"])] = projector_calibration
             projection_matrixes[int(result["cameraId"])] = projection_matrix
             logging.error("RECAL PROJECTION MATRIX -- done")
+            show_scores()
 
 
 def draw_score_on_region(result, percentage, r, g, b, subscription_id):
