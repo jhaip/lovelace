@@ -221,8 +221,9 @@ class Example(wx.Frame):
 
         self.Bind(wx.EVT_PAINT, self.OnPaint)
 
-        self.Show()
-        self.Maximize(True)
+        # self.Show()
+        # self.Maximize(True)
+        self.ShowFullScreen(True)
 
         self.MyListenDrawLoop()
 
