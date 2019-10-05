@@ -60,7 +60,7 @@ app.put('/region/:regionId', (req, res) => {
     res.status(200).send('OK');
 })
 
-app.put('/highlight', (req, res) => {
+app.post('/highlight', (req, res) => {
     room.retractAll(`highlight all regions`);
     if (highlightAllStatus) {
         room.assert(`highlight all regions`);
