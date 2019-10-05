@@ -23,6 +23,7 @@ var regionData = [{
     'toggleable': true
 }];
 var newRegionStatus = '';
+var highlightAllStatus = false;
 
 app.get('/status', (req, res) => {
     res.status(200).send({
@@ -55,6 +56,16 @@ app.put('/region/:regionId', (req, res) => {
         room.retractAll(`region "${regionId}" at %`);
         room.assert(`region "${regionId}" at ${data.x1} ${data.y1} ${data.x2} ${data.y2} ${data.x3} ${data.y3} ${data.x4} ${data.y4}`);
     }
+    room.flush();
+    res.status(200).send('OK');
+})
+
+app.put('/highlight', (req, res) => {
+    room.retractAll(`highlight all regions`);
+    if (highlightAllStatus) {
+        room.assert(`highlight all regions`);
+    }
+    highlightAllStatus = !highlightAllStatus;
     room.flush();
     res.status(200).send('OK');
 })

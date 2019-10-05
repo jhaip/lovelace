@@ -94,7 +94,7 @@ def highlight_regions(results, subscription_id, r, g, b):
     batch(claims)
 
 
-@subscription(["$ $ region $regionId at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4"])
+@subscription(["$ $ highlight all regions", "$ $ region $regionId at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4"])
 def sub_callback_highlight_region(results):
     highlight_regions(results, "1", 255, 0, 0)
 

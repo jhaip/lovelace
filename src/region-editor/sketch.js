@@ -177,6 +177,25 @@ function makeRegion(data) {
 function update(regions, newRegionStatus) {
   document.body.innerHTML = '';
 
+  let $highlightButtonSection = document.createElement('div');
+  let $highlightButton = document.createElement('button');
+  $highlightButton.innerHTML = 'Toggle highlight all regions';
+  $highlightButtonSection.appendChild($highlightButton);
+  document.body.appendChild($highlightButtonSection);
+  $highlightButton.onclick = (evt) => {
+    evt.preventDefault();
+    fetch(`/highlight`, {
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/json'
+        // 'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: JSON.stringify({})
+    }).then(
+      response => console.log(response)
+    );
+  }
+
   let $newRegionStatus = document.createElement('div');
   $newRegionStatus.setAttribute("class", "new-region");
   $newRegionStatus.innerHTML = `<strong>New Region Status:</strong><br>${newRegionStatus}`;
