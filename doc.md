@@ -71,6 +71,10 @@ sudo apt-get install libczmq-dev
 sudo apt-get install libqtgui4
 ```
 
+For moving windows around programmatically `sudo apt install xdotool` is needed.
+
+When building the Go files, you may need to copy the `new-backend/go-server/go.mod` and `new-backend/go-server/go.sum` files to the root folder of this repo in order for the `src/standalone_processes` Go files to be build properly.
+
 ## Core idea: A Shared Fact Table
 
 Programs communicate by making and subscribing to changes in a "shared fact table". Facts are sentences like "Temperature is 23 C", which is parsed in the fact table as a typed list of phrases like [(text, Temperature), (text, is), (int, 23), (text, C)]. "Claiming a fact" or "asserting a fact" means adding something new to the shared fact table. "Retracting" or "clearing" a fact means removing zero or more things from the shared fact table. Programs subscribe to fill-in-the-blank questions about the shared fact table such as "When Temperature is $X". `$X` represents a variable that is filled in when the subscribed program is notified about a new changed result set. Subscriptions can have multiple parts and reuse variables. For example "When $program is at $x $y, $program has source code $code" would return distict results of x, y, program, and code where the value of `program` is the same across the query parts. This query style is similar to [Datalog](https://en.wikipedia.org/wiki/Datalog) and it draws inspiration from HARC's [Natural Language Datalog](https://github.com/harc/nl-datalog). The shared fact table is used as a communication mechanism between programs for this project because it:
