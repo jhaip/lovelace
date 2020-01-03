@@ -4,6 +4,7 @@ node_modules
 __pycache__
 .log
 src/standalone_processes/files/*.pdf
+!src/standalone_processes/logs/.keep
 src/standalone_processes/logs/
 *.bin
 new-backend/go-server/db_view*.txt
