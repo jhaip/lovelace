@@ -1,7 +1,7 @@
 const { room, myId, run } = require('../helper2')(__filename);
 const request = require('request');
 
-const secretKey = process.env.DARKSKY_SECRET_KEY || "";
+var secretKey = process.env.DARKSKY_SECRET_KEY || "";
 const DELAY_BETWEEN_REQUESTS_MS = 1000 * 60 * 5;
 
 room.on(`darksky secret key is $k`,
@@ -11,6 +11,7 @@ room.on(`darksky secret key is $k`,
             results.forEach(({ k }) => {
                 secretKey = k;
             });
+            fetchWeather();
         }
         room.subscriptionPostfix();
     })
@@ -51,6 +52,8 @@ setInterval(() => {
     fetchWeather();
 }, DELAY_BETWEEN_REQUESTS_MS);
 
-fetchWeather();
+if (secretKey) {
+    fetchWeather();
+}
 
 run();
