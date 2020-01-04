@@ -15,7 +15,7 @@ room.on(`darksky secret key is $k`,
         room.subscriptionPostfix();
     })
 
-setInterval(() => {
+function fetchWeather() {
     request(
         `https://api.darksky.net/forecast/${secretKey}/42.3601,-71.0589?exclude=minutely,hourly,alerts,flags`,
         { json: true },
@@ -27,6 +27,7 @@ setInterval(() => {
                 room.assert(`weather forecast had error "${err}"`)
                 return console.log(err);
             }
+            console.log(body);
             room.assert(`current weather is ${body.currently.temperature} F and ${body.currently.icon}`)
             body.daily.data.forEach(v => {
                 const dateIsoString = (new Date(v.time * 1000)).toISOString()
@@ -39,7 +40,12 @@ setInterval(() => {
             room.subscriptionPostfix();
         }
     );
+}
+
+setInterval(() => {
+    fetchWeather();
 }, DELAY_BETWEEN_REQUESTS_MS);
 
+fetchWeather();
 
 run();
