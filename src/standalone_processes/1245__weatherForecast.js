@@ -1,7 +1,7 @@
 const { room, myId, run } = require('../helper2')(__filename);
 const request = require('request');
 
-let secretKey = process.env.DARKSKY_SECRET_KEY | "";
+const secretKey = process.env.DARKSKY_SECRET_KEY || "";
 const DELAY_BETWEEN_REQUESTS_MS = 1000 * 60 * 5;
 
 room.on(`darksky secret key is $k`,
@@ -20,7 +20,6 @@ function fetchWeather() {
         `https://api.darksky.net/forecast/${secretKey}/42.3601,-71.0589?exclude=minutely,hourly,alerts,flags`,
         { json: true },
         (err, res, body) => {
-            console.log(`Used URL https://api.darksky.net/forecast/${secretKey}/42.3601,-71.0589?exclude=minutely,hourly,alerts,flags`);
             room.subscriptionPrefix(2);
             const currentTimeMs = (new Date()).getTime()
             room.assert(`weather forecast updated at ${currentTimeMs}`)
