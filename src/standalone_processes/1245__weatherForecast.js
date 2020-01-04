@@ -25,22 +25,22 @@ function fetchWeather() {
             room.assert(`weather forecast updated at ${currentTimeMs}`)
             if (err) {
                 room.assert(`weather forecast had error "${err}"`)
-                return console.log(err);
-            }
-            if (!res || res.statusCode !== 200) {
+                console.log(err);
+            } else if (!res || res.statusCode !== 200) {
                 room.assert(`weather forecast had error "${res && res.statusCode}"`)
-                return console.log(err);
+                console.log(res && res.statusCode);
+            } else {
+                console.log(body);
+                room.assert(`current weather is ${body.currently.temperature} F and ${body.currently.icon}`)
+                body.daily.data.forEach(v => {
+                    const dateIsoString = (new Date(v.time * 1000)).toISOString()
+                    room.assert(
+                        `weather forecast for "${dateIsoString}" is ` +
+                        `low ${Math.floor(v.temperatureLow)} F high ${Math.floor(v.temperatureHigh)} F and ` +
+                        `${v.icon} with ${v.precipProbability} % chance of ${v.precipType}`
+                    )
+                })
             }
-            console.log(body);
-            room.assert(`current weather is ${body.currently.temperature} F and ${body.currently.icon}`)
-            body.daily.data.forEach(v => {
-                const dateIsoString = (new Date(v.time * 1000)).toISOString()
-                room.assert(
-                    `weather forecast for "${dateIsoString}" is ` +
-                    `low ${Math.floor(v.temperatureLow)} F high ${Math.floor(v.temperatureHigh)} F and ` +
-                    `${v.icon} with ${v.precipProbability} % chance of ${v.precipType}`
-                )
-            })
             room.subscriptionPostfix();
             room.flush();
         }
