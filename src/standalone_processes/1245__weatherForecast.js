@@ -32,13 +32,13 @@ function fetchWeather() {
                 console.log(res && res.statusCode);
             } else {
                 console.log(body);
-                room.assert(`current weather is ${body.currently.temperature} F and ${body.currently.icon}`)
+                room.assert(`current weather is ${Math.floor(body.currently.temperature)} F and ${body.currently.icon}`)
                 body.daily.data.forEach(v => {
                     const dateIsoString = (new Date(v.time * 1000)).toISOString()
                     room.assert(
                         `weather forecast for "${dateIsoString}" is ` +
                         `low ${Math.floor(v.temperatureLow)} F high ${Math.floor(v.temperatureHigh)} F and ` +
-                        `${v.icon} with "${v.precipProbability}%" chance of ${v.precipType}`
+                        `${v.icon} with "${Math.floor(100 * v.precipProbability)}%" chance of ${v.precipType}`
                     )
                 })
             }
