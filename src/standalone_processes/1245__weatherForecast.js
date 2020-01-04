@@ -42,6 +42,7 @@ function fetchWeather() {
                 )
             })
             room.subscriptionPostfix();
+            room.flush();
         }
     );
 }
