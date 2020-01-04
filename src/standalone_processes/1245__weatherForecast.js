@@ -20,11 +20,16 @@ function fetchWeather() {
         `https://api.darksky.net/forecast/${secretKey}/42.3601,-71.0589?exclude=minutely,hourly,alerts,flags`,
         { json: true },
         (err, res, body) => {
+            console.log(`Used URL https://api.darksky.net/forecast/${secretKey}/42.3601,-71.0589?exclude=minutely,hourly,alerts,flags`);
             room.subscriptionPrefix(2);
             const currentTimeMs = (new Date()).getTime()
             room.assert(`weather forecast updated at ${currentTimeMs}`)
             if (err) {
                 room.assert(`weather forecast had error "${err}"`)
+                return console.log(err);
+            }
+            if (!response || response.statusCode !== 200) {
+                room.assert(`weather forecast had error "${response && response.statusCode}"`)
                 return console.log(err);
             }
             console.log(body);
