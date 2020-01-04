@@ -38,7 +38,7 @@ function fetchWeather() {
                     room.assert(
                         `weather forecast for "${dateIsoString}" is ` +
                         `low ${Math.floor(v.temperatureLow)} F high ${Math.floor(v.temperatureHigh)} F and ` +
-                        `${v.icon} with ${v.precipProbability} % chance of ${v.precipType}`
+                        `${v.icon} with "${v.precipProbability}%" chance of ${v.precipType}`
                     )
                 })
             }
