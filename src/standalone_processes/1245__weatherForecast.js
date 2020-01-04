@@ -27,8 +27,8 @@ function fetchWeather() {
                 room.assert(`weather forecast had error "${err}"`)
                 return console.log(err);
             }
-            if (!response || response.statusCode !== 200) {
-                room.assert(`weather forecast had error "${response && response.statusCode}"`)
+            if (!res || res.statusCode !== 200) {
+                room.assert(`weather forecast had error "${res && res.statusCode}"`)
                 return console.log(err);
             }
             console.log(body);
