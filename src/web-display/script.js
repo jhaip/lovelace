@@ -31,7 +31,8 @@ function drawGraphics($rawCanvas, graphics) {
                 ctx.fillStyle = `rgba(${opt[0]}, ${opt[1]}, ${opt[2]}, ${opt[3]})`
             }
         } else {
-            console.log(`unrecognized command: ${g}`)
+            console.log(`unrecognized command:`)
+            console.log(g);
         }
     });
 }
