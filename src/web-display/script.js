@@ -46,11 +46,12 @@ function updatePerspectiveCanvas($rawCanvas, calibration) {
     }
 
     var texture = canvas.texture($rawCanvas);
+    const BASE_CALIBRATION = [0, 0, CANVAS_WIDTH, 0, CANVAS_WIDTH, CANVAS_HEIGHT, 0, CANVAS_HEIGHT];
     canvas
         .draw(texture)
         .perspective(
-            [0, 0, CANVAS_WIDTH, 0, CANVAS_WIDTH, CANVAS_HEIGHT, 0, CANVAS_HEIGHT],
-            calibration
+            BASE_CALIBRATION,
+            calibration || BASE_CALIBRATION
         )
         .update();
     $rawCanvas.parentNode.insertBefore(canvas, $rawCanvas);
@@ -68,40 +69,40 @@ function update(calibration, graphics) {
 }
 
 // Test:
-update(
-    [175, 156, 264, 61, 161, 279, 504, 330],
-    [
-        { "type": "fill", "options": "yellow" },
-        { "type": "rectangle", "options": { "x": 0, "y": 0, "w": CANVAS_WIDTH, "h": CANVAS_HEIGHT } },
-        { "type": "fill", "options": "green" },
-        { "type": "rectangle", "options": { "x": 10, "y": 10, "w": 60, "h": 60 } },
-        { "type": "rectangle", "options": { "x": 100, "y": 10, "w": 100, "h": 60 } },
-    ]
-);
+// update(
+//     [175, 156, 264, 61, 161, 279, 504, 330],
+//     [
+//         { "type": "fill", "options": "yellow" },
+//         { "type": "rectangle", "options": { "x": 0, "y": 0, "w": CANVAS_WIDTH, "h": CANVAS_HEIGHT } },
+//         { "type": "fill", "options": "green" },
+//         { "type": "rectangle", "options": { "x": 10, "y": 10, "w": 60, "h": 60 } },
+//         { "type": "rectangle", "options": { "x": 100, "y": 10, "w": 100, "h": 60 } },
+//     ]
+// );
 
-// async function loop() {
-//     try {
-//         const response = await fetch('/status')
-//         const myJson = await response.json();
-//         const myJsonString = JSON.stringify(myJson)
-//         if (myJsonString !== previousResultJSONString) {
-//             if (ignore_next_update) {
-//                 ignore_next_update = false;
-//             } else {
-//                 update(myJson.calibration, myJson.graphics);
-//             }
-//         } else {
-//             console.log("ignoring update because nothing changed");
-//         }
-//         previousResultJSONString = myJsonString;
-//         if (longPollingActive) {
-//             setTimeout(function () {
-//                 loop();
-//             }, 1000);
-//         }
-//     } catch (error) {
-//         console.error(error);
-//     }
-// }
+async function loop() {
+    try {
+        const response = await fetch('/status')
+        const myJson = await response.json();
+        const myJsonString = JSON.stringify(myJson)
+        if (myJsonString !== previousResultJSONString) {
+            if (ignore_next_update) {
+                ignore_next_update = false;
+            } else {
+                update(myJson.calibration, myJson.graphics);
+            }
+        } else {
+            console.log("ignoring update because nothing changed");
+        }
+        previousResultJSONString = myJsonString;
+        if (longPollingActive) {
+            setTimeout(function () {
+                loop();
+            }, 1000);
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
 
-// loop();
+loop();
