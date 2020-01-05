@@ -132,6 +132,16 @@ function cmd() {
     python3 src/standalone_processes/55__frameProxy.py &
     python3 src/standalone_processes/1630__claimFrame.py &
     echo -e "booting"
+  elif [ "$1" == "calendarstart" ]
+  then
+    cd new-backend/go-server
+    go run server.go parser2.go subscriber.go database.go &
+    echo -e "running server"
+    cd ../..
+    sleep 2
+    node src/standalone_processes/12__regionDebug.js &
+    node src/standalone_processes/1246__webDisplay.js &
+    echo -e "booting"
   elif [ "$1" == "test" ]
   then
     cd new-backend/go-server
