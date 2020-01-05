@@ -26,7 +26,7 @@ function drawGraphics($rawCanvas, graphics) {
             let lines = opt.text.split("\n");
             let lineHeight = fontSize * 1.3;
             lines.forEach((line, i) => {
-                ctx.strokeText(line, opt.x, opt.y + i * lineHeight);
+                ctx.fillText(line, opt.x, opt.y + i * lineHeight);
             });
         } else if (g.type === "line") {
             ctx.beginPath();
@@ -41,7 +41,7 @@ function drawGraphics($rawCanvas, graphics) {
             }
             ctx.fill();
             ctx.stroke();
-        } else if (g.type === "fill") {
+        } else if (g.type === "fill" || g.type === "fontcolor") {
             if (typeof opt === "string") {
                 ctx.fillStyle = opt;
             } else if (opt.length === 3) {
@@ -49,7 +49,7 @@ function drawGraphics($rawCanvas, graphics) {
             } else if (opt.length === 4) {
                 ctx.fillStyle = `rgba(${opt[0]}, ${opt[1]}, ${opt[2]}, ${opt[3]})`
             }
-        } else if (g.type === "stroke" || g.type === "fontcolor") {
+        } else if (g.type === "stroke") {
             if (typeof opt === "string") {
                 ctx.strokeStyle = opt;
             } else if (opt.length === 3) {
