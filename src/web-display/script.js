@@ -9,6 +9,8 @@ function drawGraphics($rawCanvas, graphics) {
 
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    let fontSize = Math.max(Math.floor(CANVAS_WIDTH / 10), 1)
+    ctx.font = `${fontSize}px Arial`;
 
     graphics.forEach(g => {
         let opt = g.options;
@@ -18,11 +20,23 @@ function drawGraphics($rawCanvas, graphics) {
             ctx.ellipse(opt.x, opt.y, opt.x, opt.w*0.5, opt.h*0.5, 0, 0, 2 * Math.PI);
         } else if (g.type === "text") {
             let lines = opt.text.split("\n");
-            let lineHeight = ctx.measureText("X").height * 1.3;
+            let lineHeight = fontSize * 1.3;
             lines.forEach((line, i) => {
                 ctx.fillText(line, opt.x, opt.y + i * lineHeight);
             });
-        } else if (g.type === "fill") {
+        } else if (g.type === "line") {
+            ctx.beginPath();
+            ctx.moveTo(opt[0], opt[1]);
+            ctx.lineTo(opt[2], opt[3]);
+            ctx.stroke();
+        } else if (g.type === "polygon") {
+            ctx.beginPath();
+            ctx.moveTo(opt[0][0], opt[0][1]);
+            for (let i = 1; i < opt.length; i += 1) {
+                ctx.lineTo(opt[i][0], opt[i][1]);
+            }
+            ctx.stroke();
+        } else if (g.type === "fill" || g.type === "fontcolor") {
             if (typeof opt === "string") {
                 ctx.fillStyle = opt;
             } else if (opt.length === 3) {
@@ -30,6 +44,33 @@ function drawGraphics($rawCanvas, graphics) {
             } else if (opt.length === 4) {
                 ctx.fillStyle = `rgba(${opt[0]}, ${opt[1]}, ${opt[2]}, ${opt[3]})`
             }
+        } else if (g.type === "stroke") {
+            if (typeof opt === "string") {
+                ctx.strokeStyle = opt;
+            } else if (opt.length === 3) {
+                ctx.strokeStyle = `rgb(${opt[0]}, ${opt[1]}, ${opt[2]})`
+            } else if (opt.length === 4) {
+                ctx.strokeStyle = `rgba(${opt[0]}, ${opt[1]}, ${opt[2]}, ${opt[3]})`
+            }
+        } else if (g.type === "nostroke") {
+            ctx.strokeStyle = "rgba(1, 1, 1, 0)";
+        } else if (g.type === "nofill") {
+            ctx.fillStyle = "rgba(1, 1, 1, 0)";
+        } else if (g.type === "strokewidth") {
+            ctx.lineWidth = +opt;
+        } else if (g.type === "fontsize") {
+            fontSize = +opt;
+            ctx.font = `${fontSize}px Arial`;
+        } else if (g.type === "push") {
+            ctx.save();
+        } else if (g.type === "pop") {
+            ctx.restore();
+        } else if (g.type === "translate") {
+            ctx.translate(+opt[0], +opt[1]);
+        } else if (g.type === "rotate") {
+            ctx.rotate(+opt);
+        } else if (g.type === "scale") {
+            ctx.scale(+opt[0], +opt[1]);
         } else {
             console.log(`unrecognized command:`)
             console.log(g);
@@ -71,13 +112,14 @@ function update(calibration, graphics) {
 
 // Test:
 // update(
-//     [175, 156, 264, 61, 161, 279, 504, 330],
+//     null,
 //     [
 //         { "type": "fill", "options": "yellow" },
 //         { "type": "rectangle", "options": { "x": 0, "y": 0, "w": CANVAS_WIDTH, "h": CANVAS_HEIGHT } },
 //         { "type": "fill", "options": "green" },
 //         { "type": "rectangle", "options": { "x": 10, "y": 10, "w": 60, "h": 60 } },
 //         { "type": "rectangle", "options": { "x": 100, "y": 10, "w": 100, "h": 60 } },
+//         { "type": "text", "options": { "x": 200, "y": 200, "text": "Hello World!" } },
 //     ]
 // );
 
