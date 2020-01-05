@@ -143,6 +143,8 @@ function cmd() {
     node src/standalone_processes/12__regionDebug.js &
     node src/standalone_processes/1246__webDisplay.js &
     echo -e "booting"
+    sleep 5
+    chromium-browser --start-fullscreen http://localhost:3012
   elif [ "$1" == "test" ]
   then
     cd new-backend/go-server
