@@ -128,6 +128,9 @@ function update(calibration, graphics) {
 //     ]
 // );
 
+// curl - X POST http://10.0.0.38:5000/cleanup-claim -H 'Content-Type: application/json' -H 'cache-control: no-cache' -d '{"claim":"region region1 at 176 20 1736 13 1820 980 176 1016", "retract": "$ $ wish paper $ at $ would be printed"}'
+// curl - X POST http://10.0.0.38:5000/cleanup-claim -H 'Content-Type: application/json' -H 'cache-control: no-cache' -d '{"claim":"region region1 has name calibration", "retract": "$ $ wish paper $ at $ would be printed"}'
+
 async function loop() {
     try {
         const response = await fetch('/status')
