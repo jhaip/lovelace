@@ -139,6 +139,7 @@ function cmd() {
     echo -e "running server"
     cd ../..
     sleep 2
+    node src/standalone_processes/20__httpClient.js &
     node src/standalone_processes/12__regionDebug.js &
     node src/standalone_processes/1246__webDisplay.js &
     echo -e "booting"
