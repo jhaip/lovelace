@@ -39,7 +39,7 @@ room.on(`draw graphics $graphics on $`,
             graphicsCache = [];
             results.forEach(({ graphics }) => {
                 let parsedGraphics = JSON.parse(graphics)
-                graphicsCache = graphicsCache.concat(graphics);
+                graphicsCache = graphicsCache.concat(parsedGraphics);
             });
         }
         room.subscriptionPostfix();
