@@ -16,13 +16,17 @@ function drawGraphics($rawCanvas, graphics) {
         let opt = g.options;
         if (g.type === "rectangle") {
             ctx.fillRect(opt.x, opt.y, opt.w, opt.h);
+            ctx.strokeRect(opt.x, opt.y, opt.w, opt.h);
         } else if (g.type === "ellipse") {
+            ctx.beginPath();
             ctx.ellipse(opt.x, opt.y, opt.x, opt.w*0.5, opt.h*0.5, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.stroke();
         } else if (g.type === "text") {
             let lines = opt.text.split("\n");
             let lineHeight = fontSize * 1.3;
             lines.forEach((line, i) => {
-                ctx.fillText(line, opt.x, opt.y + i * lineHeight);
+                ctx.strokeText(line, opt.x, opt.y + i * lineHeight);
             });
         } else if (g.type === "line") {
             ctx.beginPath();
@@ -35,8 +39,9 @@ function drawGraphics($rawCanvas, graphics) {
             for (let i = 1; i < opt.length; i += 1) {
                 ctx.lineTo(opt[i][0], opt[i][1]);
             }
+            ctx.fill();
             ctx.stroke();
-        } else if (g.type === "fill" || g.type === "fontcolor") {
+        } else if (g.type === "fill") {
             if (typeof opt === "string") {
                 ctx.fillStyle = opt;
             } else if (opt.length === 3) {
@@ -44,7 +49,7 @@ function drawGraphics($rawCanvas, graphics) {
             } else if (opt.length === 4) {
                 ctx.fillStyle = `rgba(${opt[0]}, ${opt[1]}, ${opt[2]}, ${opt[3]})`
             }
-        } else if (g.type === "stroke") {
+        } else if (g.type === "stroke" || g.type === "fontcolor") {
             if (typeof opt === "string") {
                 ctx.strokeStyle = opt;
             } else if (opt.length === 3) {
