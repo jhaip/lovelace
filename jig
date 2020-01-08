@@ -145,6 +145,21 @@ function cmd() {
     echo -e "booting"
     sleep 5
     chromium-browser --start-fullscreen http://localhost:3012
+  if [ "$1" == "editorstart" ]
+  then
+    cd new-backend/go-server
+    go run server.go parser2.go subscriber.go database.go &
+    echo -e "running server"
+    cd ../..
+    sleep 2
+    node src/standalone_processes/0__boot.js &
+    sleep 3
+    node src/standalone_processes/1013__textEditor.js &
+    node src/standalone_processes/1804__editPaperSeen.js &
+    python3 src/standalone_processes/57__editorToServerProxy.py &
+    python3 src/standalone_processes/1700__projectorDisplay.py &
+    sudo python3 src/standalone_processes/649__keyboard.py &
+    echo -e "booting"
   elif [ "$1" == "test" ]
   then
     cd new-backend/go-server
