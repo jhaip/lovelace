@@ -92,6 +92,16 @@ def sub_callback_graphics(results):
         ["id", "2"],
         ["postfix", ""],
     ]})
+    claims.append({"type": "retract", "fact": [
+        ["variable", "$"],
+        ["variable", "$"],
+        ["text", "wish"],
+        ["variable", "$"],
+        ["text", "has"],
+        ["text", "source"],
+        ["text", "code"],
+        ["variable", "$"],
+    ]})
     for result in results:
         claims.append({"type": "claim", "fact": [
             ["id", get_my_id_str()],
@@ -117,6 +127,24 @@ def sub_callback_graphics(results):
         ["id", get_my_id_str()],
         ["id", "3"],
         ["postfix", ""],
+    ]})
+    claims.append({"type": "retract", "fact": [
+        ["variable", "$"],
+        ["variable", "$"],
+        ["text", "wish"],
+        ["text", "a"],
+        ["text", "paper"],
+        ["text", "would"],
+        ["text", "be"],
+        ["text", "created"],
+        ["text", "in"],
+        ["variable", "$"],
+        ["text", "with"],
+        ["text", "source"],
+        ["text", "code"],
+        ["variable", "$"],
+        ["text", "@"],
+        ["variable", "$"],
     ]})
     for result in results:
         claims.append({"type": "claim", "fact": [
