@@ -145,7 +145,7 @@ function cmd() {
     echo -e "booting"
     sleep 5
     chromium-browser --start-fullscreen http://localhost:3012
-  if [ "$1" == "editorstart" ]
+  elif [ "$1" == "editorstart" ]
   then
     cd new-backend/go-server
     go run server.go parser2.go subscriber.go database.go &
