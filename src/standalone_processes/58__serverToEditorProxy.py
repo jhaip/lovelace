@@ -80,4 +80,65 @@ def sub_callback_graphics(results):
         get_my_id_str(), json.dumps(claims)).encode()], zmq.NOBLOCK)
 
 
+@subscription(["$ $ wish $name has source code $code"])
+def sub_callback_graphics(results):
+    global proxy_client
+    if not check_and_connect_proxy_server():
+        return
+    logging.info("proxying message")
+    claims = []
+    claims.append({"type": "retract", "fact": [
+        ["id", get_my_id_str()],
+        ["id", "2"],
+        ["postfix", ""],
+    ]})
+    for result in results:
+        claims.append({"type": "claim", "fact": [
+            ["id", get_my_id_str()],
+            ["id", "2"],
+            ["text", "wish"],
+            ["text", str(result["name"])],
+            ["text", "has"],
+            ["text", "source"],
+            ["text", "code"],
+            ["text", str(result["code"])],
+        ]})
+    proxy_client.send_multipart(["....BATCH{}{}".format(
+        get_my_id_str(), json.dumps(claims)).encode()], zmq.NOBLOCK)
+
+@subscription(["$ $ wish a paper would be created in $lang with source code $code @ $time"])
+def sub_callback_graphics(results):
+    global proxy_client
+    if not check_and_connect_proxy_server():
+        return
+    logging.info("proxying message")
+    claims = []
+    claims.append({"type": "retract", "fact": [
+        ["id", get_my_id_str()],
+        ["id", "3"],
+        ["postfix", ""],
+    ]})
+    for result in results:
+        claims.append({"type": "claim", "fact": [
+            ["id", get_my_id_str()],
+            ["id", "3"],
+            ["text", "wish"],
+            ["text", "a"],
+            ["text", "paper"],
+            ["text", "would"],
+            ["text", "be"],
+            ["text", "created"],
+            ["text", "in"],
+            ["text", str(result["lang"])],
+            ["text", "with"],
+            ["text", "source"],
+            ["text", "code"],
+            ["text", str(result["code"])],
+            ["text", "@"],
+            ["integer", str(result["time"])],
+        ]})
+    proxy_client.send_multipart(["....BATCH{}{}".format(
+        get_my_id_str(), json.dumps(claims)).encode()], zmq.NOBLOCK)
+
+
 init(__file__)
