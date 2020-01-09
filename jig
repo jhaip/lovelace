@@ -152,13 +152,22 @@ function cmd() {
     echo -e "running server"
     cd ../..
     sleep 2
-    node src/standalone_processes/0__boot.js &
+    node src/standalone_processes/1900__processManager.js &
+    node src/standalone_processes/10__debugViewer.js &
+    node src/standalone_processes/20__httpClient.js &
+    node src/standalone_processes/40__parser.js &
+    python3 src/standalone_processes/498__printingManager.py &
+    node src/standalone_processes/577__programEditor.js &
     sleep 3
     node src/standalone_processes/1013__textEditor.js &
     node src/standalone_processes/1804__editPaperSeen.js &
     python3 src/standalone_processes/57__editorToServerProxy.py &
     python3 src/standalone_processes/1700__projectorDisplay.py &
     sudo python3 src/standalone_processes/649__keyboard.py &
+    cd src/standalone_processes
+    go run 1382__print-paper.go &
+    go run 1800__dots-to-papers.go &
+    cd ../..
     echo -e "booting"
   elif [ "$1" == "test" ]
   then
