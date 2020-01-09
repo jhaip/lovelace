@@ -84,10 +84,6 @@ def sub_callback_graphics(results):
         ["postfix", ""],
     ]})
     for result in results:
-        room.assert(
-          `wish a paper would be created in`, ["text", language],
-          `with source code`, ["text", cleanSourceCode],
-          `@ ${millis}`);
         claims.append({"type": "claim", "fact": [
             ["id", get_my_id_str()],
             ["id", "2"],
