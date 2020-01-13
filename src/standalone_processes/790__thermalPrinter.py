@@ -1,5 +1,6 @@
 from helper2 import init, claim, retract, prehook, subscription, batch, get_my_id_str
 import helper2
+import logging
 import board
 import busio
 import serial
