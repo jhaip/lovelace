@@ -12,7 +12,7 @@ ThermalPrinter = adafruit_thermal_printer.get_printer_class(2.64)
 uart = serial.Serial("/dev/serial0", 19200, timeout=5)
 printer = ThermalPrinter(uart)
 
-@subscription(["$ $ wish text $name would be thermal printed"])
+@subscription(["$ $ wish text $text would be thermal printed"])
 def sub_callback(results):
     claims = []
     claims.append({"type": "retract", "fact": [
