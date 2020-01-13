@@ -30,8 +30,7 @@ def sub_callback(results):
     for result in results:
         logging.info("PRINTING:")
         logging.info(result["text"])
-        printer.print('Hello world!')
-        printer.println(logging.info(result["text"]))
+        printer.print(result["text"])
         printer.feed(2)
 
 init(__file__)
