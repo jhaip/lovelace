@@ -25,7 +25,7 @@ const sensorScreenLocations = {
     '5': Z(0, 1)
   },
   'Photon200038000747343232363230': {
-    '1': 'TL (0, 0) TR (1920, 0) BR (1920, 1080) BL (0, 1080)'
+    '3': 'TL (0, 0) TR (1920, 0) BR (1920, 1080) BL (0, 1080)'
   },
   'Photon400035001547343433313338': {
     '1': 'TL (0, 0) TR (1, 0) BR (1, 1) BL (0, 1)'
@@ -45,7 +45,7 @@ room.on(`$photonId read $value on sensor $sensorId`,
   room.subscriptionPostfix();
 })
 
-room.on(`Photon2c001b000347343233323032 read $value on sensor 2`,
+room.on(`Photon200038000747343232363230 read $value on sensor 1`,
         `paper $paperId has RFID $value`,
   results => {
     room.subscriptionPrefix(2);
@@ -57,7 +57,7 @@ room.on(`Photon2c001b000347343233323032 read $value on sensor 2`,
     room.subscriptionPostfix();
   })
 
-room.on(`Photon200038000747343232363230 read $value on sensor 1`,
+room.on(`Photon200038000747343232363230 read $value on sensor 3`,
         `paper $paperId has RFID $value`,
   results => {
     room.subscriptionPrefix(3);
