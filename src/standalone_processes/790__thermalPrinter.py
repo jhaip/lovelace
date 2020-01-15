@@ -29,8 +29,8 @@ def sub_callback(results):
     batch(claims)
     for result in results:
         logging.info("PRINTING:")
-        logging.info(result["text"].replace(chr(9787), '"')
-        printer.print(result["text"].replace(chr(9787), '"')
+        logging.info(result["text"].replace(chr(9787), '"'))
+        printer.print(result["text"].replace(chr(9787), '"'))
         printer.feed(2)
 
 init(__file__)
