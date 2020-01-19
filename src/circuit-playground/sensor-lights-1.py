@@ -1,10 +1,11 @@
 import time
 import board
+import neopixel
 import busio
 from adafruit_circuitplayground.express import cpx
 
 N_PIXELS = 10
-pixels = neopixel.NeoPixel(board.NEOPIXEL, N_PIXELS, brightness=0.2, auto_write=False)
+pixels = neopixel.NeoPixel(board.NEOPIXEL, 10, brightness=0.2, auto_write=False)
 uart = busio.UART(board.TX, board.RX, baudrate=115200)
 last_sensor_reading = time.monotonic()
 
@@ -29,13 +30,14 @@ while True:
                     g = int(parsed_data[3])
                     b = int(parsed_data[4])
                     pixels[pixel_id] = (r, g, b)
+                    time.sleep(0.2)
                     pixels.show()
     
     # Write sensor values
     if time.monotonic() - last_sensor_reading > 1000:
         last_sensor_reading = time.monotonic()
-        button_a_value = if button_a.value then 1 else 0
-        button_b_value = if button_b.value then 1 else 0
+        button_a_value = 1 if button_a.value else 0
+        button_b_value = 1 if button_b.value else 0
         light_value = light.value
         print("SENDING SENSOR VALUES: {} {} {}".format(button_a_value, button_b_value, light_value))
         uart.write(b"BUTTON_A:{}\n".format(button_a_value))
