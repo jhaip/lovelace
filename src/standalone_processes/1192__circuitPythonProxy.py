@@ -17,13 +17,18 @@ def melody_callback(results):
 init(__file__, skipListening=True)
 
 
-with serial.Serial('/dev/ttyUSB0', 115200, timeout=1) as ser:
+with serial.Serial('/dev/ttyUSB0', 115200, timeout=1.0) as ser:
+    ser.reset_input_buffer()
+    ser.reset_output_buffer()
     while True:
         received_msg = True
         while received_msg:
+            logging.info("checking for messages from room")
             received_msg = listen(blocking=False)
         # Send new messages if there are any
         if len(write_buffer) > 0:
+            logging.info("writing to serial:")
+            logging.info(write_buffer)
             for line in write_buffer:
                 ser.write(line)
             write_buffer = []
@@ -31,7 +36,9 @@ with serial.Serial('/dev/ttyUSB0', 115200, timeout=1) as ser:
         claims = [
             {"type": "retract", "fact": [["id", get_my_id_str()], ["id", "0"], ["postfix", ""]]}
         ]
+        logging.info("reading serial lines")
         lines = ser.readlines()  # used the serial timeout specified above
+        logging.info("done reading serial lines")
         for line in lines:
             # Example: line = b'BUTTON_A:1\n'
             try:
