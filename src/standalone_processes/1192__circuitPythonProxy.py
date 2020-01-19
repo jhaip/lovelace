@@ -11,8 +11,8 @@ def melody_callback(results):
     # b"LIGHT,0,255,128,0\n"
     if results:
         for result in results:
-            write_buffer.append(b"LIGHT,0,255,128,0\n".format(
-                result["i"], result["r"], result["g"], result["b"]))
+            write_buffer.append("LIGHT,0,255,128,0\n".format(
+                result["i"], result["r"], result["g"], result["b"]).encode("utf-8"))
 
 
 init(__file__, skipListening=True)
@@ -39,7 +39,7 @@ with serial.Serial('/dev/ttyUSB0', 115200, timeout=1) as ser:
             if len(parsed_line) is 2:
                 prefix = parsed_line[0].decode("utf-8")
                 value = parsed_line[1]
-                if prefix == 'BUTTON_A' or prefix == 'BUTTON_B' or prefix == 'LIGHT_SENSOR':
+                if prefix == 'BUTTON_A' or prefix == 'BUTTON_B' or prefix == 'LIGHT':
                     claims.append({"type": "claim", "fact": [
                         ["id", get_my_id_str()],
                         ["id", "0"],
