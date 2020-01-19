@@ -19,7 +19,7 @@ while True:
             if prefix == b'LIGHT' and len(parsed_data) == 5:
                 print("PARSING LIGHT COMMAND: {}".format(data))
                 pixel_id = int(parsed_data[1])
-                if pixel_id >= 0 and parsed_data < N_PIXELS:
+                if pixel_id >= 0 and pixel_id < N_PIXELS:
                     r = int(parsed_data[2])
                     g = int(parsed_data[3])
                     b = int(parsed_data[4])

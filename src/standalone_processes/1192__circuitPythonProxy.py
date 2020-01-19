@@ -8,10 +8,9 @@ write_buffer = []
 @subscription(["$ $ wish circuit playground neopixel $i had color $r $g $b"])
 def melody_callback(results):
     global write_buffer
-    # b"LIGHT,0,255,128,0\n"
     if results:
         for result in results:
-            write_buffer.append("LIGHT,0,255,128,0\n".format(
+            write_buffer.append("LIGHT,{},{},{},{}\n".format(
                 result["i"], result["r"], result["g"], result["b"]).encode("utf-8"))
 
 
