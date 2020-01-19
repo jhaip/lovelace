@@ -26,7 +26,7 @@ while True:
                     cp.pixels[pixel_id] = (r, g, b)
 
     # Write sensor values
-    if time.monotonic() - last_sensor_reading > 1:
+    if time.monotonic() - last_sensor_reading > 0.5:
         last_sensor_reading = time.monotonic()
         button_a_value = 1 if cp.button_a else 0
         button_b_value = 1 if cp.button_b else 0
