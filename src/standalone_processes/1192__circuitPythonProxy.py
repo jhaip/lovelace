@@ -34,23 +34,26 @@ with serial.Serial('/dev/ttyUSB0', 115200, timeout=1) as ser:
         lines = ser.readlines()  # used the serial timeout specified above
         for line in lines:
             # Example: line = b'BUTTON_A:1\n'
-            parsed_line = line.rstrip().split(b":")
-            if len(parsed_line) is 2:
-                prefix = parsed_line[0].decode("utf-8")
-                value = parsed_line[1]
-                if prefix == 'BUTTON_A' or prefix == 'BUTTON_B' or prefix == 'LIGHT':
-                    claims.append({"type": "claim", "fact": [
-                        ["id", get_my_id_str()],
-                        ["id", "0"],
-                        ["text", "circuit"],
-                        ["text", "playground"],
-                        ["text", prefix],
-                        ["text", "has"],
-                        ["text", "value"],
-                        ["integer", value.decode("utf-8")],
-                    ]})
-                else:
-                    logging.info("Ignoring message: {}".format(line))
+            try:
+                parsed_line = line.rstrip().split(b":")
+                if len(parsed_line) is 2:
+                    prefix = parsed_line[0].decode("utf-8")
+                    value = parsed_line[1]
+                    if prefix == 'BUTTON_A' or prefix == 'BUTTON_B' or prefix == 'LIGHT':
+                        claims.append({"type": "claim", "fact": [
+                            ["id", get_my_id_str()],
+                            ["id", "0"],
+                            ["text", "circuit"],
+                            ["text", "playground"],
+                            ["text", prefix],
+                            ["text", "has"],
+                            ["text", "value"],
+                            ["integer", value.decode("utf-8")],
+                        ]})
+                    else:
+                        logging.info("Ignoring message: {}".format(line))
+            except:
+                logging.error("Unexpected error:", sys.exc_info()[0])
         if claims:
             batch(claims)
         time.sleep(0.1)
