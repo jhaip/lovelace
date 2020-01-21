@@ -7,7 +7,7 @@ room.on(
         room.subscriptionPrefix(1);
         if (!!results) {
             results.forEach(({ id, shortFilename, sourceCode }) => {
-                room.assert(`wish text`, ["text", sourceCode], `would be thermal printed`)
+                room.assert(`wish text`, ["text", `Code for ${id}:\n\nsourceCode`], `would be thermal printed`)
             });
         }
         room.subscriptionPostfix();
