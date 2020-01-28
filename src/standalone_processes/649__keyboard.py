@@ -51,7 +51,7 @@ def handle_key_event(e):
         if ctrl_held:
             add_key(None, 'C-{}'.format(e.name))
         else:
-            special_keys = ['backspace', 'enter', 'tab', 'space', 'left', 'right', 'up', 'down']
+            special_keys = ['backspace', 'enter', 'tab', 'space', 'left', 'right', 'up', 'down', 'shift']
             if e.name in special_keys:
                 add_key(None, e.name)
             else:
