@@ -3,6 +3,8 @@ import serial
 import logging
 import time
 
+helper2.rpc_url = "10.0.0.27"
+
 write_buffer = []
 
 @subscription(["$ $ wish circuit playground neopixel $i had color $r $g $b"])
