@@ -45,11 +45,14 @@ def add_key(key, special_key):
 
 def handle_key_event(e):
     ctrl_held = keyboard.is_pressed('ctrl')
+    shift_held = keyboard.is_pressed('shift')
     if e.event_type == 'down':
         if e.name == 'unknown':
             return
         if ctrl_held:
             add_key(None, 'C-{}'.format(e.name))
+        elif shift_held and e.name.isalpha():
+            add_key(e.name.upper(), None)
         else:
             special_keys = ['backspace', 'enter', 'tab', 'space', 'left', 'right', 'up', 'down', 'shift']
             if e.name in special_keys:
