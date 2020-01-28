@@ -91,7 +91,7 @@ function parse(x) {
           }
           OUTPUT += `        results => {\n`
           OUTPUT += `  room.subscriptionPrefix(${currentSubscriptionId});\n`
-          OUTPUT += `  if (!!results) {\n`
+          OUTPUT += `  if (!!results && results.length > 0) {\n`
           OUTPUT += `    results.forEach(({ ${variables.join(", ")} }) => {\n`
           STATE = STATES.WHEN_TRUE;
         } else if (line.slice(-1) === ',') {
