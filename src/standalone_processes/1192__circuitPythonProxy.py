@@ -1,4 +1,5 @@
 from helper2 import init, claim, retract, prehook, subscription, batch, MY_ID_STR, listen, get_my_id_str
+import helper2
 import serial
 import logging
 import time
