@@ -10,6 +10,7 @@ function drawGraphics($rawCanvas, graphics) {
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     let fontSize = Math.max(Math.floor(CANVAS_WIDTH / 10), 1)
+    ctx.textBaseline = "top";
     ctx.font = `${fontSize}px Arial`;
 
     graphics.forEach(g => {
