@@ -45,7 +45,7 @@ def check_and_connect_proxy_server():
             return False
     return True
 
-@subscription(["$ $ wish $name has source code $code"])
+@subscription(["#1013 $ wish $name has source code $code"])
 def sub_callback_graphics(results):
     global proxy_client
     if not check_and_connect_proxy_server():
@@ -71,7 +71,7 @@ def sub_callback_graphics(results):
     proxy_client.send_multipart(["....BATCH{}{}".format(
         get_my_id_str(), json.dumps(claims)).encode()], zmq.NOBLOCK)
 
-@subscription(["$ $ wish a paper would be created in $lang with source code $code @ $time"])
+@subscription(["#1013 $ wish a paper would be created in $lang with source code $code @ $time"])
 def sub_callback_graphics(results):
     global proxy_client
     if not check_and_connect_proxy_server():

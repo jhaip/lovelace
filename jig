@@ -155,9 +155,9 @@ function cmd() {
     node src/standalone_processes/1900__processManager.js &
     node src/standalone_processes/10__debugViewer.js &
     node src/standalone_processes/20__httpClient.js &
-    node src/standalone_processes/40__parser.js &
+    # node src/standalone_processes/40__parser.js &
     python3 src/standalone_processes/498__printingManager.py &
-    node src/standalone_processes/577__programEditor.js &
+    # node src/standalone_processes/577__programEditor.js &
     sleep 3
     node src/standalone_processes/1013__textEditor.js &
     node src/standalone_processes/1804__editPaperSeen.js &
