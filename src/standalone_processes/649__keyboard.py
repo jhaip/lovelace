@@ -9,6 +9,16 @@ batch([{"type": "retract", "fact": [["id", get_my_id_str()], ["postfix", ""]]}])
 special_keys = ['backspace', 'enter', 'tab', 'space', 'left', 'right', 'up', 'down',
     'shift', 'caps lock', 'alt', 'menu', 'unknown', 'delete', 'page up', 'page down']
 
+shift_map = {
+    '.': '>',
+    '/': '?',
+    '[': '{',
+    ']': '}',
+    '\\': '|',
+    '-': '_',
+    '`': '~'
+}
+
 def add_key(key, special_key):
     logging.info("{} - {}".format(key, special_key))
     timestamp = int(time.time()*1000.0)
@@ -58,6 +68,8 @@ def handle_key_event(e):
             add_key(None, e.name)
         elif shift_held and e.name.isalpha():
             add_key(e.name.upper(), None)
+        elif shift_held and e.name in shift_map:
+            add_key(shift_map[e.name], None)
         else:
             add_key(e.name, None)
 
