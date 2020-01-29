@@ -6,6 +6,9 @@ import logging
 init(__file__, skipListening=True)
 batch([{"type": "retract", "fact": [["id", get_my_id_str()], ["postfix", ""]]}])
 
+special_keys = ['backspace', 'enter', 'tab', 'space', 'left', 'right', 'up', 'down',
+    'shift', 'caps lock', 'alt', 'menu', 'unknown', 'delete', 'page up', 'page down']
+
 def add_key(key, special_key):
     logging.info("{} - {}".format(key, special_key))
     timestamp = int(time.time()*1000.0)
@@ -51,14 +54,12 @@ def handle_key_event(e):
             return
         if ctrl_held:
             add_key(None, 'C-{}'.format(e.name))
+        elif e.name in special_keys:
+            add_key(None, e.name)
         elif shift_held and e.name.isalpha():
             add_key(e.name.upper(), None)
         else:
-            special_keys = ['backspace', 'enter', 'tab', 'space', 'left', 'right', 'up', 'down', 'shift']
-            if e.name in special_keys:
-                add_key(None, e.name)
-            else:
-                add_key(e.name, None)
+            add_key(e.name, None)
 
 keyboard.hook(handle_key_event)
 keyboard.wait()
