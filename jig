@@ -169,6 +169,26 @@ function cmd() {
     go run 1800__dots-to-papers.go &
     cd ../..
     echo -e "booting"
+  elif [ "$1" == "rfideditorstart" ]
+  then
+    cd new-backend/go-server
+    go run server.go parser2.go subscriber.go database.go &
+    echo -e "running server"
+    cd ../..
+    sleep 2
+    node src/standalone_processes/1900__processManager.js &
+    node src/standalone_processes/10__debugViewer.js &
+    node src/standalone_processes/20__httpClient.js &
+    sleep 3
+    node src/standalone_processes/1013__textEditor.js &
+    node src/standalone_processes/1804__editPaperSeen.js &
+    node src/standalone_processes/980__thermalPrintCode.js
+    python3 src/standalone_processes/57__editorToServerProxy.py &
+    python3 src/standalone_processes/1700__projectorDisplay.py &
+    sudo python3 src/standalone_processes/791__thermalPrinterLinux.py &
+    sudo python3 src/standalone_processes/1192__circuitPythonProxy.py
+    sudo python3 src/standalone_processes/649__keyboard.py &
+    echo -e "booting"
   elif [ "$1" == "test" ]
   then
     cd new-backend/go-server
