@@ -155,16 +155,14 @@ const render = () => {
   correctCursorPosition();
   correctWindowPosition();
   room.retractMine(`draw graphics $ on $`) // room.cleanup();
-  let lines = [{type: "text", text: "Point at something!"}]
+  let lines = [[{type: "text", text: "Point at something!"}]]
   if (currentTargetName) {
     lines = convertSyntaxHighlightingToLines(parseForSyntaxHighlighting(currentSourceCode))
     console.error(lines)
   }
   let ill = room.newIllumination();
-  console.log("LINES:")
-  console.log(lines);
   lines.slice(windowPosition[1], windowPosition[1] + editorHeightCharacters).forEach((lineRaw, i) => {
-    if (!lineRaw || lineRaw.length === 0) {
+    if (lineRaw.length === 0) {
       return; // skip drawing for this blank line
     }
     lineRaw.forEach(lineRawPart => {
