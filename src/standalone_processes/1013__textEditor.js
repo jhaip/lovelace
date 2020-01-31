@@ -215,6 +215,7 @@ room.on(
       currentTargetName = undefined;
       currentTargetId = undefined;
       currentSourceCode = "";
+      render();
     }
   }
 )
