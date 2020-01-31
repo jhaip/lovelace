@@ -211,6 +211,11 @@ room.on(
       currentHeight = myHeight;
       render();
     })
+    if (!results || results.length === 0) {
+      currentTargetName = undefined;
+      currentTargetId = undefined;
+      currentSourceCode = "";
+    }
   }
 )
 
