@@ -181,6 +181,7 @@ function cmd() {
     node src/standalone_processes/20__httpClient.js &
     sleep 3
     node src/standalone_processes/1013__textEditor.js &
+    node src/standalone_processes/1804__editPaperSeen.js &
     node src/standalone_processes/980__thermalPrintCode.js &
     python3 src/standalone_processes/57__editorToServerProxy.py &
     python3 src/standalone_processes/1700__projectorDisplay.py &
