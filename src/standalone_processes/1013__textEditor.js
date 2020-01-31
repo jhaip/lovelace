@@ -161,8 +161,10 @@ const render = () => {
     console.error(lines)
   }
   let ill = room.newIllumination();
+  console.log("LINES:")
+  console.log(lines);
   lines.slice(windowPosition[1], windowPosition[1] + editorHeightCharacters).forEach((lineRaw, i) => {
-    if (lineRaw.length === 0) {
+    if (!lineRaw || lineRaw.length === 0) {
       return; // skip drawing for this blank line
     }
     lineRaw.forEach(lineRawPart => {
