@@ -6,6 +6,7 @@ room.on(
     results => {
         room.subscriptionPrefix(1);
         if (!!results) {
+            room.retractAll(`wish paper $ at $ would be printed`);
             results.forEach(({ id, shortFilename, sourceCode }) => {
                 room.assert(`wish text`, ["text", `Code for ${id}:\n\n${sourceCode}`], `would be thermal printed`)
             });
