@@ -61,17 +61,17 @@ room.on(`Photon200038000747343232363230 read $value on sensor 1`,
     room.subscriptionPostfix();
   })
 
-room.on(`Photon200038000747343232363230 read $value on sensor 3`,
-        `paper $paperId has RFID $value`,
-  results => {
-    room.subscriptionPrefix(3);
-    if (!!results) {
-      results.forEach(({ value, paperId }) => {
-        room.assert(`wish display 1700 only showed ${paperId}`);
-      });
-    }
-    room.subscriptionPostfix();
-  })
+// room.on(`Photon200038000747343232363230 read $value on sensor 3`,
+//         `paper $paperId has RFID $value`,
+//   results => {
+//     room.subscriptionPrefix(3);
+//     if (!!results) {
+//       results.forEach(({ value, paperId }) => {
+//         room.assert(`wish display 1700 only showed ${paperId}`);
+//       });
+//     }
+//     room.subscriptionPostfix();
+//   })
 
 
 run();
