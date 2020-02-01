@@ -198,6 +198,7 @@ function cmd() {
     sleep 2
     node src/standalone_processes/111__rfidEditorBoot.js &
     sleep 2
+    sudo python3 src/standalone_processes/791__thermalPrinterLinux.py &
     sudo python3 src/standalone_processes/649__keyboard.py &
     echo -e "booting"
   elif [ "$1" == "test" ]
