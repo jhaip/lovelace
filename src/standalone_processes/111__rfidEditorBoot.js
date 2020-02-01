@@ -93,7 +93,7 @@ room.assert(`camera 99 sees paper 980 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2)
 // Circuit Playground Proxy
 // room.assert(`camera 99 sees paper 1192 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Display
-room.assert(`camera 99 sees paper 1700 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// room.assert(`camera 99 sees paper 1700 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Keyboard
 // room.assert(`camera 99 sees paper 649 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 
