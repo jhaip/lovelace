@@ -1,1 +1,9 @@
-// Write your code here
+when circuit playground "BUTTON_A" has value 0:
+
+claim wish circuit playground neopixel 0 had color 0 0 0
+
+end
+
+when circuit playground "BUTTON_A" has value 1:
+
+claim wish circuit playground neopixel 0 had color 100 0 0

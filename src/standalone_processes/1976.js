@@ -1,6 +1,6 @@
 const { room, myId, run } = require('../helper2')(__filename);
 
-room.assert(`there is a cat`)
+room.assert(`I wish I was highlighted blue`)
 
 
 
