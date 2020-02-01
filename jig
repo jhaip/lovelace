@@ -196,7 +196,7 @@ function cmd() {
     echo -e "running server"
     cd ../..
     sleep 2
-    sudo node src/standalone_processes/111__rfidEditorBoot.js &
+    node src/standalone_processes/111__rfidEditorBoot.js &
     echo -e "booting"
   elif [ "$1" == "test" ]
   then
