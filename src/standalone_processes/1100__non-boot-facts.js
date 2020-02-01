@@ -37,7 +37,7 @@ function subscribe(id) {
         FACTS[id] = factSubscriptionResult;
         render();
     });
-    room.onRaw(`subscription #${id} %subscription`, subscriptionSubscriptionResult => {
+    room.onRaw(`subscription #${id} $ %subscription`, subscriptionSubscriptionResult => {
         SUBSCRIPTIONS[id] = subscriptionSubscriptionResult;
         render();
     });
