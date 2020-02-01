@@ -189,6 +189,15 @@ function cmd() {
     sudo python3 src/standalone_processes/1192__circuitPythonProxy.py &
     sudo python3 src/standalone_processes/649__keyboard.py &
     echo -e "booting"
+  elif [ "$1" == "rfideditorstart2" ]
+  then
+    cd new-backend/go-server
+    go run server.go parser2.go subscriber.go database.go &
+    echo -e "running server"
+    cd ../..
+    sleep 2
+    sudo node src/standalone_processes/111__rfidEditorBoot.js &
+    echo -e "booting"
   elif [ "$1" == "test" ]
   then
     cd new-backend/go-server
