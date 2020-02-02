@@ -41,7 +41,8 @@ with serial.Serial('/dev/ttyUSB0', 115200, timeout=1.0) as ser:
         ]
         logging.info("reading serial lines")
         lines = ser.readlines()  # used the serial timeout specified above
-        logging.info("done reading serial lines")
+        logging.info("done reading serial lines.")
+        logging.info(lines)
         for line in lines:
             # Example: line = b'BUTTON_A:1\n'
             try:
