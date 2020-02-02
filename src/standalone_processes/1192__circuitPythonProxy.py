@@ -43,14 +43,15 @@ with serial.Serial('/dev/ttyUSB0', 115200, timeout=1.0) as ser:
         lines = ser.readlines()  # used the serial timeout specified above
         logging.info("done reading serial lines.")
         logging.info(lines)
-        for line in lines:
+        sent_prefixes = {}
+        for line in reversed(lines):
             # Example: line = b'BUTTON_A:1\n'
             try:
                 parsed_line = line.rstrip().split(b":")
                 if len(parsed_line) is 2:
                     prefix = parsed_line[0].decode("utf-8")
                     value = parsed_line[1]
-                    if prefix == 'BUTTON_A' or prefix == 'BUTTON_B' or prefix == 'LIGHT':
+                    if (prefix == 'BUTTON_A' or prefix == 'BUTTON_B' or prefix == 'LIGHT') and (prefix not in sent_prefixes):
                         claims.append({"type": "claim", "fact": [
                             ["id", get_my_id_str()],
                             ["id", "0"],
@@ -61,6 +62,7 @@ with serial.Serial('/dev/ttyUSB0', 115200, timeout=1.0) as ser:
                             ["text", "value"],
                             ["integer", value.decode("utf-8")],
                         ]})
+                        sent_prefixes[prefix] = True
                     else:
                         logging.info("Ignoring message: {}".format(line))
             except:
