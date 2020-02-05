@@ -27,17 +27,24 @@ const sensorScreenLocations = {
     },
     'Photon400035001547343433313338': {
         '1': 'TL (0, 0) TR (1, 0) BR (1, 1) BL (0, 1)'
-    }
+    },
+    'ArgonBLE': {
+        '3': 'TL (0, 0) TR (1920, 0) BR (1920, 1080) BL (0, 1080)'
+    },
 }
 
 when $photonId read $value on sensor $sensorId,
      paper $paperId has RFID $value:
     claim camera 1 sees paper ${paperId} at ${sensorScreenLocations[photonId][sensorId]} @ 1
 
-when Photon2c001b000347343233323032 read $value on sensor 2,
+when Photon200038000747343232363230 read $value on sensor 1,
      paper $paperId has RFID $value:
     claim paper 1013 is pointing at paper ${paperId}
 
-when Photon200038000747343232363230 read $value on sensor 1,
+when ArgonBLE read $value on sensor 1,
      paper $paperId has RFID $value:
-    claim wish display 1700 only showed ${paperId}
+    claim paper 1013 is pointing at paper ${paperId}
+
+// when Photon200038000747343232363230 read $value on sensor 1,
+//     paper $paperId has RFID $value:
+//     claim wish display 1700 only showed ${paperId}

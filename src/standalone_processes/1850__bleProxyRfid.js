@@ -1,4 +1,6 @@
 
+const { room, myId, MY_ID_STR } = require('../helper2')(__filename);
+
 /*
 Noble UART service example
 
@@ -246,6 +248,14 @@ var bleSerial = new BleUart('nordic');
 // the Bluetooth LE serial service:
 bleSerial.on('data', function (data) {
     console.log("Got new data: " + String(data));
+    // expecting data in format "5," or "1,a35kjtk4"
+    const parsedData = String(data).split(",");
+    if (parsedData.length !== 2) {
+        console.log("INVALID SENSOR DATA FORMAT");
+    } else {
+        room.assert(`ArgonBLE read ${parsedData[1] || "null"} on sensor ${parsedData[0]}`);
+        room.flush();
+    }
 });
 
 // this function gets called when the program
@@ -267,3 +277,5 @@ bleSerial.on('scanning', function (status) {
 // Run with:
 // which node
 // sudo the-node-from-above 1850__bleProxyRfid.js
+
+run();

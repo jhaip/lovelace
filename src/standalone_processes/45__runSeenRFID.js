@@ -33,7 +33,10 @@ const sensorScreenLocations = {
   'Photon400035001547343433313338': {
     '1': 'TL (0, 0) TR (1920, 0) BR (1920, 1080) BL (0, 1080)',
     '3': 'TL (0, 0) TR (1920, 0) BR (1920, 1080) BL (0, 1080)'
-  }
+  },
+  'ArgonBLE': {
+    '3': 'TL (0, 0) TR (1920, 0) BR (1920, 1080) BL (0, 1080)'
+  },
 }
 
 room.on(`$photonId read $value on sensor $sensorId`,
@@ -51,6 +54,18 @@ room.on(`$photonId read $value on sensor $sensorId`,
 
 room.on(`Photon200038000747343232363230 read $value on sensor 1`,
         `paper $paperId has RFID $value`,
+  results => {
+    room.subscriptionPrefix(2);
+    if (!!results) {
+      results.forEach(({ value, paperId }) => {
+        room.assert(`paper 1013 is pointing at paper ${paperId}`);
+      });
+    }
+    room.subscriptionPostfix();
+  })
+
+room.on(`ArgonBLE read $value on sensor 1`,
+  `paper $paperId has RFID $value`,
   results => {
     room.subscriptionPrefix(2);
     if (!!results) {
