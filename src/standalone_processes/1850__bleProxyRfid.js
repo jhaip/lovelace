@@ -249,13 +249,17 @@ var bleSerial = new BleUart('nordic');
 bleSerial.on('data', function (data) {
     console.log("Got new data: " + String(data));
     // expecting data in format "5," or "1,a35kjtk4"
-    const parsedData = String(data).split(",");
-    if (parsedData.length !== 2) {
-        console.log("INVALID SENSOR DATA FORMAT");
-    } else {
-        room.assert(`ArgonBLE read ${parsedData[1] || "null"} on sensor ${parsedData[0]}`);
-        room.flush();
-    }
+    const lines = String(data).split("\n");
+    lines.forEach(function(line) {
+        console.log(`LINE:${line}`)
+        const parsedData = line.split(",");
+        if (parsedData.length !== 2) {
+            console.log("INVALID SENSOR DATA FORMAT");
+        } else {
+            room.assert(`ArgonBLE read ${parsedData[1] || "null"} on sensor ${parsedData[0]}`);
+            room.flush();
+        }
+    });
 });
 
 // this function gets called when the program
