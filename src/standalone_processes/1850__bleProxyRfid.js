@@ -256,7 +256,7 @@ bleSerial.on('data', function (data) {
         if (parsedData.length !== 2) {
             console.log("INVALID SENSOR DATA FORMAT");
         } else {
-            room.retract(`ArgonBLE read $ on sensor ${parsedData[0]}`);
+            room.retractMine(`ArgonBLE read $ on sensor ${parsedData[0]}`);
             room.assert(`ArgonBLE read ${parsedData[1] || "null"} on sensor ${parsedData[0]}`);
             room.flush();
         }
