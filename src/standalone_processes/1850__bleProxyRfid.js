@@ -244,6 +244,8 @@ var bleSerial = new BleUart('nordic');
 // }
 // var bleSerial = new BleUart('foo', uart);
 
+var lastValues = {'1': null, '2': null, '3': null, '4': null, '5': null};
+
 // this function gets called when new data is received from
 // the Bluetooth LE serial service:
 bleSerial.on('data', function (data) {
@@ -256,9 +258,13 @@ bleSerial.on('data', function (data) {
         if (parsedData.length !== 2) {
             console.log("INVALID SENSOR DATA FORMAT");
         } else {
-            room.retractMine(`ArgonBLE read $ on sensor ${parsedData[0]}`);
-            room.assert(`ArgonBLE read ${parsedData[1] || "null"} on sensor ${parsedData[0]}`);
-            room.flush();
+            const parsedValue = parsedData[1] || "null";
+            if (lastValues[`${parsedData[0]}`] != parsedValue) {
+                lastValues[`${parsedData[0]}`] = parsedValue;
+                room.retractMine(`ArgonBLE read $ on sensor ${parsedData[0]}`);
+                room.assert(`ArgonBLE read ${parsedValue} on sensor ${parsedData[0]}`);
+                room.flush();
+            }
         }
     });
 });
