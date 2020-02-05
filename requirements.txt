@@ -9,3 +9,5 @@ zmq==0.0.0
 opentracing==2.2.0
 jaeger-client==4.0.0
 keyboard==0.13.3
+pyserial==3.4
+adafruit-circuitpython-thermal-printer==1.1.4
