@@ -43,8 +43,8 @@
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 // MFRC522 mfrc522_b(SS_PIN_B, RST_PIN);
 MFRC522 mfrc522_c(SS_PIN_C, RST_PIN);
-// MFRC522 mfrc522_d(SS_PIN_D, RST_PIN);
-// MFRC522 mfrc522_e(SS_PIN_E, RST_PIN);
+MFRC522 mfrc522_d(SS_PIN_D, RST_PIN);
+MFRC522 mfrc522_e(SS_PIN_E, RST_PIN);
 // MFRC522 mfrc522_f(SS_PIN_F, RST_PIN);
 
 // This example does not require the cloud so you can run it in manual mode or
@@ -85,14 +85,14 @@ void setup()
   mfrc522.setSPIConfig();
   // mfrc522_b.setSPIConfig();
   mfrc522_c.setSPIConfig();
-  // mfrc522_d.setSPIConfig();
-  // mfrc522_e.setSPIConfig();
+  mfrc522_d.setSPIConfig();
+  mfrc522_e.setSPIConfig();
 
   mfrc522.PCD_Init(); // Init MFRC522 card
   // mfrc522_b.PCD_Init(); // Init MFRC522 card
   mfrc522_c.PCD_Init(); // Init MFRC522 card
-  // mfrc522_d.PCD_Init(); // Init MFRC522 card
-  // mfrc522_e.PCD_Init(); // Init MFRC522 card
+  mfrc522_d.PCD_Init(); // Init MFRC522 card
+  mfrc522_e.PCD_Init(); // Init MFRC522 card
   Serial.println("Scan PICC to see UID and type...");
 
   BLE.on();
@@ -154,8 +154,8 @@ void loop()
     String val_a = check_reader(mfrc522);
     // String val_b = check_reader(mfrc522_b);
     String val_c = check_reader(mfrc522_c);
-    // String val_d = check_reader(mfrc522_d);
-    // String val_e = check_reader(mfrc522_e);
+    String val_d = check_reader(mfrc522_d);
+    String val_e = check_reader(mfrc522_e);
     // String val_f = check_reader(mfrc522_f);
 
     now = millis();
@@ -179,6 +179,10 @@ void loop()
       txBuf[txLen++] = val_a.charAt(e);
     }
     txBuf[txLen++] = '\n';
+    if (txLen > 0)
+    {
+      txCharacteristic.setValue(txBuf, txLen);
+    }
 
     // publishValueMessage(3, val_a);
     txBuf[txLen++] = '3';
@@ -189,14 +193,41 @@ void loop()
       txBuf[txLen++] = val_c.charAt(e);
     }
     txBuf[txLen++] = '\n';
-
-    now = millis();
-    Serial.printlnf("send lag: %lu ms", (now - lastTime));
-    /////////
-
     if (txLen > 0)
     {
       txCharacteristic.setValue(txBuf, txLen);
     }
+
+    // publishValueMessage(4, val_a);
+    txBuf[txLen++] = '4';
+    txBuf[txLen++] = ',';
+    // txBuf[txLen++] = val_a;
+    for (int e = 0; e < val_d.length(); e++)
+    {
+      txBuf[txLen++] = val_d.charAt(e);
+    }
+    txBuf[txLen++] = '\n';
+    if (txLen > 0)
+    {
+      txCharacteristic.setValue(txBuf, txLen);
+    }
+
+    // publishValueMessage(5, val_a);
+    txBuf[txLen++] = '5';
+    txBuf[txLen++] = ',';
+    // txBuf[txLen++] = val_a;
+    for (int e = 0; e < val_e.length(); e++)
+    {
+      txBuf[txLen++] = val_e.charAt(e);
+    }
+    txBuf[txLen++] = '\n';
+    if (txLen > 0)
+    {
+      txCharacteristic.setValue(txBuf, txLen);
+    }
+
+    now = millis();
+    Serial.printlnf("send lag: %lu ms", (now - lastTime));
+    /////////
   }
 }
