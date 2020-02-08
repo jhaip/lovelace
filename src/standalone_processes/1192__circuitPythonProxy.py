@@ -25,6 +25,13 @@ def circuit_playground_play_tone_callback(results):
     else:
         write_buffer.append("STOP_TONE\n".encode("utf-8"))
 
+@subscription(["$ $ wish circuit playground stopped playing tone"])
+def circuit_playground_play_tone_callback(results):
+    global write_buffer
+    if results:
+        for result in results:
+            write_buffer.append("STOP_TONE\n".encode("utf-8"))
+
 
 init(__file__, skipListening=True)
 
