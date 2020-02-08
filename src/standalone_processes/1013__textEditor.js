@@ -215,8 +215,8 @@ room.on(
       currentTargetName = undefined;
       currentTargetId = undefined;
       currentSourceCode = "";
-      room.retractAll(
-        `wish`, ["text", postCompiledTargetName], `would be running`
+      room.retractMine(
+        `wish`, ["variable", ""], `would be running`
       )
       render();
     }
