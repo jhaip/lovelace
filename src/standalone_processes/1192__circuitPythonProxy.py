@@ -9,12 +9,21 @@ import time
 write_buffer = []
 
 @subscription(["$ $ wish circuit playground neopixel $i had color $r $g $b"])
-def melody_callback(results):
+def circuit_playground_light_callback(results):
     global write_buffer
     if results:
         for result in results:
             write_buffer.append("LIGHT,{},{},{},{}\n".format(
                 result["i"], result["r"], result["g"], result["b"]).encode("utf-8"))
+
+@subscription(["$ $ wish circuit playground played $freq tone"])
+def circuit_playground_play_tone_callback(results):
+    global write_buffer
+    if results:
+        for result in results:
+            write_buffer.append("TONE,{}\n".format(result["freq"]).encode("utf-8"))
+    else:
+        write_buffer.append("STOP_TONE\n".encode("utf-8"))
 
 
 init(__file__, skipListening=True)
