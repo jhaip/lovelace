@@ -27,7 +27,7 @@ while True:
                     cp.pixels[pixel_id] = (r, g, b)
             elif prefix == b'TONE' and len(parsed_data) == 2:
                 print("PARSING TONE COMMAND: {}".format(data))
-                cp.play_tone(int(parsed_data[1]), 1)
+                cp.play_tone(int(parsed_data[1]))
             elif prefix == b'STOP_TONE':
                 print("PARSING STOP_TONE COMMAND: {}".format(data))
                 cp.stop_tone()
