@@ -49,7 +49,7 @@ MFRC522 mfrc522_e(SS_PIN_E, RST_PIN);
 
 // This example does not require the cloud so you can run it in manual mode or
 // normal cloud-connected mode
-// SYSTEM_MODE(MANUAL);
+SYSTEM_MODE(MANUAL);
 
 String myID = System.deviceID();
 
