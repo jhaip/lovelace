@@ -241,6 +241,15 @@ function init(filename) {
                 ].concat(fullyParseFact(args))
             })
         },
+        globalAssert: (...args) => {
+            batched_calls.push({
+                "type": "claim",
+                "fact": [
+                    ["id", MY_ID_STR],
+                    ["id", `0`]
+                ].concat(fullyParseFact(args))
+            })
+        },
         retractNow: (query) => {
             client.send([`..RETRACT${MY_ID_STR}${query}`]);
         },

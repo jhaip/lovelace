@@ -33,7 +33,11 @@ function parse(x) {
   const claimRetractCleanupCheck = s => {
     let m = s.match(/^(\s*)claim (.+)\s*$/);
     if (m !== null) OUTPUT += `${m[1]}room.assert(\`${m[2]}\`)\n`;
+    m = s.match(/^(\s*)global claim (.+)\s*$/);
+    if (m !== null) OUTPUT += `${m[1]}room.globalAssert(\`${m[2]}\`)\n`;
     m = s.match(/^(\s*)retract (.+)\s*$/);
+    if (m !== null) OUTPUT += `${m[1]}room.retractAll(\`${m[2]}\`)\n`;
+    m = s.match(/^(\s*)global retract (.+)\s*$/);
     if (m !== null) OUTPUT += `${m[1]}room.retractAll(\`${m[2]}\`)\n`;
     m = s.match(/^(\s*)cleanup\s*$/);
     if (m !== null) OUTPUT += `${m[1]}room.cleanup()\n`;
