@@ -201,6 +201,7 @@ function cmd() {
     sudo python3 src/standalone_processes/791__thermalPrinterLinux.py &
     sudo python3 src/standalone_processes/1192__circuitPythonProxy.py &
     sudo python3 src/standalone_processes/649__keyboard.py &
+    sudo /home/jacob/.nvm/versions/node/v10.6.0/bin/node src/standalone_processes/1850__bleProxyRfid.js &
     python3 src/standalone_processes/1700__projectorDisplay.py &
     echo -e "booting"
   elif [ "$1" == "test" ]
