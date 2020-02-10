@@ -4,7 +4,7 @@ var FACTS = {};
 var SUBSCRIPTIONS = {};
 var nonBootFactSubcriptions = {};
 const FONT_SIZE = 16;
-const ORIGIN = [0, 0];
+const ORIGIN = [20, 20];
 
 function render() {
     console.error(FACTS);
@@ -12,7 +12,7 @@ function render() {
     room.cleanup();
     let ill = room.newIllumination();
     ill.fontsize(FONT_SIZE);
-    let offset = 1;
+    let offset = 0;
 
     let programDetails = {}; // {"programId": {"claims": [], "listens": []}, ...}
     for (var programId in SUBSCRIPTIONS) {
@@ -38,12 +38,12 @@ function render() {
         offset += 1;
         ill.fontcolor(255, 100, 100);
         programDetails[programId]["listens"].forEach(subscription => {
-            ill.text(ORIGIN[0], (ORIGIN[1] + (offset) * FONT_SIZE * 1.3), `    when ${subscription}`);
+            ill.text(ORIGIN[0], (ORIGIN[1] + (offset) * FONT_SIZE * 1.3), `    when ${subscription.slice(6)}`);
             offset += 1;
         });
         ill.fontcolor(100, 255, 100);
         programDetails[programId]["claims"].forEach(fact => {
-            ill.text(ORIGIN[0], (ORIGIN[1] + (offset) * FONT_SIZE * 1.3), `    claim ${fact}`);
+            ill.text(ORIGIN[0], (ORIGIN[1] + (offset) * FONT_SIZE * 1.3), `    claim ${fact.slice(3)}`);
             offset += 1;
         });
         offset += 0.5; // half space for padding between programs
