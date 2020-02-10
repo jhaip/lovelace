@@ -12,7 +12,7 @@ function render() {
     room.cleanup();
     let ill = room.newIllumination();
     ill.fontsize(FONT_SIZE);
-    let offset = 0;
+    let offset = 1;
 
     let programDetails = {}; // {"programId": {"claims": [], "listens": []}, ...}
     for (var programId in SUBSCRIPTIONS) {
@@ -27,16 +27,23 @@ function render() {
         programDetails[programId]["claims"] = sortedFacts;
     }
     Object.keys(programDetails).sort().forEach(programId => {
+        if (
+            programDetails[programId]["listens"].length === 0 &&
+            programDetails[programId]["claims"].length === 0
+        ) {
+            return;
+        }
+        ill.fontcolor(255, 255, 255);
         ill.text(ORIGIN[0], (ORIGIN[1] + (offset) * FONT_SIZE * 1.3), `#${programId}`);
         offset += 1;
-        ill.fontcolor(255, 50, 50);
+        ill.fontcolor(255, 100, 100);
         programDetails[programId]["listens"].forEach(subscription => {
-            ill.text(ORIGIN[0], (ORIGIN[1] + (offset) * FONT_SIZE * 1.3), `    ${subscription}`);
+            ill.text(ORIGIN[0], (ORIGIN[1] + (offset) * FONT_SIZE * 1.3), `    when ${subscription}`);
             offset += 1;
         });
-        ill.fontcolor(50, 255, 50);
+        ill.fontcolor(100, 255, 100);
         programDetails[programId]["claims"].forEach(fact => {
-            ill.text(ORIGIN[0], (ORIGIN[1] + (offset) * FONT_SIZE * 1.3), `    ${fact}`);
+            ill.text(ORIGIN[0], (ORIGIN[1] + (offset) * FONT_SIZE * 1.3), `    claim ${fact}`);
             offset += 1;
         });
         offset += 0.5; // half space for padding between programs
