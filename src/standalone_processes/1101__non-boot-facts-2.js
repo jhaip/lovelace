@@ -24,7 +24,7 @@ function render() {
         if (!(programId in programDetails)) {
             programDetails[programId] = {"claims": [], "listens": []}
         }
-        programDetails[programId]["listens"] = sortedFacts;
+        programDetails[programId]["claims"] = sortedFacts;
     }
     Object.keys(programDetails).sort().forEach(programId => {
         ill.text(ORIGIN[0], (ORIGIN[1] + (offset) * FONT_SIZE * 1.3), `#${programId}`);
