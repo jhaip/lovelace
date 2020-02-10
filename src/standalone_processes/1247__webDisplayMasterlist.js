@@ -32,7 +32,7 @@ app.get('/status', (req, res) => {
 //         room.subscriptionPostfix();
 //     })
 
-room.on(`draw graphics $graphics on 1100`,
+room.on(`draw graphics $graphics on 1101`,
     results => {
         room.subscriptionPrefix(2);
         if (!!results) {
