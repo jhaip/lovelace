@@ -17,15 +17,23 @@ var strippedMAC = function (mac) {
 const BLUEFRUIT_BUTTON_SERVICE = 'adaf0600c33242a893bd25e905756cb8';
 const BLUEFRUIT_LIGHT_SENSOR_SERVICE = 'adaf0300c33242a893bd25e905756cb8';
 const BLUEFRUIT_TONE_SERVICE = 'adaf0c00c33242a893bd25e905756cb8';
+const BLUEFRUIT_NEOPIXEL_SERVICE = 'adaf0900c33242a893bd25e905756cb8';
 const SERVICE_CHARACTERISTICS = {
-    [BLUEFRUIT_BUTTON_SERVICE]: 'adaf0601c33242a893bd25e905756cb8',
-    [BLUEFRUIT_LIGHT_SENSOR_SERVICE]: 'adaf0301c33242a893bd25e905756cb8',
-    [BLUEFRUIT_TONE_SERVICE]: 'adaf0c01c33242a893bd25e905756cb8'
+    [BLUEFRUIT_BUTTON_SERVICE]: ['adaf0601c33242a893bd25e905756cb8'],
+    [BLUEFRUIT_LIGHT_SENSOR_SERVICE]: ['adaf0301c33242a893bd25e905756cb8'],
+    [BLUEFRUIT_TONE_SERVICE]: ['adaf0c01c33242a893bd25e905756cb8'],
+    [BLUEFRUIT_NEOPIXEL_SERVICE]: [
+        'adaf0901c33242a893bd25e905756cb8',
+        'adaf0902c33242a893bd25e905756cb8',
+        'adaf0903c33242a893bd25e905756cb8',
+        'adaf0904c33242a893bd25e905756cb8'
+    ]
 }
 const SERVICE_NAMES = {
     [BLUEFRUIT_BUTTON_SERVICE]: 'buttons',
     [BLUEFRUIT_LIGHT_SENSOR_SERVICE]: 'light_sensor',
-    [BLUEFRUIT_TONE_SERVICE]: 'tone'
+    [BLUEFRUIT_TONE_SERVICE]: 'tone',
+    [BLUEFRUIT_NEOPIXEL_SERVICE]: 'neopixel'
 }
 const CONVERSION_FUNC = {
     [BLUEFRUIT_BUTTON_SERVICE]: data => data.readUInt8(0),
@@ -77,18 +85,63 @@ noble.on('discover', function (peripheral) {
     peripheral.connect(function (error) {
         console.log('connected to peripheral: ' + peripheral.uuid);
         // adaf0600c33242a893bd25e905756cb8 are the bluefruit buttons
-        const supportedServices = [BLUEFRUIT_BUTTON_SERVICE, BLUEFRUIT_LIGHT_SENSOR_SERVICE, BLUEFRUIT_TONE_SERVICE];
+        const supportedServices = [BLUEFRUIT_BUTTON_SERVICE, BLUEFRUIT_LIGHT_SENSOR_SERVICE, BLUEFRUIT_TONE_SERVICE, BLUEFRUIT_NEOPIXEL_SERVICE];
         peripheral.discoverServices(supportedServices, function (error, services) {
             services.forEach(service => {
                 var serviceUuid = `${service.uuid}`;
                 console.log(`discovered ${SERVICE_NAMES[serviceUuid]} service ${service}`);
 
-                service.discoverCharacteristics([SERVICE_CHARACTERISTICS[serviceUuid]], function (error, characteristics) {
-                    console.log(`discovered ${SERVICE_NAMES[serviceUuid]} characteristic`);
+                service.discoverCharacteristics(SERVICE_CHARACTERISTICS[serviceUuid], function (error, characteristics) {
+                    console.log(`discovered ${SERVICE_NAMES[serviceUuid]} characteristics`);
                     const serviceName = SERVICE_NAMES[serviceUuid];
                     if (serviceName === 'tone') {
                         var characteristic = characteristics[0];
                         playTone(characteristic);
+                    } else if (serviceName === 'neopixel') {
+                        // var characteristic = characteristics[0];
+                        characteristics.forEach(characteristic => {
+                            // console.log(characteristic);
+                            var characteristicUuid = `${characteristic.uuid}`;
+                            if (characteristicUuid === SERVICE_CHARACTERISTICS[BLUEFRUIT_NEOPIXEL_SERVICE][0]) {
+                                characteristic.write(Buffer.from([0x08]), true, function (error) {
+                                    console.log('wrote neopixel 0');
+                                    console.log(error);
+                                });
+                            }
+                            if (characteristicUuid === SERVICE_CHARACTERISTICS[BLUEFRUIT_NEOPIXEL_SERVICE][1]) {
+                                characteristic.write(Buffer.from([0x00]), true, function (error) {
+                                    console.log('wrote neopixel 1');
+                                    console.log(error);
+                                });
+                            }
+                            if (characteristicUuid === SERVICE_CHARACTERISTICS[BLUEFRUIT_NEOPIXEL_SERVICE][2]) {
+                                const msg = [
+                                    0x00, 0x00,
+                                    0x01,
+                                    0x00, 0x00, 0x00, // Neopixel 0 color in GRB
+                                    0x05, 0x00, 0x00, // Neopixel 1 color in GRB
+                                    0x10, 0x00, 0x00, // ...
+                                    0x00, 0x05, 0x00,
+                                    0x00, 0x10, 0x00,
+                                    0x00, 0x00, 0x05,
+                                    0x00, 0x00, 0x10,
+                                    0x00, 0x00, 0x00,
+                                    0x00, 0x00, 0x00,
+                                    0x00, 0x00, 0x00
+                                ]
+                                characteristic.write(Buffer.from(msg), true, function (error) {
+                                    console.log('wrote neopixel 2');
+                                    console.log(error);
+                                });
+                            }
+                            if (characteristicUuid === SERVICE_CHARACTERISTICS[BLUEFRUIT_NEOPIXEL_SERVICE][3]) {
+                                // set buffer size to 30
+                                characteristic.write(Buffer.from([0x1E, 0x00]), true, function (error) {
+                                    console.log('wrote neopixel 3');
+                                    console.log(error);
+                                });
+                            }
+                        })
                     } else {
                         var characteristic = characteristics[0];
 
