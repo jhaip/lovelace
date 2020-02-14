@@ -119,7 +119,8 @@ noble.on('stateChange', function scan(state) {
 function connect(peripheral) {
     // adaf0600c33242a893bd25e905756cb8 are the bluefruit buttons
     const supportedServices = [BLUEFRUIT_BUTTON_SERVICE, BLUEFRUIT_LIGHT_SENSOR_SERVICE, BLUEFRUIT_TONE_SERVICE, BLUEFRUIT_NEOPIXEL_SERVICE];
-    peripheral.discoverServices(supportedServices, function (error, services) {
+    peripheral.discoverServices(supportedServices);
+    peripheral.once('servicesDiscover', function (services) {
         services.forEach(service => {
             var serviceUuid = `${service.uuid}`;
             console.log(`discovered ${SERVICE_NAMES[serviceUuid]} service ${service}`);
@@ -267,6 +268,5 @@ room.on(`wish circuit playground stopped playing tone`,
 
 room.cleanup();
 room.retractRaw(`subscription #1193 %`);
-room.flush();
 
 run();
