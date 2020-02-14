@@ -266,4 +266,5 @@ room.on(`wish circuit playground stopped playing tone`,
 // sudo the-node-from-above 1193__bluefruitProxy.js
 
 room.cleanup();
+room.retractRaw(`subscription #1193 %`);
 run();
