@@ -80,5 +80,7 @@ room.on(
 // circuit playground proxy is run manually
 nonBootFactSubcriptions['1192'] = "SUBSCRIBED";
 subscribe('1192');
+nonBootFactSubcriptions['1193'] = "SUBSCRIBED";
+subscribe('1193');
 
 run()
