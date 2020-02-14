@@ -217,6 +217,10 @@ noble.on('discover', function (peripheral) {
     });
     peripheral.on('disconnect', function () {
         console.log("PERIPHERAL DISCONNECTED")
+        setTimeout(() => {
+            console.log("attempting to reconnect");
+            peripheral.connect();
+        }, 1000);
     });
 });
 
