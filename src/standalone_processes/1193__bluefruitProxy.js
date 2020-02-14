@@ -60,6 +60,8 @@ function update_neopixels(D) {
         console.log("No neopixel characteristic yet")
         return;
     }
+    console.log("update neopixels")
+    console.log(D)
     // D = [[R,G,B], [R,G,B], ...]
     const msg = [
         0x00, 0x00,
