@@ -267,4 +267,6 @@ room.on(`wish circuit playground stopped playing tone`,
 
 room.cleanup();
 room.retractRaw(`subscription #1193 %`);
+room.flush();
+
 run();
