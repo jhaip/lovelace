@@ -120,6 +120,7 @@ function connect(peripheral) {
     // adaf0600c33242a893bd25e905756cb8 are the bluefruit buttons
     const supportedServices = [BLUEFRUIT_BUTTON_SERVICE, BLUEFRUIT_LIGHT_SENSOR_SERVICE, BLUEFRUIT_TONE_SERVICE, BLUEFRUIT_NEOPIXEL_SERVICE];
     peripheral.discoverServices(supportedServices);
+    console.log("started discovering services");
     peripheral.once('servicesDiscover', function (services) {
         services.forEach(service => {
             var serviceUuid = `${service.uuid}`;
