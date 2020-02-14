@@ -181,14 +181,16 @@ noble.on('discover', function (peripheral) {
                                 let slideValue = (characteristicValue & 1);
                                 let buttonValueA = (characteristicValue & 2) >> 1;
                                 let buttonValueB = (characteristicValue & 4) >> 2;
-                                room.cleanup();
+                                room.retractMine(`circuit playground "SLIDE" has value $`);
                                 room.assert(`circuit playground "SLIDE" has value ${slideValue}`);
+                                room.retractMine(`circuit playground "BUTTON_A" has value $`);
                                 room.assert(`circuit playground "BUTTON_A" has value ${buttonValueA}`);
+                                room.retractMine(`circuit playground "BUTTON_B" has value $`);
                                 room.assert(`circuit playground "BUTTON_B" has value ${buttonValueB}`);
                                 room.flush();
                             } else if (SERVICE_NAMES[serviceUuid] === 'light_sensor') {
                                 let lightValue = Math.floor(characteristicValue);
-                                room.cleanup();
+                                room.retractMine(`circuit playground "LIGHT" has value $`);
                                 room.assert(`circuit playground "LIGHT" has value ${lightValue}`);
                                 room.flush();
                             }
