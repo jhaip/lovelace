@@ -114,15 +114,7 @@ noble.on('stateChange', function scan(state) {
     }
 });
 
-// if you discover a peripheral with the appropriate service, connect:
-// noble.on('discover', self.connect);
-noble.on('discover', function (peripheral) {
-    console.log(`inside discover ${peripheral.address}`)
-    if (strippedMAC(peripheral.address) !== strippedMAC('d1:d3:b6:0c:9b:95')) {
-        return;
-    } else {
-        console.log("FOUND BLUEFRUIT!");
-    }
+function connect(peripheral) {
     peripheral.connect(function (error) {
         console.log('connected to peripheral: ' + peripheral.uuid);
         // adaf0600c33242a893bd25e905756cb8 are the bluefruit buttons
@@ -204,6 +196,26 @@ noble.on('discover', function (peripheral) {
                 });
             });
         });
+    });
+}
+
+// if you discover a peripheral with the appropriate service, connect:
+// noble.on('discover', self.connect);
+noble.on('discover', function (peripheral) {
+    console.log(`inside discover ${peripheral.address}`)
+    if (strippedMAC(peripheral.address) !== strippedMAC('d1:d3:b6:0c:9b:95')) {
+        return;
+    } else {
+        console.log("FOUND BLUEFRUIT!");
+        console.log(peripheral);
+    }
+    noble.stopScanning();
+    peripheral.connect();
+    peripheral.on('connect', function() {
+        connect(peripheral);
+    });
+    peripheral.on('disconnect', function () {
+        console.log("PERIPHERAL DISCONNECTED")
     });
 });
 
