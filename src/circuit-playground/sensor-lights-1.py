@@ -25,7 +25,7 @@ while True:
                 cp.pixels[pixel_id] = (r, g, b)
         elif prefix == b'T':
             print("PARSING TONE COMMAND")
-            cp.start_tone(int.from_bytes(data[1] + data[2], 'little'))
+            cp.start_tone(int.from_bytes(bytearray([data[1], data[2]]), 'little'))
         elif prefix == b'S':
             print("PARSING STOP_TONE COMMAND")
             cp.stop_tone()
