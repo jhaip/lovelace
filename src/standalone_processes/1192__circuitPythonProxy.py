@@ -13,7 +13,7 @@ def circuit_playground_light_callback(results):
     global write_buffer
     if results:
         for result in results:
-            line = b'L' + bytearray([result["i"], result["r"], result["g"], result["b"]) + b'00'
+            line = b'L' + bytearray([result["i"], result["r"], result["g"], result["b"]]) + b'00'
             write_buffer.append(line)
 
 @subscription(["$ $ wish circuit playground played $freq tone"])
