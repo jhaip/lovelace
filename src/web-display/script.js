@@ -72,11 +72,11 @@ function drawGraphics($rawCanvas, graphics) {
         } else if (g.type === "pop") {
             ctx.restore();
         } else if (g.type === "translate") {
-            ctx.translate(+opt[0], +opt[1]);
+            ctx.translate(+(opt.x || 0), +(opt.y || 0));
         } else if (g.type === "rotate") {
             ctx.rotate(+opt);
         } else if (g.type === "scale") {
-            ctx.scale(+opt[0], +opt[1]);
+            ctx.scale(+(opt.x || 0), +(opt.y || 0));
         } else {
             console.log(`unrecognized command:`)
             console.log(g);
