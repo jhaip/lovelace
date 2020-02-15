@@ -13,30 +13,31 @@ def circuit_playground_light_callback(results):
     global write_buffer
     if results:
         for result in results:
-            write_buffer.append("LIGHT,{},{},{},{}\n".format(
-                result["i"], result["r"], result["g"], result["b"]).encode("utf-8"))
+            line = b'L' + bytearray([result["i"], result["r"], result["g"], result["b"]) + b'00'
+            write_buffer.append(line)
 
 @subscription(["$ $ wish circuit playground played $freq tone"])
 def circuit_playground_play_tone_callback(results):
     global write_buffer
     if results:
         for result in results:
-            write_buffer.append("TONE,{}\n".format(result["freq"]).encode("utf-8"))
+            line = b'T' + result["freq"].to_bytes(2, 'little') + b'0000'
+            write_buffer.append(line)
     else:
-        write_buffer.append("STOP_TONE\n".encode("utf-8"))
+        write_buffer.append(b'S000000')
 
 @subscription(["$ $ wish circuit playground stopped playing tone"])
 def circuit_playground_play_tone_callback(results):
     global write_buffer
     if results:
         for result in results:
-            write_buffer.append("STOP_TONE\n".encode("utf-8"))
+            write_buffer.append(b'S000000')
 
 
 init(__file__, skipListening=True)
 
 
-with serial.Serial('/dev/ttyUSB0', 115200, timeout=1.0) as ser:
+with serial.Serial('/dev/ttyUSB0', 19200, timeout=1.0) as ser:
     ser.reset_input_buffer()
     ser.reset_output_buffer()
     while True:

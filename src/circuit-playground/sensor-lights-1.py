@@ -3,7 +3,7 @@ import board
 import neopixel
 import busio
 import digitalio
-uart = busio.UART(board.TX, board.RX, baudrate=115200, timeout=1)
+uart = busio.UART(board.TX, board.RX, baudrate=19200, timeout=1)
 from adafruit_circuitplayground import cp
 
 N_PIXELS = 10
@@ -11,28 +11,27 @@ last_sensor_reading = time.monotonic()
 
 while True:
     # Read commands to change outputs
-    data = uart.readline()
-    if data is not None:
+    data = uart.read(7)
+    while data is not None:
         print(data)
-        parsed_data = data.rstrip().split(b",")
-        if len(parsed_data) >= 1:
-            prefix = parsed_data[0]
-            if prefix == b'LIGHT' and len(parsed_data) == 5:
-                print("PARSING LIGHT COMMAND: {}".format(data))
-                pixel_id = int(parsed_data[1])
-                if pixel_id >= 0 and pixel_id < N_PIXELS:
-                    r = int(parsed_data[2])
-                    g = int(parsed_data[3])
-                    b = int(parsed_data[4])
-                    cp.pixels[pixel_id] = (r, g, b)
-            elif prefix == b'TONE' and len(parsed_data) == 2:
-                print("PARSING TONE COMMAND: {}".format(data))
-                cp.start_tone(int(parsed_data[1]))
-            elif prefix == b'STOP_TONE':
-                print("PARSING STOP_TONE COMMAND: {}".format(data))
-                cp.stop_tone()
-    else:
-        print("DATA WAS NONE")
+        prefix = bytearray([data[0]])
+        if prefix == b'L':
+            print("PARSING LIGHT COMMAND")
+            pixel_id = int(data[1])
+            if pixel_id >= 0 and pixel_id < N_PIXELS:
+                r = int(data[2])
+                g = int(data[3])
+                b = int(data[4])
+                cp.pixels[pixel_id] = (r, g, b)
+        elif prefix == b'T':
+            print("PARSING TONE COMMAND")
+            cp.start_tone(int.from_bytes(data[1] + data[2], 'little'))
+        elif prefix == b'S':
+            print("PARSING STOP_TONE COMMAND")
+            cp.stop_tone()
+        data = uart.read(7)
+    
+    print("done reading data")
 
     # Write sensor values
     if time.monotonic() - last_sensor_reading > 0.1:
@@ -45,4 +44,4 @@ while True:
         uart.write(b"BUTTON_B:{}\n".format(button_b_value).encode())
         uart.write(b"LIGHT:{}\n".format(light_value).encode())
 
-    time.sleep(0.1)
+    # time.sleep(0.1)
