@@ -8,28 +8,44 @@ from adafruit_circuitplayground import cp
 
 N_PIXELS = 10
 last_sensor_reading = time.monotonic()
+STATE = "IDLE"
+buffer = []
 
 while True:
     # Read commands to change outputs
-    data = uart.read(7)
+    data = uart.read(1)
     while data is not None:
         print(data)
-        prefix = bytearray([data[0]])
-        if prefix == b'L':
-            print("PARSING LIGHT COMMAND")
-            pixel_id = int(data[1])
-            if pixel_id >= 0 and pixel_id < N_PIXELS:
-                r = int(data[2])
-                g = int(data[3])
-                b = int(data[4])
-                cp.pixels[pixel_id] = (r, g, b)
-        elif prefix == b'T':
-            print("PARSING TONE COMMAND")
-            cp.start_tone(int.from_bytes(bytearray([data[1], data[2]]), 'little'))
-        elif prefix == b'S':
-            print("PARSING STOP_TONE COMMAND")
-            cp.stop_tone()
-        data = uart.read(7)
+        if STATE == "IDLE" and bytearray([data[0]]) in [b'L', b'T', b'S']:
+            STATE = "ACTIVE"
+            buffer.append(data[0])
+        elif STATE == "ACTIVE":
+            buffer.append(data[0])
+            if len(buffer) == 7:
+                print("GOT FULL MESSAGE")
+                print(buffer)
+                # buffer is full, process message
+                prefix = bytearray([buffer[0]])
+                if prefix == b'L':
+                    print("PARSING LIGHT COMMAND")
+                    pixel_id = int(buffer[1])
+                    if pixel_id >= 0 and pixel_id < N_PIXELS:
+                        r = int(buffer[2])
+                        g = int(buffer[3])
+                        b = int(buffer[4])
+                        cp.pixels[pixel_id] = (r, g, b)
+                elif prefix == b'T':
+                    print("PARSING TONE COMMAND")
+                    cp.start_tone(int.from_bytes(bytearray([buffer[1], buffer[2]]), 'little'))
+                elif prefix == b'S':
+                    print("PARSING STOP_TONE COMMAND")
+                    cp.stop_tone()
+                # done processing message
+                buffer = []
+                STATE = "IDLE"
+        else:
+            print("IGNORING BYTE")
+        data = uart.read(1)
     
     print("done reading data")
 
