@@ -86,6 +86,8 @@ room.assert(`paper 1013 has width 1920 height 1080 angle 0 at ( 0 , 0 )`)
 room.assert(`camera 99 sees paper 1101 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Masterlist Web Display
 room.assert(`camera 99 sees paper 1247 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// Web Display 2
+room.assert(`camera 99 sees paper 1248 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Thermal Print Code
 room.assert(`camera 99 sees paper 980 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Thermal Printer
