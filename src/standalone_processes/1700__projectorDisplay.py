@@ -124,7 +124,7 @@ def sub_callback_graphics(results):
         if source not in graphics:
             graphics[source] = {}
         target = v["target"]
-        if target != "global":
+        if target.isdigit():
             target = int(target)
         if target not in graphics[source]:
             graphics[source][target] = []
