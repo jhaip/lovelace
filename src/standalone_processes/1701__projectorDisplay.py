@@ -110,8 +110,10 @@ def sub_callback_graphics(results):
         if source not in graphics:
             graphics[source] = {}
         target = v["target"]
-        if target.isdigit():
+        try:
             target = int(target)
+        except ValueError:
+            pass
         if target not in graphics[source]:
             graphics[source][target] = []
         graphics[source][target].extend(json.loads(v["graphics"]))
