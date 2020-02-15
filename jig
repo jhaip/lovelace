@@ -204,7 +204,7 @@ function cmd() {
     sudo /home/jacob/.nvm/versions/node/v10.6.0/bin/node src/standalone_processes/1850__bleProxyRfid.js &
     # sudo /home/jacob/.nvm/versions/node/v10.6.0/bin/node src/standalone_processes/1193__bluefruitProxy.js &
     python3 src/standalone_processes/1700__projectorDisplay.py &
-    ngrok http -subdomain=progspacemasterlist 3013
+    ngrok http -subdomain=progspacemasterlist 3013 > /dev/null
     echo -e "booting"
   elif [ "$1" == "test" ]
   then
