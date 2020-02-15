@@ -37,7 +37,7 @@ def circuit_playground_play_tone_callback(results):
 init(__file__, skipListening=True)
 
 
-with serial.Serial('/dev/ttyUSB0', 19200, timeout=1.0) as ser:
+with serial.Serial('/dev/ttyUSB0', 9600, timeout=0.1) as ser:
     ser.reset_input_buffer()
     ser.reset_output_buffer()
     while True:

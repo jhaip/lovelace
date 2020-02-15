@@ -3,7 +3,7 @@ import board
 import neopixel
 import busio
 import digitalio
-uart = busio.UART(board.TX, board.RX, baudrate=19200, timeout=1)
+uart = busio.UART(board.TX, board.RX, baudrate=9600, timeout=0.1)
 from adafruit_circuitplayground import cp
 
 N_PIXELS = 10
