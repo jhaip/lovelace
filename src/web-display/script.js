@@ -20,7 +20,7 @@ function drawGraphics($rawCanvas, graphics) {
             ctx.strokeRect(opt.x, opt.y, opt.w, opt.h);
         } else if (g.type === "ellipse") {
             ctx.beginPath();
-            ctx.ellipse(opt.x, opt.y, opt.w*0.5, opt.h*0.5, 0, 0, 2 * Math.PI);
+            ctx.ellipse(opt.x + opt.w * 0.5, opt.y + opt.h * 0.5, opt.w*0.5, opt.h*0.5, 0, 0, 2 * Math.PI);
             ctx.fill();
             ctx.stroke();
         } else if (g.type === "text") {
