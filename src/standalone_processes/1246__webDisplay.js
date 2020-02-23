@@ -41,10 +41,10 @@ room.on(
                 calibration = [x1, y1, x2, y2, x3, y3, x4, y4];
             });
             expressWs.getWss().clients.forEach(client => {
-                client.send({
+                client.send(JSON.stringify({
                     'calibration': calibration,
                     'graphics': graphicsCache
-                });
+                }));
             });
         }
         room.subscriptionPostfix();
@@ -60,10 +60,10 @@ room.on(`draw graphics $graphics on $`,
                 graphicsCache = graphicsCache.concat(parsedGraphics);
             });
             expressWs.getWss().clients.forEach(client => {
-                client.send({
+                client.send(JSON.stringify({
                     'calibration': calibration,
                     'graphics': graphicsCache
-                });
+                }));
             })
         }
         room.subscriptionPostfix();
