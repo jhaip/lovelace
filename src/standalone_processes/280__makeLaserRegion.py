@@ -89,7 +89,7 @@ def render_mode():
     return claims
 
 
-@subscription(["$ $ keyboard $ typed key $key @ $t"])
+@subscription(["#650 $ keyboard $ typed key $key @ $t"])
 def sub_callback_normal_key(results):
     global MODE, is_toggleable, region_name, region_id
     if results:
@@ -105,7 +105,7 @@ def sub_callback_normal_key(results):
                 batch(render_mode())
 
 
-@subscription(["$ $ keyboard $ typed special key $key @ $t"])
+@subscription(["#650 $ keyboard $ typed special key $key @ $t"])
 def sub_callback_keyboard(results):
     global MODE, lastLastPosition, regionPoints, ignore_key_press, region_name, region_id, is_toggleable
     if ignore_key_press:
