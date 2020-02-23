@@ -44,7 +44,7 @@ room.on(`laser at calendar $x $y @ $t`,
             results.forEach(({ x, y, t }) => {
                 let ill = room.newIllumination()
                 ill.nostroke();
-                ill.fill(color)
+                ill.fill("orange")
                 ill.rect(
                     x * Math.floor(CANVAS_WIDTH / 7),
                     y * Math.floor(CANVAS_HEIGHT / 5),
