@@ -55,7 +55,9 @@ function cmd() {
       --set-ctrl=saturation=-100 \
       --set-ctrl=sharpness=128 \
       --set-ctrl=exposure_time_absolute=100
+    export DISPLAY=:0
     python3 src/standalone_processes/1621__seeLaser.py &
+    chromium-browser --kiosk --app=http://progspaceweb2.ngrok.io
     echo -e "booting"
   elif [ "$1" == "lasersocksstart" ]
   then
