@@ -56,7 +56,7 @@ function cmd() {
       --set-ctrl=sharpness=128 \
       --set-ctrl=exposure_time_absolute=100
     export DISPLAY=:0
-    python3 src/standalone_processes/1621__seeLaser.py &
+    python3 src/standalone_processes/1621__seeLaserLamp.py &
     sudo python3 src/standalone_processes/650__keyboard.py &
     chromium-browser --kiosk --app=http://progspaceweb2.ngrok.io
     echo -e "booting"
