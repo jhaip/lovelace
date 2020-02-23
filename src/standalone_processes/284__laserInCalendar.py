@@ -43,7 +43,7 @@ def point_inside_polygon(x, y, poly):
         p1x,p1y = p2x,p2y
     return inside
 
-@subscription(["region $id at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4", "region $id has name calendar"])
+@subscription(["$ $ region $id at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4", "$ $ region $id has name calendar"])
 def sub_callback_calibration(results):
     global projector_calibrations, projection_matrixes, CAM_WIDTH, CAM_HEIGHT
     logging.info("sub_callback_calibration")
