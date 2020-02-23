@@ -10,8 +10,8 @@ import logging
 
 helper2.rpc_url = "10.0.0.22"
 
-CAM_WIDTH = 1920
-CAM_HEIGHT = 1080
+CAM_WIDTH = 1280
+CAM_HEIGHT = 720
 THRESHOLD = 20
 DEBUG = False
 last_data = []
@@ -78,4 +78,4 @@ while True:
     claim_data(dots)
     if DEBUG:
       cv2.waitKey(1)
-    time.sleep(0.1)
+    time.sleep(0.2)
