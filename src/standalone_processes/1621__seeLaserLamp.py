@@ -63,7 +63,7 @@ def claim_data(data):
             ["text", "at"],
             ["integer", str(x)],
             ["integer", str(y)],
-            ["integer", str(v)],
+            # ["integer", str(v)],
             ["text", "@"],
             ["integer", str(currentTimeMs)]
         ]})
