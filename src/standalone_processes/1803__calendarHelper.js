@@ -29,7 +29,7 @@ room.on(`wish calendar day $dateString was highlighted with color $color`,
                     Math.floor(CANVAS_WIDTH / 7),
                     Math.floor(CANVAS_HEIGHT / 5)
                 )
-                room.draw(ill, "miniprojector")
+                room.draw(ill, "web2")
 
             });
         }
