@@ -18,6 +18,19 @@ app.get('/status', (req, res) => {
     });
 })
 
+room.on(
+    `region $id at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4`,
+    `region $id has name calibration`,
+    results => {
+        room.subscriptionPrefix(1);
+        if (!!results) {
+            results.forEach(({ x1, y1, x2, y2, x3, y3, x4, y4 }) => {
+                calibration = [x1, y1, x2, y2, x3, y3, x4, y4];
+            });
+        }
+        room.subscriptionPostfix();
+    })
+
 room.on(`draw graphics $graphics on web2`,
     results => {
         room.subscriptionPrefix(2);
