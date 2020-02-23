@@ -59,7 +59,7 @@ function cmd() {
     export DISPLAY=:0
     python3 src/standalone_processes/1621__seeLaserLamp.py &
     sudo python3 src/standalone_processes/650__keyboard.py &
-    chromium-browser --kiosk --app=http://progspaceweb2.ngrok.io
+    chromium-browser --kiosk --enable-webgl --ignore-gpu-blacklist --app=http://progspaceweb2.ngrok.io
     echo -e "booting"
   elif [ "$1" == "lasersocksstart" ]
   then
