@@ -1,8 +1,8 @@
 var longPollingActive = true;
 var ignore_next_update = false;
 var previousResultJSONString;
-var CANVAS_WIDTH = 1920;
-var CANVAS_HEIGHT = 1080;
+var CANVAS_WIDTH = 1280;
+var CANVAS_HEIGHT = 720;
 
 function drawGraphics($rawCanvas, graphics) {
     var ctx = $rawCanvas.getContext('2d');
