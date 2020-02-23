@@ -1,7 +1,10 @@
 from helper2 import init, claim, retract, prehook, subscription, batch, get_my_id_str, check_server_connection
+import helper2
 import keyboard
 import time
 import logging
+
+helper2.rpc_url = "10.0.0.22"
 
 init(__file__, skipListening=True)
 batch([{"type": "retract", "fact": [["id", get_my_id_str()], ["postfix", ""]]}])
