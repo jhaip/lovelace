@@ -145,7 +145,18 @@ socket.onopen = () => {
 }
 
 socket.onmessage = e => {
-    console.log('Message from server:', event.data)
+    const myJsonString = event.data;
+    const myJson = JSON.parse(myJsonString);
+    if (myJsonString !== previousResultJSONString) {
+        if (ignore_next_update) {
+            ignore_next_update = false;
+        } else {
+            update(myJson.calibration, myJson.graphics);
+        }
+    } else {
+        console.log("ignoring update because nothing changed");
+    }
+    previousResultJSONString = myJsonString;
 }
 
 async function loop() {
@@ -173,4 +184,4 @@ async function loop() {
     }
 }
 
-loop();
+// loop();
