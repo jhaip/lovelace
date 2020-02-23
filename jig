@@ -47,6 +47,16 @@ function cmd() {
     python3 src/standalone_processes/1620__seeLaser.py &
     sudo python3 src/standalone_processes/649__keyboard.py &
     echo -e "booting"
+  elif [ "$1" == "lampstart" ]
+  then
+    v4l2-ctl \
+      --set-ctrl=brightness=10 \
+      --set-ctrl=contrast=0 \
+      --set-ctrl=saturation=-100 \
+      --set-ctrl=sharpness=128 \
+      --set-ctrl=exposure_time_absolute=100
+    python3 src/standalone_processes/1621__seeLaser.py &
+    echo -e "booting"
   elif [ "$1" == "lasersocksstart" ]
   then
     cd new-backend/go-server
