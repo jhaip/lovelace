@@ -84,7 +84,7 @@ function drawGraphics($rawCanvas, graphics) {
     });
 }
 
-function updatePerspectiveCanvas($rawCanvas, calibration) {
+function updatePerspectiveCanvas($rawCanvas, calibration, calendarRegion) {
     // try to create a WebGL canvas (will fail if WebGL isn't supported)
     try {
         var canvas = fx.canvas();
@@ -94,18 +94,23 @@ function updatePerspectiveCanvas($rawCanvas, calibration) {
     }
 
     var texture = canvas.texture($rawCanvas);
+    const SCREEN_SIZE = [0, 0, CANVAS_WIDTH, 0, CANVAS_WIDTH, CANVAS_HEIGHT, 0, CANVAS_HEIGHT];
     const BASE_CALIBRATION = [0, 0, CANVAS_WIDTH, 0, CANVAS_WIDTH, CANVAS_HEIGHT, 0, CANVAS_HEIGHT];
     canvas
         .draw(texture)
         .perspective(
-            BASE_CALIBRATION,
-            calibration || BASE_CALIBRATION
+            [0, 0, CANVAS_WIDTH, 0, CANVAS_WIDTH, CANVAS_HEIGHT, 0, CANVAS_HEIGHT], // draw illumination on calendar program 1280x720
+            calendarRegion || BASE_CALIBRATION 
+        )
+        .perspective( // these may be switched
+            calibration || BASE_CALIBRATION,
+            SCREEN_SIZE
         )
         .update();
     $rawCanvas.parentNode.insertBefore(canvas, $rawCanvas);
 }
 
-function update(calibration, graphics) {
+function update(calibration, graphics, calendarRegion) {
     document.body.innerHTML = '';
     let $rawCanvas = document.createElement('canvas');
     $rawCanvas.setAttribute("class", "hide");
@@ -113,7 +118,7 @@ function update(calibration, graphics) {
     $rawCanvas.setAttribute("height", CANVAS_HEIGHT);
     document.body.appendChild($rawCanvas);
     drawGraphics($rawCanvas, graphics);
-    updatePerspectiveCanvas($rawCanvas, calibration);
+    updatePerspectiveCanvas($rawCanvas, calibration, calendarRegion);
 }
 
 // Test:
@@ -126,7 +131,8 @@ function update(calibration, graphics) {
 //         { "type": "rectangle", "options": { "x": 10, "y": 10, "w": 60, "h": 60 } },
 //         { "type": "rectangle", "options": { "x": 100, "y": 10, "w": 100, "h": 60 } },
 //         { "type": "text", "options": { "x": 200, "y": 200, "text": "Hello World!" } },
-//     ]
+//     ],
+//     null
 // );
 
 // curl - X POST http://10.0.0.38:5000/cleanup-claim -H 'Content-Type: application/json' -H 'cache-control: no-cache' -d '{"claim":"region region1 at 176 20 1736 13 1820 980 176 1016", "retract": "$ $ wish paper $ at $ would be printed"}'
@@ -151,7 +157,7 @@ socket.onmessage = e => {
         if (ignore_next_update) {
             ignore_next_update = false;
         } else {
-            update(myJson.calibration, myJson.graphics);
+            update(myJson.calibration, myJson.graphics, myJson.calendarRegion);
         }
     } else {
         console.log("ignoring update because nothing changed");
@@ -168,7 +174,7 @@ async function loop() {
             if (ignore_next_update) {
                 ignore_next_update = false;
             } else {
-                update(myJson.calibration, myJson.graphics);
+                update(myJson.calibration, myJson.graphics, myJson.calendarRegion);
             }
         } else {
             console.log("ignoring update because nothing changed");

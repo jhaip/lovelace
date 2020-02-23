@@ -13,11 +13,13 @@ const expressWs = enableWs(app)
 
 var graphicsCache = [];
 var calibration = null;
+var calendarRegion = null;
 
 app.get('/status', (req, res) => {
     res.status(200).send({
         'calibration': calibration,
-        'graphics': graphicsCache
+        'graphics': graphicsCache,
+        'calendarRegion': calendarRegion
     });
 })
 
@@ -43,7 +45,29 @@ room.on(
             expressWs.getWss().clients.forEach(client => {
                 client.send(JSON.stringify({
                     'calibration': calibration,
-                    'graphics': graphicsCache
+                    'graphics': graphicsCache,
+                    'calendarRegion': calendarRegion
+                }));
+            });
+        }
+        room.subscriptionPostfix();
+    })
+
+
+room.on(
+    `region $id at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4`,
+    `region $id has name calendar`,
+    results => {
+        room.subscriptionPrefix(1);
+        if (!!results) {
+            results.forEach(({ x1, y1, x2, y2, x3, y3, x4, y4 }) => {
+                calendarRegion = [x1, y1, x2, y2, x3, y3, x4, y4];
+            });
+            expressWs.getWss().clients.forEach(client => {
+                client.send(JSON.stringify({
+                    'calibration': calibration,
+                    'graphics': graphicsCache,
+                    'calendarRegion': calendarRegion
                 }));
             });
         }
@@ -62,7 +86,8 @@ room.on(`draw graphics $graphics on web2`,
             expressWs.getWss().clients.forEach(client => {
                 client.send(JSON.stringify({
                     'calibration': calibration,
-                    'graphics': graphicsCache
+                    'graphics': graphicsCache,
+                    'calendarRegion': calendarRegion
                 }));
             })
         }
