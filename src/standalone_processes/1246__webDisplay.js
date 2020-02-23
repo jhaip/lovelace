@@ -1,4 +1,5 @@
 const express = require('express')
+const enableWs = require('express-ws')
 const bodyParser = require("body-parser");
 const fs = require('fs');
 const { room, myId, scriptName, run } = require('../helper2')(__filename);
@@ -8,6 +9,7 @@ const port = 3012;
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.static('./src/web-display'))
+const expressWs = enableWs(app)
 
 var graphicsCache = [];
 var calibration = null;
@@ -19,6 +21,18 @@ app.get('/status', (req, res) => {
     });
 })
 
+app.ws('/echo', (ws, req) => {
+    ws.
+
+    ws.on('message', msg => {
+        console.log("received message");
+    })
+
+    ws.on('close', () => {
+        console.log('WebSocket was closed')
+    })
+})
+
 room.on(
     `region $id at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4`,
     `region $id has name calibration`,
@@ -27,6 +41,12 @@ room.on(
         if (!!results) {
             results.forEach(({x1, y1, x2, y2, x3, y3, x4, y4}) => {
                 calibration = [x1, y1, x2, y2, x3, y3, x4, y4];
+            });
+            expressWs.getWss().clients.forEach(client => {
+                client.send({
+                    'calibration': calibration,
+                    'graphics': graphicsCache
+                });
             });
         }
         room.subscriptionPostfix();
@@ -41,6 +61,12 @@ room.on(`draw graphics $graphics on $`,
                 let parsedGraphics = JSON.parse(graphics)
                 graphicsCache = graphicsCache.concat(parsedGraphics);
             });
+            expressWs.getWss().clients.forEach(client => {
+                client.send({
+                    'calibration': calibration,
+                    'graphics': graphicsCache
+                });
+            })
         }
         room.subscriptionPostfix();
     })
