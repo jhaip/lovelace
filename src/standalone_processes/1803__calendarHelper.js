@@ -1,7 +1,7 @@
 const { room, myId, run } = require('../helper2')(__filename);
 
-const CANVAS_WIDTH = 1920;
-const CANVAS_HEIGHT = 1080;
+const CANVAS_WIDTH = 1280;
+const CANVAS_HEIGHT = 720;
 
 function getWeekNum(d) {
     let monthDayNumber = d.getDate();
@@ -51,7 +51,7 @@ room.on(`laser at calendar $x $y @ $t`,
                     Math.floor(CANVAS_WIDTH / 7),
                     Math.floor(CANVAS_HEIGHT / 5)
                 )
-                room.draw(ill, "miniprojector")
+                room.draw(ill, "web2")
 
             });
         }
