@@ -22,8 +22,6 @@ app.get('/status', (req, res) => {
 })
 
 app.ws('/echo', (ws, req) => {
-    ws.
-
     ws.on('message', msg => {
         console.log("received message");
     })
