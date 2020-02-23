@@ -77,8 +77,9 @@ def sub_callback_laser_dots(results):
         ["postfix", ""],
     ]})
     for result in results:
-        pt = project(LASER_CAMERA_ID, result["x"], result["y"]),
-        logging.info("DOT", result["x"], result["y"], pt)
+        ptRaw = project(LASER_CAMERA_ID, result["x"], result["y"]),
+        pt = ptRaw[0]
+        logging.info("DOT", result["x"], result["y"], pt[0], pt[1])
         if pt[0] >= 0 and pt[1] >= 0 and pt[0] < 7 and pt[1] < 5:
             grid_x = int(pt[0])
             grid_y = int(pt[1])
