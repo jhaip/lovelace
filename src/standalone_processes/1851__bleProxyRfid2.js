@@ -51,7 +51,7 @@ function connect(peripheral) {
                         room.assert(`ArgonBLE read ${characteristicValue.slice(24, 32)} on sensor 5`);
                         room.flush();
 
-                        characteristicValue = last_characteristic_value;
+                        last_characteristic_value = characteristicValue;
                     }
                 });
 
