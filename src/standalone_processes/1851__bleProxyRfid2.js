@@ -17,8 +17,7 @@ var strippedMAC = function (mac) {
 const ARGON_RFID_SERVICE = uuid('4677062c-ad02-4034-9abf-98581772427c');
 const ARGON_RFID_CHARACTERISTIC = uuid('dc13b36a-3499-46b0-ac11-5ac0173c4cc5');
 
-var active_tone_characteristic = null;
-var active_neopixel_characteristic = null;
+var last_characteristic_value = null;
 
 // when the radio turns on, start scanning:
 noble.on('stateChange', function scan(state) {
@@ -41,11 +40,19 @@ function connect(peripheral) {
                 var characteristic = characteristics[0];
 
                 characteristic.on('data', function (data, isNotification) {
-                    const characteristicValue = data.toString('utf8')
+                    const characteristicValue = data.toString('hex');
                     console.log(`value is now: ${characteristicValue}`);
-                    // room.retractMine(`circuit playground "LIGHT" has value $`);
-                    // room.assert(`circuit playground "LIGHT" has value ${lightValue}`);
-                    // room.flush();
+
+                    if (characteristicValue !== last_characteristic_value) {
+                        room.retractMine(`ArgonBLE read $ on sensor $`);
+                        room.assert(`ArgonBLE read ${characteristicValue.slice(0, 8)} on sensor 1`);
+                        room.assert(`ArgonBLE read ${characteristicValue.slice(8, 16)} on sensor 3`);
+                        room.assert(`ArgonBLE read ${characteristicValue.slice(16, 24)} on sensor 4`);
+                        room.assert(`ArgonBLE read ${characteristicValue.slice(24, 32)} on sensor 5`);
+                        room.flush();
+
+                        characteristicValue = last_characteristic_value;
+                    }
                 });
 
                 // to enable notify
@@ -61,8 +68,7 @@ function connect(peripheral) {
 // noble.on('discover', self.connect);
 noble.on('discover', function (peripheral) {
     console.log(`inside discover ${peripheral.address}`)
-    // TODO: update MAC
-    if (strippedMAC(peripheral.address) !== strippedMAC('d1:d3:b6:0c:9b:95')) {
+    if (strippedMAC(peripheral.address) !== strippedMAC('db:4f:87:70:71:b7')) {
         return;
     } else {
         console.log("FOUND ARGON!");
