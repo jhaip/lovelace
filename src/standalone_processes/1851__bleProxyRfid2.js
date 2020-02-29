@@ -14,31 +14,8 @@ var strippedMAC = function (mac) {
 }
 
 // https://learn.adafruit.com/bluefruit-playground-app/ble-services
-const BLUEFRUIT_BUTTON_SERVICE = 'adaf0600c33242a893bd25e905756cb8';
-const BLUEFRUIT_LIGHT_SENSOR_SERVICE = 'adaf0300c33242a893bd25e905756cb8';
-const BLUEFRUIT_TONE_SERVICE = 'adaf0c00c33242a893bd25e905756cb8';
-const BLUEFRUIT_NEOPIXEL_SERVICE = 'adaf0900c33242a893bd25e905756cb8';
-const SERVICE_CHARACTERISTICS = {
-    [BLUEFRUIT_BUTTON_SERVICE]: ['adaf0601c33242a893bd25e905756cb8'],
-    [BLUEFRUIT_LIGHT_SENSOR_SERVICE]: ['adaf0301c33242a893bd25e905756cb8'],
-    [BLUEFRUIT_TONE_SERVICE]: ['adaf0c01c33242a893bd25e905756cb8'],
-    [BLUEFRUIT_NEOPIXEL_SERVICE]: [
-        'adaf0901c33242a893bd25e905756cb8',
-        'adaf0902c33242a893bd25e905756cb8',
-        'adaf0903c33242a893bd25e905756cb8',
-        'adaf0904c33242a893bd25e905756cb8'
-    ]
-}
-const SERVICE_NAMES = {
-    [BLUEFRUIT_BUTTON_SERVICE]: 'buttons',
-    [BLUEFRUIT_LIGHT_SENSOR_SERVICE]: 'light_sensor',
-    [BLUEFRUIT_TONE_SERVICE]: 'tone',
-    [BLUEFRUIT_NEOPIXEL_SERVICE]: 'neopixel'
-}
-const CONVERSION_FUNC = {
-    [BLUEFRUIT_BUTTON_SERVICE]: data => data.readUInt8(0),
-    [BLUEFRUIT_LIGHT_SENSOR_SERVICE]: data => data.readFloatLE(0)
-}
+const ARGON_RFID_SERVICE = uuid('4677062c-ad02-4034-9abf-98581772427c');
+const ARGON_RFID_CHARACTERISTIC = uuid('dc13b36a-3499-46b0-ac11-5ac0173c4cc5');
 
 var active_tone_characteristic = null;
 var active_neopixel_characteristic = null;
@@ -51,84 +28,30 @@ noble.on('stateChange', function scan(state) {
 });
 
 function connect(peripheral) {
-    // adaf0600c33242a893bd25e905756cb8 are the bluefruit buttons
-    const supportedServices = [BLUEFRUIT_BUTTON_SERVICE, BLUEFRUIT_LIGHT_SENSOR_SERVICE, BLUEFRUIT_TONE_SERVICE, BLUEFRUIT_NEOPIXEL_SERVICE];
+    const supportedServices = [ARGON_RFID_SERVICE];
     peripheral.discoverServices(supportedServices);
     console.log("started discovering services");
     peripheral.once('servicesDiscover', function (services) {
         services.forEach(service => {
             var serviceUuid = `${service.uuid}`;
-            console.log(`discovered ${SERVICE_NAMES[serviceUuid]} service ${service}`);
+            console.log(`discovered service ${service}`);
 
-            service.discoverCharacteristics(SERVICE_CHARACTERISTICS[serviceUuid], function (error, characteristics) {
-                console.log(`discovered ${SERVICE_NAMES[serviceUuid]} characteristics`);
-                const serviceName = SERVICE_NAMES[serviceUuid];
-                if (serviceName === 'tone') {
-                    var characteristic = characteristics[0];
-                    active_tone_characteristic = characteristic;
-                    stopTone();
-                } else if (serviceName === 'neopixel') {
-                    // var characteristic = characteristics[0];
-                    characteristics.forEach(characteristic => {
-                        // console.log(characteristic);
-                        var characteristicUuid = `${characteristic.uuid}`;
-                        if (characteristicUuid === SERVICE_CHARACTERISTICS[BLUEFRUIT_NEOPIXEL_SERVICE][0]) {
-                            // set pixel pin to 8
-                            characteristic.write(Buffer.from([0x08]), true, function (error) {
-                                console.log('wrote neopixel pixel pin service');
-                                console.log(error);
-                            });
-                        }
-                        if (characteristicUuid === SERVICE_CHARACTERISTICS[BLUEFRUIT_NEOPIXEL_SERVICE][1]) {
-                            // set pixel pin type to 0 = WS2812 (NeoPixel), 800kHz
-                            characteristic.write(Buffer.from([0x00]), true, function (error) {
-                                console.log('wrote neopixel pixel pin type');
-                                console.log(error);
-                            });
-                        }
-                        if (characteristicUuid === SERVICE_CHARACTERISTICS[BLUEFRUIT_NEOPIXEL_SERVICE][2]) {
-                            active_neopixel_characteristic = characteristic;
-                            update_neopixels(neopixel_cache);
-                        }
-                        if (characteristicUuid === SERVICE_CHARACTERISTICS[BLUEFRUIT_NEOPIXEL_SERVICE][3]) {
-                            // set buffer size to 30
-                            characteristic.write(Buffer.from([0x1E, 0x00]), true, function (error) {
-                                console.log('wrote neopixel pixel buffer size');
-                                console.log(error);
-                            });
-                        }
-                    })
-                } else {
-                    var characteristic = characteristics[0];
+            service.discoverCharacteristics([ARGON_RFID_CHARACTERISTIC], function (error, characteristics) {
+                console.log(`discovered characteristics`);
+                var characteristic = characteristics[0];
 
-                    characteristic.on('data', function (data, isNotification) {
-                        let characteristicValue = CONVERSION_FUNC[serviceUuid](data);
-                        console.log(`${SERVICE_NAMES[serviceUuid]} is now: ${characteristicValue}`);
+                characteristic.on('data', function (data, isNotification) {
+                    const characteristicValue = data.toString('utf8')
+                    console.log(`value is now: ${characteristicValue}`);
+                    // room.retractMine(`circuit playground "LIGHT" has value $`);
+                    // room.assert(`circuit playground "LIGHT" has value ${lightValue}`);
+                    // room.flush();
+                });
 
-                        if (SERVICE_NAMES[serviceUuid] === 'buttons') {
-                            let slideValue = (characteristicValue & 1);
-                            let buttonValueA = (characteristicValue & 2) >> 1;
-                            let buttonValueB = (characteristicValue & 4) >> 2;
-                            room.retractMine(`circuit playground "SLIDE" has value $`);
-                            room.assert(`circuit playground "SLIDE" has value ${slideValue}`);
-                            room.retractMine(`circuit playground "BUTTON_A" has value $`);
-                            room.assert(`circuit playground "BUTTON_A" has value ${buttonValueA}`);
-                            room.retractMine(`circuit playground "BUTTON_B" has value $`);
-                            room.assert(`circuit playground "BUTTON_B" has value ${buttonValueB}`);
-                            room.flush();
-                        } else if (SERVICE_NAMES[serviceUuid] === 'light_sensor') {
-                            let lightValue = Math.floor(characteristicValue);
-                            room.retractMine(`circuit playground "LIGHT" has value $`);
-                            room.assert(`circuit playground "LIGHT" has value ${lightValue}`);
-                            room.flush();
-                        }
-                    });
-
-                    // to enable notify
-                    characteristic.subscribe(function (error) {
-                        console.log(`${SERVICE_NAMES[serviceUuid]} notification on`);
-                    });
-                }
+                // to enable notify
+                characteristic.subscribe(function (error) {
+                    console.log(`notification on`);
+                });
             });
         });
     });
