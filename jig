@@ -215,7 +215,7 @@ function cmd() {
     sudo python3 src/standalone_processes/791__thermalPrinterLinux.py &
     sudo python3 src/standalone_processes/1192__circuitPythonProxy.py &
     sudo python3 src/standalone_processes/649__keyboard.py &
-    sudo /home/jacob/.nvm/versions/node/v10.6.0/bin/node src/standalone_processes/1850__bleProxyRfid.js &
+    sudo /home/jacob/.nvm/versions/node/v10.6.0/bin/node src/standalone_processes/1851__bleProxyRfid2.js &
     # sudo /home/jacob/.nvm/versions/node/v10.6.0/bin/node src/standalone_processes/1193__bluefruitProxy.js &
     python3 src/standalone_processes/1700__projectorDisplay.py &
     # ngrok http -subdomain=progspacemasterlist 3013 > /dev/null &
