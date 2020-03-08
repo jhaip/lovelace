@@ -29,7 +29,7 @@ function handleRequest(percentValue) {
 }
 
 room.on(
-    `wish plant lamp was at ${p} percent`,
+    `wish plant lamp was at $p percent`,
     results => {
         room.subscriptionPrefix(1);
         if (!!results) {
