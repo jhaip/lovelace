@@ -37,6 +37,7 @@ function handleRequest() {
                     if (dataValueArr.length === 2) {
                         const sensorName = dataValueArr[0];
                         const sensorValue = dataValueArr[1];
+                        room.retractMine(`Photon says "${sensorName}" is $`)
                         room.assert(`Photon says "${sensorName}" is ${sensorValue}`)
                         room.flush();
                     }
