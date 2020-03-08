@@ -21,7 +21,7 @@ function handleRequest() {
             })
     } else {
         console.log("getting event stream!")
-        particle.getEventStream({ name: 'rgb_lights', auth: token }).then(function (stream) {
+        particle.getEventStream({ deviceId: '3c002f000e47343432313031', auth: token }).then(function (stream) {
             stream.on('event', function (data) {
                 console.log("Event: ", data);
                 // data looks like this:
