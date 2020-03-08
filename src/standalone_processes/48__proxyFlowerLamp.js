@@ -24,6 +24,11 @@ function handleRequest(percentValue) {
                 console.log('Function called succesfully:', data);
             }, err => {
                 console.log('An error occurred:', err);
+            })
+            .catch(err => {
+                console.error("ERROR:")
+                console.error(err);
+                // TODO: make a claim about the error
             });
     }
 }

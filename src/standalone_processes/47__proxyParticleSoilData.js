@@ -20,6 +20,7 @@ function handleRequest() {
                 handleRequest();
             })
     } else {
+        console.log("getting event stream!")
         particle.getEventStream({ name: 'rgb_lights', auth: token }).then(function (stream) {
             stream.on('event', function (data) {
                 console.log("Event: ", data);
@@ -43,6 +44,11 @@ function handleRequest() {
             stream.on('error', function (error) {
                 console.log('Error in handler', error);
             });
+        })
+        .catch(err => {
+            console.error("ERROR:")
+            console.error(err);
+            // TODO: make a claim about the error
         });
     }
 }
