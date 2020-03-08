@@ -36,7 +36,7 @@ function handleRequest() {
                     const dataValueArr = data.data.split(":");
                     if (dataValueArr.length === 2) {
                         const sensorName = dataValueArr[0];
-                        const sensorValue = dataValueArr[1].toInt();
+                        const sensorValue = dataValueArr[1];
                         room.assert(`Photon says "${sensorName}" is ${sensorValue}`)
                     }
                 }
