@@ -38,6 +38,7 @@ function handleRequest() {
                         const sensorName = dataValueArr[0];
                         const sensorValue = dataValueArr[1];
                         room.assert(`Photon says "${sensorName}" is ${sensorValue}`)
+                        room.flush();
                     }
                 }
             });
