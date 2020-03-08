@@ -106,4 +106,9 @@ room.assert(`camera 99 sees paper 281 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2)
 // Regiom debug viewwer
 room.assert(`camera 99 sees paper 12 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 
+// Proxy Particle Soil Data
+room.assert(`camera 99 sees paper 47 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// Proxy Flower Lamp
+room.assert(`camera 99 sees paper 48 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+
 run();
