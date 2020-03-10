@@ -26,12 +26,15 @@ room.onRaw(`$ $ ArgonBLE read $value on sensor $sensorId`,
                 turtles = [];
                 if (stack.length > 0 && stack[0] === "turtle") {
                     const hasSpiral = stack.indexOf("spiral") > 0;
+                    const hasTail = stack.indexOf("pen") > 0;
                     turtles.push({
                         x: 0,
                         y: 0,
                         heading: Math.random() * 2.0 * Math.PI,
-                        speed: 1,
-                        movementType: hasSpiral ? "spiral" : "random"
+                        speed: 3,
+                        movementType: hasSpiral ? "spiral" : "random",
+                        hasTail: hasTail,
+                        trail: []
                     });
                 }
             }
@@ -48,6 +51,10 @@ setInterval(() => {
         } else if (turtles[i].movementType === "spiral") {
             turtles[i].heading += 1.0 / (Math.PI * 2.0);
         }
+        if (turtles[i].hasTail) {
+            turtles[i].tail.push([turtles[i].x, turtles[i].y, 0, 0, 255]);
+            turtles[i].tail = turtles[i].tail.slice(0, 1000); // limits length of tail
+        }
         turtles[i].x += turtles[i].speed * Math.cos(turtles[i].heading);
         turtles[i].y += turtles[i].speed * Math.sin(turtles[i].heading);
     }
@@ -58,6 +65,13 @@ setInterval(() => {
     ill.translate(300, 300);
     ill.fill("green")
     for (let i = 0; i < turtles.length; i += 1) {
+        for (let t = 0; t < turtles[i].tail.length; t += 1) {
+            const tailPoint = turtles[i].tail[t];
+            ill.push();
+            ill.fill(tailPoint[2], tailPoint[3], tailPoint[4])
+            ill.ellipse(-10 + tailPoint[0], -10 + tailPoint[1], 20, 20);
+            ill.pop();
+        }
         ill.push();
         ill.translate(turtles[i].x, turtles[i].y);
         ill.ellipse(-15, -15, 30, 30);
