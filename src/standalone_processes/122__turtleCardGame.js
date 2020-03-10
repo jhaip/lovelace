@@ -34,7 +34,7 @@ room.onRaw(`$ $ ArgonBLE read $value on sensor $sensorId`,
                         speed: 3,
                         movementType: hasSpiral ? "spiral" : "random",
                         hasTail: hasTail,
-                        trail: []
+                        tail: []
                     });
                 }
             }
