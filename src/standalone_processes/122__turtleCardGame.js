@@ -29,8 +29,8 @@ room.onRaw(`$ $ ArgonBLE read $value on sensor $sensorId`,
                     const hasTail = stack.indexOf("pen") > 0;
                     const hasRainbow = stack.indexOf("rainbow") > 0;
                     turtles.push({
-                        x: 0,
-                        y: 0,
+                        x: 200 + Math.random() * 800,
+                        y: 200 + Math.random() * 300,
                         heading: Math.random() * 2.0 * Math.PI,
                         speed: 3,
                         movementType: hasSpiral ? "spiral" : "random",
@@ -111,7 +111,7 @@ setInterval(() => {
     room.cleanup();
     let ill = room.newIllumination()
     ill.push();
-    ill.translate(300, 300);
+    ill.translate(600, 400);
     ill.fill("green")
     for (let i = 0; i < turtles.length; i += 1) {
         for (let t = 0; t < turtles[i].tail.length; t += 1) {
