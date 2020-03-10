@@ -27,12 +27,15 @@ room.onRaw(`$ $ ArgonBLE read $value on sensor $sensorId`,
                 if (stack.length > 0 && stack[0] === "turtle") {
                     const hasSpiral = stack.indexOf("spiral") > 0;
                     const hasTail = stack.indexOf("pen") > 0;
+                    const hasRainbow = stack.indexOf("rainbow") > 0;
                     turtles.push({
                         x: 0,
                         y: 0,
                         heading: Math.random() * 2.0 * Math.PI,
                         speed: 3,
                         movementType: hasSpiral ? "spiral" : "random",
+                        hasRainbowTail: hasRainbow,
+                        lastRainbowValue: 0,
                         hasTail: hasTail,
                         tail: []
                     });
@@ -42,6 +45,36 @@ room.onRaw(`$ $ ArgonBLE read $value on sensor $sensorId`,
         room.subscriptionPostfix();
     })
 
+function HSVtoRGB(h, s, v) {
+    var r, g, b, i, f, p, q, t;
+    if (arguments.length === 1) {
+        s = h.s, v = h.v, h = h.h;
+    }
+    i = Math.floor(h * 6);
+    f = h * 6 - i;
+    p = v * (1 - s);
+    q = v * (1 - f * s);
+    t = v * (1 - (1 - f) * s);
+    switch (i % 6) {
+        case 0: r = v, g = t, b = p; break;
+        case 1: r = q, g = v, b = p; break;
+        case 2: r = p, g = v, b = t; break;
+        case 3: r = p, g = q, b = v; break;
+        case 4: r = t, g = p, b = v; break;
+        case 5: r = v, g = p, b = q; break;
+    }
+    return {
+        r: Math.round(r * 255),
+        g: Math.round(g * 255),
+        b: Math.round(b * 255)
+    };
+}
+
+function rainbow(p) {
+    var rgb = HSVtoRGB(p / 100.0 * 0.85, 1.0, 1.0);
+    return [rgb.r, rgb.g, rgb.b];
+}
+
 setInterval(() => {
     console.log(turtles);
     // update
@@ -50,9 +83,25 @@ setInterval(() => {
             turtles[i].heading = Math.random() * 2.0 * Math.PI;
         } else if (turtles[i].movementType === "spiral") {
             turtles[i].heading += 1.0 / (Math.PI * 2.0);
+            turtles[i].speed += 0.2;
         }
         if (turtles[i].hasTail) {
-            turtles[i].tail.push([turtles[i].x, turtles[i].y, 0, 0, 255]);
+            if (turtles[i].hasRainbowTail) {
+                lastRainbowValue += 1;
+                if (lastRainbowValue > 100) {
+                    lastRainbowValue = 0;
+                }
+                const rainbowColorRGB = rainbow(lastRainbowValue);
+                turtles[i].tail.push([
+                    turtles[i].x,
+                    turtles[i].y,
+                    rainbowColorRGB[0],
+                    rainbowColorRGB[1],
+                    rainbowColorRGB[2]
+                ]);
+            } else {
+                turtles[i].tail.push([turtles[i].x, turtles[i].y, 100, 100, 100]);
+            }
             turtles[i].tail = turtles[i].tail.slice(0, 1000); // limits length of tail
         }
         turtles[i].x += turtles[i].speed * Math.cos(turtles[i].heading);
@@ -68,6 +117,7 @@ setInterval(() => {
         for (let t = 0; t < turtles[i].tail.length; t += 1) {
             const tailPoint = turtles[i].tail[t];
             ill.push();
+            ill.nostroke();
             ill.fill(tailPoint[2], tailPoint[3], tailPoint[4])
             ill.ellipse(-10 + tailPoint[0], -10 + tailPoint[1], 20, 20);
             ill.pop();
