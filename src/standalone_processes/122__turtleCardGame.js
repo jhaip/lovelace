@@ -39,7 +39,7 @@ room.onRaw(`$ $ ArgonBLE read $value on sensor $sensorId`,
         room.subscriptionPostfix();
     })
 
-setTimeout(() => {
+setInterval(() => {
     console.log(turtles);
     // update
     for (let i = 0; i < turtles.length; i += 1) {
