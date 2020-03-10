@@ -87,11 +87,11 @@ setInterval(() => {
         }
         if (turtles[i].hasTail) {
             if (turtles[i].hasRainbowTail) {
-                lastRainbowValue += 1;
-                if (lastRainbowValue > 100) {
-                    lastRainbowValue = 0;
+                turtles[i].lastRainbowValue += 1;
+                if (turtles[i].lastRainbowValue > 100) {
+                    turtles[i].lastRainbowValue = 0;
                 }
-                const rainbowColorRGB = rainbow(lastRainbowValue);
+                const rainbowColorRGB = rainbow(turtles[i].lastRainbowValue);
                 turtles[i].tail.push([
                     turtles[i].x,
                     turtles[i].y,
