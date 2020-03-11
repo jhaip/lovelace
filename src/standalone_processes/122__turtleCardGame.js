@@ -123,6 +123,25 @@ setInterval(() => {
         turtles[i].x += turtles[i].speed * Math.cos(turtles[i].heading);
         turtles[i].y += turtles[i].speed * Math.sin(turtles[i].heading);
     }
+    for (let i = 0; i < emitters.length; i += 1) {
+        if (emitters[i].hasTurtle) {
+            if (Math.floor(Math.random() * 10) === 1) {
+                // create a new turtle
+                turtles.push({
+                    x: 200 + Math.random() * 800 - 500,
+                    y: 200 + Math.random() * 300 - 250,
+                    heading: Math.random() * 2.0 * Math.PI,
+                    speed: 3,
+                    movementType: emitters[i].hasSpiral ? "spiral" : "random",
+                    isRainbow: emitters[i].isRainbow,
+                    hasRainbowTail: emitters[i].hasRainbowTail,
+                    lastRainbowValue: Math.floor(Math.random() * 100),
+                    hasTail: emitters[i].hasTail,
+                    tail: []
+                });
+            }
+        }
+    }
     // draw
     room.cleanup();
     let ill = room.newIllumination()
@@ -157,6 +176,11 @@ setInterval(() => {
         ill.ellipse(-15, -15, 30, 30);
         ill.pop();
         ill.pop();
+    }
+    for (let i = 0; i < emitters.length; i += 1) {
+        ill.nostroke();
+        ill.fill("white");
+        ill.ellipse(emitters[i].x - 5, emitters[i].x - 5, 10, 10)
     }
     ill.pop();
     room.draw(ill, "web2")
