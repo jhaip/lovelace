@@ -3,6 +3,7 @@ const sensorOrder = [4, 5, 3, 1];
 
 var lastStack = [];
 var turtles = [];
+var emitters = [];
 
 room.onRaw(`$ $ ArgonBLE read $value on sensor $sensorId`,
     `$ $ paper $paperNumber has RFID $value`,
@@ -27,18 +28,33 @@ room.onRaw(`$ $ ArgonBLE read $value on sensor $sensorId`,
                 if (stack.length > 0 && stack[0] === "turtle") {
                     const hasSpiral = stack.indexOf("spiral") > 0;
                     const hasTail = stack.indexOf("pen") > 0;
-                    const hasRainbow = stack.indexOf("rainbow") > 0;
+                    const hasRainbowTail = hasTail && stack.indexOf("rainbow") > stack.indexOf("pen");
+                    const isRainbow = stack.indexOf("rainbow") > 0 && (!hasTail || stack.indexOf("rainbow") < stack.indexOf("pen"))
                     turtles.push({
                         x: 200 + Math.random() * 800,
                         y: 200 + Math.random() * 300,
                         heading: Math.random() * 2.0 * Math.PI,
                         speed: 3,
                         movementType: hasSpiral ? "spiral" : "random",
-                        hasRainbowTail: hasRainbow,
+                        isRainbow: isRainbow,
+                        hasRainbowTail: hasRainbowTail,
                         lastRainbowValue: 0,
                         hasTail: hasTail,
                         tail: []
                     });
+                } else if (stack.length > 0 && stack[0] === "emitter") {
+                    const hasTurtle = stack.indexOf("turtle") > 0;
+                    const hasSpiral = stack.indexOf("spiral") > stack.indexOf("turtle");
+                    const hasTail = stack.indexOf("pen") > stack.indexOf("turtle");
+                    const hasRainbow = stack.indexOf("rainbow") > stack.indexOf("turtle");
+                    emitters.push({
+                        x: 200 + Math.random() * 800,
+                        y: 200 + Math.random() * 300,
+                        hasTurtle,
+                        hasSpiral,
+                        hasTail,
+                        hasRainbow
+                    })
                 }
             }
         }
@@ -85,12 +101,12 @@ setInterval(() => {
             turtles[i].heading += 1.0 / (Math.PI * 2.0);
             turtles[i].speed += 0.2;
         }
+        turtles[i].lastRainbowValue += 1;
+        if (turtles[i].lastRainbowValue > 100) {
+            turtles[i].lastRainbowValue = 0;
+        }
         if (turtles[i].hasTail) {
             if (turtles[i].hasRainbowTail) {
-                turtles[i].lastRainbowValue += 1;
-                if (turtles[i].lastRainbowValue > 100) {
-                    turtles[i].lastRainbowValue = 0;
-                }
                 const rainbowColorRGB = rainbow(turtles[i].lastRainbowValue);
                 turtles[i].tail.push([
                     turtles[i].x,
@@ -112,7 +128,6 @@ setInterval(() => {
     let ill = room.newIllumination()
     ill.push();
     ill.translate(600, 400);
-    ill.fill("green")
     for (let i = 0; i < turtles.length; i += 1) {
         for (let t = 0; t < turtles[i].tail.length; t += 1) {
             const tailPoint = turtles[i].tail[t];
@@ -124,10 +139,21 @@ setInterval(() => {
         }
         ill.push();
         ill.translate(turtles[i].x, turtles[i].y);
+        if (turtles[i].isRainbow) {
+            const rainbowColorRGB = rainbow(turtles[i].lastRainbowValue);
+            ill.fill(rainbowColorRGB[0], rainbowColorRGB[1], rainbowColorRGB[2])
+        } else {
+            ill.fill("green")
+        }
         ill.ellipse(-15, -15, 30, 30);
         ill.push();
         ill.rotate(turtles[i].heading);
-        ill.line(0, 0, 30, 0);
+        ill.fill(100, 255, 100);
+        ill.ellipse(-10, -10, 10, 10);
+        ill.ellipse(-10, 10, 10, 10);
+        ill.ellipse(10 -10, 10, 10);
+        ill.ellipse(10, 10, 10, 10);
+        ill.ellipse(15, 0, 14, 5);
         ill.pop();
         ill.pop();
     }
