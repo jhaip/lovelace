@@ -38,7 +38,7 @@ room.onRaw(`$ $ ArgonBLE read $value on sensor $sensorId`,
                         movementType: hasSpiral ? "spiral" : "random",
                         isRainbow: isRainbow,
                         hasRainbowTail: hasRainbowTail,
-                        lastRainbowValue: 0,
+                        lastRainbowValue: Math.floor(Math.random() * 100),
                         hasTail: hasTail,
                         tail: []
                     });
@@ -150,11 +150,11 @@ setInterval(() => {
         ill.push();
         ill.rotate(turtles[i].heading);
         ill.fill(100, 255, 100);
-        ill.ellipse(-15 + -5, -15 + -5, 10, 10);
-        ill.ellipse(-15 + -5, -15 + 5, 10, 10);
-        ill.ellipse(-15 + 5, -15 + -5, 10, 10);
-        ill.ellipse(-15 + 5, -15 + 5, 10, 10);
-        ill.ellipse(-15 + 10, -15 + 0, 10, 5);
+        ill.ellipse(-5, -5, 10, 10);
+        ill.ellipse(-5, 5, 10, 10);
+        ill.ellipse(5, -5, 10, 10);
+        ill.ellipse(5, 5, 10, 10);
+        ill.ellipse(10, 0, 10, 5);
         ill.pop();
         ill.pop();
     }
