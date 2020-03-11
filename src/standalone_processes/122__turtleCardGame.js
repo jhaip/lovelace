@@ -56,7 +56,8 @@ room.onRaw(`$ $ ArgonBLE read $value on sensor $sensorId`,
                         hasSpiral,
                         hasTail,
                         isRainbow,
-                        hasRainbowTail
+                        hasRainbowTail,
+                        turtleEmitCountdown: 10
                     })
                 }
             }
@@ -128,8 +129,8 @@ setInterval(() => {
     }
     for (let i = 0; i < emitters.length; i += 1) {
         if (emitters[i].hasTurtle) {
-            if (Math.floor(Math.random() * 40) === 1) {
-                // create a new turtle
+            turtleEmitCountdown -= 1;
+            if (turtleEmitCountdown === 0) {
                 turtles.push({
                     x: emitters[i].x,
                     y: emitters[i].y,
@@ -142,6 +143,9 @@ setInterval(() => {
                     hasTail: emitters[i].hasTail,
                     tail: []
                 });
+            }
+            if (turtleEmitCountdown < 0) {
+                turtleEmitCountdown = 10 + Math.floor(Math.random() * 20);
             }
         }
     }
