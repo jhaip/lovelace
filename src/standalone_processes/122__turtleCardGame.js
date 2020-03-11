@@ -47,14 +47,16 @@ room.onRaw(`$ $ ArgonBLE read $value on sensor $sensorId`,
                     const hasTurtle = stack.indexOf("turtle") > 0;
                     const hasSpiral = stack.indexOf("spiral") > stack.indexOf("turtle");
                     const hasTail = stack.indexOf("pen") > stack.indexOf("turtle");
-                    const hasRainbow = stack.indexOf("rainbow") > stack.indexOf("turtle");
+                    const hasRainbowTail = hasTail && stack.indexOf("rainbow") > stack.indexOf("pen");
+                    const isRainbow = stack.indexOf("rainbow") > stack.indexOf("turtle") && (!hasTail || stack.indexOf("rainbow") < stack.indexOf("pen"));
                     emitters.push({
                         x: 200 + Math.random() * 800 - 500,
                         y: 200 + Math.random() * 300 - 250,
                         hasTurtle,
                         hasSpiral,
                         hasTail,
-                        hasRainbow
+                        isRainbow,
+                        hasRainbowTail
                     })
                 }
             }
