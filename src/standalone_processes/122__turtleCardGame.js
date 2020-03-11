@@ -25,6 +25,7 @@ room.onRaw(`$ $ ArgonBLE read $value on sensor $sensorId`,
             if (JSON.stringify(stack) !== JSON.stringify(lastStack)) {
                 lastStack = stack;
                 turtles = [];
+                emitters = [];
                 if (stack.length > 0 && stack[0] === "turtle") {
                     const hasSpiral = stack.indexOf("spiral") > 0;
                     const hasTail = stack.indexOf("pen") > 0;
