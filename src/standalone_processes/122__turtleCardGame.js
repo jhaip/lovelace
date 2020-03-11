@@ -48,8 +48,8 @@ room.onRaw(`$ $ ArgonBLE read $value on sensor $sensorId`,
                     const hasTail = stack.indexOf("pen") > stack.indexOf("turtle");
                     const hasRainbow = stack.indexOf("rainbow") > stack.indexOf("turtle");
                     emitters.push({
-                        x: 200 + Math.random() * 800,
-                        y: 200 + Math.random() * 300,
+                        x: 200 + Math.random() * 800 - 500,
+                        y: 200 + Math.random() * 300 - 250,
                         hasTurtle,
                         hasSpiral,
                         hasTail,
@@ -180,7 +180,7 @@ setInterval(() => {
     for (let i = 0; i < emitters.length; i += 1) {
         ill.nostroke();
         ill.fill("white");
-        ill.ellipse(emitters[i].x - 5, emitters[i].x - 5, 10, 10)
+        ill.ellipse(emitters[i].x - 10, emitters[i].y - 10, 20, 20);
     }
     ill.pop();
     room.draw(ill, "web2")
