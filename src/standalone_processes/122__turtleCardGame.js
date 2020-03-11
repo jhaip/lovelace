@@ -31,8 +31,8 @@ room.onRaw(`$ $ ArgonBLE read $value on sensor $sensorId`,
                     const hasRainbowTail = hasTail && stack.indexOf("rainbow") > stack.indexOf("pen");
                     const isRainbow = stack.indexOf("rainbow") > 0 && (!hasTail || stack.indexOf("rainbow") < stack.indexOf("pen"))
                     turtles.push({
-                        x: 200 + Math.random() * 800,
-                        y: 200 + Math.random() * 300,
+                        x: 200 + Math.random() * 800 - 500,
+                        y: 200 + Math.random() * 300 - 250,
                         heading: Math.random() * 2.0 * Math.PI,
                         speed: 3,
                         movementType: hasSpiral ? "spiral" : "random",
