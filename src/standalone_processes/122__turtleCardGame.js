@@ -140,13 +140,6 @@ setInterval(() => {
         ill.push();
         ill.translate(turtles[i].x, turtles[i].y);
         ill.nostroke();
-        if (turtles[i].isRainbow) {
-            const rainbowColorRGB = rainbow(turtles[i].lastRainbowValue);
-            ill.fill(rainbowColorRGB[0], rainbowColorRGB[1], rainbowColorRGB[2])
-        } else {
-            ill.fill("green")
-        }
-        ill.ellipse(-15, -15, 30, 30);
         ill.push();
         ill.rotate(turtles[i].heading);
         ill.fill(100, 255, 100);
@@ -154,7 +147,14 @@ setInterval(() => {
         ill.ellipse(-10-5, 10-5, 10, 10);
         ill.ellipse(10-5, -10-5, 10, 10);
         ill.ellipse(10-5, 10-5, 10, 10);
-        ill.ellipse(10-7, -4, 14, 8);
+        ill.ellipse(15-7, -4, 14, 8);
+        if (turtles[i].isRainbow) {
+            const rainbowColorRGB = rainbow(turtles[i].lastRainbowValue);
+            ill.fill(rainbowColorRGB[0], rainbowColorRGB[1], rainbowColorRGB[2])
+        } else {
+            ill.fill("green")
+        }
+        ill.ellipse(-15, -15, 30, 30);
         ill.pop();
         ill.pop();
     }
