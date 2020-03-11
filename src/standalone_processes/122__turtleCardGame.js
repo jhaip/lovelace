@@ -126,7 +126,7 @@ setInterval(() => {
     }
     for (let i = 0; i < emitters.length; i += 1) {
         if (emitters[i].hasTurtle) {
-            if (Math.floor(Math.random() * 50) === 1) {
+            if (Math.floor(Math.random() * 40) === 1) {
                 // create a new turtle
                 turtles.push({
                     x: emitters[i].x,
