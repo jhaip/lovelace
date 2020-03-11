@@ -125,11 +125,11 @@ setInterval(() => {
     }
     for (let i = 0; i < emitters.length; i += 1) {
         if (emitters[i].hasTurtle) {
-            if (Math.floor(Math.random() * 10) === 1) {
+            if (Math.floor(Math.random() * 50) === 1) {
                 // create a new turtle
                 turtles.push({
-                    x: 200 + Math.random() * 800 - 500,
-                    y: 200 + Math.random() * 300 - 250,
+                    x: emitters[i].x,
+                    y: emitters[i].y,
                     heading: Math.random() * 2.0 * Math.PI,
                     speed: 3,
                     movementType: emitters[i].hasSpiral ? "spiral" : "random",
