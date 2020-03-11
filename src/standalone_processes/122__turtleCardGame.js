@@ -150,11 +150,11 @@ setInterval(() => {
         ill.push();
         ill.rotate(turtles[i].heading);
         ill.fill(100, 255, 100);
-        ill.ellipse(-5, -5, 10, 10);
-        ill.ellipse(-5, 5, 10, 10);
-        ill.ellipse(5, -5, 10, 10);
-        ill.ellipse(5, 5, 10, 10);
-        ill.ellipse(10, 0, 10, 5);
+        ill.ellipse(-10-5, -10-5, 10, 10);
+        ill.ellipse(-10-5, 10-5, 10, 10);
+        ill.ellipse(10-5, -10-5, 10, 10);
+        ill.ellipse(10-5, 10-5, 10, 10);
+        ill.ellipse(10-7, -4, 14, 8);
         ill.pop();
         ill.pop();
     }
