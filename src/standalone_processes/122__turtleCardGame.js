@@ -129,8 +129,8 @@ setInterval(() => {
     }
     for (let i = 0; i < emitters.length; i += 1) {
         if (emitters[i].hasTurtle) {
-            turtleEmitCountdown -= 1;
-            if (turtleEmitCountdown === 0) {
+            emitters[i].turtleEmitCountdown -= 1;
+            if (emitters[i].turtleEmitCountdown === 0) {
                 turtles.push({
                     x: emitters[i].x,
                     y: emitters[i].y,
@@ -144,8 +144,8 @@ setInterval(() => {
                     tail: []
                 });
             }
-            if (turtleEmitCountdown < 0) {
-                turtleEmitCountdown = 10 + Math.floor(Math.random() * 20);
+            if (emitters[i].turtleEmitCountdown < 0) {
+                emitters[i].turtleEmitCountdown = 10 + Math.floor(Math.random() * 20);
             }
         }
     }
