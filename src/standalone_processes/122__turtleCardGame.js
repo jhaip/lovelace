@@ -96,7 +96,7 @@ setInterval(() => {
     // update
     for (let i = 0; i < turtles.length; i += 1) {
         if (turtles[i].movementType === "random") {
-            turtles[i].heading += Math.random() * 5.0 / (2.0 * Math.PI);
+            turtles[i].heading += -3.0 / (2.0 * Math.PI) + Math.random() * 6.0 / (2.0 * Math.PI);
         } else if (turtles[i].movementType === "spiral") {
             turtles[i].heading += 1.0 / (Math.PI * 2.0);
             turtles[i].speed += 0.2;
