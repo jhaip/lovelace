@@ -90,7 +90,7 @@ func initZeroMQ(MY_ID_STR string) *zmq.Socket {
 	checkErr(zmqCreationErr)
 	setIdentityErr := client.SetIdentity(MY_ID_STR)
 	checkErr(setIdentityErr)
-	connectErr := client.Connect("tcp://localhost:5570")
+	connectErr := client.Connect("tcp://10.0.0.22:5570")
 	checkErr(connectErr)
 
 	init_ping_id := "61034e37-df61-42ca-a60d-045e93b156ae"; // just a random ID
