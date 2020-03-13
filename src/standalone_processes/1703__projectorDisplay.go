@@ -116,7 +116,7 @@ func initWishSubscription(client *zmq.Socket, MY_ID_STR string) string {
 	sub_query := map[string]interface{}{
 		"id": subscription_id,
 		"facts": []string{
-			"$ $ claim I am a turtle card",
+			"$ $ I am a turtle card",
 		},
 	}
 	sub_query_msg, jsonMarshallErr := json.Marshal(sub_query)
