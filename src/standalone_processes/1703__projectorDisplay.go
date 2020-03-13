@@ -6,7 +6,6 @@
 package main // import "github.com/go-gl/example/gl21-cube"
 
 import (
-	"bufio"
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
@@ -18,9 +17,6 @@ import (
 	"log"
 	"os"
 	"runtime"
-	"strconv"
-	"strings"
-	"time"
 
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
