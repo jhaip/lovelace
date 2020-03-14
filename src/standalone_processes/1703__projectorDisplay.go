@@ -150,7 +150,7 @@ func main() {
 	BASE_PATH := GetBasePath()
 
 	/*** Set up logging ***/
-	LOG_PATH := BASE_PATH + "logs/1382__print-paper.log"
+	LOG_PATH := BASE_PATH + "logs/1703__print-paper.log"
 	f, err := os.OpenFile(LOG_PATH, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)
