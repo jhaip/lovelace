@@ -57,17 +57,17 @@ func trimLeftChars(s string, n int) string {
 	return s[:0]
 }
 
-func get_wishes(client *zmq.Socket, MY_ID_STR string, subscription_id string) bool {
-	rawReply, err := client.RecvMessage(0)
+func get_wishes(client *zmq.Socket, MY_ID_STR string, subscription_id string) (bool, bool) {
+	rawReply, err := client.RecvMessage(zmq.DONTWAIT)
 	reply := rawReply[0]
 	if err != nil {
-		log.Println("get wishes error:")
-		log.Println(err)
-		panic(err)
-	} else {
-		log.Println("reply:")
-		log.Println(reply)
+		// log.Println("get wishes error:")
+		// log.Println(err)
+		// panic(err)
+		return false, false
 	}
+	log.Println("reply:")
+	log.Println(reply)
 	msg_prefix := fmt.Sprintf("%s%s", MY_ID_STR, subscription_id)
 	val := trimLeftChars(reply, len(msg_prefix)+13)
 	json_val := make([]map[string][]string, 0)
@@ -75,7 +75,7 @@ func get_wishes(client *zmq.Socket, MY_ID_STR string, subscription_id string) bo
 	if jsonValErr != nil {
 		panic(jsonValErr)
 	}
-	return len(json_val) > 0
+	return true, len(json_val) > 0
 }
 
 func initZeroMQ(MY_ID_STR string) *zmq.Socket {
@@ -189,10 +189,15 @@ func main() {
 	texture = newTexture("square.png")
 	defer gl.DeleteTextures(1, &texture)
 
+	lastWishToShow := false
+
 	setupScene()
 	for !window.ShouldClose() {
-		wishToShow := get_wishes(client, MY_ID_STR, subscription_id)
-		drawScene(wishToShow)
+		gotStuff, wishToShow := get_wishes(client, MY_ID_STR, subscription_id)
+		if (gotStuff) {
+			lastWishToShow = wishToShow
+		}
+		drawScene(lastWishToShow)
 		window.SwapBuffers()
 		glfw.PollEvents()
 	}
