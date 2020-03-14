@@ -59,13 +59,13 @@ func trimLeftChars(s string, n int) string {
 
 func get_wishes(client *zmq.Socket, MY_ID_STR string, subscription_id string) (bool, bool) {
 	rawReply, err := client.RecvMessage(zmq.DONTWAIT)
-	reply := rawReply[0]
 	if err != nil {
 		// log.Println("get wishes error:")
 		// log.Println(err)
 		// panic(err)
 		return false, false
 	}
+	reply := rawReply[0]
 	log.Println("reply:")
 	log.Println(reply)
 	msg_prefix := fmt.Sprintf("%s%s", MY_ID_STR, subscription_id)
