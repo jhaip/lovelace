@@ -8,7 +8,9 @@ uuid.seed()
 
 local MY_ID_STR = "1999"
 local RPC_URL = "10.0.0.22" -- "localhost" -- "10.0.0.22"
+local server_listening = false
 local init_ping_id = uuid()
+local SUBSCRIPTION_ID_LEN = #init_ping_id
 subscription_ids = {}
 
 -- Prepare our context and publisher
@@ -70,8 +72,25 @@ function listen(blocking)
     print("received!")
     print(raw_msg)
     if raw_msg ~= nil then
-        for i = 1, #raw_msg do  -- #v is the size of v for lists.
-            print(raw_msg[i])  -- Indices start at 1 !! SO CRAZY!
+        
+        if #raw_msg > 0 then
+            print(raw_msg[1])
+            -- 1999b4a4f075-9fde-41ae-c1cb-bea4ea0b2b381584545958956[{}]
+            local source_len = 4
+            local server_send_time_len = 13
+            local id = raw_msg:sub(source_len, source_len + SUBSCRIPTION_ID_LEN)
+            local val = raw_msg:sub(source_len + SUBSCRIPTION_ID_LEN + server_send_time_len)
+            print("ID")
+            print(id)
+            print("VAL")
+            print(val)
+            if id == init_ping_id then
+                server_listening = true
+            elseif subscription_ids[id] ~= nil then
+                print("Found matching sub id")
+                local callback = subscription_ids[id]
+                callback(val)
+            end
         end
     end
     print("TODO")
