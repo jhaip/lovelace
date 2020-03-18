@@ -63,7 +63,7 @@ subcribe({"$ $ I am a turtle card"}, sub_callback)
 -- TODO: listen loop
 function listen(blocking)
     flags = 0
-    if blocking == false
+    if blocking == false then
         flags = 1 -- zmq.NOBLOCK
     end
     local raw_msg = client:recv_multipart(flags)
