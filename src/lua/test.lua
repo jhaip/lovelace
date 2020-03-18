@@ -55,8 +55,32 @@ function subscribe(query_strings, callback)
     print(err_sub)
 end
 
+function parse_results(val)
+    local json_val = json.decode(val)
+    local results = {}
+    for i = 1, #json_val do
+        print(json_val[i])
+        local result = json_val[i]
+        local new_result = {}
+        for key, val in pairs(result) do  -- Table iteration.
+            print(key, val)
+            print(val[0], val[1], val[2])
+            local value_type = val[1]
+            if value_type == "integer" then
+                new_result[key] = tonumber(val[2])
+            elseif value_type == "float" then
+                new_result[key] = tonumber(val[2])
+            else
+                new_result[key] = tostring(val[2])
+            end
+        end
+        results[#results + 1] = new_result
+    end
+    return results
+end
+
 function sub_callback(results)
-    print("INSIDE CALLBACK!")
+    print("########### INSIDE CALLBACK!")
     print(results)
 end
 
@@ -90,7 +114,8 @@ function listen(blocking)
             elseif subscription_ids[id] ~= nil then
                 print("Found matching sub id")
                 local callback = subscription_ids[id]
-                callback(val)
+                local parsed_results = parse_results(val)
+                callback(parsed_results)
             end
         end
     end
