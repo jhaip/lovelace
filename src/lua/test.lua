@@ -79,8 +79,8 @@ function listen(blocking)
             -- 1999b4a4f075-9fde-41ae-c1cb-bea4ea0b2b381584545958956[{}]
             local source_len = 4
             local server_send_time_len = 13
-            local id = string.sub(msg_string, source_len, source_len + SUBSCRIPTION_ID_LEN)
-            local val = string.sub(msg_string, source_len + SUBSCRIPTION_ID_LEN + server_send_time_len)
+            local id = string.sub(msg_string, source_len + 1, source_len + SUBSCRIPTION_ID_LEN)
+            local val = string.sub(msg_string, source_len + 1 + SUBSCRIPTION_ID_LEN + server_send_time_len)
             print("ID")
             print(id)
             print("VAL")
