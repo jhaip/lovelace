@@ -75,11 +75,12 @@ function listen(blocking)
         
         if #raw_msg > 0 then
             print(raw_msg[1])
+            msg_string = raw_msg[1]
             -- 1999b4a4f075-9fde-41ae-c1cb-bea4ea0b2b381584545958956[{}]
             local source_len = 4
             local server_send_time_len = 13
-            local id = string.sub(raw_msg, source_len, source_len + SUBSCRIPTION_ID_LEN)
-            local val = string.sub(raw_msg, source_len + SUBSCRIPTION_ID_LEN + server_send_time_len)
+            local id = string.sub(msg_string, source_len, source_len + SUBSCRIPTION_ID_LEN)
+            local val = string.sub(msg_string, source_len + SUBSCRIPTION_ID_LEN + server_send_time_len)
             print("ID")
             print(id)
             print("VAL")
