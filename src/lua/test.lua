@@ -42,7 +42,7 @@ print(raw_msg[1]) -- "1999bd096d5b-e5bb-4425-8c8a-3d109f53a2641584412138839"
 
 -- TODO: subcribe to stuff
 function subscribe(query_strings, callback)
-    subscriptionId = uuid()
+    subscription_id = uuid()
     query = {id = subscription_id, facts = query_strings}
     query_msg = json.encode(query)
     subscription_ids[subscription_id] = callback
