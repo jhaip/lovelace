@@ -82,6 +82,10 @@ end
 function sub_callback(results)
     print("########### INSIDE CALLBACK!")
     print(results)
+    print(#results)
+    if #results > 0 then
+        print("########### GOT SOME RESULTS!")
+    end
 end
 
 subscribe({"$ $ I am a turtle card"}, sub_callback)
