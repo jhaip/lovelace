@@ -41,11 +41,6 @@ print(raw_msg[1]) -- "1999bd096d5b-e5bb-4425-8c8a-3d109f53a2641584412138839"
 -- TODO: prehook
 
 -- TODO: subcribe to stuff
-function sub_callback(results)
-    print("INSIDE CALLBACK!")
-    print(results)
-end
-
 function subscribe(query_strings, callback)
     subscriptionId = uuid()
     query = {id = subscription_id, facts = query_strings}
@@ -58,7 +53,12 @@ function subscribe(query_strings, callback)
     print(err_sub)
 end
 
-subcribe({"$ $ I am a turtle card"}, sub_callback)
+function sub_callback(results)
+    print("INSIDE CALLBACK!")
+    print(results)
+end
+
+subscribe({"$ $ I am a turtle card"}, sub_callback)
 
 -- TODO: listen loop
 function listen(blocking)
