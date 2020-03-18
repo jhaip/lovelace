@@ -77,4 +77,11 @@ function listen(blocking)
     print("TODO")
 end
 
-listen(false)
+function sleep(sec)
+    socket.select(nil, nil, sec)
+end
+
+while true do
+    listen(false)
+    sleep(0.5)
+end
