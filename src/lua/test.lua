@@ -69,8 +69,11 @@ function listen(blocking)
     local raw_msg = client:recv_multipart(flags)
     print("received!")
     print(raw_msg)
-    print(raw_msg[0]) -- nil
-    print(raw_msg[1]) -- "1999bd096d5b-e5bb-4425-8c8a-3d109f53a2641584412138839"
+    if raw_msg ~= nil then
+        for i = 1, #raw_msg do  -- #v is the size of v for lists.
+            print(raw_msg[i])  -- Indices start at 1 !! SO CRAZY!
+        end
+    end
     print("TODO")
 end
 
