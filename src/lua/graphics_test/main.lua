@@ -142,13 +142,13 @@ end
 
 function love.load()
     love.window.setFullscreen( true )
-    love.graphics.setBackgroundColor(177, 106, 248)
+    love.graphics.setBackgroundColor(0, 0, 0)
     font = love.graphics.setNewFont("FreeSans.ttf", 72)
 end
 
 function love.draw()
     if show_graphics then
-        love.graphics.setColor(0, 0, 0)
+        love.graphics.setColor(255, 255, 0)
         love.graphics.print("Hello World", cwide/4, chigh/3.33)
         love.graphics.circle("fill", cwide/2, chigh/2, 50)
     end
