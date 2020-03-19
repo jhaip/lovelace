@@ -141,6 +141,7 @@ function sleep(sec)
 end
 
 function love.load()
+    love.window.setFullscreen( true )
     love.graphics.setBackgroundColor(177, 106, 248)
     font = love.graphics.setNewFont("FreeSans.ttf", 72)
 end
