@@ -1,6 +1,7 @@
 require "zhelpers"
 local room = require "helper"
 local json = require "json"
+local matrix = require "matrix"
 
 calibration = {}
 calendarRegion = {}
@@ -18,6 +19,41 @@ local colors = {
     cyan={0, 255, 255},
     orange={255, 165, 0},
 }
+
+
+function getPerspectiveTransform(src, dst)
+    -- src table {{x=1, y=1}, ...}
+    -- dst table
+    local a = matrix{
+        {0, 0, 1, 0, 0, 0, 0, 0},
+        {0, 0, 1, 0, 0, 0, 0, 0},
+        {0, 0, 1, 0, 0, 0, 0, 0},
+        {0, 0, 1, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 1, 0, 0},
+        {0, 0, 0, 0, 0, 1, 0, 0},
+        {0, 0, 0, 0, 0, 1, 0, 0},
+        {0, 0, 0, 0, 0, 1, 0, 0},
+    }
+    local b = matrix{{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}
+    for i = 1, 4 do
+        a[i][1] = src[i].x
+        a[i+4][4] = src[i].x
+        a[i][2] = src[i].y
+        a[i+4][5] = src[i].y
+        a[i][7] = -src[i].x*dst[i].x
+        a[i][8] = -src[i].y*dst[i].x
+        a[i+4][7] = -src[i].x*dst[i].y
+        a[i+4][8] = -src[i].y*dst[i].y
+        b[i][1] = dst[i].x
+        b[i+4][1] = dst[i].y
+    end
+    x = a:invert() * b
+    return matrix{
+      {x[1][1], x[2][1], x[3][1]},
+      {x[4][1], x[5][1], x[6][1]},
+      {x[7][1], x[8][1], 1},
+    }
+end
 
 room.on({"$ $ region $id at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4",
          "$ $ region $id has name calibration"}, function(results)
