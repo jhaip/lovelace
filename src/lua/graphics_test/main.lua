@@ -24,6 +24,7 @@ local colors = {
 function getPerspectiveTransform(src, dst)
     -- src table {{x=1, y=1}, ...}
     -- dst table
+    -- order: Top left (TL), TR, BR, BL
     local a = matrix{
         {0, 0, 1, 0, 0, 0, 0, 0},
         {0, 0, 1, 0, 0, 0, 0, 0},
