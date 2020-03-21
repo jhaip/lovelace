@@ -2,6 +2,8 @@ require "zhelpers"
 local room = require "helper"
 local json = require "json"
 
+calibration = {}
+calendarRegion = {}
 graphics_cache = {}
 font = false
 
@@ -16,6 +18,22 @@ local colors = {
     cyan={0, 255, 255},
     orange={255, 165, 0},
 }
+
+room.on({"$ $ region $id at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4",
+         "$ $ region $id has name calibration"}, function(results)
+    for i = 1, #results do
+        local r = results[i]
+        calibration = {r.x1, r.y1, r.x2, r.y2, r.x3, r.y3, r.x4, r.y4}
+    end
+end)
+
+room.on({"$ $ region $id at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4",
+         "$ $ region $id has name calendar"}, function(results)
+    for i = 1, #results do
+        local r = results[i]
+        calendarRegion = {r.x1, r.y1, r.x2, r.y2, r.x3, r.y3, r.x4, r.y4}
+    end
+end)
 
 room.on({"$ $ draw graphics $graphics on web2"}, function(results)
     graphics_cache = {}
