@@ -73,6 +73,25 @@ function love.draw()
                 love.graphics.setColor(stroke_color)
                 love.graphics.ellipse("line", opt.x, opt.y, opt.w * 0.5, opt.h * 0.5)
             end
+        elseif g.type == "line" then
+            if is_stroke_on then
+                love.graphics.setColor(stroke_color)
+                love.graphics.line(opt[1], opt[2], opt[3], opt[4])
+            end
+        elseif g.type == "polygon" then
+            local vertices = {}
+            for j = 1, #opt do
+                vertices[j*2 - 1] = opt[j][1]
+                vertices[j*2] = opt[j][2]
+            end
+            if is_fill_on then
+                love.graphics.setColor(fill_color)
+                love.graphics.polygon('fill', vertices)
+            end
+            if is_stroke_on then
+                love.graphics.setColor(stroke_color)
+                love.graphics.polygon('line', vertices)
+            end
         elseif g.type == "text" then
             love.graphics.setColor(font_color)
             local lineHeight = fontSize * 1.3
@@ -113,7 +132,25 @@ function love.draw()
             stroke_width = tonumber(opt)
             love.graphics.setLineWidth( stroke_width )
         elseif g.type == "fontsize" then
-            is_stroke_on = false
+            font = love.graphics.newFont(tonumber(opt))
+        elseif g.type == "push" then
+            love.graphics.push()
+        elseif g.type == "pop" then
+            love.graphics.pop()
+        elseif g.type == "translate" then
+            love.graphics.translate(tonumber(opt.x), tonumber(opt.y))
+        elseif g.type == "rotate" then
+            love.graphics.rotate(tonumber(opt))
+        elseif g.type == "scale" then
+            love.graphics.scale(tonumber(opt.x), tonumber(opt.y))
+        elseif g.type == "transform" then
+            local elements = {}
+            for j = 1, #opt do
+                elements[j] = tonumber(opt[j])
+            end
+            -- interpret elements as row-major
+            local transform = Transform:setMatrix(MatrixLayout:row, elements)
+            love.graphics.replaceTransform(transform)
         end
     end
 end
