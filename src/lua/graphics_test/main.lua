@@ -149,7 +149,8 @@ function love.draw()
                 elements[j] = tonumber(opt[j])
             end
             -- interpret elements as row-major
-            local transform = Transform:setMatrix("row", elements)
+            local transform = love.math.newTransform()
+            transform.setMatrix("row", elements)
             love.graphics.replaceTransform(transform)
         end
     end
