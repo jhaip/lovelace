@@ -15,8 +15,9 @@ local colors = {
     blue={0, 0, 255},
     black={0, 0, 0},
     yellow={255, 255, 0},
-    purple={255, 0, 255},
+    purple={128, 0, 128},
     cyan={0, 255, 255},
+    orange={255, 165, 0},
 }
 
 room.on({"$ $ I am a turtle card"}, function(results)
