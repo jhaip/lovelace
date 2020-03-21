@@ -3,8 +3,21 @@ local room = require "helper"
 local json = require "json"
 local matrix = require "matrix"
 
-calibration = {}
-calendarRegion = {}
+SCREEN_WIDTH = 1280
+SCREEN_HEIGHT = 720
+CAMERA_IMAGE_WIDTH = 1280
+CAMERA_IMAGE_HEIGHT = 720
+
+function getSquareCalibrationList(w, h)
+    return {{x=0, y=0}, {x=w, y=0}, {x=w, y=h}, {x=0, y=h}}
+end
+
+local SCREEN_SIZE = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
+-- BASE_CALIBRATION should match the resolution of the camera?
+local BASE_CALIBRATION = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
+calibrationRegion = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
+calendarRegion = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
+
 graphics_cache = {}
 font = false
 
@@ -19,7 +32,6 @@ local colors = {
     cyan={0, 255, 255},
     orange={255, 165, 0},
 }
-
 
 function getPerspectiveTransform(src, dst)
     -- src table {{x=1, y=1}, ...}
@@ -56,11 +68,36 @@ function getPerspectiveTransform(src, dst)
     }
 end
 
+function recalculateCombinedTransform()
+    print("[[ Recalculating combined transform ]]")
+    local calendarTransformMatrix = getPerspectiveTransform(
+        SCREEN_SIZE,
+        calendarRegion
+    )
+    local calendarTransform = convertFromMatrixToTransform(calendarTransformMatrix)
+    local calibrationTransformMatrix = getPerspectiveTransform(
+        calibrationRegion
+        SCREEN_SIZE
+    )
+    local calibrationTransform = convertFromMatrixToTransform(calendarTransformMatrix)
+    COMBINED_TRANSFORM = calendarTransform.clone()
+    COMBINED_TRANSFORM.apply(calibrationTransform)
+end
+
+COMBINED_TRANSFORM = {}
+recalculateCombinedTransform()
+
 room.on({"$ $ region $id at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4",
          "$ $ region $id has name calibration"}, function(results)
     for i = 1, #results do
         local r = results[i]
-        calibration = {r.x1, r.y1, r.x2, r.y2, r.x3, r.y3, r.x4, r.y4}
+        calibrationRegion = {
+            {x=r.x1, y=r.y1},
+            {x=r.x2, y=r.y2},
+            {x=r.x3, y=r.y3},
+            {x=r.x4, y=r.y4}
+        }
+        recalculateCombinedTransform()
     end
 end)
 
@@ -68,7 +105,13 @@ room.on({"$ $ region $id at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4",
          "$ $ region $id has name calendar"}, function(results)
     for i = 1, #results do
         local r = results[i]
-        calendarRegion = {r.x1, r.y1, r.x2, r.y2, r.x3, r.y3, r.x4, r.y4}
+        calendarRegion = {
+            {x=r.x1, y=r.y1},
+            {x=r.x2, y=r.y2},
+            {x=r.x3, y=r.y3},
+            {x=r.x4, y=r.y4}
+        }
+        recalculateCombinedTransform()
     end
 end)
 
@@ -90,6 +133,17 @@ function love.load()
     room.init(true)
 end
 
+function convertFromMatrixToTransform(M)
+    local transform = love.math.newTransform()
+    transform.setMatrix(
+        M[1][1], M[1][2], M[1][3], 0,
+        M[2][1], M[2][2], M[2][3], 0,
+        M[3][1], M[3][2], M[3][3], 0,
+        0,       0,       0,       1
+    )
+    return transform
+end
+
 function love.draw()
     -- TODO: set baseline things
     is_fill_on = true
@@ -101,6 +155,8 @@ function love.draw()
     font_color = {255, 255, 255}
     local fontSize = 72
     love.graphics.setFont(font)
+
+    love.graphics.replaceTransform(COMBINED_TRANSFORM)
 
     for i = 1, #graphics_cache do
         local g = graphics_cache[i]
@@ -205,7 +261,7 @@ function love.draw()
             -- interpret elements as row-major
             local transform = love.math.newTransform()
             transform.setMatrix("row", elements)
-            love.graphics.replaceTransform(transform)
+            love.graphics.applyTransform(transform)
         end
     end
 end
