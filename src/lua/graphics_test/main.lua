@@ -8,6 +8,17 @@ show_graphics = false
 graphics_cache = {}
 font = false
 
+local colors = {
+    "white" = {255, 255, 255},
+    "red" = {255, 0, 0},
+    "green" = {0, 255, 0},
+    "blue" = {0, 0, 255},
+    "black" = {0, 0, 0},
+    "yellow" = {255, 255, 0},
+    "purple" = {255, 0, 255},
+    "cyan" = {0, 255, 255},
+}
+
 room.on({"$ $ I am a turtle card"}, function(results)
     if #results > 0 then
         show_graphics = true
@@ -67,7 +78,7 @@ function love.draw()
         elseif g.type == "ellipse" then
             if is_fill_on then
                 love.graphics.setColor(fill_color)
-                love.graphics.ellipse("fill", opt.x, opt.y, opt.w * 0.5, opt.h * 0.5)
+                love.graphics.ellipse("fill", opt.x - opt.w * 0.5, opt.y - opt.h * 0.5, opt.w * 0.5, opt.h * 0.5)
             end
             if is_stroke_on then
                 love.graphics.setColor(stroke_color)
@@ -101,7 +112,9 @@ function love.draw()
         elseif g.type == "fill" then
             is_fill_on = true
             if type(opt) == "string" then
-                -- TODO: have color names like "red" in love2d
+                if colors[opt] ~= nill then
+                    fill_color = colors[opt]
+                end
             elseif #opt == 3 then
                 fill_color = {opt[1], opt[2], opt[3]}
             elseif #opt == 4 then
@@ -110,7 +123,9 @@ function love.draw()
         elseif g.type == "stroke" then
             is_stroke_on = true
             if type(opt) == "string" then
-                -- TODO: have color names like "red" in love2d
+                if colors[opt] ~= nill then
+                    stroke_color = colors[opt]
+                end
             elseif #opt == 3 then
                 stroke_color = {opt[1], opt[2], opt[3]}
             elseif #opt == 4 then
