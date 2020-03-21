@@ -2,9 +2,6 @@ require "zhelpers"
 local room = require "helper"
 local json = require "json"
 
-cwide = 520
-chigh = 333
-show_graphics = false
 graphics_cache = {}
 font = false
 
@@ -20,14 +17,6 @@ local colors = {
     orange={255, 165, 0},
 }
 
-room.on({"$ $ I am a turtle card"}, function(results)
-    if #results > 0 then
-        show_graphics = true
-    else
-        show_graphics = false
-    end
-end)
-
 room.on({"$ $ draw graphics $graphics on web2"}, function(results)
     graphics_cache = {}
     for i = 1, #results do
@@ -39,8 +28,7 @@ room.on({"$ $ draw graphics $graphics on web2"}, function(results)
 end)
 
 function love.load()
-    love.window.setTitle(' Hello Wörld ')
-    love.window.setMode(cwide, chigh)
+    love.window.setTitle('Room Graphics')
     love.window.setFullscreen( true )
     love.graphics.setBackgroundColor(0, 0, 0)
     font = love.graphics.newFont(72)
@@ -48,11 +36,6 @@ function love.load()
 end
 
 function love.draw()
-    if show_graphics then
-        love.graphics.setColor(255, 255, 0)
-        love.graphics.print("Hello World", cwide/4, chigh/3.33)
-        love.graphics.circle("fill", cwide/2, chigh/2, 50)
-    end
     -- TODO: set baseline things
     is_fill_on = true
     fill_color = {255, 255, 255}
