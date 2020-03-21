@@ -78,11 +78,11 @@ function love.draw()
         elseif g.type == "ellipse" then
             if is_fill_on then
                 love.graphics.setColor(fill_color)
-                love.graphics.ellipse("fill", opt.x - opt.w * 0.5, opt.y - opt.h * 0.5, opt.w * 0.5, opt.h * 0.5)
+                love.graphics.ellipse("fill", opt.x + opt.w * 0.5, opt.y + opt.h * 0.5, opt.w * 0.5, opt.h * 0.5)
             end
             if is_stroke_on then
                 love.graphics.setColor(stroke_color)
-                love.graphics.ellipse("line", opt.x, opt.y, opt.w * 0.5, opt.h * 0.5)
+                love.graphics.ellipse("line", opt.x + opt.w * 0.5, opt.y + opt.h * 0.5, opt.w * 0.5, opt.h * 0.5)
             end
         elseif g.type == "line" then
             if is_stroke_on then
