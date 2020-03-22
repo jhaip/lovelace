@@ -61,6 +61,24 @@ function cmd() {
     sudo python3 src/standalone_processes/650__keyboard.py &
     chromium-browser --kiosk --enable-webgl --ignore-gpu-blacklist --app=http://progspaceweb2.ngrok.io
     echo -e "booting"
+  elif [ "$1" == "lampstart2" ]
+  then
+    pkill -f "love ./hello.love"
+    v4l2-ctl \
+      --set-ctrl=brightness=10 \
+      --set-ctrl=contrast=0 \
+      --set-ctrl=saturation=-100 \
+      --set-ctrl=sharpness=128 \
+      --set-ctrl=exposure_time_absolute=100
+    v4l2-ctl --device /dev/video0 --set-fmt-video=width=1280,height=720,pixelformat=MPEG
+    export DISPLAY=:0
+    python3 src/standalone_processes/1621__seeLaserLamp.py &
+    sudo python3 src/standalone_processes/650__keyboard.py &
+    cd src/lua/graphics_test
+    zip hello.love main.lua helper.lua matrix.lua json.lua zhelpers.lua FreeSans.ttf
+    love ./hello.love &
+    cd ../../..
+    echo -e "booting"
   elif [ "$1" == "lasersocksstart" ]
   then
     cd new-backend/go-server
