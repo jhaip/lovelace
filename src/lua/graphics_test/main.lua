@@ -91,8 +91,8 @@ function recalculateCombinedTransform()
         SCREEN_SIZE
     )
     local calibrationTransform = convertFromMatrixToTransform(calendarTransformMatrix)
-    COMBINED_TRANSFORM = calendarTransform.clone()
-    COMBINED_TRANSFORM.apply(calibrationTransform)
+    COMBINED_TRANSFORM = calendarTransform:clone()
+    COMBINED_TRANSFORM:apply(calibrationTransform)
 end
 
 COMBINED_TRANSFORM = {}
