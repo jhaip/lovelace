@@ -17,6 +17,7 @@ local SCREEN_SIZE = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
 local BASE_CALIBRATION = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
 calibrationRegion = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
 calendarRegion = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
+COMBINED_TRANSFORM = {}
 
 graphics_cache = {}
 font = false
@@ -92,10 +93,9 @@ function recalculateCombinedTransform()
     )
     local calibrationTransform = convertFromMatrixToTransform(calendarTransformMatrix)
     COMBINED_TRANSFORM = calendarTransform:clone()
-    COMBINED_TRANSFORM:apply(calibrationTransform)
+    -- COMBINED_TRANSFORM:apply(calibrationTransform)
 end
 
-COMBINED_TRANSFORM = {}
 recalculateCombinedTransform()
 
 room.on({"$ $ region $id at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4",
