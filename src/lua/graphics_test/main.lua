@@ -68,6 +68,17 @@ function getPerspectiveTransform(src, dst)
     }
 end
 
+function convertFromMatrixToTransform(M)
+    local transform = love.math.newTransform()
+    transform.setMatrix(
+        M[1][1], M[1][2], M[1][3], 0,
+        M[2][1], M[2][2], M[2][3], 0,
+        M[3][1], M[3][2], M[3][3], 0,
+        0,       0,       0,       1
+    )
+    return transform
+end
+
 function recalculateCombinedTransform()
     print("[[ Recalculating combined transform ]]")
     local calendarTransformMatrix = getPerspectiveTransform(
@@ -131,17 +142,6 @@ function love.load()
     love.graphics.setBackgroundColor(0, 0, 0)
     font = love.graphics.newFont(72)
     room.init(true)
-end
-
-function convertFromMatrixToTransform(M)
-    local transform = love.math.newTransform()
-    transform.setMatrix(
-        M[1][1], M[1][2], M[1][3], 0,
-        M[2][1], M[2][2], M[2][3], 0,
-        M[3][1], M[3][2], M[3][3], 0,
-        0,       0,       0,       1
-    )
-    return transform
 end
 
 function love.draw()
