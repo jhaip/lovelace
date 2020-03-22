@@ -76,7 +76,7 @@ function recalculateCombinedTransform()
     )
     local calendarTransform = convertFromMatrixToTransform(calendarTransformMatrix)
     local calibrationTransformMatrix = getPerspectiveTransform(
-        calibrationRegion
+        calibrationRegion,
         SCREEN_SIZE
     )
     local calibrationTransform = convertFromMatrixToTransform(calendarTransformMatrix)
