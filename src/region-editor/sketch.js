@@ -181,10 +181,26 @@ function update(regions, newRegionStatus) {
   let $highlightButton = document.createElement('button');
   $highlightButton.innerHTML = 'Toggle highlight all regions';
   $highlightButtonSection.appendChild($highlightButton);
+  let $newRegionButton = document.createElement('button');
+  $newRegionButton.innerHTML = 'Create new region';
+  $highlightButtonSection.appendChild($newRegionButton);
   document.body.appendChild($highlightButtonSection);
   $highlightButton.onclick = (evt) => {
     evt.preventDefault();
     fetch(`/highlight`, {
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/json'
+        // 'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: JSON.stringify({})
+    }).then(
+      response => console.log(response)
+    );
+  }
+  $newRegionButton.onclick = (evt) => {
+    evt.preventDefault();
+    fetch(`/region`, {
       method: 'post',
       headers: {
         'Content-Type': 'application/json'

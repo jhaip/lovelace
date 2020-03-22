@@ -25,6 +25,13 @@ var regionData = [{
 var newRegionStatus = '';
 var highlightAllStatus = false;
 
+function uuidv4() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
 app.get('/status', (req, res) => {
     res.status(200).send({
         'regions': regionData,
@@ -56,6 +63,14 @@ app.put('/region/:regionId', (req, res) => {
         room.retractAll(`region "${regionId}" at %`);
         room.assert(`region "${regionId}" at ${data.x1} ${data.y1} ${data.x2} ${data.y2} ${data.x3} ${data.y3} ${data.x4} ${data.y4}`);
     }
+    room.flush();
+    res.status(200).send('OK');
+})
+
+app.post('/region', (req, res) => {
+    let newRegionId = uuidv4();
+    room.assertForOtherSource("0", `region "${newRegionId}" at 100 100 600 100 600 600 100 600`)
+    room.assertForOtherSource("0", `region "${newRegionId}" has name "TODO"`)
     room.flush();
     res.status(200).send('OK');
 })
