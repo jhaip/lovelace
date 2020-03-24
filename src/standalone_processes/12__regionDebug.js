@@ -77,7 +77,7 @@ app.post('/region', (req, res) => {
 
 app.post('/region-mode', (req, res) => {
     const data = req.body;
-    room.retractFromSource("#0650", "%");
+    room.retractFromSource("0650", "%");
     if (
         data.new_region_status.indexOf("toggle") >= 0 || 
         data.new_region_status.indexOf("region name") >= 0
