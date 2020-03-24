@@ -229,7 +229,7 @@ function update(regions, newRegionStatus) {
         // 'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: JSON.stringify({
-        'name': newRegionStatus
+        'new_region_status': newRegionStatus
       })
     }).then(
       response => console.log(response)
