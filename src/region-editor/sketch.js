@@ -215,7 +215,26 @@ function update(regions, newRegionStatus) {
   let $newRegionStatus = document.createElement('div');
   $newRegionStatus.setAttribute("class", "new-region");
   $newRegionStatus.innerHTML = `<strong>New Region Status:</strong><br>${newRegionStatus}`;
+  let $continueButton = document.createElement('button');
+  $continueButton.innerHTML = 'Continue';
+  $continueButton.setAttribute("class", "continue-button");
+  $newRegionStatus.appendChild($continueButton);
   document.body.appendChild($newRegionStatus);
+  $continueButton.onclick = (evt) => {
+    evt.preventDefault();
+    fetch(`/region-mode`, {
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/json'
+        // 'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: JSON.stringify({
+        'name': newRegionStatus
+      })
+    }).then(
+      response => console.log(response)
+    );
+  }
 
   regions.forEach(datum => {
     makeRegion({

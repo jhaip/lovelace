@@ -25,3 +25,7 @@ small, strong {
   background-color: rgb(182, 255, 182);
   margin-bottom: 1rem;
 }
+
+.continue-button {
+  padding: 10px;
+}

@@ -75,6 +75,20 @@ app.post('/region', (req, res) => {
     res.status(200).send('OK');
 })
 
+app.post('/region-mode', (req, res) => {
+    const data = req.body;
+    if (
+        data.new_region_status.indexOf("toggle") >= 0 || 
+        data.new_region_status.indexOf("region name") >= 0
+    ) {
+        room.assertForOtherSource("0650", `keyboard 0 typed special key "ENTER" @ ${Math.floor((new Date()).getTime() / 1000)}`)
+    } else {
+        room.assertForOtherSource("0650", `keyboard 0 typed special key "DOWN" @ ${Math.floor((new Date()).getTime() / 1000)}`)
+    }
+    room.flush();
+    res.status(200).send('OK');
+})
+
 app.post('/highlight', (req, res) => {
     room.retractAll(`highlight all regions`);
     if (highlightAllStatus) {
