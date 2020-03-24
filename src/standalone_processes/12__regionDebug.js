@@ -82,9 +82,9 @@ app.post('/region-mode', (req, res) => {
         data.new_region_status.indexOf("toggle") >= 0 || 
         data.new_region_status.indexOf("region name") >= 0
     ) {
-        room.assertForOtherSource("0650", `keyboard 0 typed special key "ENTER" @ ${Math.floor((new Date()).getTime() / 1000)}`)
+        room.assertForOtherSource("0650", `keyboard "0650" typed special key "enter" @ ${Math.floor((new Date()).getTime() / 1000)}`)
     } else {
-        room.assertForOtherSource("0650", `keyboard 0 typed special key "DOWN" @ ${Math.floor((new Date()).getTime() / 1000)}`)
+        room.assertForOtherSource("0650", `keyboard "0650" typed special key "down" @ ${Math.floor((new Date()).getTime() / 1000)}`)
     }
     room.flush();
     res.status(200).send('OK');
