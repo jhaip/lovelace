@@ -69,6 +69,11 @@ function getPerspectiveTransform(src, dst)
     }
 end
 
+function projectPoint(homographyMatrix, x, y)
+    local r = homographyMatrix * matrix{{x}, {y}, {1}}
+    return {r[1][1], r[2][1]}
+end
+
 function convertFromMatrixToTransform(M)
     -- https://forum.openframeworks.cc/t/quad-warping-an-entire-opengl-view-solved/509/10
     local transform = love.math.newTransform()
