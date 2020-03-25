@@ -63,7 +63,7 @@ function cmd() {
     echo -e "booting"
   elif [ "$1" == "lampstart2" ]
   then
-    pkill -f "love ./hello.love"
+    pkill -f "hello.love"
     v4l2-ctl \
       --set-ctrl=brightness=10 \
       --set-ctrl=contrast=0 \
@@ -74,8 +74,8 @@ function cmd() {
     export DISPLAY=:0
     python3 src/standalone_processes/1621__seeLaserLamp.py &
     cd src/lua/graphics_test
-    zip hello.love main.lua helper.lua matrix.lua json.lua zhelpers.lua FreeSans.ttf
-    love ./hello.love &
+    zip hello.love main.lua helper.lua matrix.lua json.lua zhelpers.lua
+    love ./hello.love
     cd ../../..
     echo -e "booting"
   elif [ "$1" == "lasersocksstart" ]
