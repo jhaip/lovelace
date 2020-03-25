@@ -70,8 +70,8 @@ function getPerspectiveTransform(src, dst)
 end
 
 function projectPoint(homographyMatrix, x, y)
-    local r = homographyMatrix * matrix{{x}, {y}, {1}}
-    return {r[1][1], r[2][1]}
+    local r = homographyMatrix * matrix{{pt.x}, {pt.y}, {1}}
+    return {x=r[1][1], y=r[2][1]}
 end
 
 function convertFromMatrixToTransform(M)
@@ -88,20 +88,33 @@ end
 
 function recalculateCombinedTransform()
     print("[[ Recalculating combined transform ]]")
-    local calendarTransformMatrix = getPerspectiveTransform(
-        SCREEN_SIZE,
-        calendarRegion
-    )
-    local calendarTransform = convertFromMatrixToTransform(calendarTransformMatrix)
+    -- local calendarTransformMatrix = getPerspectiveTransform(
+    --     SCREEN_SIZE,
+    --     calendarRegion
+    -- )
+    -- local calendarTransform = convertFromMatrixToTransform(calendarTransformMatrix)
+
     local calibrationTransformMatrix = getPerspectiveTransform(
-        calibrationRegion,
-        SCREEN_SIZE
+        SCREEN_SIZE,
+        calibrationRegion
     )
-    local calibrationTransform = convertFromMatrixToTransform(calendarTransformMatrix)
+    local projectedCalendarRegion = {
+        projectPoint(calibrationTransformMatrix, calendarRegion[1]),
+        projectPoint(calibrationTransformMatrix, calendarRegion[2]),
+        projectPoint(calibrationTransformMatrix, calendarRegion[3]),
+        projectPoint(calibrationTransformMatrix, calendarRegion[4]),
+    }
+    local screenToCalendarTransformMatrix = getPerspectiveTransform(
+        SCREEN_SIZE,
+        projectedCalendarRegion
+    )
+    local screenToCalendarTransform = convertFromMatrixToTransform(screenToCalendarTransformMatrix)
+    COMBINED_TRANSFORM = screenToCalendarTransform:clone()
+    -- local calibrationTransform = convertFromMatrixToTransform(calendarTransformMatrix)
     -- local combined_matrix = calendarTransformMatrix * calibrationTransformMatrix;
     -- COMBINED_TRANSFORM = convertFromMatrixToTransform(combined_matrix)
-    COMBINED_TRANSFORM = calendarTransform:clone()
-    COMBINED_TRANSFORM:apply(calibrationTransform)
+    -- COMBINED_TRANSFORM = calendarTransform:clone()
+    -- COMBINED_TRANSFORM:apply(calibrationTransform)
 end
 
 recalculateCombinedTransform()
