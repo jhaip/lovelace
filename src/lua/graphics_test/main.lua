@@ -94,7 +94,7 @@ function recalculateCombinedTransform()
     )
     -- local calibrationTransform = convertFromMatrixToTransform(calendarTransformMatrix)
     local combined_matrix = calendarTransformMatrix * calibrationTransformMatrix;
-    COMBINED_TRANSFORM = combined_matrix:clone()
+    COMBINED_TRANSFORM = convertFromMatrixToTransform(combined_matrix)
     -- COMBINED_TRANSFORM = calendarTransform:clone()
     -- COMBINED_TRANSFORM:apply(calibrationTransform)
 end
