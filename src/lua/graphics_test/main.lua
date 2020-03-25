@@ -84,8 +84,8 @@ end
 function recalculateCombinedTransform()
     print("[[ Recalculating combined transform ]]")
     local calendarTransformMatrix = getPerspectiveTransform(
-        SCREEN_SIZE,
-        calendarRegion
+        calendarRegion,
+        SCREEN_SIZE
     )
     local calendarTransform = convertFromMatrixToTransform(calendarTransformMatrix)
     local calibrationTransformMatrix = getPerspectiveTransform(
