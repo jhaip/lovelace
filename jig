@@ -73,7 +73,6 @@ function cmd() {
     v4l2-ctl --device /dev/video0 --set-fmt-video=width=1280,height=720,pixelformat=MPEG
     export DISPLAY=:0
     python3 src/standalone_processes/1621__seeLaserLamp.py &
-    sudo python3 src/standalone_processes/650__keyboard.py &
     cd src/lua/graphics_test
     zip hello.love main.lua helper.lua matrix.lua json.lua zhelpers.lua FreeSans.ttf
     love ./hello.love &
