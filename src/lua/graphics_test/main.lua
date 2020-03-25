@@ -69,7 +69,7 @@ function getPerspectiveTransform(src, dst)
     }
 end
 
-function projectPoint(homographyMatrix, x, y)
+function projectPoint(homographyMatrix, pt)
     local r = homographyMatrix * matrix{{pt.x}, {pt.y}, {1}}
     return {x=r[1][1], y=r[2][1]}
 end
