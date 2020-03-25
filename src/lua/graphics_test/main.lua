@@ -87,14 +87,16 @@ function recalculateCombinedTransform()
         calendarRegion,
         SCREEN_SIZE
     )
-    local calendarTransform = convertFromMatrixToTransform(calendarTransformMatrix)
+    -- local calendarTransform = convertFromMatrixToTransform(calendarTransformMatrix)
     local calibrationTransformMatrix = getPerspectiveTransform(
         calibrationRegion,
         SCREEN_SIZE
     )
-    local calibrationTransform = convertFromMatrixToTransform(calendarTransformMatrix)
-    COMBINED_TRANSFORM = calendarTransform:clone()
-    COMBINED_TRANSFORM:apply(calibrationTransform)
+    -- local calibrationTransform = convertFromMatrixToTransform(calendarTransformMatrix)
+    local combined_matrix = calendarTransformMatrix * calibrationTransformMatrix;
+    COMBINED_TRANSFORM = combined_matrix:clone()
+    -- COMBINED_TRANSFORM = calendarTransform:clone()
+    -- COMBINED_TRANSFORM:apply(calibrationTransform)
 end
 
 recalculateCombinedTransform()
