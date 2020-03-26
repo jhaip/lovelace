@@ -221,10 +221,11 @@ function love.draw()
             end
         elseif g.type == "text" then
             love.graphics.setColor(font_color)
-            local lineHeight = fontSize * 1.3
-            for line in opt.text:gmatch("([^\n]*)\n?") do
-                love.graphics.print(line, opt.x, opt.y + i * lineHeight)
-            end
+            love.graphics.print(line, opt.x, opt.y)
+            -- local lineHeight = fontSize * 1.3
+            -- for line in opt.text:gmatch("([^\n]*)\n?") do
+            --     love.graphics.print(line, opt.x, opt.y + i * lineHeight)
+            -- end
         elseif g.type == "fill" then
             is_fill_on = true
             if type(opt) == "string" then
