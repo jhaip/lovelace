@@ -40,7 +40,137 @@
 
 byte ssPins[] = {SS_1_PIN, SS_2_PIN, SS_3_PIN, SS_4_PIN};
 
+bool rfid_tag_present_prev[] = {false, false, false, false};
+bool rfid_tag_present[] = {false, false, false, false};
+int _rfid_error_counter[] = {0, 0, 0, 0};
+bool _tag_found[] = {false, false, false, false};
+
 MFRC522 mfrc522[NR_OF_READERS]; // Create MFRC522 instance.
+
+String check_reader(MFRC522 reader)
+{
+    byte bufferATQA[2];
+    byte bufferSize = sizeof(bufferATQA);
+    byte result = reader.PICC_WakeupA(bufferATQA, &bufferSize);
+    if (!(result == MFRC522::STATUS_OK || result == MFRC522::STATUS_COLLISION))
+    {
+        // Serial.println("STATUS is not OK or COLLISION");
+        return "null";
+    }
+
+    // Select one of the cards
+    if (!reader.PICC_ReadCardSerial())
+    {
+        return "null";
+    }
+
+    MFRC522::Uid *uid = &(reader.uid);
+    String cardUidString = "";
+    Serial.print("Card UID: ");
+    for (byte i = 0; i < uid->size; i++)
+    {
+        cardUidString = String(cardUidString + String(uid->uidByte[i] < 0x10 ? "0" : ""));
+        cardUidString = String(cardUidString + String(uid->uidByte[i], HEX));
+    }
+    // Serial.println(cardUidString);
+
+    // Halt PICC
+    reader.PICC_HaltA();
+    // Stop encryption on PCD
+    reader.PCD_StopCrypto1();
+
+    return cardUidString;
+}
+
+bool read2(MFRC522 reader)
+{
+    // Detect Tag without looking for collisions
+    byte bufferATQA[2];
+    byte bufferSize = sizeof(bufferATQA);
+
+    // Reset baud rates
+    reader.PCD_WriteRegister(reader.TxModeReg, 0x00);
+    reader.PCD_WriteRegister(reader.RxModeReg, 0x00);
+    // Reset ModWidthReg
+    reader.PCD_WriteRegister(reader.ModWidthReg, 0x26);
+
+    MFRC522::StatusCode result = reader.PICC_RequestA(bufferATQA, &bufferSize);
+
+    bool _tag_found = false;
+
+    if (result == reader.STATUS_OK)
+    {
+        if (!reader.PICC_ReadCardSerial())
+        { //Since a PICC placed get Serial and continue
+            return;
+        }
+        _tag_found = true;
+    }
+
+    return _tag_found;
+}
+
+bool check3(uint8_t reader)
+{
+    rfid_tag_present_prev[reader] = rfid_tag_present[reader];
+
+    _rfid_error_counter[reader] += 1;
+    if (_rfid_error_counter[reader] > 2)
+    {
+        _tag_found[reader] = false;
+    }
+
+    // Detect Tag without looking for collisions
+    byte bufferATQA[2];
+    byte bufferSize = sizeof(bufferATQA);
+
+    // Reset baud rates
+    mfrc522[reader].PCD_WriteRegister(mfrc522[reader].TxModeReg, 0x00);
+    mfrc522[reader].PCD_WriteRegister(mfrc522[reader].RxModeReg, 0x00);
+    // Reset ModWidthReg
+    mfrc522[reader].PCD_WriteRegister(mfrc522[reader].ModWidthReg, 0x26);
+
+    MFRC522::StatusCode result = mfrc522[reader].PICC_RequestA(bufferATQA, &bufferSize);
+
+    if (result == mfrc522[reader].STATUS_OK)
+    {
+        if (!mfrc522[reader].PICC_ReadCardSerial())
+        { //Since a PICC placed get Serial and continue
+            return;
+        }
+        _rfid_error_counter[reader] = 0;
+        _tag_found[reader] = true;
+    }
+
+    rfid_tag_present[reader] = _tag_found[reader];
+
+    // rising edge
+    if (rfid_tag_present[reader] && !rfid_tag_present_prev[reader])
+    {
+        //    Serial.print(reader);
+        //    Serial.println(" Tag found");
+
+        MFRC522::Uid *uid = &(mfrc522[reader].uid);
+        String cardUidString = "";
+        Serial.print(reader);
+        Serial.print(" Card UID: ");
+        for (byte i = 0; i < uid->size; i++)
+        {
+            cardUidString = String(cardUidString + String(uid->uidByte[i] < 0x10 ? "0" : ""));
+            cardUidString = String(cardUidString + String(uid->uidByte[i], HEX));
+        }
+        Serial.println(cardUidString);
+    }
+
+    // falling edge
+    if (!rfid_tag_present[reader] && rfid_tag_present_prev[reader])
+    {
+        //    Serial.print(reader);
+        //    Serial.println(" Tag gone");
+        Serial.print(reader);
+        Serial.println(" Card UID: null");
+    }
+}
 
 /**
  * Initialize.`
@@ -52,9 +182,11 @@ void setup()
     while (!Serial)
         ; // Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4)
 
+    delay(100);
+
     SPI.begin(); // Init SPI bus
 
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < 6; ++i)
     {
         bool gotAllCorrectFirmwares = true;
         for (uint8_t reader = 0; reader < NR_OF_READERS; reader++)
@@ -89,9 +221,21 @@ void setup()
  */
 void loop()
 {
-
     for (uint8_t reader = 0; reader < NR_OF_READERS; reader++)
     {
+        //    String val = check_reader(mfrc522[reader]);
+        ////    bool val = read2(mfrc522[reader]);
+        //    Serial.print(F("Reader "));
+        //    Serial.print(reader);
+        //    Serial.print(" = ");
+        //    Serial.println(val);
+        ////    delay(100);
+        ////
+        //    delay(10);
+        //    continue;
+        check3(reader);
+        continue;
+
         // Look for new cards
 
         if (mfrc522[reader].PICC_IsNewCardPresent() && mfrc522[reader].PICC_ReadCardSerial())
@@ -110,8 +254,15 @@ void loop()
             mfrc522[reader].PICC_HaltA();
             // Stop encryption on PCD
             mfrc522[reader].PCD_StopCrypto1();
-        } //if (mfrc522[reader].PICC_IsNewC
-    }     //for(uint8_t reader
+        }
+        else
+        {
+            Serial.print(F("Reader "));
+            Serial.print(reader);
+            Serial.println(" has nothing ---");
+        }
+    } //for(uint8_t reader
+      // delay(100);
 }
 
 /**
