@@ -14,9 +14,7 @@ with serial.Serial('/dev/ttyACM0', 9600, timeout=0.1) as ser:
     ser.reset_output_buffer()
     while True:
         # Receive serial messages
-        claims = [
-            {"type": "retract", "fact": [["id", get_my_id_str()], ["id", "0"], ["postfix", ""]]}
-        ]
+        claims = []
         # logging.info("reading serial lines")
         lines = ser.readlines()  # used the serial timeout specified above
         # logging.info("done reading serial lines.")
@@ -36,6 +34,16 @@ with serial.Serial('/dev/ttyACM0', 9600, timeout=0.1) as ser:
                                 ["id", "0"],
                                 ["text", "ArduinoUSB"],
                                 ["text", "read"],
+                                ["variable", ""],
+                                ["text", "on"],
+                                ["text", "sensor"],
+                                ["integer", prefix],
+                            ]})
+                            claims.append({"type": "claim", "fact": [
+                                ["id", get_my_id_str()],
+                                ["id", "0"],
+                                ["text", "ArduinoUSB"],
+                                ["text", "read"],
                                 ["text", value],
                                 ["text", "on"],
                                 ["text", "sensor"],
@@ -48,6 +56,6 @@ with serial.Serial('/dev/ttyACM0', 9600, timeout=0.1) as ser:
                         logging.info("Ignoring message: {}".format(line))
             except:
                 logging.error("Unexpected error:", sys.exc_info()[0])
-        if len(claims) > 1:
+        if len(claims) > 0:
             batch(claims)
         # time.sleep(0.1)
