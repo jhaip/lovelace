@@ -29,7 +29,7 @@ with serial.Serial('/dev/ttyACM0', 9600, timeout=0.1) as ser:
                         prefix = parsed_line[0].decode("utf-8")
                         value = parsed_line[1].decode("utf-8")
                         if prefix in ['0', '1', '2', '3'] and prefix not in sent_prefixes:
-                            claims.append({"type": "claim", "fact": [
+                            claims.append({"type": "retract", "fact": [
                                 ["id", get_my_id_str()],
                                 ["id", "0"],
                                 ["text", "ArduinoUSB"],
