@@ -3,6 +3,7 @@ import helper2
 import serial
 import logging
 import time
+import sys
 
 helper2.rpc_url = "10.0.0.22"
 
@@ -35,7 +36,7 @@ with serial.Serial('/dev/ttyACM0', 9600, timeout=0.1) as ser:
                                 ["id", "0"],
                                 ["text", "ArduinoUSB"],
                                 ["text", "read"],
-                                ["text", val],
+                                ["text", value],
                                 ["text", "on"],
                                 ["text", "sensor"],
                                 ["integer", prefix],
