@@ -41,6 +41,12 @@ const sensorScreenLocations = {
     '4': 'TL (0, 0) TR (1920, 0) BR (1920, 1080) BL (0, 1080)',
     '5': 'TL (0, 0) TR (1920, 0) BR (1920, 1080) BL (0, 1080)',
   },
+  'ArduinoUSB': {
+    '0': 'TL (0, 0) TR (1920, 0) BR (1920, 1080) BL (0, 1080)',
+    '1': 'TL (0, 0) TR (1920, 0) BR (1920, 1080) BL (0, 1080)',
+    '2': 'TL (0, 0) TR (1920, 0) BR (1920, 1080) BL (0, 1080)',
+    '3': 'TL (0, 0) TR (1920, 0) BR (1920, 1080) BL (0, 1080)',
+  },
 }
 
 room.on(`$photonId read $value on sensor $sensorId`,
