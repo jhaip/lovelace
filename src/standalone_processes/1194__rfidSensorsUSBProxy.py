@@ -9,7 +9,7 @@ helper2.rpc_url = "10.0.0.22"
 
 init(__file__, skipListening=True)
 
-with serial.Serial('/dev/ttyACM0', 9600, timeout=None) as ser:
+with serial.Serial('/dev/ttyACM0', 9600, timeout=0) as ser:
     ser.reset_input_buffer()
     ser.reset_output_buffer()
     while True:
