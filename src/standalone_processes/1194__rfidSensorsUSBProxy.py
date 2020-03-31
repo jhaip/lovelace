@@ -24,7 +24,7 @@ with serial.Serial('/dev/ttyACM0', 9600, timeout=0.1) as ser:
         for line in reversed(lines):
             # Example: line = b'0 Card UID: fjfjefkj\n'
             try:
-                if len(line) > 0 and 'Card UID:' in line:
+                if len(line) > 0 and b' Card UID:' in line:
                     parsed_line = line.rstrip().split(b' Card UID: ')
                     if len(parsed_line) is 2:
                         prefix = parsed_line[0].decode("utf-8")
