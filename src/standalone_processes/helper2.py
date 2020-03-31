@@ -218,12 +218,15 @@ def init(root_filename, skipListening=False):
     print("INSIDE INIT:")
     print(MY_ID)
     print(MY_ID_STR)
+    print("tcp://{0}:5570".format(rpc_url))
     # print(logPath)
     # print("-")
     tracer = init_jaeger_tracer()
     client.setsockopt(zmq.IDENTITY, MY_ID_STR.encode())
     client.connect("tcp://{0}:5570".format(rpc_url))
+    print("connected")
     client.send_multipart([".....PING{}{}".format(MY_ID_STR, init_ping_id).encode()])
+    print("sent ping")
     listen()  # assumes the first message recv'd will be the PING response
 
     # time.sleep(1.0)
