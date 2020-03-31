@@ -48,6 +48,6 @@ with serial.Serial('/dev/ttyACM0', 9600, timeout=0.1) as ser:
                         logging.info("Ignoring message: {}".format(line))
             except:
                 logging.error("Unexpected error:", sys.exc_info()[0])
-        if claims:
+        if len(claims) > 1:
             batch(claims)
-        time.sleep(0.1)
+        # time.sleep(0.1)
