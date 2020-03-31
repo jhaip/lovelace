@@ -20,7 +20,7 @@ with serial.Serial('/dev/ttyACM0', 9600, timeout=0.1) as ser:
         # logging.info("reading serial lines")
         lines = ser.readlines()  # used the serial timeout specified above
         # logging.info("done reading serial lines.")
-        # logging.info(lines)
+        logging.info(lines)
         sent_prefixes = {}
         for line in reversed(lines):
             # Example: line = b'0 Card UID: fjfjefkj\n'
