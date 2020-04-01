@@ -16,6 +16,7 @@ process_name = sys.argv[1]
 def my_prehook():
     # Kill process
     print("killing process")
+    print("pkill -f \"{}\"".format(process_name))
     os.system("pkill -f \"{}\"".format(process_name))
     # Restart process
     print("starting new process: {} &".format(process_name))
