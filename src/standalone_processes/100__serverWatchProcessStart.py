@@ -23,7 +23,7 @@ helper2.rpc_url = "10.0.0.22"
 
 if len(sys.argv) != 2:
     logging.info("Expected a single argument of the process to run!")
-    return 1
+    sys.exit()
 
 process_name = sys.argv[1]
 
