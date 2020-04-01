@@ -19,8 +19,8 @@ def my_prehook():
     print("pkill -f \"{}\"".format(process_name))
     os.system("pkill -f \"{}\"".format(process_name))
     # Restart process
-    print("starting new process: {} &".format(process_name))
-    os.system("{} &".format(process_name))
+    print("starting new process: python3 {} &".format(process_name))
+    os.system("python3 {} &".format(process_name))
 
 init(__file__, skipListening=True)
 
