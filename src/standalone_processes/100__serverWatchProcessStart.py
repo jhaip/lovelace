@@ -7,9 +7,10 @@ import sys
 import os, signal
 
 my_pid = int(os.getpid())
+print(my_pid)
 
 def check_kill_process(pstring):
-    for line in os.popen("ps ax | grep " + pstring + " | grep -v grep"):
+    for line in os.popen("ps ax | grep \"" + pstring + "\" | grep -v grep"):
         fields = line.split()
         pid = fields[0]
         if int(pid) == my_pid:
