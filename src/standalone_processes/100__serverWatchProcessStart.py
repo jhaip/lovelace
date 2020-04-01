@@ -4,6 +4,13 @@ import logging
 import time
 import os
 import sys
+import os, signal
+
+def check_kill_process(pstring):
+    for line in os.popen("ps ax | grep " + pstring + " | grep -v grep"):
+        fields = line.split()
+        pid = fields[0]
+        os.kill(int(pid), signal.SIGKILL)
 
 helper2.rpc_url = "10.0.0.22"
 
@@ -16,8 +23,9 @@ process_name = sys.argv[1]
 def my_prehook():
     # Kill process
     print("killing process")
-    print("pkill -f \"{}\"".format(process_name))
-    os.system("pkill -f \"{}\"".format(process_name))
+    # print("pkill -f \"{}\"".format(process_name))
+    # os.system("pkill -f \"{}\"".format(process_name))
+    check_kill_process(process_name)
     # Restart process
     print("starting new process: python3 {} &".format(process_name))
     os.system("python3 {} &".format(process_name))
