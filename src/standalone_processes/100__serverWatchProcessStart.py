@@ -17,7 +17,7 @@ def check_kill_process(pstring):
             print("It's my own PID!")
         else:
             print("not my PID {}".format(pid))
-        os.kill(int(pid), signal.SIGKILL)
+            os.kill(int(pid), signal.SIGKILL)
 
 helper2.rpc_url = "10.0.0.22"
 
