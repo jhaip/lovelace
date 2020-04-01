@@ -10,6 +10,7 @@ helper2.rpc_url = "10.0.0.22"
 ThermalPrinter = adafruit_thermal_printer.get_printer_class(2.64)
 uart = serial.Serial("/dev/serial0", 19200, timeout=5)
 printer = ThermalPrinter(uart)
+printer.send_command("\x1B\x21\x01") # Use small font B
 
 @subscription(["$ $ wish text $text would be thermal printed"])
 def sub_callback(results):
