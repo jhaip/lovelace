@@ -17,7 +17,7 @@ def my_prehook():
     # Kill process
     print("killing process")
     print("killall -9 \"{}\"".format(process_name))
-    os.system("killall -f \"{}\"".format(process_name))
+    os.system("killall -9 \"{}\"".format(process_name))
     # Restart process
     print("starting new process: {} &".format(process_name))
     os.system("{} &".format(process_name))
