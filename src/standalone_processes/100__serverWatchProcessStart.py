@@ -6,10 +6,16 @@ import os
 import sys
 import os, signal
 
+my_pid = int(os.getpid())
+
 def check_kill_process(pstring):
     for line in os.popen("ps ax | grep " + pstring + " | grep -v grep"):
         fields = line.split()
         pid = fields[0]
+        if int(pid) == my_pid:
+            print("It's my own PID!")
+        else:
+            print("not my PID {}".format(pid))
         os.kill(int(pid), signal.SIGKILL)
 
 helper2.rpc_url = "10.0.0.22"
