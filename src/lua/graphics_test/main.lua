@@ -161,7 +161,7 @@ function love.load()
     love.window.setTitle('Room Graphics')
     love.window.setFullscreen( true )
     love.graphics.setBackgroundColor(0, 0, 0)
-    font = love.graphics.newFont(72)
+    font = love.graphics.newFont("Inconsolata-Regular.ttf", 72)
     room.init(true)
 end
 
@@ -264,7 +264,7 @@ function love.draw()
             stroke_width = tonumber(opt)
             love.graphics.setLineWidth( stroke_width )
         elseif g.type == "fontsize" then
-            font = love.graphics.newFont(tonumber(opt))
+            font = love.graphics.newFont("Inconsolata-Regular.ttf", tonumber(opt))
         elseif g.type == "push" then
             love.graphics.push()
         elseif g.type == "pop" then
