@@ -162,6 +162,7 @@ function love.load()
     love.window.setFullscreen( true )
     love.graphics.setBackgroundColor(0, 0, 0)
     font = love.graphics.newFont("Inconsolata-Regular.ttf", 72)
+    love.mouse.setVisible(false)
     room.init(true)
 end
 
