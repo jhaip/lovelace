@@ -78,6 +78,16 @@ function cmd() {
     love ./hello.love
     cd ../../..
     echo -e "booting"
+  elif [ "$1" == "pieditorstart" ]
+  then
+    pkill -f "hello.love"
+    export DISPLAY=:0
+    sudo python3 src/standalone_processes/650__keyboard.py &
+    cd src/lua/graphics_test
+    zip hello.love main.lua helper.lua matrix.lua json.lua zhelpers.lua Inconsolata-Regular.ttf
+    love ./hello.love
+    cd ../../..
+    echo -e "booting"
   elif [ "$1" == "lasersocksstart" ]
   then
     cd new-backend/go-server
