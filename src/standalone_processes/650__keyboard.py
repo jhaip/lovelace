@@ -84,6 +84,8 @@ def handle_key_event(e):
                 add_key(None, 'C-{}'.format(e.name.upper()))
             elif shift_held and e.name in shift_map:
                 add_key(None, 'C-{}'.format(shift_map[e.name]))
+            elif e.name == '−':
+                add_key(None, 'C--'.format(e.name))
             else:
                 add_key(None, 'C-{}'.format(e.name))
         elif e.name in special_keys:
