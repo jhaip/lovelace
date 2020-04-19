@@ -236,7 +236,7 @@ function love.draw()
             elseif #opt == 3 then
                 fill_color = {opt[1], opt[2], opt[3]}
             elseif #opt == 4 then
-                fill_color = {opt[1], opt[2], opt[3], opt[4]}
+                fill_color = {opt[1], opt[2], opt[3], opt[4]/255}
             end
         elseif g.type == "stroke" then
             is_stroke_on = true
