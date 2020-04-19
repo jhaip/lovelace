@@ -80,7 +80,12 @@ def handle_key_event(e):
         if e.name == 'unknown':
             return
         if ctrl_held:
-            add_key(None, 'C-{}'.format(e.name))
+            if shift_held and e.name.isalpha():
+                add_key(None, 'C-{}'.format(e.name.upper()))
+            elif shift_held and e.name in shift_map:
+                add_key(None, 'C-{}'.format(shift_map[e.name]))
+            else:
+                add_key(None, 'C-{}'.format(e.name))
         elif e.name in special_keys:
             add_key(None, e.name)
         elif shift_held and e.name.isalpha():
