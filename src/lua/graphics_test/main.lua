@@ -169,12 +169,12 @@ end
 function love.draw()
     -- TODO: set baseline things
     is_fill_on = true
-    fill_color = {255, 255, 255}
+    fill_color = {1, 1, 1}
     is_stroke_on = true
-    stroke_color = {255, 255, 255}
+    stroke_color = {1, 1, 1}
     stroke_width = 1
     love.graphics.setLineWidth( stroke_width )
-    font_color = {255, 255, 255}
+    font_color = {1, 1, 1}
     local fontSize = 72
     love.graphics.setFont(font)
 
@@ -234,9 +234,9 @@ function love.draw()
                     fill_color = colors[opt]
                 end
             elseif #opt == 3 then
-                fill_color = {opt[1], opt[2], opt[3]}
+                fill_color = {opt[1]/255, opt[2]/255, opt[3]/255}
             elseif #opt == 4 then
-                fill_color = {opt[1], opt[2], opt[3], opt[4]/255}
+                fill_color = {opt[1]/255, opt[2]/255, opt[3]/255, opt[4]/255}
             end
         elseif g.type == "stroke" then
             is_stroke_on = true
@@ -245,17 +245,17 @@ function love.draw()
                     stroke_color = colors[opt]
                 end
             elseif #opt == 3 then
-                stroke_color = {opt[1], opt[2], opt[3]}
+                stroke_color = {opt[1]/255, opt[2]/255, opt[3]/255}
             elseif #opt == 4 then
-                stroke_color = {opt[1], opt[2], opt[3], opt[4]/255}
+                stroke_color = {opt[1]/255, opt[2]/255, opt[3]/255, opt[4]/255}
             end
         elseif g.type == "fontcolor" then
             if type(opt) == "string" then
                 -- TODO: have color names like "red" in love2d
             elseif #opt == 3 then
-                font_color = {opt[1], opt[2], opt[3]}
+                font_color = {opt[1]/255, opt[2]/255, opt[3]/255}
             elseif #opt == 4 then
-                font_color = {opt[1], opt[2], opt[3], opt[4]/255}
+                font_color = {opt[1]/255, opt[2]/255, opt[3]/255, opt[4]/255}
             end
         elseif g.type == "nofill" then
             is_fill_on = false
