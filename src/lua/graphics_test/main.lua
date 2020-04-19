@@ -266,6 +266,7 @@ function love.draw()
             love.graphics.setLineWidth( stroke_width )
         elseif g.type == "fontsize" then
             font = love.graphics.newFont("Inconsolata-Regular.ttf", tonumber(opt))
+            love.graphics.setFont(font)
         elseif g.type == "push" then
             love.graphics.push()
         elseif g.type == "pop" then
