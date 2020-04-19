@@ -247,7 +247,7 @@ function love.draw()
             elseif #opt == 3 then
                 stroke_color = {opt[1], opt[2], opt[3]}
             elseif #opt == 4 then
-                stroke_color = {opt[1], opt[2], opt[3], opt[4]}
+                stroke_color = {opt[1], opt[2], opt[3], opt[4]/255}
             end
         elseif g.type == "fontcolor" then
             if type(opt) == "string" then
@@ -255,7 +255,7 @@ function love.draw()
             elseif #opt == 3 then
                 font_color = {opt[1], opt[2], opt[3]}
             elseif #opt == 4 then
-                font_color = {opt[1], opt[2], opt[3], opt[4]}
+                font_color = {opt[1], opt[2], opt[3], opt[4]/255}
             end
         elseif g.type == "nofill" then
             is_fill_on = false
