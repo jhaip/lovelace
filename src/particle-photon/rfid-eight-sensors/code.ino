@@ -111,12 +111,12 @@ void publishValueMessages(String val1, String val2, String val3, String val4, St
     Serial.println(response.status);
 }
 
-void check_firmware(MFRC522 reader)
+bool check_firmware(MFRC522 reader)
 {
     delay(5);
     byte v = reader.PCD_ReadRegister(MFRC522::VersionReg);
     Serial.println(v, HEX);
-    return v == 0x92
+    return v == 0x92;
 }
 
 void setup()
