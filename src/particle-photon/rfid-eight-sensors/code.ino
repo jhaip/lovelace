@@ -1,8 +1,8 @@
 // This #include statement was automatically added by the Particle IDE.
-#include <HttpClient.h>
+#include "MFRC522.h"
 
 // This #include statement was automatically added by the Particle IDE.
-#include <MFRC522.h>
+#include <HttpClient.h>
 
 // #include "SparkJson.h"
 // #include "HttpClient.h"
@@ -60,6 +60,15 @@ MFRC522 mfrc522_f(SS_PIN_F, RST_PIN);
 MFRC522 mfrc522_g(SS_PIN_G, RST_PIN);
 MFRC522 mfrc522_h(SS_PIN_H, RST_PIN);
 
+String prev_a = "null";
+String prev_b = "null";
+String prev_c = "null";
+String prev_d = "null";
+String prev_e = "null";
+String prev_f = "null";
+String prev_g = "null";
+String prev_h = "null";
+
 HttpClient http;
 
 // Headers currently need to be set at init, useful for API keys etc.
@@ -78,30 +87,18 @@ String myID = System.deviceID();
 unsigned long lastTime = 0;
 unsigned long now = 0;
 
-void publishValueMessage(int sensorId, String sensorValue)
+void publishValueMessages(String val1, String val2, String val3, String val4, String val5, String val6, String val7, String val8)
 {
-    char str[300];
-    sprintf(str, "{\"claim\":\"Photon%s read \\\"%s\\\" on sensor %i\", \"retract\":\"$ $ Photon%s read $ on sensor %i\"}", (const char *)myID, sensorValue.c_str(), sensorId, (const char *)myID, sensorId);
-    Serial.println(str);
-    request.ip = {10, 0, 0, 22};
-    request.port = 5000;
-    request.path = "/cleanup-claim";
-    request.body = str;
-    Serial.println(request.body);
-    http.post(request, response, headers);
-    Serial.print("Application>\tResponse status: ");
-    Serial.println(response.status);
-}
-
-void publishValueMessages(String sensorValue1, String sensorValue2, String sensorValue3, String sensorValue4, String sensorValue5)
-{
-    char str[400];
-    sprintf(str, "{\"claim\":[\"Photon%s read \\\"%s\\\" on sensor %i\", \"Photon%s read \\\"%s\\\" on sensor %i\", \"Photon%s read \\\"%s\\\" on sensor %i\", \"Photon%s read \\\"%s\\\" on sensor %i\", \"Photon%s read \\\"%s\\\" on sensor %i\"], \"retract\":\"$ $ Photon%s read $ on sensor $\"}",
-            (const char *)myID, sensorValue1.c_str(), 1,
-            (const char *)myID, sensorValue2.c_str(), 2,
-            (const char *)myID, sensorValue3.c_str(), 3,
-            (const char *)myID, sensorValue4.c_str(), 4,
-            (const char *)myID, sensorValue5.c_str(), 5,
+    char str[600];
+    sprintf(str, "{\"claim\":[\"Photon%s read \\\"%s\\\" on sensor %i\", \"Photon%s read \\\"%s\\\" on sensor %i\", \"Photon%s read \\\"%s\\\" on sensor %i\", \"Photon%s read \\\"%s\\\" on sensor %i\", \"Photon%s read \\\"%s\\\" on sensor %i\", \"Photon%s read \\\"%s\\\" on sensor %i\", \"Photon%s read \\\"%s\\\" on sensor %i\", \"Photon%s read \\\"%s\\\" on sensor %i\"], \"retract\":\"$ $ Photon%s read $ on sensor $\"}",
+            (const char *)myID, val1.c_str(), 1,
+            (const char *)myID, val2.c_str(), 2,
+            (const char *)myID, val3.c_str(), 3,
+            (const char *)myID, val4.c_str(), 4,
+            (const char *)myID, val5.c_str(), 5,
+            (const char *)myID, val6.c_str(), 6,
+            (const char *)myID, val7.c_str(), 7,
+            (const char *)myID, val8.c_str(), 8,
             (const char *)myID);
     Serial.println(str);
     request.ip = {10, 0, 0, 22};
@@ -114,9 +111,21 @@ void publishValueMessages(String sensorValue1, String sensorValue2, String senso
     Serial.println(response.status);
 }
 
+void check_firmware(MFRC522 reader)
+{
+    delay(5);
+    byte v = reader.PCD_ReadRegister(MFRC522::VersionReg);
+    Serial.println(v, HEX);
+    return v == 0x92
+}
+
 void setup()
 {
-    Serial.begin(9600); // Initialize serial communications with the PC
+    Serial.begin(9600); // Initialize serial communications with the
+    while (!Serial)
+        ; // Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4)
+    delay(100);
+
     mfrc522.setSPIConfig();
     mfrc522_b.setSPIConfig();
     mfrc522_c.setSPIConfig();
@@ -134,7 +143,37 @@ void setup()
     mfrc522_f.PCD_Init(); // Init MFRC522 card
     mfrc522_g.PCD_Init(); // Init MFRC522 card
     mfrc522_h.PCD_Init(); // Init MFRC522 card
+
+    check_firmware(mfrc522);
+    check_firmware(mfrc522_b);
+    check_firmware(mfrc522_c);
+    check_firmware(mfrc522_d);
+    check_firmware(mfrc522_e);
+    check_firmware(mfrc522_f);
+    check_firmware(mfrc522_g);
+    check_firmware(mfrc522_h);
     Serial.println("Scan PICC to see UID and type...");
+}
+
+String check_reader_new(MFRC522 reader)
+{
+    String ret = "null";
+    if (reader.PICC_IsNewCardPresent() && reader.PICC_ReadCardSerial())
+    {
+        MFRC522::Uid *uid = &(reader.uid);
+        String cardUidString = "";
+        // Serial.print("Card UID: ");
+        for (byte i = 0; i < uid->size; i++)
+        {
+            cardUidString = String(cardUidString + String(uid->uidByte[i] < 0x10 ? "0" : ""));
+            cardUidString = String(cardUidString + String(uid->uidByte[i], HEX));
+        }
+        ret = cardUidString;
+
+        reader.PICC_HaltA();
+        reader.PCD_StopCrypto1();
+    }
+    return ret;
 }
 
 String check_reader(MFRC522 reader)
@@ -144,7 +183,7 @@ String check_reader(MFRC522 reader)
     byte result = reader.PICC_WakeupA(bufferATQA, &bufferSize);
     if (!(result == MFRC522::STATUS_OK || result == MFRC522::STATUS_COLLISION))
     {
-        Serial.println("STATUS is not OK or COLLISION");
+        // Serial.println("STATUS is not OK or COLLISION");
         return "null";
     }
 
@@ -156,13 +195,13 @@ String check_reader(MFRC522 reader)
 
     MFRC522::Uid *uid = &(reader.uid);
     String cardUidString = "";
-    Serial.print("Card UID: ");
+    // Serial.print("Card UID: ");
     for (byte i = 0; i < uid->size; i++)
     {
         cardUidString = String(cardUidString + String(uid->uidByte[i] < 0x10 ? "0" : ""));
         cardUidString = String(cardUidString + String(uid->uidByte[i], HEX));
     }
-    Serial.println(cardUidString);
+    // Serial.println(cardUidString);
 
     reader.PICC_HaltA();
     return cardUidString;
@@ -170,32 +209,74 @@ String check_reader(MFRC522 reader)
 
 void loop()
 {
-
-    delay(50);
+    delay(100);
 
     lastTime = millis();
 
     String val_a = check_reader(mfrc522);
+    // delay(50);
     String val_b = check_reader(mfrc522_b);
+    // delay(50);
     String val_c = check_reader(mfrc522_c);
+    // delay(50);
     String val_d = check_reader(mfrc522_d);
+    // delay(50);
     String val_e = check_reader(mfrc522_e);
+    // delay(50);
     String val_f = check_reader(mfrc522_f);
+    // delay(50);
     String val_g = check_reader(mfrc522_g);
+    // delay(50);
     String val_h = check_reader(mfrc522_h);
 
-    now = millis();
-    Serial.printlnf("rfid read lag: %lu ms", (now - lastTime));
-    lastTime = millis();
+    Serial.printlnf("%s %s %s %s %s %s %s %s", val_a.c_str(), val_b.c_str(), val_c.c_str(), val_d.c_str(), val_e.c_str(), val_f.c_str(), val_g.c_str(), val_h.c_str());
 
-    // publishValueMessages(val_a, val_b, val_c, val_d, val_e);
-    //   publishValueMessage(1, val_a);
-    // publishValueMessage(2, val_b);
-    //   publishValueMessage(3, val_c);
-    // publishValueMessage(4, val_d);
-    // publishValueMessage(5, val_e);
-    // publishValueMessage(6, val_f);
+    // now = millis();
+    // Serial.printlnf("rfid read lag: %lu ms", (now - lastTime));
+    // lastTime = millis();
 
-    now = millis();
-    Serial.printlnf("send lag: %lu ms", (now - lastTime));
+    /*
+    publishValueMessages(
+            val_a,
+            val_b,
+            val_c,
+            val_d,
+            val_e,
+            val_f,
+            val_g,
+            val_h);
+    */
+
+    if (
+        prev_a != val_a ||
+        prev_b != val_b ||
+        prev_c != val_c ||
+        prev_d != val_d ||
+        prev_e != val_e ||
+        prev_f != val_f ||
+        prev_g != val_g ||
+        prev_h != val_h)
+    {
+        Serial.println("Change!");
+        // publishValueMessages(
+        //     val_a,
+        //     val_b,
+        //     val_c,
+        //     val_d,
+        //     val_e,
+        //     val_f,
+        //     val_g,
+        //     val_h);
+        prev_a = val_a;
+        prev_b = val_b;
+        prev_c = val_c;
+        prev_d = val_d;
+        prev_e = val_e;
+        prev_f = val_f;
+        prev_g = val_g;
+        prev_h = val_h;
+    }
+
+    // now = millis();
+    // Serial.printlnf("send lag: %lu ms", (now - lastTime));
 }
