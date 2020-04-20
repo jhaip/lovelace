@@ -69,6 +69,16 @@ String prev_f = "null";
 String prev_g = "null";
 String prev_h = "null";
 
+byte DEBOUNCE_SENSOR_NULL_LIMIT = 3;
+byte sensor_null_count_a = DEBOUNCE_SENSOR_NULL_LIMIT;
+byte sensor_null_count_b = DEBOUNCE_SENSOR_NULL_LIMIT;
+byte sensor_null_count_c = DEBOUNCE_SENSOR_NULL_LIMIT;
+byte sensor_null_count_d = DEBOUNCE_SENSOR_NULL_LIMIT;
+byte sensor_null_count_e = DEBOUNCE_SENSOR_NULL_LIMIT;
+byte sensor_null_count_f = DEBOUNCE_SENSOR_NULL_LIMIT;
+byte sensor_null_count_g = DEBOUNCE_SENSOR_NULL_LIMIT;
+byte sensor_null_count_h = DEBOUNCE_SENSOR_NULL_LIMIT;
+
 HttpClient http;
 
 // Headers currently need to be set at init, useful for API keys etc.
@@ -231,6 +241,173 @@ void loop()
 
     Serial.printlnf("%s %s %s %s %s %s %s %s", val_a.c_str(), val_b.c_str(), val_c.c_str(), val_d.c_str(), val_e.c_str(), val_f.c_str(), val_g.c_str(), val_h.c_str());
 
+    bool some_change = false;
+    if (val_a != "null")
+    {
+        if (sensor_null_count_a == DEBOUNCE_SENSOR_NULL_LIMIT)
+        {
+            some_change = true;
+        }
+        sensor_null_count_a = 0;
+        prev_a = val_a;
+    }
+    else if (sensor_null_count_a < DEBOUNCE_SENSOR_NULL_LIMIT)
+    {
+        sensor_null_count_a += 1;
+        prev_a = "null";
+        if (sensor_null_count_a == DEBOUNCE_SENSOR_NULL_LIMIT)
+        {
+            some_change = true;
+        }
+    }
+
+    if (val_b != "null")
+    {
+        if (sensor_null_count_b == DEBOUNCE_SENSOR_NULL_LIMIT)
+        {
+            some_change = true;
+        }
+        sensor_null_count_b = 0;
+        prev_b = val_b;
+    }
+    else if (sensor_null_count_b < DEBOUNCE_SENSOR_NULL_LIMIT)
+    {
+        sensor_null_count_b += 1;
+        prev_b = "null";
+        if (sensor_null_count_b == DEBOUNCE_SENSOR_NULL_LIMIT)
+        {
+            some_change = true;
+        }
+    }
+
+    if (val_c != "null")
+    {
+        if (sensor_null_count_c == DEBOUNCE_SENSOR_NULL_LIMIT)
+        {
+            some_change = true;
+        }
+        sensor_null_count_c = 0;
+        prev_c = val_c;
+    }
+    else if (sensor_null_count_c < DEBOUNCE_SENSOR_NULL_LIMIT)
+    {
+        sensor_null_count_c += 1;
+        prev_c = "null";
+        if (sensor_null_count_c == DEBOUNCE_SENSOR_NULL_LIMIT)
+        {
+            some_change = true;
+        }
+    }
+
+    if (val_d != "null")
+    {
+        if (sensor_null_count_d == DEBOUNCE_SENSOR_NULL_LIMIT)
+        {
+            some_change = true;
+        }
+        sensor_null_count_d = 0;
+        prev_d = val_d;
+    }
+    else if (sensor_null_count_d < DEBOUNCE_SENSOR_NULL_LIMIT)
+    {
+        sensor_null_count_d += 1;
+        prev_d = "null";
+        if (sensor_null_count_d == DEBOUNCE_SENSOR_NULL_LIMIT)
+        {
+            some_change = true;
+        }
+    }
+
+    if (val_e != "null")
+    {
+        if (sensor_null_count_e == DEBOUNCE_SENSOR_NULL_LIMIT)
+        {
+            some_change = true;
+        }
+        sensor_null_count_e = 0;
+        prev_e = val_e;
+    }
+    else if (sensor_null_count_d < DEBOUNCE_SENSOR_NULL_LIMIT)
+    {
+        sensor_null_count_d += 1;
+        prev_e = "null";
+        if (sensor_null_count_e == DEBOUNCE_SENSOR_NULL_LIMIT)
+        {
+            some_change = true;
+        }
+    }
+
+    if (val_f != "null")
+    {
+        if (sensor_null_count_f == DEBOUNCE_SENSOR_NULL_LIMIT)
+        {
+            some_change = true;
+        }
+        sensor_null_count_f = 0;
+        prev_f = val_f;
+    }
+    else if (sensor_null_count_f < DEBOUNCE_SENSOR_NULL_LIMIT)
+    {
+        sensor_null_count_f += 1;
+        prev_f = "null";
+        if (sensor_null_count_f == DEBOUNCE_SENSOR_NULL_LIMIT)
+        {
+            some_change = true;
+        }
+    }
+
+    if (val_g != "null")
+    {
+        if (sensor_null_count_g == DEBOUNCE_SENSOR_NULL_LIMIT)
+        {
+            some_change = true;
+        }
+        sensor_null_count_g = 0;
+        prev_g = val_g;
+    }
+    else if (sensor_null_count_g < DEBOUNCE_SENSOR_NULL_LIMIT)
+    {
+        sensor_null_count_g += 1;
+        prev_g = "null";
+        if (sensor_null_count_g == DEBOUNCE_SENSOR_NULL_LIMIT)
+        {
+            some_change = true;
+        }
+    }
+
+    if (val_h != "null")
+    {
+        if (sensor_null_count_h == DEBOUNCE_SENSOR_NULL_LIMIT)
+        {
+            some_change = true;
+        }
+        sensor_null_count_h = 0;
+        prev_h = val_h;
+    }
+    else if (sensor_null_count_h < DEBOUNCE_SENSOR_NULL_LIMIT)
+    {
+        sensor_null_count_h += 1;
+        prev_h = "null";
+        if (sensor_null_count_h == DEBOUNCE_SENSOR_NULL_LIMIT)
+        {
+            some_change = true;
+        }
+    }
+
+    if (some_change)
+    {
+        Serial.println("Change!");
+        publishValueMessages(
+            prev_a,
+            prev_b,
+            prev_c,
+            prev_d,
+            prev_e,
+            prev_f,
+            prev_g,
+            prev_h);
+    }
+
     // now = millis();
     // Serial.printlnf("rfid read lag: %lu ms", (now - lastTime));
     // lastTime = millis();
@@ -245,8 +422,8 @@ void loop()
             val_f,
             val_g,
             val_h);
-    */
-
+    
+    
     if (
         prev_a != val_a ||
         prev_b != val_b ||
@@ -276,6 +453,7 @@ void loop()
         prev_g = val_g;
         prev_h = val_h;
     }
+    */
 
     // now = millis();
     // Serial.printlnf("send lag: %lu ms", (now - lastTime));
