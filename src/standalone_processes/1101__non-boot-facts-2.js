@@ -69,6 +69,9 @@ room.on(
         console.error(results)
         for (let i=0; i<results.length; i+=1) {
             const id = results[i].id.toString().padStart(4, '0');
+            if (id === "2042") {
+                continue; // skip the masterlist replicator
+            }
             if (nonBootFactSubcriptions[id] !== "SUBSCRIBED" && id !== MY_ID_STR) {
                 nonBootFactSubcriptions[id] = "SUBSCRIBED";
                 subscribe(id);
