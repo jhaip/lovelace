@@ -80,7 +80,7 @@ room.assert(`camera 99 sees paper 30 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) 
 // room.assert(`camera 2 has projector calibration TL ( 512 , 282 ) TR ( 1712 , 229 ) BR ( 1788 , 961 ) BL ( 483 , 941 ) @ 9`)
 
 // Text editor
-room.assert(`camera 99 sees paper 1013 at TL( 0 , 0 ) TR ( 1920 , 0 ) BR ( 1920 , 1080 ) BL ( 0 , 1080 ) @ 1`)
+// room.assert(`camera 99 sees paper 1013 at TL( 0 , 0 ) TR ( 1920 , 0 ) BR ( 1920 , 1080 ) BL ( 0 , 1080 ) @ 1`)
 room.assert(`paper 1013 has width 1920 height 1080 angle 0 at ( 0 , 0 )`)
 // Non boot facts
 room.assert(`camera 99 sees paper 1101 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
