@@ -273,6 +273,7 @@ function love.draw()
                 font_cache[opt_font_size] = love.graphics.newFont("Inconsolata-Regular.ttf", opt_font_size)
             else
                 print("using cached font")
+            end
             font = font_cache[opt_font_size]
             love.graphics.setFont(font)
         elseif g.type == "push" then
