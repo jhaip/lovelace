@@ -268,7 +268,7 @@ function love.draw()
             love.graphics.setLineWidth( stroke_width )
         elseif g.type == "fontsize" then
             opt_font_size = tonumber(opt)
-            if font_cache[opt_font_size] ~= nil then
+            if font_cache[opt_font_size] == nil then
                 print("created new font")
                 font_cache[opt_font_size] = love.graphics.newFont("Inconsolata-Regular.ttf", opt_font_size)
             else
