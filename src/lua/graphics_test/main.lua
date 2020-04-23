@@ -21,6 +21,7 @@ COMBINED_TRANSFORM = {}
 
 graphics_cache = {}
 font = false
+font_cache = {}
 
 local colors = {
     white={255, 255, 255},
@@ -162,6 +163,7 @@ function love.load()
     love.window.setFullscreen( true )
     love.graphics.setBackgroundColor(0, 0, 0)
     font = love.graphics.newFont("Inconsolata-Regular.ttf", 72)
+    font_cache[72] = font
     love.mouse.setVisible(false)
     room.init(true)
 end
@@ -265,7 +267,13 @@ function love.draw()
             stroke_width = tonumber(opt)
             love.graphics.setLineWidth( stroke_width )
         elseif g.type == "fontsize" then
-            font = love.graphics.newFont("Inconsolata-Regular.ttf", tonumber(opt))
+            opt_font_size = tonumber(opt)
+            if font_cache[opt_font_size] ~= nil then
+                print("created new font")
+                font_cache[opt_font_size] = love.graphics.newFont("Inconsolata-Regular.ttf", opt_font_size)
+            else
+                print("using cached font")
+            font = font_cache[opt_font_size]
             love.graphics.setFont(font)
         elseif g.type == "push" then
             love.graphics.push()
