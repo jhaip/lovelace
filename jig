@@ -1,5 +1,8 @@
 #!/bin/bash
 
+parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+cd "$parent_path"
+
 function cmd() {
   if [ "$1" == "start" ]
   then
@@ -250,10 +253,10 @@ function cmd() {
     echo -e "booting"
   elif [ "$1" == "rfideditorstart3" ]
   then
-    cd ~/lovelace/new-backend/go-server
+    cd new-backend/go-server
     go run server.go parser2.go subscriber.go database.go &
     echo -e "running server"
-    cd ~/lovelace
+    cd ../..
     sleep 2
     node src/standalone_processes/111__rfidEditorBoot.js &
     sleep 2
