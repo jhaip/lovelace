@@ -250,10 +250,10 @@ function cmd() {
     echo -e "booting"
   elif [ "$1" == "rfideditorstart3" ]
   then
-    cd new-backend/go-server
+    cd ~/lovelace/new-backend/go-server
     go run server.go parser2.go subscriber.go database.go &
     echo -e "running server"
-    cd ../..
+    cd ~/lovelace
     sleep 2
     node src/standalone_processes/111__rfidEditorBoot.js &
     sleep 2
