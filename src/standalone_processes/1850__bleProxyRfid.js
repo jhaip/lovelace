@@ -139,7 +139,7 @@ var BleUart = function (name, options) {
             noble.stopScanning();
             // get the service you want on this peripheral:
             if (peripheral.services) {
-                explore(null, peripheral.services.filter(service => uuid === serviceUUID));
+                explore(null, peripheral.services.filter(service => service.uuid === serviceUUID));
             }
             peripheral.discoverServices([serviceUUID], explore);
         }
