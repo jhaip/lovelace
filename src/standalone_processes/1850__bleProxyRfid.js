@@ -168,7 +168,12 @@ var BleUart = function (name, options) {
                     if (characteristic.properties.indexOf("notify") < 0) {
                         console.log("ERROR: expecting " + characteristic.uuid + " to have 'notify' property.");
                     }
-                    receive.notify(true);  // turn on notifications
+                    try {
+                        receive.notify(true);  // turn on notifications
+                    } catch (err) {
+                        console.log(err);
+                        console.log("but ignoring error?...")
+                    }
 
                     receive.on('read', function (data, notification) {
                         if (notification) {   // if you got a notification
