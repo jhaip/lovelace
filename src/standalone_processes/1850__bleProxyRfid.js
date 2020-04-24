@@ -204,7 +204,7 @@ var BleUart = function (name, options) {
                 console.log("found service");
                 console.log(services[s]);
                 if (services[s].characteristics) {
-                    getCharacteristics(services[s].characteristics);
+                    getCharacteristics(null, services[s].characteristics);
                 } else {
                     services[s].discoverCharacteristics([], getCharacteristics);
                 }
