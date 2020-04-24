@@ -202,7 +202,7 @@ var BleUart = function (name, options) {
         for (var s in services) {
             if (services[s].uuid === serviceUUID) {
                 console.log("found service");
-                console.log(service);
+                console.log(services[s]);
                 services[s].discoverCharacteristics([], getCharacteristics);
                 return;
             }
