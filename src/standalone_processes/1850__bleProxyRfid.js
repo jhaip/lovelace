@@ -191,7 +191,7 @@ var BleUart = function (name, options) {
                             self.emit('data', data);  // emit a data event
                         }
                     });
-                    *.
+                    */
                 }
 
                 // separate *if* since some hardware uses the same characteristic for tx and rx
