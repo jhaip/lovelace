@@ -140,8 +140,9 @@ var BleUart = function (name, options) {
             // get the service you want on this peripheral:
             if (peripheral.services) {
                 explore(null, peripheral.services.filter(service => service.uuid === serviceUUID));
+            } else {
+                peripheral.discoverServices([serviceUUID], explore);
             }
-            peripheral.discoverServices([serviceUUID], explore);
         }
 
         // called only when the peripheral has the service you're looking for:
