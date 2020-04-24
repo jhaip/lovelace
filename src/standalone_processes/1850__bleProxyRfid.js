@@ -203,7 +203,11 @@ var BleUart = function (name, options) {
             if (services[s].uuid === serviceUUID) {
                 console.log("found service");
                 console.log(services[s]);
-                services[s].discoverCharacteristics([], getCharacteristics);
+                if (services[s].characteristics) {
+                    getCharacteristics(services[s].characteristics);
+                } else {
+                    services[s].discoverCharacteristics([], getCharacteristics);
+                }
                 return;
             }
         }
