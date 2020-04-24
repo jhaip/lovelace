@@ -288,7 +288,12 @@ bleSerial.on('data', function (data) {
 bleSerial.on('connected', function (data) {
     console.log(data);
     console.log("Connected to BLE. Sending a hello message");
-    bleSerial.write("Hello BLE!");
+    try {
+        bleSerial.write("Hello BLE!");
+    } catch (e) {
+        console.log(e);
+        console.log("try ignoring write BLE error...");
+    }
     //bleSerial.write([1,2,3,4,5]);
     //bleSerial.write(new Uint8Array([5,4,3,2,1]));
     //bleSerial.write(new Buffer([6,7,8,9]))
