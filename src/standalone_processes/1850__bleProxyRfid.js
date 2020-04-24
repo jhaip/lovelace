@@ -168,6 +168,17 @@ var BleUart = function (name, options) {
                     if (characteristic.properties.indexOf("notify") < 0) {
                         console.log("ERROR: expecting " + characteristic.uuid + " to have 'notify' property.");
                     }
+
+                    receive.on('data', function (data, notification) {
+                        if (notification) {   // if you got a notification
+                            self.emit('data', data);  // emit a data event
+                        }
+                    });
+
+                    receive.subscribe(function(error) {
+                        console.log("characteristics notification on");
+                    })
+                    /*
                     try {
                         receive.notify(true);  // turn on notifications
                     } catch (err) {
@@ -180,6 +191,7 @@ var BleUart = function (name, options) {
                             self.emit('data', data);  // emit a data event
                         }
                     });
+                    *.
                 }
 
                 // separate *if* since some hardware uses the same characteristic for tx and rx
