@@ -138,6 +138,9 @@ var BleUart = function (name, options) {
             // service, you can stop scanning for others:
             noble.stopScanning();
             // get the service you want on this peripheral:
+            if (peripheral.services) {
+                explore(null, peripheral.services.filter(service => uuid === serviceUUID));
+            }
             peripheral.discoverServices([serviceUUID], explore);
         }
 
@@ -198,6 +201,8 @@ var BleUart = function (name, options) {
         // the UART service, look for its characteristics:
         for (var s in services) {
             if (services[s].uuid === serviceUUID) {
+                console.log("found service");
+                console.log(service);
                 services[s].discoverCharacteristics([], getCharacteristics);
                 return;
             }
