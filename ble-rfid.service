@@ -10,7 +10,7 @@ User=root
 # sudo systemctl start ble-rfid
 Environment=PATH=/home/jacob/bin:/home/jacob/.local/bin:/home/jacob/.nvm/versions/node/v10.6.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/usr/$
 Restart=always
-ExecStart=/home/jacob/.nvm/versions/node/v10.6.0/bin/node src/standalone_processes/1850__bleProxyRfid.js
+ExecStart=/home/jacob/.nvm/versions/node/v10.6.0/bin/node /home/jacob/lovelace/src/standalone_processes/1850__bleProxyRfid.js
 ExecStop=/usr/bin/pkill -f standalone_processes/1850__bleProxyRfid.js
 
 [Install]
