@@ -250,6 +250,8 @@ var BleUart = function (name, options) {
     // the BLE disconnect function:
     self.disconnect = function () {
         self.connected = false;
+        console.log("device disconnected. Killing process so it can be fully rebooted.")
+        process.exit(1);
     };
 
     // when the radio turns on, start scanning:

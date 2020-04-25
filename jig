@@ -264,7 +264,8 @@ function cmd() {
     echo -e "done running 1"
     sleep 2
     echo -e "done sleeping 2"
-    /home/jacob/.nvm/versions/node/v10.6.0/bin/node src/standalone_processes/1850__bleProxyRfid.js &
+    # /home/jacob/.nvm/versions/node/v10.6.0/bin/node src/standalone_processes/1850__bleProxyRfid.js &
+    sudo systemctl start ble-rfid
     echo -e "done running 2"
     # sudo /home/jacob/.nvm/versions/node/v10.6.0/bin/node src/standalone_processes/1193__bluefruitProxy.js &
     # ngrok http -subdomain=progspacemasterlist 3013 > /dev/null &
