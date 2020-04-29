@@ -1,5 +1,8 @@
 const { room, myId, run } = require('../helper2')(__filename);
 
-// Write your code here
+room.assert(`I am a pen card`)
+
+
+
 
 run();

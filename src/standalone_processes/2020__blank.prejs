@@ -1,1 +1,5 @@
-// Write your code here
+setInterval(() => {
+  cleanup
+  claim time is ${Math.round((new Date()).getTime()/1000)}
+  room.flush()
+}, 800)

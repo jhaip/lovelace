@@ -1,5 +1,9 @@
 const { room, myId, run } = require('../helper2')(__filename);
 
-// Write your code here
+room.assert(`wish plant lamp was at 100 percent`)
+
+
+
+
 
 run();
