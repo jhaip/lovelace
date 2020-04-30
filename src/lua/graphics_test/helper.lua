@@ -19,11 +19,7 @@ my_subscriptions = {}
 
 -- Prepare our context and publisher
 local context = zmq.context()
-local client, err = context:socket(zmq.DEALER, {
-    identity = MY_ID_STR;
-    connect = "tcp://" .. RPC_URL .. ":5570";
-})
-zassert(client, err)
+local client = nil
 
 function subscribe(query_strings, callback)
     subscription_id = uuid()
@@ -103,7 +99,13 @@ function room.listen(blocking)
     print("TODO")
 end
 
-function room.init(skipListening)
+function room.init(skipListening, passed_in_my_id_str)
+    MY_ID_STR = passed_in_my_id_str
+    client, err = context:socket(zmq.DEALER, {
+        identity = MY_ID_STR;
+        connect = "tcp://" .. RPC_URL .. ":5570";
+    })
+    zassert(client, err)
     -- TODO: set MY_ID, MY_ID_STR
     local err = client:send_multipart{".....PING" .. MY_ID_STR .. init_ping_id}
     print(err)

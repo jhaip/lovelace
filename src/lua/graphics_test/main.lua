@@ -22,6 +22,7 @@ COMBINED_TRANSFORM = {}
 graphics_cache = {}
 font = false
 font_cache = {}
+is_first_update = true
 
 local colors = {
     white={255, 255, 255},
@@ -158,14 +159,30 @@ room.on({"$ $ draw graphics $graphics on web2"}, function(results)
     end
 end)
 
-function love.load()
+function love.load(args)
+    local MY_ID_STR = "1999"
+    if #command_line_args >= 2 then
+        MY_ID_STR = command_line_args[1]
+        print("Set MY_ID_STR to:")
+        print(MY_ID_STR)
+    
+    room.on({"$ $ draw graphics $graphics on " .. MY_ID_STR}, function(results)
+        graphics_cache = {}
+        for i = 1, #results do
+            local parsedGraphics = json.decode(results[i].graphics)
+            for g = 1, #parsedGraphics do
+                graphics_cache[#graphics_cache + 1] = parsedGraphics[g]
+            end
+        end
+    end)
+
     love.window.setTitle('Room Graphics')
     love.window.setFullscreen( true )
     love.graphics.setBackgroundColor(0, 0, 0)
     font = love.graphics.newFont("Inconsolata-Regular.ttf", 72)
     font_cache[72] = font
     love.mouse.setVisible(false)
-    room.init(true)
+    room.init(true, MY_ID_STR)
 end
 
 function love.draw()
@@ -300,5 +317,9 @@ function love.draw()
 end
 
 function love.update()
-    room.listen(true) -- blocking listen
+    if is_first_update == false then
+        room.listen(true) -- blocking listen
+    else
+        is_first_update = true
+    end
 end
