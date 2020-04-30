@@ -165,6 +165,7 @@ function love.load(args)
         MY_ID_STR = command_line_args[1]
         print("Set MY_ID_STR to:")
         print(MY_ID_STR)
+    end
     
     room.on({"$ $ draw graphics $graphics on " .. MY_ID_STR}, function(results)
         graphics_cache = {}
