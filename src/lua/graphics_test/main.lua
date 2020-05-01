@@ -321,6 +321,6 @@ function love.update()
     if is_first_update == false then
         room.listen(true) -- blocking listen
     else
-        is_first_update = true
+        is_first_update = false
     end
 end
