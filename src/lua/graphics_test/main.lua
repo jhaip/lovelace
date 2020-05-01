@@ -161,9 +161,7 @@ end)
 
 function love.load(args)
     local MY_ID_STR = "1999"
-    print("ARGS:")
-    print(unpack(args))
-    if #args >= 2 then
+    if #args >= 1 then
         MY_ID_STR = args[1]
         print("Set MY_ID_STR to:")
         print(MY_ID_STR)
