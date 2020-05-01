@@ -79,7 +79,7 @@ function cmd() {
     cd src/lua/graphics_test
     rm hello.love
     zip hello.love main.lua helper.lua matrix.lua json.lua zhelpers.lua Inconsolata-Regular.ttf
-    love ./hello.love
+    love ./hello.love 1997
     cd ../../..
     echo -e "booting"
   elif [ "$1" == "pieditorstart" ]
