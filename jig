@@ -88,6 +88,7 @@ function cmd() {
     export DISPLAY=:0
     sudo python3 src/standalone_processes/650__keyboard.py &
     cd src/lua/graphics_test
+    rm hello.love
     zip hello.love main.lua helper.lua matrix.lua json.lua zhelpers.lua Inconsolata-Regular.ttf
     love ./hello.love 1999
     cd ../../..
