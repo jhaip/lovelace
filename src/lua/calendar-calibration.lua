@@ -90,27 +90,29 @@ function recalculateCombinedTransform()
     )
 
     room.claim({
-        {"type": "retract", "fact": [
-            ["id", room.get_my_id_str()],
-            ["id", "0"],
-            ["postfix", ""],
-        ]},
-        {"type": "claim", "fact": [
-            ["id", room.get_my_id_str()],
-            ["id", "0"],
-            ["text", "calendar"],
-            ["text", "calibration"],
-            ["text", "is"],
-            ["float", tostring(M[1][1])],
-            ["float", tostring(M[1][2])],
-            ["float", tostring(M[1][3])],
-            ["float", tostring(M[2][1])],
-            ["float", tostring(M[2][2])],
-            ["float", tostring(M[2][3])],
-            ["float", tostring(M[3][1])],
-            ["float", tostring(M[3][2])],
-            ["float", tostring(M[3][3])],
-        ]}
+        {type="retract", fact={
+            {"id", room.get_my_id_str()},
+            {"id", "0"},
+            {"postfix", ""},
+        }},
+        {type="claim", "fact"={
+            {"id", room.get_my_id_str()},
+            {"id", "0"},
+            {"text", "wish"},
+            {"text", "calibration"},
+            {"text", "for"},
+            {"integer", "1997"},
+            {"text", "is"},
+            {"float", tostring(M[1][1])},
+            {"float", tostring(M[1][2])},
+            {"float", tostring(M[1][3])},
+            {"float", tostring(M[2][1])},
+            {"float", tostring(M[2][2])},
+            {"float", tostring(M[2][3])},
+            {"float", tostring(M[3][1])},
+            {"float", tostring(M[3][2])},
+            {"float", tostring(M[3][3])},
+        }}
     })
 end
 
