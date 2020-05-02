@@ -89,6 +89,7 @@ function recalculateCombinedTransform()
         projectedCalendarRegion
     )
 
+    local M = screenToCalendarTransformMatrix
     room.claim({
         {type="retract", fact={
             {"id", room.get_my_id_str()},
