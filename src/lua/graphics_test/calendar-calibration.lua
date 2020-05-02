@@ -83,7 +83,7 @@ function recalculateCombinedTransform()
         SCREEN_SIZE_OFFSET_INNER
     )
     local M = calibrationTransformMatrix
-    if #calendarRegion > 0 {
+    if #calendarRegion > 0 then
         local projectedCalendarRegion = {
             projectPoint(calibrationTransformMatrix, calendarRegion[1]),
             projectPoint(calibrationTransformMatrix, calendarRegion[2]),
@@ -95,7 +95,7 @@ function recalculateCombinedTransform()
             projectedCalendarRegion
         )
         M = screenToCalendarTransformMatrix
-    }
+    end
     room.claim({
         {type="retract", fact={
             {"id", room.get_my_id_str()},
