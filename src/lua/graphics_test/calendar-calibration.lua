@@ -12,6 +12,15 @@ function getSquareCalibrationList(w, h)
     return {{x=0, y=0}, {x=w, y=0}, {x=w, y=h}, {x=0, y=h}}
 end
 
+function getCalibrationRegionDefault()
+    return {
+        {x=OFFSET, y=OFFSET},
+        {x=SCREEN_WIDTH - OFFSET, y=OFFSET},
+        {x=SCREEN_WIDTH - OFFSET, y=SCREEN_HEIGHT - OFFSET},
+        {x=OFFSET, y=SCREEN_HEIGHT - OFFSET}
+    }
+end
+
 local SCREEN_SIZE = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
 local OFFSET = 200;
 local SCREEN_SIZE_OFFSET_INNER = {
@@ -23,13 +32,8 @@ local SCREEN_SIZE_OFFSET_INNER = {
 -- BASE_CALIBRATION should match the resolution of the camera?
 local BASE_CALIBRATION = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
 -- calibrationRegion = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
-calibrationRegion = {
-    {x=OFFSET, y=OFFSET},
-    {x=SCREEN_WIDTH - OFFSET, y=OFFSET},
-    {x=SCREEN_WIDTH - OFFSET, y=SCREEN_HEIGHT - OFFSET},
-    {x=OFFSET, y=SCREEN_HEIGHT - OFFSET}
-}
-calendarRegion = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
+calibrationRegion = getCalibrationRegionDefault()
+calendarRegion = {}
 COMBINED_TRANSFORM = {}
 
 function getPerspectiveTransform(src, dst)
@@ -78,18 +82,20 @@ function recalculateCombinedTransform()
         calibrationRegion,
         SCREEN_SIZE_OFFSET_INNER
     )
-    local projectedCalendarRegion = {
-        projectPoint(calibrationTransformMatrix, calendarRegion[1]),
-        projectPoint(calibrationTransformMatrix, calendarRegion[2]),
-        projectPoint(calibrationTransformMatrix, calendarRegion[3]),
-        projectPoint(calibrationTransformMatrix, calendarRegion[4]),
+    local M = calibrationTransformMatrix
+    if #calendarRegion > 0 {
+        local projectedCalendarRegion = {
+            projectPoint(calibrationTransformMatrix, calendarRegion[1]),
+            projectPoint(calibrationTransformMatrix, calendarRegion[2]),
+            projectPoint(calibrationTransformMatrix, calendarRegion[3]),
+            projectPoint(calibrationTransformMatrix, calendarRegion[4]),
+        }
+        local screenToCalendarTransformMatrix = getPerspectiveTransform(
+            SCREEN_SIZE,
+            projectedCalendarRegion
+        )
+        M = screenToCalendarTransformMatrix
     }
-    local screenToCalendarTransformMatrix = getPerspectiveTransform(
-        SCREEN_SIZE,
-        projectedCalendarRegion
-    )
-
-    local M = screenToCalendarTransformMatrix
     room.claim({
         {type="retract", fact={
             {"id", room.get_my_id_str()},
@@ -123,6 +129,7 @@ end)
 
 room.on({"$ $ region $id at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4",
          "$ $ region $id has name calibration"}, function(results)
+    calibrationRegion = getCalibrationRegionDefault()
     for i = 1, #results do
         local r = results[i]
         calibrationRegion = {
@@ -137,6 +144,7 @@ end)
 
 room.on({"$ $ region $id at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4",
          "$ $ region $id has name calendar"}, function(results)
+    calendarRegion = {}
     for i = 1, #results do
         local r = results[i]
         calendarRegion = {
