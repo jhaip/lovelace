@@ -5,32 +5,12 @@ local matrix = require "matrix"
 
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
-CAMERA_IMAGE_WIDTH = 1280
-CAMERA_IMAGE_HEIGHT = 720
 
-function getSquareCalibrationList(w, h)
-    return {{x=0, y=0}, {x=w, y=0}, {x=w, y=h}, {x=0, y=h}}
-end
-
-local SCREEN_SIZE = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
-local OFFSET = 200;
-local SCREEN_SIZE_OFFSET_INNER = {
-    {x=OFFSET, y=OFFSET},
-    {x=SCREEN_WIDTH - OFFSET, y=OFFSET},
-    {x=SCREEN_WIDTH - OFFSET, y=SCREEN_HEIGHT - OFFSET},
-    {x=OFFSET, y=SCREEN_HEIGHT - OFFSET}
-}
--- BASE_CALIBRATION should match the resolution of the camera?
-local BASE_CALIBRATION = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
--- calibrationRegion = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
-calibrationRegion = {
-    {x=OFFSET, y=OFFSET},
-    {x=SCREEN_WIDTH - OFFSET, y=OFFSET},
-    {x=SCREEN_WIDTH - OFFSET, y=SCREEN_HEIGHT - OFFSET},
-    {x=OFFSET, y=SCREEN_HEIGHT - OFFSET}
-}
-calendarRegion = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
-COMBINED_TRANSFORM = {}
+COMBINED_TRANSFORM = convertFromMatrixTermsToTransform(
+    1, 0, 0,
+    0, 1, 0,
+    0, 0, 1,
+)
 
 graphics_cache = {}
 font = false
@@ -49,128 +29,17 @@ local colors = {
     orange={255, 165, 0},
 }
 
-function getPerspectiveTransform(src, dst)
-    -- src table {{x=1, y=1}, ...}
-    -- dst table
-    -- order: Top left (TL), TR, BR, BL
-    local a = matrix{
-        {0, 0, 1, 0, 0, 0, 0, 0},
-        {0, 0, 1, 0, 0, 0, 0, 0},
-        {0, 0, 1, 0, 0, 0, 0, 0},
-        {0, 0, 1, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 1, 0, 0},
-        {0, 0, 0, 0, 0, 1, 0, 0},
-        {0, 0, 0, 0, 0, 1, 0, 0},
-        {0, 0, 0, 0, 0, 1, 0, 0},
-    }
-    local b = matrix{{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}
-    for i = 1, 4 do
-        a[i][1] = src[i].x
-        a[i+4][4] = src[i].x
-        a[i][2] = src[i].y
-        a[i+4][5] = src[i].y
-        a[i][7] = -src[i].x*dst[i].x
-        a[i][8] = -src[i].y*dst[i].x
-        a[i+4][7] = -src[i].x*dst[i].y
-        a[i+4][8] = -src[i].y*dst[i].y
-        b[i][1] = dst[i].x
-        b[i+4][1] = dst[i].y
-    end
-    x = a:invert() * b
-    return matrix{
-      {x[1][1], x[2][1], x[3][1]},
-      {x[4][1], x[5][1], x[6][1]},
-      {x[7][1], x[8][1], 1},
-    }
-end
-
-function projectPoint(homographyMatrix, pt)
-    local r = homographyMatrix * matrix{{pt.x}, {pt.y}, {1}}
-    return {x=r[1][1], y=r[2][1]}
-end
-
-function convertFromMatrixToTransform(M)
+function convertFromMatrixTermsToTransform(M11, M12, M13, M21, M22, M23, M31, M32, M33)
     -- https://forum.openframeworks.cc/t/quad-warping-an-entire-opengl-view-solved/509/10
     local transform = love.math.newTransform()
     transform:setMatrix(
-        M[1][1], M[1][2], 0, M[1][3],
-        M[2][1], M[2][2], 0, M[2][3],
-        0,       0,       1, 0,
-        M[3][1], M[3][2], 0, 1
+        M11, M12, 0, M13,
+        M21, M22, 0, M23,
+        0,   0,   1, 0,
+        M31, M32, 0, 1
     )
     return transform
 end
-
-function recalculateCombinedTransform()
-    print("[[ Recalculating combined transform ]]")
-    -- local calendarTransformMatrix = getPerspectiveTransform(
-    --     SCREEN_SIZE,
-    --     calendarRegion
-    -- )
-    -- local calendarTransform = convertFromMatrixToTransform(calendarTransformMatrix)
-
-    local calibrationTransformMatrix = getPerspectiveTransform(
-        calibrationRegion,
-        SCREEN_SIZE_OFFSET_INNER
-    )
-    local projectedCalendarRegion = {
-        projectPoint(calibrationTransformMatrix, calendarRegion[1]),
-        projectPoint(calibrationTransformMatrix, calendarRegion[2]),
-        projectPoint(calibrationTransformMatrix, calendarRegion[3]),
-        projectPoint(calibrationTransformMatrix, calendarRegion[4]),
-    }
-    local screenToCalendarTransformMatrix = getPerspectiveTransform(
-        SCREEN_SIZE,
-        projectedCalendarRegion
-    )
-    local screenToCalendarTransform = convertFromMatrixToTransform(screenToCalendarTransformMatrix)
-    COMBINED_TRANSFORM = screenToCalendarTransform:clone()
-    -- local calibrationTransform = convertFromMatrixToTransform(calendarTransformMatrix)
-    -- local combined_matrix = calendarTransformMatrix * calibrationTransformMatrix;
-    -- COMBINED_TRANSFORM = convertFromMatrixToTransform(combined_matrix)
-    -- COMBINED_TRANSFORM = calendarTransform:clone()
-    -- COMBINED_TRANSFORM:apply(calibrationTransform)
-end
-
-recalculateCombinedTransform()
-
-room.on({"$ $ region $id at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4",
-         "$ $ region $id has name calibration"}, function(results)
-    for i = 1, #results do
-        local r = results[i]
-        calibrationRegion = {
-            {x=r.x1, y=r.y1},
-            {x=r.x2, y=r.y2},
-            {x=r.x3, y=r.y3},
-            {x=r.x4, y=r.y4}
-        }
-        recalculateCombinedTransform()
-    end
-end)
-
-room.on({"$ $ region $id at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4",
-         "$ $ region $id has name calendar"}, function(results)
-    for i = 1, #results do
-        local r = results[i]
-        calendarRegion = {
-            {x=r.x1, y=r.y1},
-            {x=r.x2, y=r.y2},
-            {x=r.x3, y=r.y3},
-            {x=r.x4, y=r.y4}
-        }
-        recalculateCombinedTransform()
-    end
-end)
-
-room.on({"$ $ draw graphics $graphics on web2"}, function(results)
-    graphics_cache = {}
-    for i = 1, #results do
-        local parsedGraphics = json.decode(results[i].graphics)
-        for g = 1, #parsedGraphics do
-            graphics_cache[#graphics_cache + 1] = parsedGraphics[g]
-        end
-    end
-end)
 
 function love.load(args)
     local MY_ID_STR = "1999"
@@ -187,6 +56,24 @@ function love.load(args)
             for g = 1, #parsedGraphics do
                 graphics_cache[#graphics_cache + 1] = parsedGraphics[g]
             end
+        end
+    end)
+
+    room.on({"$ $ wish calibration for " .. MY_ID_STR .. " is $M11 $M12 $M13 $M21 $M22 $M23 $M31 $M32 $H33"}, function(results)
+        -- MYX where Y is row and X is columns
+        for i = 1, #results do
+            local screenToCalendarTransform = convertFromMatrixTermsToTransform(
+                results[i].M11,
+                results[i].M12,
+                results[i].M13,
+                results[i].M21,
+                results[i].M22,
+                results[i].M23,
+                results[i].M31,
+                results[i].M32,
+                results[i].M33,
+            )
+            COMBINED_TRANSFORM = screenToCalendarTransform:clone()
         end
     end)
 
