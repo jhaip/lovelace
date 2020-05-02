@@ -71,7 +71,7 @@ function love.load(args)
                 results[i].M23,
                 results[i].M31,
                 results[i].M32,
-                results[i].M33,
+                results[i].M33
             )
             COMBINED_TRANSFORM = screenToCalendarTransform:clone()
         end
