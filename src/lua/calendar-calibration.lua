@@ -95,7 +95,7 @@ function recalculateCombinedTransform()
             {"id", "0"},
             {"postfix", ""},
         }},
-        {type="claim", "fact"={
+        {type="claim", fact={
             {"id", room.get_my_id_str()},
             {"id", "0"},
             {"text", "wish"},

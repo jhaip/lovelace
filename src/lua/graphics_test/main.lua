@@ -9,7 +9,7 @@ SCREEN_HEIGHT = 720
 COMBINED_TRANSFORM = convertFromMatrixTermsToTransform(
     1, 0, 0,
     0, 1, 0,
-    0, 0, 1,
+    0, 0, 1
 )
 
 graphics_cache = {}
