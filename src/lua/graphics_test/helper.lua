@@ -134,7 +134,7 @@ function room.init(skipListening, passed_in_my_id_str)
         return
     end
 
-    while True do
+    while true do
         room.listen(true)
     end
 end
