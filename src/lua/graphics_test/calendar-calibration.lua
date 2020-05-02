@@ -14,15 +14,6 @@ end
 
 local SCREEN_SIZE = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
 local OFFSET = 200;
-local SCREEN_SIZE_OFFSET_INNER = {
-    {x=OFFSET, y=OFFSET},
-    {x=SCREEN_WIDTH - OFFSET, y=OFFSET},
-    {x=SCREEN_WIDTH - OFFSET, y=SCREEN_HEIGHT - OFFSET},
-    {x=OFFSET, y=SCREEN_HEIGHT - OFFSET}
-}
--- BASE_CALIBRATION should match the resolution of the camera?
-local BASE_CALIBRATION = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
--- calibrationRegion = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
 
 function getCalibrationRegionDefault()
     return {
@@ -32,6 +23,12 @@ function getCalibrationRegionDefault()
         {x=OFFSET, y=SCREEN_HEIGHT - OFFSET}
     }
 end
+
+local SCREEN_SIZE_OFFSET_INNER = getCalibrationRegionDefault()
+
+-- BASE_CALIBRATION should match the resolution of the camera?
+local BASE_CALIBRATION = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
+-- calibrationRegion = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
 
 calibrationRegion = getCalibrationRegionDefault()
 calendarRegion = {}
@@ -139,8 +136,8 @@ room.on({"$ $ region $id at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4",
             {x=r.x3, y=r.y3},
             {x=r.x4, y=r.y4}
         }
-        recalculateCombinedTransform()
     end
+    recalculateCombinedTransform()
 end)
 
 room.on({"$ $ region $id at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4",
@@ -154,8 +151,8 @@ room.on({"$ $ region $id at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4",
             {x=r.x3, y=r.y3},
             {x=r.x4, y=r.y4}
         }
-        recalculateCombinedTransform()
     end
+    recalculateCombinedTransform()
 end)
 
 local MY_ID_STR = "1996"
