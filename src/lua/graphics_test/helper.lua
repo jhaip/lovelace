@@ -99,6 +99,15 @@ function room.listen(blocking)
     print("TODO")
 end
 
+function room.claim(batch_claims)
+    local err = client:send_multipart{"....BATCH" .. MY_ID_STR .. json.encode(batch_claims)}
+    print(err)
+end
+
+function room.get_my_id_str()
+    return MY_ID_STR
+end
+
 function room.init(skipListening, passed_in_my_id_str)
     MY_ID_STR = passed_in_my_id_str
     client, err = context:socket(zmq.DEALER, {
