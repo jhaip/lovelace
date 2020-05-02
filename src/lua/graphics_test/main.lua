@@ -13,9 +13,22 @@ function getSquareCalibrationList(w, h)
 end
 
 local SCREEN_SIZE = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
+local OFFSET = 200;
+local SCREEN_SIZE_OFFSET_INNER = {
+    {x=OFFSET, y=OFFSET},
+    {x=SCREEN_WIDTH - OFFSET, y=OFFSET},
+    {x=SCREEN_WIDTH - OFFSET, y=SCREEN_HEIGHT - OFFSET},
+    {x=OFFSET, y=SCREEN_HEIGHT - OFFSET}
+}
 -- BASE_CALIBRATION should match the resolution of the camera?
 local BASE_CALIBRATION = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
-calibrationRegion = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
+-- calibrationRegion = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
+calibrationRegion = {
+    {x=OFFSET, y=OFFSET},
+    {x=SCREEN_WIDTH - OFFSET, y=OFFSET},
+    {x=SCREEN_WIDTH - OFFSET, y=SCREEN_HEIGHT - OFFSET},
+    {x=OFFSET, y=SCREEN_HEIGHT - OFFSET}
+}
 calendarRegion = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
 COMBINED_TRANSFORM = {}
 
@@ -98,7 +111,7 @@ function recalculateCombinedTransform()
 
     local calibrationTransformMatrix = getPerspectiveTransform(
         calibrationRegion,
-        SCREEN_SIZE
+        SCREEN_SIZE_OFFSET_INNER
     )
     local projectedCalendarRegion = {
         projectPoint(calibrationTransformMatrix, calendarRegion[1]),
