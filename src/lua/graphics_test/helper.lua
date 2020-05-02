@@ -34,7 +34,7 @@ function subscribe(query_strings, callback)
 end
 
 function room.prehook(callback)
-    my_prehooks[#my_prehooks + 1] = {callback}
+    my_prehooks[#my_prehooks + 1] = callback
 end
 
 function room.on(query_strings, callback)
