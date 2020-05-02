@@ -76,9 +76,8 @@ function cmd() {
     v4l2-ctl --device /dev/video0 --set-fmt-video=width=1280,height=720,pixelformat=MPEG
     export DISPLAY=:0
     python3 src/standalone_processes/1621__seeLaserLamp.py &
-    cd src/lua
-    lua calendar-calibration.lua
-    cd graphics_test
+    cd src/lua/graphics_test
+    lua calendar-calibration.lua &
     rm hello.love
     zip hello.love main.lua helper.lua matrix.lua json.lua zhelpers.lua Inconsolata-Regular.ttf
     love ./hello.love 1997
