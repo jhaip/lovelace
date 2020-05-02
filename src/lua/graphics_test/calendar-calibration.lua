@@ -12,15 +12,6 @@ function getSquareCalibrationList(w, h)
     return {{x=0, y=0}, {x=w, y=0}, {x=w, y=h}, {x=0, y=h}}
 end
 
-function getCalibrationRegionDefault()
-    return {
-        {x=OFFSET, y=OFFSET},
-        {x=SCREEN_WIDTH - OFFSET, y=OFFSET},
-        {x=SCREEN_WIDTH - OFFSET, y=SCREEN_HEIGHT - OFFSET},
-        {x=OFFSET, y=SCREEN_HEIGHT - OFFSET}
-    }
-end
-
 local SCREEN_SIZE = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
 local OFFSET = 200;
 local SCREEN_SIZE_OFFSET_INNER = {
@@ -32,6 +23,16 @@ local SCREEN_SIZE_OFFSET_INNER = {
 -- BASE_CALIBRATION should match the resolution of the camera?
 local BASE_CALIBRATION = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
 -- calibrationRegion = getSquareCalibrationList(SCREEN_WIDTH, SCREEN_HEIGHT)
+
+function getCalibrationRegionDefault()
+    return {
+        {x=OFFSET, y=OFFSET},
+        {x=SCREEN_WIDTH - OFFSET, y=OFFSET},
+        {x=SCREEN_WIDTH - OFFSET, y=SCREEN_HEIGHT - OFFSET},
+        {x=OFFSET, y=SCREEN_HEIGHT - OFFSET}
+    }
+end
+
 calibrationRegion = getCalibrationRegionDefault()
 calendarRegion = {}
 COMBINED_TRANSFORM = {}
