@@ -6,11 +6,7 @@ local matrix = require "matrix"
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
 
-COMBINED_TRANSFORM = convertFromMatrixTermsToTransform(
-    1, 0, 0,
-    0, 1, 0,
-    0, 0, 1
-)
+COMBINED_TRANSFORM = love.math.newTransform()
 
 graphics_cache = {}
 font = false
