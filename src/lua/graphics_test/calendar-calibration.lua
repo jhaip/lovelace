@@ -81,19 +81,17 @@ function recalculateCombinedTransform()
         SCREEN_SIZE_OFFSET_INNER
     )
     local M = calibrationTransformMatrix
-    if #calendarRegion > 0 then
-        local projectedCalendarRegion = {
-            projectPoint(calibrationTransformMatrix, calendarRegion[1]),
-            projectPoint(calibrationTransformMatrix, calendarRegion[2]),
-            projectPoint(calibrationTransformMatrix, calendarRegion[3]),
-            projectPoint(calibrationTransformMatrix, calendarRegion[4]),
-        }
-        local screenToCalendarTransformMatrix = getPerspectiveTransform(
-            SCREEN_SIZE,
-            projectedCalendarRegion
-        )
-        M = screenToCalendarTransformMatrix
-    end
+    local projectedCalendarRegion = {
+        projectPoint(calibrationTransformMatrix, calendarRegion[1]),
+        projectPoint(calibrationTransformMatrix, calendarRegion[2]),
+        projectPoint(calibrationTransformMatrix, calendarRegion[3]),
+        projectPoint(calibrationTransformMatrix, calendarRegion[4]),
+    }
+    local screenToCalendarTransformMatrix = getPerspectiveTransform(
+        SCREEN_SIZE,
+        projectedCalendarRegion
+    )
+    local M2 = screenToCalendarTransformMatrix
     room.claim({
         {type="retract", fact={
             {"id", room.get_my_id_str()},
@@ -103,7 +101,7 @@ function recalculateCombinedTransform()
         {type="claim", fact={
             {"id", room.get_my_id_str()},
             {"id", "0"},
-            {"text", "wish"},
+            {"text", "camera"},
             {"text", "calibration"},
             {"text", "for"},
             {"integer", "1997"},
@@ -117,6 +115,24 @@ function recalculateCombinedTransform()
             {"float", tostring(M[3][1])},
             {"float", tostring(M[3][2])},
             {"float", tostring(M[3][3])},
+        }},
+        {type="claim", fact={
+            {"id", room.get_my_id_str()},
+            {"id", "0"},
+            {"text", "calendar"},
+            {"text", "calibration"},
+            {"text", "for"},
+            {"integer", "1997"},
+            {"text", "is"},
+            {"float", tostring(M2[1][1])},
+            {"float", tostring(M2[1][2])},
+            {"float", tostring(M2[1][3])},
+            {"float", tostring(M2[2][1])},
+            {"float", tostring(M2[2][2])},
+            {"float", tostring(M2[2][3])},
+            {"float", tostring(M2[3][1])},
+            {"float", tostring(M2[3][2])},
+            {"float", tostring(M2[3][3])},
         }}
     })
 end

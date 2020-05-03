@@ -122,6 +122,9 @@ class Illumination {
     translate(x, y) { this.add("translate", { "x": x, "y": y }) }
     rotate(radians) { this.add("rotate", radians) }
     scale(x, y) { this.add("scale", { "x": x, "y": y }) }
+    set_transform(m11, m12, m13, m21, m22, m23, m31, m32, m33) {
+        this.add("transform", [m11, m12, m13, m21, m22, m23, m31, m32, m33])
+    }
     toString() { return JSON.stringify(this.illuminations) }
 }
 

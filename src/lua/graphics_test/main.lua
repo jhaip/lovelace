@@ -201,14 +201,14 @@ function love.draw()
         elseif g.type == "scale" then
             love.graphics.scale(tonumber(opt.x), tonumber(opt.y))
         elseif g.type == "transform" then
-            local elements = {}
-            for j = 1, #opt do
-                elements[j] = tonumber(opt[j])
+            if #opt == 9 then
+                local transform = convertFromMatrixTermsToTransform(
+                    tonumber(opt[1]), tonumber(opt[2]), tonumber(opt[3]),
+                    tonumber(opt[4]), tonumber(opt[5]), tonumber(opt[6]),
+                    tonumber(opt[7]), tonumber(opt[8]), tonumber(opt[9])
+                )
+                love.graphics.replaceTransform(transform)
             end
-            -- interpret elements as row-major
-            local transform = love.math.newTransform()
-            transform.setMatrix("row", elements)
-            love.graphics.applyTransform(transform)
         end
     end
 end
