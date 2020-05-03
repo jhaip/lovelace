@@ -81,17 +81,20 @@ function recalculateCombinedTransform()
         SCREEN_SIZE_OFFSET_INNER
     )
     local M = calibrationTransformMatrix
-    local projectedCalendarRegion = {
-        projectPoint(calibrationTransformMatrix, calendarRegion[1]),
-        projectPoint(calibrationTransformMatrix, calendarRegion[2]),
-        projectPoint(calibrationTransformMatrix, calendarRegion[3]),
-        projectPoint(calibrationTransformMatrix, calendarRegion[4]),
-    }
-    local screenToCalendarTransformMatrix = getPerspectiveTransform(
-        SCREEN_SIZE,
-        projectedCalendarRegion
-    )
-    local M2 = screenToCalendarTransformMatrix
+    local M2 = calibrationTransformMatrix
+    if #calendarRegion > 0 then
+        local projectedCalendarRegion = {
+            projectPoint(calibrationTransformMatrix, calendarRegion[1]),
+            projectPoint(calibrationTransformMatrix, calendarRegion[2]),
+            projectPoint(calibrationTransformMatrix, calendarRegion[3]),
+            projectPoint(calibrationTransformMatrix, calendarRegion[4]),
+        }
+        local screenToCalendarTransformMatrix = getPerspectiveTransform(
+            SCREEN_SIZE,
+            projectedCalendarRegion
+        )
+        M2 = screenToCalendarTransformMatrix
+    end
     room.claim({
         {type="retract", fact={
             {"id", room.get_my_id_str()},
