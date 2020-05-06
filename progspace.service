@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=oneshot
-User=root
+User=jacob
 # Copy this file to /etc/systemd/system
 # sudo systemctl daemon-reload
 # sudo systemctl start progspace
@@ -15,7 +15,7 @@ Environment=PATH=/home/jacob/bin:/home/jacob/.local/bin:/home/jacob/.nvm/version
 Environment=DYNAMIC_ROOT=/home/jacob/lovelace/
 RemainAfterExit=yes
 ExecStart=/home/jacob/lovelace/jig rfideditorstart3
-ExecStop=/home/jacob/lovelace/jig stop
+ExecStop=/usr/bin/sudo /home/jacob/lovelace/jig stop
 
 [Install]
 WantedBy=multi-user.target
