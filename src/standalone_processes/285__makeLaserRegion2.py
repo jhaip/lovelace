@@ -19,7 +19,7 @@ projection_matrixes = {}
 LASER_CAMERA_ID = 1997
 # CAMERA 2 calibration:
 # camera 2 has projector calibration TL(512, 282) TR(1712, 229) BR(1788, 961) BL(483, 941) @2
-STATUS_DRAW_TARGET = "1996"
+STATUS_DRAW_TARGET = "1999"
 LASER_DRAW_TARGET = "1997"
 
 def project(calibration_id, x, y):
@@ -53,7 +53,7 @@ def sub_callback_calibration(results):
             logging.error("RECAL PROJECTION MATRIX")
             pts1 = np.float32(projector_calibration)
             pts2 = np.float32(
-                [[0, 0], [CAM_WIDTH, 0], [0, CAM_HEIGHT], [CAM_WIDTH, CAM_HEIGHT]])
+                [[200, 200], [CAM_WIDTH-200, 200], [200, CAM_HEIGHT-200], [CAM_WIDTH-200, CAM_HEIGHT-200]])
             projection_matrix = cv2.getPerspectiveTransform(
                 pts1, pts2)
             projector_calibrations[int(result["cameraId"])] = projector_calibration
@@ -205,7 +205,8 @@ def sub_callback_laser_dots(results):
             current_corner = int(MODE)
             poly = regionPoints[:current_corner] + [lastLastPosition]
             projected_poly = list(map(lambda p: project(LASER_CAMERA_ID, p[0], p[1]), poly))
-            ill.polygon(projected_poly)
+            if len(poly) >= 3:
+                ill.polygon(projected_poly)
             SIZE = 5
             for pt in projected_poly:
                 ill.ellipse(pt[0] - SIZE, pt[1] - SIZE, SIZE * 2, SIZE * 2)

@@ -102,7 +102,7 @@ room.assert(`camera 99 sees paper 980 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2)
 // Maker laser region
 // room.assert(`camera 99 sees paper 280 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Laser in region
-room.assert(`camera 99 sees paper 281 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// room.assert(`camera 99 sees paper 281 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Regiom debug viewwer
 room.assert(`camera 99 sees paper 12 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 
