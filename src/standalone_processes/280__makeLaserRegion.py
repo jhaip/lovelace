@@ -19,6 +19,7 @@ projection_matrixes = {}
 LASER_CAMERA_ID = 2
 # CAMERA 2 calibration:
 # camera 2 has projector calibration TL(512, 282) TR(1712, 229) BR(1788, 961) BL(483, 941) @2
+DRAW_TARGET = "global"
 
 def project(calibration_id, x, y):
     global projection_matrixes
@@ -184,7 +185,7 @@ def sub_callback_keyboard(results):
 
 @subscription(["$ $ laser seen at $x $y @ $t"])
 def sub_callback_laser_dots(results):
-    global lastLastPosition, MODE
+    global lastLastPosition, MODE, DRAW_TARGET
     claims = []
     claims.append({
         "type": "retract", "fact": [
@@ -207,7 +208,7 @@ def sub_callback_laser_dots(results):
             SIZE = 5
             for pt in projected_poly:
                 ill.ellipse(pt[0] - SIZE, pt[1] - SIZE, SIZE * 2, SIZE * 2)
-            claims.append(ill.to_batch_claim(get_my_id_str(), "2", "global"))
+            claims.append(ill.to_batch_claim(get_my_id_str(), "2", DRAW_TARGET))
     else:
         lastLastPosition = None
     batch(claims)

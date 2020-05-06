@@ -67,6 +67,9 @@ class Illumination:
 
     def scale(self, x, y):
         self.add("scale", {"x": x, "y": y})
+    
+    def set_transform(self, m11, m12, m13, m21, m22, m23, m31, m32, m33):
+        self.add("transform", [m11, m12, m13, m21, m22, m23, m31, m32, m33])
 
     def to_string(self):
         return json.dumps(self.illuminations)
