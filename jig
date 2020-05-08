@@ -77,7 +77,7 @@ function cmd() {
     export DISPLAY=:0
     python3 src/standalone_processes/1621__seeLaserLamp.py 1997 &
     cd src/lua/graphics_test
-    lua calendar-calibration.lua &
+    # lua calendar-calibration.lua &
     rm hello.love
     zip hello.love main.lua helper.lua matrix.lua json.lua zhelpers.lua Inconsolata-Regular.ttf
     love ./hello.love 1997

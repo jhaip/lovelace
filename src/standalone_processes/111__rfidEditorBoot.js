@@ -105,6 +105,8 @@ const w = 1280;
 const h = 720;
 const o = 200;
 room.assert(`camera "1997" should calibrate to ${o} ${o} ${w-o} ${o} ${w-o} ${h-o} ${o} ${h-o} on display "1997"`)
+// screen region calibration adapter
+room.assert(`camera 99 sees paper 287 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Maker laser region
 // room.assert(`camera 99 sees paper 280 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Laser in region

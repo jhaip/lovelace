@@ -8,8 +8,8 @@ import logging
                "$ $ camera $cam should calibrate to $sx1 $sy1 $sx2 $sy2 $sx3 $sy3 $sx4 $sy4 on display $display"])
 def sub_callback_calibration_points(results):
     claims = [{
-            "type": "retract", "fact": [["id", get_my_id_str()], ["id", "0"], ["postfix", ""]]
-        }]
+        "type": "retract", "fact": [["id", get_my_id_str()], ["id", "0"], ["postfix", ""]]
+    }]
     if results and len(results) > 0:
         for result in results:
             src = np.float32([
