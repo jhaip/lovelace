@@ -6,6 +6,11 @@ import imutils
 import os
 import time
 import logging
+import sys
+
+CAMERA_ID = "9999"
+if len(sys.argv) - 1 > 0:
+    CAMERA_ID = sys.argv[1]
 
 CAM_WIDTH = 1920
 CAM_HEIGHT = 1080
@@ -19,6 +24,22 @@ capture.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, CAM_HEIGHT)
 time.sleep(2)
 capture.start()
 time.sleep(2)
+
+def claim_camera_resolution():
+    claims = [
+        {"type": "retract", "fact": [["id", get_my_id_str()], ["postfix", ""]]},
+        {"type": "claim", "fact": [
+            ["id", get_my_id_str()],
+            ["id", "0"],
+            ["text", "camera"],
+            ["text", str(CAMERA_ID)],
+            ["text", "has"],
+            ["text", "resolution"],
+            ["integer", str(CAM_WIDTH)],
+            ["integer", str(CAM_HEIGHT)],
+        ]}
+    ]
+    batch(claims)
 
 def detect(background):
     image = capture.read()
@@ -34,7 +55,7 @@ def detect(background):
 
 
 def claim_data(data):
-    global last_data
+    global last_data, CAMERA_ID
     if len(last_data) == 0 and len(data) == 0:
         if DEBUG:
             logging.info("empty data again, skipping claim")
@@ -42,7 +63,7 @@ def claim_data(data):
     last_data = data
     currentTimeMs = int(round(time.time() * 1000))
     claims = [
-        {"type": "retract", "fact": [["id", get_my_id_str()], ["id", "0"], ["postfix", ""]]}
+        {"type": "retract", "fact": [["id", get_my_id_str()], ["id", "1"], ["postfix", ""]]}
     ]
     for datum in data:
         x = int(sum([d[0][0] for d in datum])/len(datum))
@@ -51,7 +72,7 @@ def claim_data(data):
             logging.info((x, y))
         claims.append({"type": "claim", "fact": [
             ["id", get_my_id_str()],
-            ["id", "0"],
+            ["id", "1"],
             ["text", "laser"],
             ["text", "seen"],
             ["text", "at"],
@@ -59,6 +80,9 @@ def claim_data(data):
             ["integer", str(y)],
             ["text", "@"],
             ["integer", str(currentTimeMs)]
+            ["text", "on"],
+            ["text", "camera"],
+            ["text", CAMERA_ID],
         ]})
     batch(claims)
 
@@ -66,6 +90,7 @@ init(__file__, skipListening=True)
 background = capture.read()
 background = cv2.cvtColor(background, cv2.COLOR_BGR2GRAY)
 background = cv2.GaussianBlur(background, (3, 3), 0)
+claim_camera_resolution()
 while True:
     dots = detect(background)
     claim_data(dots)

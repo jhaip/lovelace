@@ -75,7 +75,7 @@ function cmd() {
       --set-ctrl=exposure_time_absolute=100
     v4l2-ctl --device /dev/video0 --set-fmt-video=width=1280,height=720,pixelformat=MPEG
     export DISPLAY=:0
-    python3 src/standalone_processes/1621__seeLaserLamp.py &
+    python3 src/standalone_processes/1621__seeLaserLamp.py 1997 &
     cd src/lua/graphics_test
     lua calendar-calibration.lua &
     rm hello.love

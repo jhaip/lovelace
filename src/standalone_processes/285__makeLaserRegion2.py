@@ -6,21 +6,16 @@ import uuid
 import logging
 
 MODE = "IDLE"
+CURRENT_CAMERA_TARGET = None
 lastLastPosition = None
 regionPoints = [None, None, None, None]
 region_id = None
 ignore_key_press = True
 is_toggleable = True
 region_name = ""
-CAM_WIDTH = 1280
-CAM_HEIGHT = 720
-projector_calibrations = {}
 projection_matrixes = {}
-LASER_CAMERA_ID = 1997
-# CAMERA 2 calibration:
-# camera 2 has projector calibration TL(512, 282) TR(1712, 229) BR(1788, 961) BL(483, 941) @2
+camera_to_display_map = {}
 STATUS_DRAW_TARGET = "1999"
-LASER_DRAW_TARGET = "1997"
 
 def project(calibration_id, x, y):
     global projection_matrixes
@@ -35,31 +30,17 @@ def project(calibration_id, x, y):
         np.array([np.float32(pts)]), projection_matrix)
     return (int(dst[0][0][0]), int(dst[0][0][1]))
 
-
-@subscription(["$ $ camera $cameraId has projector calibration TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time"])
+@subscription(["$ $ camera $cameraId calibration for $displayId is $M1 $M2 $M3 $M4 $M5 $M6 $M7 $M8 $M9"])
 def sub_callback_calibration(results):
-    global projector_calibrations, projection_matrixes, CAM_WIDTH, CAM_HEIGHT
-    logging.info("sub_callback_calibration")
+    global projection_matrixes, camera_to_display_map
     logging.info(results)
     if results:
         for result in results:
-            projector_calibration = [
-                [result["x1"], result["y1"]],
-                [result["x2"], result["y2"]],
-                [result["x4"], result["y4"]],
-                [result["x3"], result["y3"]] # notice the order is not clock-wise
-            ]
-            logging.info(projector_calibration)
-            logging.error("RECAL PROJECTION MATRIX")
-            pts1 = np.float32(projector_calibration)
-            pts2 = np.float32(
-                [[200, 200], [CAM_WIDTH-200, 200], [200, CAM_HEIGHT-200], [CAM_WIDTH-200, CAM_HEIGHT-200]])
-            projection_matrix = cv2.getPerspectiveTransform(
-                pts1, pts2)
-            projector_calibrations[int(result["cameraId"])] = projector_calibration
-            projection_matrixes[int(result["cameraId"])] = projection_matrix
-            logging.error("RECAL PROJECTION MATRIX -- done")
-
+            projection_matrixes[str(result["cameraId"])] = np.float32([
+                [float(result["M1"]), float(result["M2"]), float(result["M3"])],
+                [float(result["M4"]), float(result["M5"]), float(result["M6"])],
+                [float(result["M7"]), float(result["M8"]), float(result["M9"])]])
+            camera_to_display_map[str(result["cameraId"])] = str(result["displayId"])
 
 def render_mode():
     global MODE, is_toggleable, region_name, STATUS_DRAW_TARGET
@@ -78,14 +59,10 @@ def render_mode():
     elif MODE in ["0", "1", "2", "3"]:
         ill.text(0, 0, "setting\ncorner\n{}/4".format(int(MODE) + 1))
     elif MODE == "is_toggleable":
-        is_toggleable_text = "no"
-        if is_toggleable:
-            is_toggleable_text = "yes"
+        is_toggleable_text = "yes" if is_toggleable else "no"
         ill.text(0, 0, "Should region\nbe a toggle?\ny/n -> {}\npress enter\nto accept".format(is_toggleable_text))
     elif MODE == "naming":
-        region_name_text = "..."
-        if region_name:
-            region_name_text = region_name
+        region_name_text = region_name if region_name else "..."
         ill.text(0, 0, "region name:\n{}\npress enter\nto accept".format(region_name_text))
     claims.append(ill.to_batch_claim(get_my_id_str(), RENDER_MODE_SUBSCRIPTION_ID, STATUS_DRAW_TARGET))
     return claims
@@ -148,6 +125,9 @@ def sub_callback_keyboard(results):
                 ["integer", str(regionPoints[2][1])],
                 ["integer", str(regionPoints[3][0])],
                 ["integer", str(regionPoints[3][1])],
+                ["text", "on"],
+                ["text", "camera"],
+                ["text", str(CURRENT_CAMERA_TARGET)],
             ]})
             regionPoints = [None, None, None, None]
         logging.info("MODE: {}, region points: {}".format(MODE, regionPoints))
@@ -184,9 +164,9 @@ def sub_callback_keyboard(results):
     batch(claims)
 
 
-@subscription(["$ $ laser seen at $x $y @ $t"])
+@subscription(["$ $ laser seen at $x $y @ $t on camera $cameraId"])
 def sub_callback_laser_dots(results):
-    global lastLastPosition, MODE, LASER_DRAW_TARGET
+    global lastLastPosition, MODE, CURRENT_CAMERA_TARGET
     claims = []
     claims.append({
         "type": "retract", "fact": [
@@ -197,20 +177,24 @@ def sub_callback_laser_dots(results):
     })
     if results and len(results) > 0:
         result = results[0]
-        lastLastPosition = [int(result["x"]), int(result["y"])]
         if MODE in ["0", "1", "2", "3"]:
+            CURRENT_CAMERA_TARGET = str(result["cameraId"])
+            lastLastPosition = [int(result["x"]), int(result["y"])]
             ill = Illumination()
             ill.stroke(255, 0, 255, 128)
             ill.fill(255, 0, 255, 100)
             current_corner = int(MODE)
             poly = regionPoints[:current_corner] + [lastLastPosition]
-            projected_poly = list(map(lambda p: project(LASER_CAMERA_ID, p[0], p[1]), poly))
+            projected_poly = list(map(lambda p: project(CURRENT_CAMERA_TARGET, p[0], p[1]), poly))
             if len(poly) >= 3:
                 ill.polygon(projected_poly)
             SIZE = 5
             for pt in projected_poly:
                 ill.ellipse(pt[0] - SIZE, pt[1] - SIZE, SIZE * 2, SIZE * 2)
-            claims.append(ill.to_batch_claim(get_my_id_str(), "2", LASER_DRAW_TARGET))
+            draw_target = "global"
+            if CURRENT_CAMERA_TARGET in camera_to_display_map:
+                draw_target = camera_to_display_map[CURRENT_CAMERA_TARGET]
+            claims.append(ill.to_batch_claim(get_my_id_str(), "2", draw_target))
     else:
         lastLastPosition = None
     batch(claims)
