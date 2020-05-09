@@ -100,23 +100,23 @@ room.assert(`camera 99 sees paper 980 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2)
 // room.assert(`camera 99 sees paper 649 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 
 // region calibration adapter
-room.assert(`camera 99 sees paper 286 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// room.assert(`camera 99 sees paper 286 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 const w = 1280;
 const h = 720;
 const o = 200;
 room.assert(`camera`, ["text", "1997"], `should calibrate to ${o} ${o} ${w - o} ${o} ${w - o} ${h - o} ${o} ${h - o} on display`, ["text", "1997"])
 // screen region calibration adapter
-room.assert(`camera 99 sees paper 287 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// room.assert(`camera 99 sees paper 287 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Maker laser region
 // room.assert(`camera 99 sees paper 280 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Laser in region
-room.assert(`camera 99 sees paper 281 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// room.assert(`camera 99 sees paper 281 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Highlghts regions
-room.assert(`camera 99 sees paper 283 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// room.assert(`camera 99 sees paper 283 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Laser in Calendar
-room.assert(`camera 99 sees paper 284 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// room.assert(`camera 99 sees paper 284 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Calendar Helper (highlight date)
-room.assert(`camera 99 sees paper 1803 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// room.assert(`camera 99 sees paper 1803 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Regiom debug viewwer
 room.assert(`camera 99 sees paper 12 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 
