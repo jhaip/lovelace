@@ -47,14 +47,17 @@ function love.load(args)
     
     room.on({"$ $ draw graphics $graphics on " .. MY_ID_STR}, function(results)
         graphics_cache = {}
+        graphics_cache[#graphics_cache + 1] = {type="__RESET__"}
         for i = 1, #results do
             local parsedGraphics = json.decode(results[i].graphics)
             for g = 1, #parsedGraphics do
                 graphics_cache[#graphics_cache + 1] = parsedGraphics[g]
             end
+            graphics_cache[#graphics_cache + 1] = {type="__RESET__"}
         end
     end)
 
+    -- TODO: update this now that the claims have changed:
     room.on({"$ $ wish calibration for " .. MY_ID_STR .. " is $M11 $M12 $M13 $M21 $M22 $M23 $M31 $M32 $H33"}, function(results)
         -- MYX where Y is row and X is columns
         for i = 1, #results do
@@ -91,6 +94,7 @@ function love.draw()
     stroke_width = 1
     love.graphics.setLineWidth( stroke_width )
     font_color = {1, 1, 1}
+    local defaultFontSize = 72;
     local fontSize = 72
     love.graphics.setFont(font)
 
@@ -99,7 +103,19 @@ function love.draw()
     for i = 1, #graphics_cache do
         local g = graphics_cache[i]
         local opt = g.options
-        if g.type == "rectangle" then
+        if g.type == "__RESET__" then
+            is_fill_on = true
+            fill_color = {1, 1, 1}
+            is_stroke_on = true
+            stroke_color = {1, 1, 1}
+            stroke_width = 1
+            love.graphics.setLineWidth( stroke_width )
+            font_color = {1, 1, 1}
+            fontSize = defaultFontSize
+            font = font_cache[defaultFontSize]
+            love.graphics.setFont(font)
+            love.graphics.replaceTransform(COMBINED_TRANSFORM)
+        elseif g.type == "rectangle" then
             if is_fill_on then
                 love.graphics.setColor(fill_color)
                 love.graphics.rectangle("fill", opt.x, opt.y, opt.w, opt.h)
