@@ -8,7 +8,7 @@ projection_matrixes = {}
 
 def project(projection_matrix, x, y):
     pts = (float(x), float(y))
-    if not projection_matrix:
+    if projection_matrix is None:
         return pts
     dst = cv2.perspectiveTransform(
         np.array([np.float32([pts])]), projection_matrix)
@@ -38,7 +38,7 @@ def highlight_regions(results, subscription_id, r, g, b):
     for result in results:
         if result["regionId"] in highlighted_regions:
             continue # Region is already highlighted
-        camera_homography_matrix = projection_matrixes.get(str(result["cameraId"]))
+        camera_homography_matrix = projection_matrixes.get(str(result["cameraId"]), None)
         polygon = [
             project(camera_homography_matrix, result["x1"], result["y1"]),
             project(camera_homography_matrix, result["x2"], result["y2"]),

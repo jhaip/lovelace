@@ -10,7 +10,7 @@ projection_matrixes = {}
 
 def project(projection_matrix, x, y):
     pts = (float(x), float(y))
-    if not projection_matrix:
+    if projection_matrix is None:
         return pts
     dst = cv2.perspectiveTransform(
         np.array([np.float32([pts])]), projection_matrix)
@@ -41,7 +41,7 @@ def sub_callback_calibration_points(results):
                 [0, SCREEN_REGION_HEIGHT_PX],
                 [SCREEN_REGION_WIDTH_PX, SCREEN_REGION_HEIGHT_PX] # notice the order is not clock-wise
             ])
-            camera_homography_matrix = projection_matrixes.get(str(result["cameraId"]))
+            camera_homography_matrix = projection_matrixes.get(str(result["cameraId"]), None)
             dst = np.float32([
                 project(camera_homography_matrix, result["rx1"], result["ry1"]),
                 project(camera_homography_matrix, result["rx2"], result["ry2"]),
