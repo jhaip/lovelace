@@ -26,22 +26,6 @@ def project(calibration_id, x, y):
         np.array([np.float32(pts)]), projection_matrix)
     return (int(dst[0][0][0]), int(dst[0][0][1]))
 
-def point_inside_polygon(x, y, poly):
-    # Copied from http://www.ariel.com.au/a/python-point-int-poly.html
-    n = len(poly)
-    inside =False
-    p1x,p1y = poly[0]
-    for i in range(n+1):
-        p2x,p2y = poly[i % n]
-        if y > min(p1y,p2y):
-            if y <= max(p1y,p2y):
-                if x <= max(p1x,p2x):
-                    if p1y != p2y:
-                        xinters = (y-p1y)*(p2x-p1x)/(p2y-p1y)+p1x
-                    if p1x == p2x or x <= xinters:
-                        inside = not inside
-        p1x,p1y = p2x,p2y
-    return inside
 
 @subscription(["$ $ region $id at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4", "$ $ region $id has name calendar"])
 def sub_callback_calibration(results):
