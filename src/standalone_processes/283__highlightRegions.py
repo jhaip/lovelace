@@ -4,55 +4,30 @@ import numpy as np
 import cv2
 import logging
 
-CAM_WIDTH = 1920
-CAM_HEIGHT = 1080
-projector_calibrations = {}
 projection_matrixes = {}
-DOTS_CAMERA_ID = 1
-LASER_CAMERA_ID = 2
-# CAMERA 2 calibration:
-# camera 2 has projector calibration TL ( 512 , 282 ) TR ( 1712 , 229 ) BR ( 1788 , 961 ) BL ( 483 , 941 ) @ 2
 
-def project(calibration_id, x, y):
-    global projection_matrixes
-    x = float(x)
-    y = float(y)
-    if calibration_id not in projection_matrixes:
-        logging.error("MISSING PROJECTION MATRIX FOR CALIBRATION {}".format(calibration_id))
-        return (x, y)
-    projection_matrix = projection_matrixes[calibration_id]
-    pts = [(x, y)]
+def project(projection_matrix, x, y):
+    pts = (float(x), float(y))
+    if not projection_matrix:
+        return pts
     dst = cv2.perspectiveTransform(
-        np.array([np.float32(pts)]), projection_matrix)
+        np.array([np.float32([pts])]), projection_matrix)
     return (int(dst[0][0][0]), int(dst[0][0][1]))
 
 
-@subscription(["$ $ camera $cameraId has projector calibration TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time"])
-def sub_callback_calibration(results):
-    global projector_calibrations, projection_matrixes, CAM_WIDTH, CAM_HEIGHT
-    logging.info("sub_callback_calibration")
-    logging.info(results)
+@subscription(["$ $ camera $cameraId calibration for $display is $M1 $M2 $M3 $M4 $M5 $M6 $M7 $M8 $M9"])
+def sub_callback_calibration_points(results):
+    global projection_matrixes
     if results:
         for result in results:
-            projector_calibration = [
-                [result["x1"], result["y1"]],
-                [result["x2"], result["y2"]],
-                [result["x4"], result["y4"]],
-                [result["x3"], result["y3"]] # notice the order is not clock-wise
-            ]
-            logging.info(projector_calibration)
-            logging.error("RECAL PROJECTION MATRIX")
-            pts1 = np.float32(projector_calibration)
-            pts2 = np.float32(
-                [[0, 0], [CAM_WIDTH, 0], [0, CAM_HEIGHT], [CAM_WIDTH, CAM_HEIGHT]])
-            projection_matrix = cv2.getPerspectiveTransform(
-                pts1, pts2)
-            projector_calibrations[int(result["cameraId"])] = projector_calibration
-            projection_matrixes[int(result["cameraId"])] = projection_matrix
-            logging.error("RECAL PROJECTION MATRIX -- done")
+            projection_matrixes[str(result["cameraId"])] = np.float32([
+                [float(result["M1"]), float(result["M2"]), float(result["M3"])],
+                [float(result["M4"]), float(result["M5"]), float(result["M6"])],
+                [float(result["M7"]), float(result["M8"]), float(result["M9"])]])
 
 
 def highlight_regions(results, subscription_id, r, g, b):
+    global projection_matrixes
     claims = []
     claims.append({"type": "retract", "fact": [
         ["id", get_my_id_str()],
@@ -63,27 +38,32 @@ def highlight_regions(results, subscription_id, r, g, b):
     for result in results:
         if result["regionId"] in highlighted_regions:
             continue # Region is already highlighted
+        camera_homography_matrix = projection_matrixes.get(str(result["cameraId"]))
         polygon = [
-            project(LASER_CAMERA_ID, result["x1"], result["y1"]),
-            project(LASER_CAMERA_ID, result["x2"], result["y2"]),
-            project(LASER_CAMERA_ID, result["x3"], result["y3"]),
-            project(LASER_CAMERA_ID, result["x4"], result["y4"]),
+            project(camera_homography_matrix, result["x1"], result["y1"]),
+            project(camera_homography_matrix, result["x2"], result["y2"]),
+            project(camera_homography_matrix, result["x3"], result["y3"]),
+            project(camera_homography_matrix, result["x4"], result["y4"]),
         ]
         highlighted_regions[result["regionId"]] = True
         ill = Illumination()
         ill.fill(r, g, b, 100)
         ill.nostroke()
         ill.polygon(polygon)
-        claims.append(ill.to_batch_claim(get_my_id_str(), subscription_id, "global"))
+        claims.append(ill.to_batch_claim(get_my_id_str(), subscription_id, result["displayId"]))
     batch(claims)
 
 
-@subscription(["$ $ laser in region $regionId", "$ $ region $regionId at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4"])
+@subscription(["$ $ laser in region $regionId",
+               "$ $ region $regionId at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4 on camera $cameraId",
+               "$ $ camera $cameraId should calibrate to $ $ $ $ $ $ $ $ on display $displayId"])
 def sub_callback_highlight_region(results):
     highlight_regions(results, "1", 255, 128, 0)
 
 
-@subscription(["$ $ region $regionId is toggled", "$ $ region $regionId at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4"])
+@subscription(["$ $ region $regionId is toggled",
+               "$ $ region $regionId at $x1 $y1 $x2 $y2 $x3 $y3 $x4 $y4 on camera $cameraId",
+               "$ $ camera $cameraId should calibrate to $ $ $ $ $ $ $ $ on display $displayId"])
 def sub_callback_toggle_regions(results):
     highlight_regions(results, "2", 0, 128, 255)
 
