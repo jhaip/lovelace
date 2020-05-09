@@ -7,6 +7,7 @@ import logging
 SCREEN_REGION_WIDTH_PX = 1280
 SCREEN_REGION_HEIGHT_PX = 720
 projection_matrixes = {}
+camera_to_display_map = {}
 
 def project(projection_matrix, x, y):
     pts = (float(x), float(y))
@@ -16,20 +17,21 @@ def project(projection_matrix, x, y):
         np.array([np.float32([pts])]), projection_matrix)
     return (int(dst[0][0][0]), int(dst[0][0][1]))
 
-@subscription(["$ $ camera $cameraId calibration for $display is $M1 $M2 $M3 $M4 $M5 $M6 $M7 $M8 $M9"])
+@subscription(["$ $ camera $cameraId calibration for $displayId is $M1 $M2 $M3 $M4 $M5 $M6 $M7 $M8 $M9"])
 def sub_callback_calibration_points(results):
-    global projection_matrixes
+    global projection_matrixes, camera_to_display_map
     if results:
         for result in results:
             projection_matrixes[str(result["cameraId"])] = np.float32([
                 [float(result["M1"]), float(result["M2"]), float(result["M3"])],
                 [float(result["M4"]), float(result["M5"]), float(result["M6"])],
                 [float(result["M7"]), float(result["M8"]), float(result["M9"])]])
+            camera_to_display_map[str(result["cameraId"])] = str(result["displayId"])
 
 @subscription(["$ $ region $id at $rx1 $ry1 $rx2 $ry2 $rx3 $ry3 $rx4 $ry4 on camera $cameraId",
                "$ $ region $id has name $regionName"])
 def sub_callback_calibration_points(results):
-    global projection_matrixes
+    global projection_matrixes, camera_to_display_map
     claims = [{
         "type": "retract", "fact": [["id", get_my_id_str()], ["id", "0"], ["postfix", ""]]
     }]
@@ -42,6 +44,8 @@ def sub_callback_calibration_points(results):
                 [SCREEN_REGION_WIDTH_PX, SCREEN_REGION_HEIGHT_PX] # notice the order is not clock-wise
             ])
             camera_homography_matrix = projection_matrixes.get(str(result["cameraId"]), None)
+            if camera_homography_matrix is None:
+                continue
             dst = np.float32([
                 project(camera_homography_matrix, result["rx1"], result["ry1"]),
                 project(camera_homography_matrix, result["rx2"], result["ry2"]),
@@ -53,10 +57,10 @@ def sub_callback_calibration_points(results):
                 ["id", get_my_id_str()],
                 ["id", "0"],
                 ["text", str(result["regionName"])],
-                ["text", str(result["cam"])],
+                ["text", str(result["cameraId"])],
                 ["text", "calibration"],
                 ["text", "for"],
-                ["text", str(result["display"])],
+                ["text", str(camera_to_display_map[str(result["cameraId"])])],
                 ["text", "is"],
                 ["float", str(homography_matrix[0][0])],
                 ["float", str(homography_matrix[0][1])],
