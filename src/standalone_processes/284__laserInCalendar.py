@@ -49,7 +49,7 @@ def sub_callback_laser_dots(results):
         ["postfix", ""],
     ]})
     for result in results:
-        pt = project(projection_matrixes.get(str(result["cameraId"])), result["x"], result["y"]),
+        pt = project(projection_matrixes.get(str(result["cameraId"])), result["x"], result["y"])
         logging.info("DOT {} {} {} {}".format(result["x"], result["y"], pt[0], pt[1]))
         if pt[0] >= 0 and pt[1] >= 0 and pt[0] < DAYS_IN_WEEK and pt[1] < WEEKS_IN_CALENDAR:
             grid_x = int(pt[0])
