@@ -28,8 +28,10 @@ def sub_callback_laser_dots(results):
         ["postfix", ""],
     ]})
     for result in results:
-        polygon = [int(result["x1"]), int(result["y1"]), int(result["x2"]), int(result["y2"]),
-                   int(result["x3"]), int(result["y3"]), int(result["x4"]), int(result["y4"])]
+        polygon = [[int(result["x1"]), int(result["y1"])],
+                   [int(result["x2"]), int(result["y2"])],
+                   [int(result["x3"]), int(result["y3"])],
+                   [int(result["x4"]), int(result["y4"])]]
         inside = point_inside_polygon(int(result["x"]), int(result["y"]), polygon)
         if inside:
             logging.info("laser {} {} inside region {}".format(result["x"], result["y"], result["regionId"]))
