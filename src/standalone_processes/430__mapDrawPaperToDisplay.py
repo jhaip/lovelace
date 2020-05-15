@@ -5,8 +5,6 @@ import cv2
 import logging
 import json
 
-CAM_WIDTH = 1920
-CAM_HEIGHT = 1080
 DISPLAY_WIDTH = 1280 # 1920
 DISPLAY_HEIGHT = 720 # 1080
 projector_calibrations = {}
@@ -30,7 +28,7 @@ def project(calibration_id, x, y):
 
 @subscription(["$ $ camera {} has projector calibration TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time".format(DOTS_CAMERA_ID)])
 def sub_callback_calibration(results):
-    global projector_calibrations, projection_matrixes, inverse_projection_matrixes, CAM_WIDTH, CAM_HEIGHT
+    global projector_calibrations, projection_matrixes, inverse_projection_matrixes, DISPLAY_WIDTH, DISPLAY_WIDTH
     logging.info("sub_callback_calibration")
     logging.info(results)
     if results:
@@ -43,9 +41,9 @@ def sub_callback_calibration(results):
             ]
             logging.info(projector_calibration)
             logging.error("RECAL PROJECTION MATRIX")
-            pts1 = np.float32(projector_calibration)
-            pts2 = np.float32(
-                [[0, 0], [CAM_WIDTH, 0], [0, CAM_HEIGHT], [CAM_WIDTH, CAM_HEIGHT]])
+            pts1 = np.float32(
+                [[0, 0], [DISPLAY_WIDTH, 0], [0, DISPLAY_HEIGHT], [DISPLAY_WIDTH, DISPLAY_HEIGHT]])
+            pts2 = np.float32(projector_calibration)
             projection_matrix = cv2.getPerspectiveTransform(
                 pts1, pts2)
             projector_calibrations[DOTS_CAMERA_ID] = projector_calibration
@@ -80,12 +78,12 @@ def sub_callback_graphics(results):
                 graphics_json.insert(0, {
                     "type": "transform",
                     "options": [
-                        1, 0, 0,
-                        0, 1, 0,
-                        0, 0, 1,
-                        # paper_proj_matrix[0][0], paper_proj_matrix[0][1], paper_proj_matrix[0][2],
-                        # paper_proj_matrix[1][0], paper_proj_matrix[1][1], paper_proj_matrix[1][2],
-                        # paper_proj_matrix[2][0], paper_proj_matrix[2][1], paper_proj_matrix[2][2],
+                        # 1, 0, 0,
+                        # 0, 1, 0,
+                        # 0, 0, 1,
+                        paper_proj_matrix[0][0], paper_proj_matrix[0][1], paper_proj_matrix[0][2],
+                        paper_proj_matrix[1][0], paper_proj_matrix[1][1], paper_proj_matrix[1][2],
+                        paper_proj_matrix[2][0], paper_proj_matrix[2][1], paper_proj_matrix[2][2],
                     ]
                 })
                 claims.append({"type": "claim", "fact": [
