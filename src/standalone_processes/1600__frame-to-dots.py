@@ -13,6 +13,7 @@ import os
 
 CAM_WIDTH = 1920
 CAM_HEIGHT = 1080
+MIN_LOOP_DELAY = 200 # 60
 latency_check_delay_s = 5
 server_latency_ms = 0
 corners = None
@@ -75,10 +76,11 @@ class ShowCapture(wx.Panel):
             more_messages_to_receive = listen(blocking=False)
     
     def MyListenDrawLoop(self):
-        global server_latency_ms
+        global server_latency_ms, MIN_LOOP_DELAY
         self.NextFrame(None)
-        wx.CallLater(max(60, server_latency_ms*5 + 60), self.MyListenDrawLoop)
-        print("loop with delay {}".format(server_latency_ms*4.7 + 60))
+        delay = max(MIN_LOOP_DELAY, server_latency_ms*5 + MIN_LOOP_DELAY)
+        wx.CallLater(delay, self.MyListenDrawLoop)
+        print("loop with delay {}".format(delay))
     
     def claimProjectorCalibration(self):
         batch_claims = [{"type": "retract", "fact": [
