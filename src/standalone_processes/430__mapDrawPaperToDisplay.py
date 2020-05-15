@@ -48,8 +48,8 @@ def sub_callback_calibration(results):
                 [[0, 0], [CAM_WIDTH, 0], [0, CAM_HEIGHT], [CAM_WIDTH, CAM_HEIGHT]])
             projection_matrix = cv2.getPerspectiveTransform(
                 pts1, pts2)
-            projector_calibrations[int(result["cameraId"])] = projector_calibration
-            projection_matrixes[int(result["cameraId"])] = projection_matrix
+            projector_calibrations[DOTS_CAMERA_ID] = projector_calibration
+            projection_matrixes[DOTS_CAMERA_ID] = projection_matrix
             logging.error("RECAL PROJECTION MATRIX -- done")
 
 
