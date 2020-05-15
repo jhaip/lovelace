@@ -80,9 +80,9 @@ def sub_callback_graphics(results):
                 graphics_json.insert(0, {
                     "type": "transform",
                     "options": [
-                        0.1, 0, 0,
-                        0, 0.1, 0,
-                        0, 0, 0.1,
+                        0.5, 0, 0,
+                        0, 0.5, 0,
+                        0, 0, 0.5,
                         # paper_proj_matrix[0][0], paper_proj_matrix[0][1], paper_proj_matrix[0][2],
                         # paper_proj_matrix[1][0], paper_proj_matrix[1][1], paper_proj_matrix[1][2],
                         # paper_proj_matrix[2][0], paper_proj_matrix[2][1], paper_proj_matrix[2][2],
