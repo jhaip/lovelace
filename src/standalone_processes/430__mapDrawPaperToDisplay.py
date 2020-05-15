@@ -41,9 +41,9 @@ def sub_callback_calibration(results):
             ]
             logging.info(projector_calibration)
             logging.error("RECAL PROJECTION MATRIX")
-            pts1 = np.float32(
+            pts1 = np.float32(projector_calibration)
+            pts2 = np.float32(
                 [[0, 0], [DISPLAY_WIDTH, 0], [0, DISPLAY_HEIGHT], [DISPLAY_WIDTH, DISPLAY_HEIGHT]])
-            pts2 = np.float32(projector_calibration)
             projection_matrix = cv2.getPerspectiveTransform(
                 pts1, pts2)
             projector_calibrations[DOTS_CAMERA_ID] = projector_calibration
@@ -65,14 +65,14 @@ def sub_callback_graphics(results):
         for result in results:
             graphics_json = json.loads(result["graphics"])
             if len(graphics_json) > 0:
-                src = np.float32([
+                src = np.float32(
+                    [[0, 0], [DISPLAY_WIDTH, 0], [0, DISPLAY_HEIGHT], [DISPLAY_WIDTH, DISPLAY_HEIGHT]])
+                dst = np.float32([
                     project(DOTS_CAMERA_ID, result["x1"], result["y1"]),
                     project(DOTS_CAMERA_ID, result["x2"], result["y2"]),
                     project(DOTS_CAMERA_ID, result["x4"], result["y4"]),
                     project(DOTS_CAMERA_ID, result["x3"], result["y3"]) # notice the order is not clock-wise
                 ])
-                dst = np.float32(
-                    [[0, 0], [DISPLAY_WIDTH, 0], [0, DISPLAY_HEIGHT], [DISPLAY_WIDTH, DISPLAY_HEIGHT]])
                 paper_proj_matrix = cv2.getPerspectiveTransform(
                     src, dst)
                 graphics_json.insert(0, {
