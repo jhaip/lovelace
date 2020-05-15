@@ -32,7 +32,7 @@ tracer = None
 ROOM_SPAN_CONTEXT = None
 
 context = zmq.Context()
-rpc_url = "localhost"
+rpc_url = os.getenv('PROG_SPACE_SERVER_URL', "localhost")
 client = context.socket(zmq.DEALER)
 
 MY_ID = None

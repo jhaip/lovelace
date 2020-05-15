@@ -9,7 +9,10 @@ uuid.seed()
 room = {}
 
 local MY_ID_STR = "1999"
-local RPC_URL = "10.0.0.22" -- "localhost" -- "10.0.0.22"
+local RPC_URL = os.getenv("PROG_SPACE_SERVER_URL")
+if RPC_URL == nil then
+    RPC_URL = "10.0.0.22" -- "localhost"
+end
 local server_listening = false
 local init_ping_id = uuid()
 local SUBSCRIPTION_ID_LEN = #init_ping_id

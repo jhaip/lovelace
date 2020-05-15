@@ -139,7 +139,7 @@ function init(filename) {
     })
     const myId = getIdFromProcessName(scriptName);
 
-    const rpc_url = "localhost";
+    const rpc_url = process.env.PROG_SPACE_SERVER_URL || "localhost";
     const MY_ID_STR = getIdStringFromId(myId);
     client = zmq.socket('dealer');
     client.identity = MY_ID_STR;
