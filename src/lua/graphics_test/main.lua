@@ -3,10 +3,13 @@ local room = require "helper"
 local json = require "json"
 local matrix = require "matrix"
 
-SCREEN_WIDTH = 1280
-SCREEN_HEIGHT = 720
-
 COMBINED_TRANSFORM = love.math.newTransform()
+COMBINED_TRANSFORM:setMatrix(
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+)
 
 graphics_cache = {}
 font = false

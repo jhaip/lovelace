@@ -5,12 +5,12 @@ import cv2
 import logging
 import json
 
-DISPLAY_WIDTH = 1280 # 1920
-DISPLAY_HEIGHT = 720 # 1080
+DISPLAY_WIDTH = 1920
+DISPLAY_HEIGHT = 1080
 projector_calibrations = {}
 projection_matrixes = {}
 DOTS_CAMERA_ID = 1
-DISPLAY_TARGET_ID = 1999 # 1993
+DISPLAY_TARGET_ID = 1993 # 1993
 
 def project(calibration_id, x, y):
     global projection_matrixes
