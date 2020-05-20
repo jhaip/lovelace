@@ -801,11 +801,34 @@ func getDots(window *gocv.Window, deviceID string, webcam *gocv.VideoCapture, bd
 
 	res := make([]Dot, len(kp))
 
-	// TODO: transform kp into []Dot
+	// transform keypoints into []Dot
+	N_H_SAMPLES := 1
+	N_V_SAMPLES := 1
+	TOTAL_SAMPLES := (2*N_H_SAMPLES+1) * (2*N_V_SAMPLES+1)
 	for kpi, kpe := range kp {
-		colorThing := GetVecbAt(img, int(kpe.Y), int(kpe.X))
-		// TOOD: check if BGR
-		res[kpi] = Dot{int(kpe.X), int(kpe.Y), [3]int{int(colorThing[0]), int(colorThing[1]), int(colorThing[2])}, make([]int, 0)}
+		// sample pixels around the keypoint center to get the average color
+		// this is to cut down the noise on the color
+		colorSum := []int{0, 0, 0}
+		for xi := N_H_SAMPLES; xi <= N_H_SAMPLES; xi += 1 {
+			for yi := N_V_SAMPLES; yi <= N_V_SAMPLES; yi += 1 {
+				colorThing := GetVecbAt(img, int(kpe.Y), int(kpe.X))
+				colorSum[0] += int(colorThing[0])
+				colorSum[1] += int(colorThing[1])
+				colorSum[2] += int(colorThing[2])
+			}
+		}
+		
+		// OpenCV uses BGR color order so we use 2, 1, 0 to map it to RGB
+		res[kpi] = Dot{
+			int(kpe.X),
+			int(kpe.Y),
+			[3]int{
+				int(colorSum[2]/TOTAL_SAMPLES),
+				int(colorSum[1]/TOTAL_SAMPLES),
+				int(colorSum[0]/TOTAL_SAMPLES),
+			},
+			make([]int, 0),
+		}
 	}
 
 	// draw the keypoints on the webcam image
@@ -814,7 +837,8 @@ func getDots(window *gocv.Window, deviceID string, webcam *gocv.VideoCapture, bd
 
 	// show the image in the window, and wait 10 millisecond
 	window.IMShow(simpleKP)
-	if window.WaitKey(10) >= 0 {
+	// this also limits the FPS - 1000 / 200 = 5 fps
+	if window.WaitKey(200) >= 0 {
 		return nil, errors.New("EXIT")
 	}
 	return res, nil
