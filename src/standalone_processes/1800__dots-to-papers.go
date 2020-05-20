@@ -89,6 +89,20 @@ func GetBasePath() string {
 	return os.Getenv(env) + "/lovelace/src/standalone_processes/"
 }
 
+// Copied from https://play.golang.org/p/4FkNSiUDMg
+func newUUID() (string, error) {
+	uuid := make([]byte, 16)
+	n, err := io.ReadFull(rand.Reader, uuid)
+	if n != len(uuid) || err != nil {
+		return "", err
+	}
+	// variant bits; see section 4.1.1
+	uuid[8] = uuid[8]&^0xc0 | 0x80
+	// version 4 (pseudo-random); see section 4.1.3
+	uuid[6] = uuid[6]&^0xf0 | 0x40
+	return fmt.Sprintf("%x-%x-%x-%x-%x", uuid[0:4], uuid[4:6], uuid[6:8], uuid[8:10], uuid[10:]), nil
+}
+
 func initZeroMQ(MY_ID_STR string) *zmq.Socket {
 	log.Println("Connecting to server...")
 	client, zmqCreationErr := zmq.NewSocket(zmq.DEALER)
@@ -102,27 +116,13 @@ func initZeroMQ(MY_ID_STR string) *zmq.Socket {
 	connectErr := client.Connect("tcp://" + rpc_url + ":5570")
 	checkErr(connectErr)
 
-	init_ping_id := "aae54f21-d95f-48e7-a778-266a17274896"; // just a random ID
+	init_ping_id := newUUID();
 	client.SendMessage(fmt.Sprintf(".....PING%s%s", MY_ID_STR, init_ping_id))
 	// block until ping response received
 	_, recvErr := client.RecvMessage(0) 
 	checkErr(recvErr);
 	
 	return client
-}
-
-// Copied from https://play.golang.org/p/4FkNSiUDMg
-func newUUID() (string, error) {
-	uuid := make([]byte, 16)
-	n, err := io.ReadFull(rand.Reader, uuid)
-	if n != len(uuid) || err != nil {
-		return "", err
-	}
-	// variant bits; see section 4.1.1
-	uuid[8] = uuid[8]&^0xc0 | 0x80
-	// version 4 (pseudo-random); see section 4.1.3
-	uuid[6] = uuid[6]&^0xf0 | 0x40
-	return fmt.Sprintf("%x-%x-%x-%x-%x", uuid[0:4], uuid[4:6], uuid[6:8], uuid[8:10], uuid[10:]), nil
 }
 
 func main() {
