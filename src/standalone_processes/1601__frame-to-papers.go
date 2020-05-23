@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"image"
 	"image/color"
 	"io"
 	"log"
@@ -205,18 +206,18 @@ func main() {
 	}
 
 	// let the user mark a ROIs (projector corners) to track
-	rects := gocv.SelectROIs("Tracking", img)
-	if len(rects) != 4 {
-		fmt.Printf("user cancelled roi selection or did not specify 4 corners\n")
-		return
-	}
+	// rects := gocv.SelectROIs("Tracking", img)
+	// if len(rects) != 4 {
+	// 	fmt.Printf("user cancelled roi selection or did not specify 4 corners\n")
+	// 	return
+	// }
 
 	for {
 		start := time.Now()
 
 		log.Println("waiting for dots")
 		// points := getDots(client, MY_ID_STR, dot_sub_id, start) // getPoints()
-		points, dotError := getDots(window, deviceID, webcam, bdp, img)
+		points, dotKeyPoints, dotError := getDots(window, deviceID, webcam, bdp, img)
 		log.Println("got dots")
 		checkErr(dotError)
 
@@ -254,6 +255,24 @@ func main() {
 		log.Printf("total     : %s \n", elapsed)
 
 		// time.Sleep(10 * time.Millisecond)
+		// draw the keypoints on the webcam image
+		simpleKP := gocv.NewMat()
+		gocv.DrawKeyPoints(img, dotKeyPoints, &simpleKP, color.RGBA{0, 0, 255, 0}, gocv.DrawDefault)
+		for _, paper := range papers {
+			fmt.Printf("Showing paper! %v %v %v\n", paper.Corners[0].X, paper.Corners[0].Y, paper.Id);
+			gocv.Line(&simpleKP, image.Pt(paper.Corners[0].X, paper.Corners[0].Y), image.Pt(paper.Corners[1].X, paper.Corners[1].Y), color.RGBA{0, 255, 0, 0}, 2)
+			gocv.Line(&simpleKP, image.Pt(paper.Corners[1].X, paper.Corners[1].Y), image.Pt(paper.Corners[2].X, paper.Corners[2].Y), color.RGBA{0, 255, 0, 0}, 2)
+			gocv.Line(&simpleKP, image.Pt(paper.Corners[2].X, paper.Corners[2].Y), image.Pt(paper.Corners[3].X, paper.Corners[3].Y), color.RGBA{0, 255, 0, 0}, 2)
+			gocv.Line(&simpleKP, image.Pt(paper.Corners[3].X, paper.Corners[3].Y), image.Pt(paper.Corners[0].X, paper.Corners[0].Y), color.RGBA{0, 255, 0, 0}, 2)
+			gocv.PutText(&simpleKP, fmt.Sprintf("%v", paper.Id), image.Pt(paper.Corners[0].X, paper.Corners[0].Y),
+				gocv.FontHersheyPlain, 1.2, color.RGBA{255, 0, 0, 0}, 2)
+		}
+		// show the image in the window, and wait
+		window.IMShow(simpleKP)
+		// this also limits the FPS - 1000 / 200 = 5 fps
+		if window.WaitKey(200) >= 0 {
+			return
+		}
 	}
 }
 
@@ -785,19 +804,19 @@ func GetVecbAt(m gocv.Mat, row int, col int) []uint8 {
 	return v
 }
 
-func getDots(window *gocv.Window, deviceID string, webcam *gocv.VideoCapture, bdp gocv.SimpleBlobDetector, img gocv.Mat) ([]Dot, error) {
+func getDots(window *gocv.Window, deviceID string, webcam *gocv.VideoCapture, bdp gocv.SimpleBlobDetector, img gocv.Mat) ([]Dot, []gocv.KeyPoint, error) {
 	if ok := webcam.Read(&img); !ok {
 		fmt.Printf("Device closed: %v\n", deviceID)
-		return nil, errors.New("DEVICE_CLOSED")
+		return nil, nil, errors.New("DEVICE_CLOSED")
 	}
 
 	if img.Empty() {
-		return make([]Dot, 0), nil
+		return make([]Dot, 0), make([]gocv.KeyPoint, 0), nil
 	}
 
 	// detect blobs/keypoints
 	kp := bdp.Detect(img)
-	fmt.Printf("Keypoints detected: $v\n", len(kp))
+	fmt.Printf("Keypoints detected: %v\n", len(kp))
 
 	res := make([]Dot, len(kp))
 
@@ -831,17 +850,7 @@ func getDots(window *gocv.Window, deviceID string, webcam *gocv.VideoCapture, bd
 		}
 	}
 
-	// draw the keypoints on the webcam image
-	simpleKP := gocv.NewMat()
-	gocv.DrawKeyPoints(img, kp, &simpleKP, color.RGBA{0, 0, 255, 0}, gocv.DrawDefault)
-
-	// show the image in the window, and wait 10 millisecond
-	window.IMShow(simpleKP)
-	// this also limits the FPS - 1000 / 200 = 5 fps
-	if window.WaitKey(200) >= 0 {
-		return nil, errors.New("EXIT")
-	}
-	return res, nil
+	return res, kp, nil
 }
 
 // func getDots(client *zmq.Socket, MY_ID_STR string, dot_sub_id string, start time.Time) []Dot {
