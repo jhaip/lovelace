@@ -17,14 +17,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kokardy/listing"
 	"gocv.io/x/gocv"
 	ciede2000 "github.com/mattn/go-ciede2000"
 	zmq "github.com/pebbe/zmq4"
 )
 
-const CAM_WIDTH = 1920
-const CAM_HEIGHT = 1080
 const dotSize = 12
 
 type Vec struct {
@@ -154,14 +151,6 @@ func main() {
 
 	client := initZeroMQ(MY_ID_STR)
 	defer client.Close()
-	count := 0
-
-	// dot_sub_id, dot_side_id_err := newUUID()
-	// checkErr(dot_side_id_err)
-	// dot_sub_query := map[string]interface{}{"id": dot_sub_id, "facts": []string{"$source $ dots $x $y color $r $g $b $t"}}
-	// dot_sub_query_msg, _ := json.Marshal(dot_sub_query)
-	// dot_sub_msg := fmt.Sprintf("SUBSCRIBE%s%s", MY_ID_STR, dot_sub_query_msg)
-	// client.SendMessage(dot_sub_msg)
 
 	if len(os.Args) < 2 {
 		fmt.Println("How to run:\n\ttracking [camera ID]")
@@ -205,18 +194,10 @@ func main() {
 		return
 	}
 
-	// let the user mark a ROIs (projector corners) to track
-	// rects := gocv.SelectROIs("Tracking", img)
-	// if len(rects) != 4 {
-	// 	fmt.Printf("user cancelled roi selection or did not specify 4 corners\n")
-	// 	return
-	// }
-
 	for {
 		start := time.Now()
 
 		log.Println("waiting for dots")
-		// points := getDots(client, MY_ID_STR, dot_sub_id, start) // getPoints()
 		points, dotKeyPoints, dotError := getDots(window, deviceID, webcam, bdp, img)
 		log.Println("got dots")
 		checkErr(dotError)
@@ -230,7 +211,6 @@ func main() {
 		step2 := doStep2(step1)
 		log.Println("step2", len(step2))
 		// printCorners(step2[:5])
-		// printJsonDots(step1)
 		// claimCorners(step2)
 		step3 := doStep3(step1, step2)
 		log.Println("step3", len(step3))
@@ -245,9 +225,6 @@ func main() {
 
 		timeProcessing := time.Since(start)
 		claimPapersAndCorners(client, MY_ID_STR, papers, step4)
-
-		count += 1
-		// claimCounter(client, count)
 
 		elapsed := time.Since(start)
 		log.Printf("get dots  : %s \n", timeGotDots)
@@ -489,108 +466,6 @@ func getColorDistance(a, b [3]int) float64 {
 	return ciede2000.Diff(c1, c2)
 }
 
-func identifyColorGroups(colors [][3]int, group P) string {
-	color_templates := listing.Permutations(
-		listing.IntReplacer([]int{0, 1, 2, 3}), 4, false, 4,
-	)
-	// all order-dependent unique combinations of 0-3
-	// log.Println(color_templates)
-
-	calibration := [][3]int{[3]int{255, 0, 0}, [3]int{0, 255, 0}, [3]int{0, 0, 255}, [3]int{0, 0, 0}}
-	// calibration := make([][3]int, 4)
-	// calibration[0] = [3]int{183, 35, 77}   // red
-	// calibration[1] = [3]int{114, 128, 106} // green
-	// calibration[2] = [3]int{95, 116, 176}  // blue
-	// calibration[3] = [3]int{22, 15, 39}    // dark
-
-	minScore := -1.0
-	var bestMatch []int // index = color, value = index of group in P that matches color
-	for rr := range color_templates {
-		r := rr.(listing.IntReplacer)
-		score := 0.0
-		score += getColorDistance(calibration[0], colors[group.G[r[0]][0]])
-		score += getColorDistance(calibration[1], colors[group.G[r[1]][0]])
-		score += getColorDistance(calibration[2], colors[group.G[r[2]][0]])
-		score += getColorDistance(calibration[3], colors[group.G[r[3]][0]])
-		// log.Println(r, score)
-		if minScore == -1 || score < minScore {
-			minScore = score
-			bestMatch = r
-		}
-	}
-
-	// log.Println("best match", bestMatch)
-
-	result := make([]string, 7)
-	for i, g := range bestMatch {
-		for _, k := range group.G[g] {
-			result[k] = strconv.Itoa(i)
-		}
-	}
-	// log.Println("Result", result)  // Something like "1222203"
-
-	return strings.Join(result, "")
-}
-
-func getGetPaperIdFromColors2(colors [][3]int, dotCodes8400 []string) (int, int, string) {
-	// color_combinations := combinations_as_list(7, 4)
-	color_combinations := listing.Combinations(
-		listing.IntReplacer([]int{0, 1, 2, 3, 4, 5, 6}), 4, false, 7,
-	)
-	// all order-indepent unique combinations of 0-6 such as [0 1 2 3], [3 4 5 6]
-	// log.Println(color_combinations)
-
-	minScore := -1.0
-	var bestGroup P
-	for rr := range color_combinations {
-		r := rr.(listing.IntReplacer)
-		p := P{G: [][]int{[]int{r[0]}, []int{r[1]}, []int{r[2]}, []int{r[3]}}}
-		// Fill p.U with unused #s
-		for i := 0; i < 7; i += 1 {
-			if r[0] != i && r[1] != i && r[2] != i && r[3] != i {
-				p.U = append(p.U, i)
-			}
-		}
-		// pop of each element in p.U and add to closet colored group
-		for i := 0; i < 3; i += 1 {
-			u_color := colors[p.U[0]]
-			// add element to group closest in color
-			min_i := 0
-			min := getColorDistance(u_color, colors[r[0]])
-			for j := 1; j < 4; j += 1 {
-				d := getColorDistance(u_color, colors[r[j]])
-				if d < min {
-					min = d
-					min_i = j
-				}
-			}
-			p.G[min_i] = append(p.G[min_i], p.U[0])
-			p.U = p.U[1:]
-			p.score += min
-		}
-
-		// log.Println(p)
-
-		// Keep track of the grouping with the lowest score
-		if minScore == -1 || p.score < minScore {
-			minScore = p.score
-			bestGroup = p
-		}
-	}
-
-	// log.Println("Best group", bestGroup)
-	colorString := identifyColorGroups(colors, bestGroup)
-
-	log.Printf("%v \n", colorString)
-	colors8400Index := indexOf(colorString, dotCodes8400)
-	if colors8400Index > 0 {
-		paperId := colors8400Index % (8400 / 4)
-		cornerId := colors8400Index / (8400 / 4)
-		return paperId, cornerId, colorString
-	}
-	return -1, -1, colorString
-}
-
 func getGetPaperIdFromColors3(colors [][3]int, dotCodes8400 []string) (int, int, string) {
 	idealColorsToDotIndex := []int{0, 0, 0, 0}
 	idealColorsToDotIndexMinScore := []float64{99999.0, 99999.0, 99999.0, 99999.0}
@@ -697,59 +572,6 @@ func getGetPaperIdFromColors3(colors [][3]int, dotCodes8400 []string) (int, int,
 	return -1, -1, colorString
 }
 
-// func getGetPaperIdFromColors(colors [][3]int, dotCodes8400 []string) (int, int, string) {
-// 	var colorString string
-
-// 	calibrationColors := make([][3]int, 4)
-// 	calibrationColors[0] = [3]int{170, 48, 31}   // red
-// 	calibrationColors[1] = [3]int{138, 131, 94}  // green
-// 	calibrationColors[2] = [3]int{112, 118, 150} // blue
-// 	calibrationColors[3] = [3]int{52, 23, 21}    // dark
-
-// 	// calibrationColors[0] = [3]int{202, 61, 79}  // red
-// 	// calibrationColors[1] = [3]int{162, 156, 118}  // green
-// 	// calibrationColors[2] = [3]int{126, 148, 191}  // blue
-// 	// calibrationColors[3] = [3]int{85, 58, 94}  // dark
-
-// 	// calibrationColors[0] = [3]int{204, 98, 107}  // red
-// 	// calibrationColors[1] = [3]int{200, 186, 167}  // green
-// 	// calibrationColors[2] = [3]int{176, 170, 198}  // blue
-// 	// calibrationColors[3] = [3]int{125, 91, 107}  // dark
-
-// 	for _, colorData := range colors {
-// 		minIndex := 0
-// 		minValue := 99999.0
-// 		for i, calibrationColorData := range calibrationColors {
-// 			c1 := &color.RGBA{
-// 				uint8(colorData[0]),
-// 				uint8(colorData[1]),
-// 				uint8(colorData[2]),
-// 				255,
-// 			}
-// 			c2 := &color.RGBA{
-// 				uint8(calibrationColorData[0]),
-// 				uint8(calibrationColorData[1]),
-// 				uint8(calibrationColorData[2]),
-// 				255,
-// 			}
-// 			value := ciede2000.Diff(c1, c2)
-// 			if i == 0 || value < minValue {
-// 				minIndex = i
-// 				minValue = value
-// 			}
-// 		}
-// 		colorString += strconv.Itoa(minIndex)
-// 	}
-// 	log.Printf("%v \n", colorString)
-// 	colors8400Index := indexOf(colorString, dotCodes8400)
-// 	if colors8400Index > 0 {
-// 		paperId := colors8400Index % (8400 / 4)
-// 		cornerId := colors8400Index / (8400 / 4)
-// 		return paperId, cornerId, colorString
-// 	}
-// 	return -1, -1, colorString
-// }
-
 func lineToColors(nodes []Dot, line []int, shouldReverse bool) [][3]int {
 	results := make([][3]int, len(line))
 	for i, nodeIndex := range line {
@@ -775,18 +597,6 @@ func doStep4CornersWithIds(nodes []Dot, corners []Corner, dotCodes8400 []string)
 		results = append(results, newCorner)
 	}
 	return results
-}
-
-// https://stackoverflow.com/questions/48798588/how-do-you-remove-the-first-character-of-a-string
-func trimLeftChars(s string, n int) string {
-	m := 0
-	for i := range s {
-		if m >= n {
-			return s[i:]
-		}
-		m++
-	}
-	return s[:0]
 }
 
 func makeTimestampMillis() int64 {
@@ -853,75 +663,6 @@ func getDots(window *gocv.Window, deviceID string, webcam *gocv.VideoCapture, bd
 	return res, kp, nil
 }
 
-// func getDots(client *zmq.Socket, MY_ID_STR string, dot_sub_id string, start time.Time) []Dot {
-// 	var reply string
-// 	nLoops := 0
-// 	dot_prefix := fmt.Sprintf("%s%s", MY_ID_STR, dot_sub_id)
-// 	for reply == "" || reply[len(reply)-4:] == "[{}]" {
-// 		log.Println("pre loop")
-// 		for {
-// 			nLoops += 1
-// 			log.Println("pre loop inner")
-// 			rawReply, err := client.RecvMessage(0)
-// 			tmp_reply := rawReply[0]
-// 			if err != nil {
-// 				log.Println("get dots error:")
-// 				log.Println(err)
-// 				break
-// 			} else {
-// 				log.Println("tmp reply:")
-// 				// log.Println(tmp_reply)
-// 				reply = tmp_reply
-// 				break
-// 				// fmt.Println("GOT REPLY:")
-// 				// fmt.Println(reply)
-// 			}
-// 			break
-// 		}
-// 		time.Sleep(1 * time.Millisecond)
-// 		log.Println("end of loop")
-// 	}
-// 	timeGotDotsPre := time.Since(start)
-// 	log.Printf("get dots pre  : %s , %s\n", timeGotDotsPre, nLoops)
-// 	// log.Println("Received ", reply)
-// 	timeVal, err := strconv.ParseInt(reply[len(dot_prefix):len(dot_prefix)+13], 10, 64)
-// 	if err != nil {
-// 		log.Println("ERROR PARSING in getDots")
-// 		log.Println(err)
-// 		panic(err)
-// 	}
-// 	timeDiff := makeTimestampMillis() - timeVal
-// 	log.Printf("time diff: %v ms\n", timeDiff)
-// 	val := trimLeftChars(reply, len(dot_prefix)+13)
-// 	json_val := make([]map[string][]string, 0)
-// 	/*
-// 		  type Dot struct {
-// 			X         int    `json:"x"`
-// 			Y         int    `json:"y"`
-// 			Color     [3]int `json:"color"`
-// 			Neighbors []int  `json:"-"`
-// 		}
-// 	*/
-// 	// TODO: parse val
-// 	json.Unmarshal([]byte(val), &json_val)
-// 	log.Println("GET JSON RESULT:")
-// 	if len(json_val) > 0 {
-// 		claimTime, _ := strconv.ParseFloat(json_val[0]["t"][1], 64)
-// 		claimTimeDiff := makeTimestampMillis() - int64(claimTime)
-// 		log.Printf("claim time diff: %v ms\n", claimTimeDiff)
-// 	}
-// 	res := make([]Dot, 0)
-// 	for _, json_result := range json_val {
-// 		x, _ := strconv.Atoi(json_result["x"][1])
-// 		y, _ := strconv.Atoi(json_result["y"][1])
-// 		r, _ := strconv.Atoi(json_result["r"][1])
-// 		g, _ := strconv.Atoi(json_result["g"][1])
-// 		b, _ := strconv.Atoi(json_result["b"][1])
-// 		res = append(res, Dot{x, y, [3]int{r, g, b}, make([]int, 0)})
-// 	}
-// 	return res
-// }
-
 func claimPapersAndCorners(client *zmq.Socket, MY_ID_STR string, papers []Paper, corners []Corner) {
 	log.Println("CLAIM PAPERS -----")
 	log.Println(papers)
@@ -940,13 +681,6 @@ func claimPapersAndCorners(client *zmq.Socket, MY_ID_STR string, papers []Paper,
 			Corners []PaperCorner `json:"corners"`
 		}
 	*/
-
-	// for _, paper := range papers {
-	// 	papersStr := fmt.Sprintf("camera 1 sees paper %s at TL %v %v TR %v %v BR %v %v BL %v %v at %v", paper.Id, paper.Corners[0].X, paper.Corners[0].Y, paper.Corners[1].X, paper.Corners[1].Y, paper.Corners[2].X, paper.Corners[2].Y, paper.Corners[3].X, paper.Corners[3].Y, 99)
-	// 	msg := fmt.Sprintf("....CLAIM%s%s", MY_ID_STR, papersStr)
-	// 	log.Println("Sending ", msg)
-	// 	client.SendMessage(msg)
-	// }
 
 	batch_claims := make([]BatchMessage, 0)
 	batch_claims = append(batch_claims, BatchMessage{"retract", [][]string{
@@ -1033,34 +767,6 @@ func claimPapersAndCorners(client *zmq.Socket, MY_ID_STR string, papers []Paper,
 	}
 	log.Println("post send message!")
 	log.Println(s)
-}
-
-func printJsonDots(dots []Dot) {
-	cornersAlmostStr, err := json.Marshal(dots)
-	log.Println("Err?")
-	log.Println(err)
-	cornersStr := string(cornersAlmostStr)
-	log.Println(cornersStr)
-	log.Println("---")
-}
-
-func claimCorners(client *zmq.Socket, corners []Corner) {
-	cornersAlmostStr, err := json.Marshal(corners)
-	log.Println("Err?")
-	log.Println(err)
-	cornersStr := string(cornersAlmostStr)
-	log.Println(cornersStr)
-	msg := fmt.Sprintf("CLAIM[global/corners]%s", cornersStr)
-	log.Println("Sending ", msg)
-	client.SendMessage(msg)
-	// client.SendMessage(msg, zmq.DONTWAIT)
-}
-
-func claimCounter(client *zmq.Socket, count int) {
-	msg := fmt.Sprintf("CLAIM[global/dtpcount]%v", count)
-	log.Println("Sending ", msg)
-	client.SendMessage(msg)
-	// client.SendMessage(msg, zmq.DONTWAIT)
 }
 
 func get8400(fileName string) []string {
