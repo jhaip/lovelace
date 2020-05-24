@@ -188,6 +188,10 @@ func main() {
 	img := gocv.NewMat()
 	defer img.Close()
 
+	// set webcam properties
+	webcam.Set(gocv.VideoCaptureFrameWidth, 1920)
+	webcam.Set(gocv.VideoCaptureFrameHeight, 1080)
+
 	// read an initial image
 	if ok := webcam.Read(&img); !ok {
 		fmt.Printf("cannot read device %v\n", deviceID)
@@ -234,7 +238,9 @@ func main() {
 		// time.Sleep(10 * time.Millisecond)
 		// draw the keypoints on the webcam image
 		simpleKP := gocv.NewMat()
-		gocv.DrawKeyPoints(img, dotKeyPoints, &simpleKP, color.RGBA{0, 0, 255, 0}, gocv.DrawDefault)
+		if len(dotKeyPoints) > 0 {
+			gocv.DrawKeyPoints(img, dotKeyPoints, &simpleKP, color.RGBA{0, 0, 255, 0}, gocv.DrawDefault)
+		}
 		for _, paper := range papers {
 			fmt.Printf("Showing paper! %v %v %v\n", paper.Corners[0].X, paper.Corners[0].Y, paper.Id);
 			gocv.Line(&simpleKP, image.Pt(paper.Corners[0].X, paper.Corners[0].Y), image.Pt(paper.Corners[1].X, paper.Corners[1].Y), color.RGBA{0, 255, 0, 0}, 2)
