@@ -262,19 +262,7 @@ func main() {
 			return
 		} else if keyId == 99 {
 			// 99 == c key
-			// claim image as base64
-			imgImg, err := img.ToImage()
-			checkErr(err)
-			scaled := resize.Resize(160, 0, imgImg, resize.Lanczos3) // 160px, 0 = keep aspect ratio
-			var buf bytes.Buffer
-			// err = Encode(&buf, img, &Options{Quality: tc.quality})
-			encodeErr := png.Encode(&buf, scaled)
-			checkErr(encodeErr)
-			// encode to base64
-			b64EncodedImage := base64.StdEncoding.EncodeToString(buf.Bytes())
-			fmt.Println("Len image %v\n", len(b64EncodedImage))
-			fmt.Println(b64EncodedImage)
-			// end claim image as base64
+			claimBase64Screenshot(client, MY_ID_STR, img)
 		}
 	}
 }
@@ -711,6 +699,7 @@ func claimPapersAndCorners(client *zmq.Socket, MY_ID_STR string, papers []Paper,
 	batch_claims := make([]BatchMessage, 0)
 	batch_claims = append(batch_claims, BatchMessage{"retract", [][]string{
 		[]string{"id", MY_ID_STR},
+		[]string{"id", "0"},
 		[]string{"postfix", ""},
 	}})
 	// $ camera $cameraId sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $time
@@ -755,7 +744,7 @@ func claimPapersAndCorners(client *zmq.Socket, MY_ID_STR string, papers []Paper,
 	for _, corner := range corners {
 		batch_claims = append(batch_claims, BatchMessage{"claim", [][]string{
 			[]string{"id", MY_ID_STR},
-			[]string{"id", "1"},
+			[]string{"id", "0"},
 			[]string{"text", "camera"},
 			[]string{"integer", "1"},
 			[]string{"text", "sees"},
@@ -776,7 +765,7 @@ func claimPapersAndCorners(client *zmq.Socket, MY_ID_STR string, papers []Paper,
 	}
 	batch_claims = append(batch_claims, BatchMessage{"claim", [][]string{
 		[]string{"id", MY_ID_STR},
-		[]string{"id", "2"},
+		[]string{"id", "0"},
 		[]string{"text", "dotsToPapers"},
 		[]string{"text", "update"},
 		[]string{"text", time.Now().String()},
@@ -792,6 +781,49 @@ func claimPapersAndCorners(client *zmq.Socket, MY_ID_STR string, papers []Paper,
 		// panic(err)
 	}
 	log.Println("post send message!")
+	log.Println(s)
+}
+
+func claimBase64Screenshot(client *zmq.Socket, MY_ID_STR string, img gocv.Mat) {
+	// claim image as base64
+	imgImg, err := img.ToImage()
+	checkErr(err)
+	scaled := resize.Resize(160, 0, imgImg, resize.Lanczos3) // 160px, 0 = keep aspect ratio
+	var buf bytes.Buffer
+	// err = Encode(&buf, img, &Options{Quality: tc.quality})
+	encodeErr := png.Encode(&buf, scaled)
+	checkErr(encodeErr)
+	// encode to base64
+	b64EncodedImage := base64.StdEncoding.EncodeToString(buf.Bytes())
+	fmt.Println("Len image %v\n", len(b64EncodedImage))
+	fmt.Println(b64EncodedImage)
+	// end claim image as base64
+
+	log.Println("CLAIM IMAGE -----")
+	batch_claims := make([]BatchMessage, 0)
+	batch_claims = append(batch_claims, BatchMessage{"retract", [][]string{
+		[]string{"id", MY_ID_STR},
+		[]string{"id", "1"},
+		[]string{"postfix", ""},
+	}})
+	batch_claims = append(batch_claims, BatchMessage{"claim", [][]string{
+		[]string{"id", MY_ID_STR},
+		[]string{"id", "1"},
+		[]string{"text", "camera"},
+		[]string{"text", "screenshot"},
+		[]string{"text", b64EncodedImage},
+	}})
+	batch_claim_str, _ := json.Marshal(batch_claims)
+	msg := fmt.Sprintf("....BATCH%s%s", MY_ID_STR, batch_claim_str)
+	log.Println("Sending ", msg)
+	s, err := client.SendMessage(msg)
+	// s, err := client.SendMessage(msg, zmq.DONTWAIT)
+	if err != nil {
+		log.Println("ERROR!")
+		log.Println(err)
+		// panic(err)
+	}
+	log.Println("post send message! 2")
 	log.Println(s)
 }
 
