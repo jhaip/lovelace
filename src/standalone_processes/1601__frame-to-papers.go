@@ -210,6 +210,20 @@ func main() {
 		log.Println("got dots")
 		checkErr(dotError)
 
+		// claim image as base64
+		imgImg, err := img.ToImage()
+		checkErr(err)
+		scaled := resize.Resize(160, 0, imgImg, resize.Lanczos3) // 160px, 0 = keep aspect ratio
+		var buf bytes.Buffer
+		// err = Encode(&buf, img, &Options{Quality: tc.quality})
+		encodeErr := png.Encode(&buf, scaled)
+		checkErr(encodeErr)
+		// encode to base64
+		b64EncodedImage := base64.StdEncoding.EncodeToString(buf.Bytes())
+		fmt.Println("Len image %v\n", len(b64EncodedImage))
+		fmt.Println(b64EncodedImage)
+		// end claim image as base64
+
 		timeGotDots := time.Since(start)
 		// printDots(points)
 		step1 := doStep1(points)
@@ -629,18 +643,6 @@ func getDots(window *gocv.Window, deviceID string, webcam *gocv.VideoCapture, bd
 		fmt.Printf("Device closed: %v\n", deviceID)
 		return nil, nil, errors.New("DEVICE_CLOSED")
 	}
-
-	imgImg, err := img.ToImage()
-	checkErr(err)
-	scaled := resize.Resize(160, 0, imgImg, resize.Lanczos3) // 160px, 0 = keep aspect ratio
-	var buf bytes.Buffer
-	// err = Encode(&buf, img, &Options{Quality: tc.quality})
-	encodeErr := png.Encode(&buf, scaled)
-	checkErr(encodeErr)
-	// encode to base64
-	b64EncodedImage := base64.StdEncoding.EncodeToString(buf.Bytes())
-	fmt.Println("Len image %v\n", len(b64EncodedImage))
-	fmt.Println(b64EncodedImage)
 
 	if img.Empty() {
 		return make([]Dot, 0), make([]gocv.KeyPoint, 0), nil
