@@ -210,20 +210,6 @@ func main() {
 		log.Println("got dots")
 		checkErr(dotError)
 
-		// claim image as base64
-		imgImg, err := img.ToImage()
-		checkErr(err)
-		scaled := resize.Resize(160, 0, imgImg, resize.Lanczos3) // 160px, 0 = keep aspect ratio
-		var buf bytes.Buffer
-		// err = Encode(&buf, img, &Options{Quality: tc.quality})
-		encodeErr := png.Encode(&buf, scaled)
-		checkErr(encodeErr)
-		// encode to base64
-		b64EncodedImage := base64.StdEncoding.EncodeToString(buf.Bytes())
-		fmt.Println("Len image %v\n", len(b64EncodedImage))
-		fmt.Println(b64EncodedImage)
-		// end claim image as base64
-
 		timeGotDots := time.Since(start)
 		// printDots(points)
 		step1 := doStep1(points)
@@ -271,8 +257,24 @@ func main() {
 		// show the image in the window, and wait
 		window.IMShow(simpleKP)
 		// this also limits the FPS - 1000 / 200 = 5 fps
-		if window.WaitKey(200) >= 0 {
+		keyId := window.WaitKey(200)
+		if keyId == 27 {
 			return
+		} else if keyId == 99 {
+			// 99 == c key
+			// claim image as base64
+			imgImg, err := img.ToImage()
+			checkErr(err)
+			scaled := resize.Resize(160, 0, imgImg, resize.Lanczos3) // 160px, 0 = keep aspect ratio
+			var buf bytes.Buffer
+			// err = Encode(&buf, img, &Options{Quality: tc.quality})
+			encodeErr := png.Encode(&buf, scaled)
+			checkErr(encodeErr)
+			// encode to base64
+			b64EncodedImage := base64.StdEncoding.EncodeToString(buf.Bytes())
+			fmt.Println("Len image %v\n", len(b64EncodedImage))
+			fmt.Println(b64EncodedImage)
+			// end claim image as base64
 		}
 	}
 }
