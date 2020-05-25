@@ -14,6 +14,7 @@ COMBINED_TRANSFORM:setMatrix(
 graphics_cache = {}
 font = false
 font_cache = {}
+image_cache = {}
 is_first_update = true
 
 local colors = {
@@ -228,6 +229,21 @@ function love.draw()
                 )
                 love.graphics.replaceTransform(transform)
             end
+        elseif g.type == "image" then
+            local image = nil
+            if image_cache[opt.bitmap_image_base64] == nil then
+                decoded = love.data.decode( 'data', 'base64', opt.bitmap_image_base64 )
+                imageData = love.image.newImageData( decoded )
+                image = love.graphics.newImage( imageData )
+                image_cache[opt.bitmap_image_base64] = image
+            else:
+                image = image_cache[opt.bitmap_image_base64]
+            r, g, b, a = love.graphics.getColor() -- save current color
+            love.graphics.setColor(1, 1, 1, 1)
+            sx = tonumber(opt.w) / image:getWidth()
+            sy = tonumber(opt.h) / image:getHeight()
+            love.graphics.draw(image, tonumber(opt.x), tonumber(opt.y), 0, sx, sy)
+            love.graphics.setColor(r, g, b, a) -- reset back to saved color
         end
     end
 end
