@@ -236,7 +236,7 @@ function love.draw()
                 imageData = love.image.newImageData( decoded )
                 image = love.graphics.newImage( imageData )
                 image_cache[opt.bitmap_image_base64] = image
-            else then
+            else
                 image = image_cache[opt.bitmap_image_base64]
             end
             r, g, b, a = love.graphics.getColor() -- save current color
