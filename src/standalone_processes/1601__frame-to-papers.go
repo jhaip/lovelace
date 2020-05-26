@@ -810,6 +810,7 @@ func claimBase64Screenshot(client *zmq.Socket, MY_ID_STR string, img gocv.Mat) {
 		[]string{"id", MY_ID_STR},
 		[]string{"id", "1"},
 		[]string{"text", "camera"},
+		[]string{"text", "1"},
 		[]string{"text", "screenshot"},
 		[]string{"text", b64EncodedImage},
 	}})
