@@ -192,6 +192,9 @@ func main() {
 	img := gocv.NewMat()
 	defer img.Close()
 
+	simpleKP := gocv.NewMat()
+	defer simpleKP.Close()
+
 	// set webcam properties
 	webcam.Set(gocv.VideoCaptureFrameWidth, 1920)
 	webcam.Set(gocv.VideoCaptureFrameHeight, 1080)
@@ -241,7 +244,6 @@ func main() {
 
 		// time.Sleep(10 * time.Millisecond)
 		// draw the keypoints on the webcam image
-		simpleKP := gocv.NewMat()
 		if len(dotKeyPoints) > 0 {
 			gocv.DrawKeyPoints(img, dotKeyPoints, &simpleKP, color.RGBA{0, 0, 255, 0}, gocv.DrawDefault)
 		}
