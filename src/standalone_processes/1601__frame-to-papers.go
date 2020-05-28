@@ -256,6 +256,10 @@ func main() {
 			gocv.PutText(&simpleKP, fmt.Sprintf("%v", paper.Id), image.Pt(paper.Corners[0].X, paper.Corners[0].Y),
 				gocv.FontHersheyPlain, 1.2, color.RGBA{255, 0, 0, 0}, 2)
 		}
+		for _, corner := range step4 {
+			gocv.PutText(&simpleKP, fmt.Sprintf("%v", corner.PaperId), image.Pt(corner.Corner.X, corner.Corner.Y),
+				gocv.FontHersheyPlain, 1.2, color.RGBA{0, 0, 255, 0}, 2)
+		}
 		// show the image in the window, and wait
 		window.IMShow(simpleKP)
 		// this also limits the FPS - 1000 / 200 = 5 fps
