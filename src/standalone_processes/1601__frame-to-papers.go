@@ -259,7 +259,7 @@ func main() {
 		// show the image in the window, and wait
 		window.IMShow(simpleKP)
 		// this also limits the FPS - 1000 / 200 = 5 fps
-		keyId := window.WaitKey(200)
+		keyId := window.WaitKey(1000)
 		if keyId == 27 {
 			return
 		} else if keyId == 99 {
