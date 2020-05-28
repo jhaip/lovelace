@@ -658,8 +658,8 @@ func getDots(window *gocv.Window, deviceID string, webcam *gocv.VideoCapture, bd
 		// sample pixels around the keypoint center to get the average color
 		// this is to cut down the noise on the color
 		colorSum := []int{0, 0, 0}
-		for xi := N_H_SAMPLES; xi <= N_H_SAMPLES; xi += 1 {
-			for yi := N_V_SAMPLES; yi <= N_V_SAMPLES; yi += 1 {
+		for xi := -N_H_SAMPLES; xi <= N_H_SAMPLES; xi += 1 {
+			for yi := -N_V_SAMPLES; yi <= N_V_SAMPLES; yi += 1 {
 				colorThing := GetVecbAt(img, int(kpe.Y) + yi, int(kpe.X) + xi)
 				colorSum[0] += int(colorThing[0])
 				colorSum[1] += int(colorThing[1])
