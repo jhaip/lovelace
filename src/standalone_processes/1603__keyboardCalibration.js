@@ -1,5 +1,7 @@
 const { room, myId } = require('../helper2')(__filename);
 
+room.cleanup();
+
 var IMG = undefined;
 var CURRENT_CORNER = 0;
 var CAM_WIDTH = 1920;
@@ -32,8 +34,8 @@ function move(dx, dy) {
     CALIBRATION[CURRENT_CORNER][0] += dx;
     CALIBRATION[CURRENT_CORNER][1] += dy;
     const C = CALIBRATION;
-    room.cleanup();
-    room.assert(`camera 1 has projector calibration TL ( ${C[0][0]}, ${C[0][1]} ) TR ( ${C[1][0]}, ${C[1][1]} ) BR ( ${C[2][0]}, ${C[2][1]} ) BL ( ${C[3][0]}, ${C[3][1]} ) @ ${Math.floor((new Date()).getTime() / 1000)}`);
+    room.retractAll(`camera 1 has projector calibration TL ($, $) TR ($, $) BR ($, $) BL ($, $) @ $`)
+    room.assertForOtherSource("0", `camera 1 has projector calibration TL ( ${C[0][0]}, ${C[0][1]} ) TR ( ${C[1][0]}, ${C[1][1]} ) BR ( ${C[2][0]}, ${C[2][1]} ) BL ( ${C[3][0]}, ${C[3][1]} ) @ ${Math.floor((new Date()).getTime() / 1000)}`);
     draw();
 }
 
