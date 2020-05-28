@@ -117,7 +117,7 @@ func initZeroMQ(MY_ID_STR string) *zmq.Socket {
 	checkErr(connectErr)
 
 	init_ping_id, err := newUUID();
-	checkErr(setIdentityErr);
+	checkErr(err);
 	client.SendMessage(fmt.Sprintf(".....PING%s%s", MY_ID_STR, init_ping_id))
 	// block until ping response received
 	_, recvErr := client.RecvMessage(0) 
