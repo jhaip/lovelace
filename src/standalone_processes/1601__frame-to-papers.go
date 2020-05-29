@@ -311,7 +311,7 @@ func getLag(client *zmq.Socket, MY_ID_STR string, lag_sub_id string) (bool, int)
 		json_val := make([]map[string][]string, 0)
 		json.Unmarshal([]byte(val), &json_val)
 		if len(json_val) > 0 {
-			json_result := json_result[0]
+			json_result := json_val[0]
 			rawLag, err := strconv.Atoi(json_result["lag"][1])
 			checkErr(err)
 			MIN_LOOP_DELAY := 200
