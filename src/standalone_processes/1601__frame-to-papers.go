@@ -305,8 +305,6 @@ func getLag(client *zmq.Socket, MY_ID_STR string, lag_sub_id string) (bool, int)
 	rawReply, err := client.RecvMessage(zmq.DONTWAIT)
 	if err == nil {
 		reply := rawReply[0]
-		timeVal, err := strconv.ParseInt(reply[len(sub_prefix):len(sub_prefix)+13], 10, 64)
-		checkErr(err)
 		val := trimLeftChars(reply, len(sub_prefix)+13)
 		json_val := make([]map[string][]string, 0)
 		json.Unmarshal([]byte(val), &json_val)
