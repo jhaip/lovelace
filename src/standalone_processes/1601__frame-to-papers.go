@@ -205,8 +205,23 @@ func main() {
 		return
 	}
 
+	lag_sub_id, lag_sub_id_err := newUUID()
+	checkErr(lag_sub_id_err)
+	lag_sub_query := map[string]interface{}{"id": lag_sub_id, "facts": []string{"$ $ measured latency $lag ms at $"}}
+	lag_sub_query_msg, _ := json.Marshal(lag_sub_query)
+	lag_sub_msg := fmt.Sprintf("SUBSCRIBE%s%s", MY_ID_STR, lag_sub_query_msg)
+	client.SendMessage(lag_sub_msg)
+
+	lag = 250
+
 	for {
 		start := time.Now()
+
+		hasNewLag, newLag := getLag(client, MY_ID_STR, lag_sub_id)
+		if (hasNewLag) {
+			log.Println("**UPDATED LAG", newLag)
+			lag = newLag
+		}
 
 		log.Println("waiting for dots")
 		points, dotKeyPoints, dotError := getDots(window, deviceID, webcam, bdp, img)
@@ -263,7 +278,7 @@ func main() {
 		// show the image in the window, and wait
 		window.IMShow(simpleKP)
 		// this also limits the FPS - 1000 / 250 = 4 fps
-		keyId := window.WaitKey(250)
+		keyId := window.WaitKey(lag)
 		if keyId == 27 {
 			return
 		} else if keyId == 99 {
@@ -271,6 +286,43 @@ func main() {
 			claimBase64Screenshot(client, MY_ID_STR, img)
 		}
 	}
+}
+
+// https://stackoverflow.com/questions/48798588/how-do-you-remove-the-first-character-of-a-string
+func trimLeftChars(s string, n int) string {
+	m := 0
+	for i := range s {
+		if m >= n {
+			return s[i:]
+		}
+		m++
+	}
+	return s[:0]
+}
+
+func getLag(client *zmq.Socket, MY_ID_STR string, lag_sub_id string) (bool, int) {
+	sub_prefix := fmt.Sprintf("%s%s", MY_ID_STR, lag_sub_id)
+	rawReply, err := client.RecvMessage(zmq.DONTWAIT)
+	if err == nil {
+		reply := rawReply[0]
+		timeVal, err := strconv.ParseInt(reply[len(sub_prefix):len(sub_prefix)+13], 10, 64)
+		checkErr(err)
+		val := trimLeftChars(reply, len(dot_prefix)+13)
+		json_val := make([]map[string][]string, 0)
+		json.Unmarshal([]byte(val), &json_val)
+		if len(json_val) > 0 {
+			rawLag, err := strconv.Atoi(json_result["lag"][1])
+			checkErr(err)
+			MIN_LOOP_DELAY = 200
+			MAX_LOOP_DELAY = 5000
+			lag := rawLag*5 + MIN_LOOP_DELAY
+			if lag > MAX_LOOP_DELAY {
+				lag = MAX_LOOP_DELAY
+			}
+			return true, lag
+		}
+	}
+	return false, 0
 }
 
 func projectMissingCorner(orderedCorners []PaperCorner, missingCornerId int) PaperCorner {
@@ -794,7 +846,7 @@ func claimBase64Screenshot(client *zmq.Socket, MY_ID_STR string, img gocv.Mat) {
 	// claim image as base64
 	imgImg, err := img.ToImage()
 	checkErr(err)
-	scaled := resize.Resize(160, 0, imgImg, resize.Lanczos3) // 160px, 0 = keep aspect ratio
+	scaled := resize.Resize(320, 0, imgImg, resize.Lanczos3) // 320px, 0 = keep aspect ratio
 	var buf bytes.Buffer
 	// err = Encode(&buf, img, &Options{Quality: tc.quality})
 	encodeErr := png.Encode(&buf, scaled)
