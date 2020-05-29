@@ -212,7 +212,7 @@ func main() {
 	lag_sub_msg := fmt.Sprintf("SUBSCRIBE%s%s", MY_ID_STR, lag_sub_query_msg)
 	client.SendMessage(lag_sub_msg)
 
-	lag = 250
+	lag := 250
 
 	for {
 		start := time.Now()
@@ -307,14 +307,14 @@ func getLag(client *zmq.Socket, MY_ID_STR string, lag_sub_id string) (bool, int)
 		reply := rawReply[0]
 		timeVal, err := strconv.ParseInt(reply[len(sub_prefix):len(sub_prefix)+13], 10, 64)
 		checkErr(err)
-		val := trimLeftChars(reply, len(dot_prefix)+13)
+		val := trimLeftChars(reply, len(sub_prefix)+13)
 		json_val := make([]map[string][]string, 0)
 		json.Unmarshal([]byte(val), &json_val)
 		if len(json_val) > 0 {
 			rawLag, err := strconv.Atoi(json_result["lag"][1])
 			checkErr(err)
-			MIN_LOOP_DELAY = 200
-			MAX_LOOP_DELAY = 5000
+			MIN_LOOP_DELAY := 200
+			MAX_LOOP_DELAY := 5000
 			lag := rawLag*5 + MIN_LOOP_DELAY
 			if lag > MAX_LOOP_DELAY {
 				lag = MAX_LOOP_DELAY
