@@ -250,6 +250,9 @@ func main() {
 		log.Println("papers", len(papers))
 
 		timeProcessing := time.Since(start)
+		for window.WaitKey(500) < 0 {
+			log.Println("press any key to continue")
+		}
 		claimPapersAndCorners(client, MY_ID_STR, papers, step4)
 
 		elapsed := time.Since(start)
