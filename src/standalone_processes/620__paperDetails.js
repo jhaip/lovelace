@@ -36,8 +36,8 @@ const paper_approximation = (paper, perspT, canvasWidth, canvasHeight) => {
 console.error("starting ---")
 
 room.on(
-  `camera 1 has projector calibration TL ($PCx1, $PCy1) TR ($PCx2, $PCy2) BR ($PCx3, $PCy3) BL ($PCx4, $PCy4) @ $`,
-  `camera 1 sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $`,
+  `camera $cam has projector calibration TL ($PCx1, $PCy1) TR ($PCx2, $PCy2) BR ($PCx3, $PCy3) BL ($PCx4, $PCy4) @ $`,
+  `camera $cam sees paper $id at TL ($x1, $y1) TR ($x2, $y2) BR ($x3, $y3) BL ($x4, $y4) @ $`,
   results => {
     console.error("GOT RESULTS")
     console.error(results)

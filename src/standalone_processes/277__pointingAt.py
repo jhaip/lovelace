@@ -63,6 +63,8 @@ def get_paper_you_point_at(papers, you_id, WISKER_LENGTH):
         wisker = get_paper_wisker(my_paper, "up", WISKER_LENGTH)
         for paper in valid_papers:
             corners = paper["corners"]
+            if my_paper["seenByCamera"] != paper["seenByCamera"]:
+                continue
             if intersects(wisker[0], wisker[1], corners[0], corners[1]) or \
                intersects(wisker[0], wisker[1], corners[1], corners[2]) or \
                intersects(wisker[0], wisker[1], corners[2], corners[3]) or \
@@ -74,6 +76,7 @@ def get_paper_you_point_at(papers, you_id, WISKER_LENGTH):
 def sub_callback_papers(results):
     papers = list(map(lambda p: ({
         "id": p["id"],
+        "seenByCamera": p["cameraId"]
         "corners": [
             {"x": p["x1"], "y": p["y1"]},
             {"x": p["x2"], "y": p["y2"]},
@@ -105,13 +108,6 @@ def sub_callback_papers(results):
                 ["text", "paper"],
                 ["integer", str(other_paper)],
             ]})
-    claims.append({"type": "claim", "fact": [
-        ["id", get_my_id_str()],
-        ["id", "1"],
-        ["text", "pointingAt"],
-        ["text", "update"],
-        ["text", str(datetime.datetime.now())],
-    ]})
     batch(claims)
 
 init(__file__)

@@ -42,7 +42,7 @@ const sensorScreenLocations = {
 
 when $photonId read $value on sensor $sensorId,
      paper $paperId has RFID $value:
-    claim camera 1 sees paper ${paperId} at ${sensorScreenLocations[photonId][sensorId]} @ 1
+    claim camera 90 sees paper ${paperId} at ${sensorScreenLocations[photonId][sensorId]} @ 1
 
 when Photon200038000747343232363230 read $value on sensor 1,
      paper $paperId has RFID $value:
