@@ -27,6 +27,9 @@ import (
 )
 
 const dotSize = 12
+const NOT_SEEN_PAPER_COUNT_THRESHOLD = 2
+const PER_CORNER_DISTANCE_DIFF_THRESHOLD = 5
+const TOTAL_CORNER_DISTANCE_SQ_DIFF_THESHOLD = 4 * PER_CORNER_DISTANCE_DIFF_THRESHOLD * PER_CORNER_DISTANCE_DIFF_THRESHOLD
 
 type Vec struct {
 	X int `json:"x"`
@@ -59,6 +62,11 @@ type PaperCorner struct {
 type Paper struct {
 	Id      string        `json:"id"`
 	Corners []PaperCorner `json:"corners"`
+}
+
+type PaperCache struct {
+	Paper			Paper
+	NotSeenCount	int
 }
 
 type P struct {
@@ -213,6 +221,7 @@ func main() {
 	client.SendMessage(lag_sub_msg)
 
 	lag := 250
+	papers_cache := make(map[string]PaperCache)
 
 	for {
 		start := time.Now()
@@ -250,10 +259,50 @@ func main() {
 		log.Println("papers", len(papers))
 
 		timeProcessing := time.Since(start)
-		for window.WaitKey(500) < 0 {
-			log.Println("press any key to continue")
+
+		//// update papers_cache
+		seen_papers_map := make(map[string]bool)
+		// check if seen papers have a different location
+		for _, seen_paper := range papers {
+			seen_papers_map[seen_paper.Id] = true
+			_, seen_paper_in_cache := papers_cache[seen_paper.Id]
+			if seen_paper_in_cache {
+				// check if corners moved
+				// if total distance between corners is different enough -> update cache
+				cached_paper := papers_cache[seen_paper.Id].Paper
+				total_corner_distance_squared := float64(0)
+				for i := 0; i < 4; i++ {
+					total_corner_distance_squared += distanceSquared(
+						Vec{seen_paper.Corners[i].X, seen_paper.Corners[i].Y},
+						Vec{cached_paper.Corners[i].X, cached_paper.Corners[i].Y},
+					)
+				}
+				if total_corner_distance_squared > float64(TOTAL_CORNER_DISTANCE_SQ_DIFF_THESHOLD) {
+					// corners have moved -> update cache with current seen paper
+					papers_cache[seen_paper.Id] = PaperCache{seen_paper, 0}
+					log.Println("Updating paper because corners have moved", seen_paper.Id, total_corner_distance_squared)
+				} else {
+					// otherwise, we just reset the not seen count to zero
+					papers_cache[seen_paper.Id] = PaperCache{papers_cache[seen_paper.Id].Paper, 0}
+				}
+			} else {
+				// add new paper to cache
+				papers_cache[seen_paper.Id] = PaperCache{seen_paper, 0}
+			}
 		}
-		claimPapersAndCorners(client, MY_ID_STR, papers, step4)
+		// increment counts of not seen papers and remove unseen
+		for cached_paper_id, cached_paper := range papers_cache {
+			if !seen_papers_map[cached_paper_id] {
+				newNotSeenCount := cached_paper.NotSeenCount + 1
+				if newNotSeenCount >= NOT_SEEN_PAPER_COUNT_THRESHOLD {
+					delete(papers_cache, cached_paper_id)
+				} else {
+					papers_cache[cached_paper_id] = PaperCache{cached_paper.Paper, newNotSeenCount}
+				}
+			}
+		}
+
+		claimPapersAndCorners(client, MY_ID_STR, papers_cache, step4)
 
 		elapsed := time.Since(start)
 		log.Printf("get dots  : %s \n", timeGotDots)
@@ -402,7 +451,7 @@ func printCorners(data []Corner) {
 	log.Println(cornersStr)
 }
 
-func distanceSquared(p1 Dot, p2 Dot) float64 {
+func distanceSquared(p1 Vec, p2 Vec) float64 {
 	return math.Pow(float64(p1.X-p2.X), 2) +
 		math.Pow(float64(p1.Y-p2.Y), 2)
 }
@@ -410,7 +459,7 @@ func distanceSquared(p1 Dot, p2 Dot) float64 {
 func getWithin(points []Dot, ref Dot, i int, dist int) []int {
 	within := make([]int, 0)
 	for pi, point := range points {
-		if pi != i && distanceSquared(point, ref) < float64(math.Pow(float64(2*dist), 2)) {
+		if pi != i && distanceSquared(Vec{point.X, point.Y}, Vec{ref.X, ref.Y}) < float64(math.Pow(float64(2*dist), 2)) {
 			within = append(within, pi)
 		}
 	}
@@ -737,7 +786,11 @@ func getDots(window *gocv.Window, deviceID string, webcam *gocv.VideoCapture, bd
 	return res, kp, nil
 }
 
-func claimPapersAndCorners(client *zmq.Socket, MY_ID_STR string, papers []Paper, corners []Corner) {
+func claimPapersAndCorners(client *zmq.Socket, MY_ID_STR string, papers_cache map[string]PaperCache, corners []Corner) {
+	papers := make([]Paper, 0)
+	for _, cached_paper := range papers_cache {
+		papers = append(papers, cached_paper.Paper)
+	}
 	log.Println("CLAIM PAPERS -----")
 	log.Println(papers)
 	// papersAlmostStr, _ := json.Marshal(papers)
