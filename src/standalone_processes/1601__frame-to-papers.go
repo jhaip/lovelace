@@ -261,6 +261,7 @@ func main() {
 		timeProcessing := time.Since(start)
 
 		//// update papers_cache
+		has_updated_papers_cache := false
 		seen_papers_map := make(map[string]bool)
 		// check if seen papers have a different location
 		for _, seen_paper := range papers {
@@ -280,6 +281,7 @@ func main() {
 				if total_corner_distance_squared > float64(TOTAL_CORNER_DISTANCE_SQ_DIFF_THESHOLD) {
 					// corners have moved -> update cache with current seen paper
 					papers_cache[seen_paper.Id] = PaperCache{seen_paper, 0}
+					has_updated_papers_cache = true
 					log.Println("Updating paper because corners have moved", seen_paper.Id, total_corner_distance_squared)
 				} else {
 					// otherwise, we just reset the not seen count to zero
@@ -287,6 +289,7 @@ func main() {
 				}
 			} else {
 				// add new paper to cache
+				has_updated_papers_cache = true
 				papers_cache[seen_paper.Id] = PaperCache{seen_paper, 0}
 			}
 		}
@@ -295,6 +298,7 @@ func main() {
 			if !seen_papers_map[cached_paper_id] {
 				newNotSeenCount := cached_paper.NotSeenCount + 1
 				if newNotSeenCount >= NOT_SEEN_PAPER_COUNT_THRESHOLD {
+					has_updated_papers_cache = true
 					delete(papers_cache, cached_paper_id)
 				} else {
 					papers_cache[cached_paper_id] = PaperCache{cached_paper.Paper, newNotSeenCount}
@@ -302,7 +306,11 @@ func main() {
 			}
 		}
 
-		claimPapersAndCorners(client, MY_ID_STR, papers_cache, step4)
+		if has_updated_papers_cache {
+			claimPapersAndCorners(client, MY_ID_STR, papers_cache, step4)
+		} else {
+			log.Println("No change in papers, skipping claim")
+		}
 
 		elapsed := time.Since(start)
 		log.Printf("get dots  : %s \n", timeGotDots)
