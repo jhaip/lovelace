@@ -79,7 +79,8 @@ function stopPaper(name, pid) {
 // )
 
 room.on(
-  `wish $name would be running`,
+  `wish $paperId would be running`,
+  `$name has paper ID $paperId`,
   results => {
     console.error("$ wish $name would be running")
     console.error(results)

@@ -62,22 +62,29 @@ function subscribe(id) {
     });
 }
 
+function checkRunningPaper(paperId) {
+    const id = paperId.toString().padStart(4, '0');
+    if (["2042", "1101"].indexOf(id) >= 0) {
+        return; // skip the masterlist replicators
+    }
+    if (nonBootFactSubcriptions[id] !== "SUBSCRIBED" && id !== MY_ID_STR) {
+        nonBootFactSubcriptions[id] = "SUBSCRIBED";
+        subscribe(id);
+    }
+}
+
+room.onRaw(`#0045 $ wish $paperId would be running`, results => {
+    (results || []).forEach(result => checkRunningPaper(result.paperId))
+})
+
 room.on(
     `camera $camId sees paper $id at TL ( $ , $ ) TR ( $ , $ ) BR ( $ , $ ) BL ( $ , $ ) @ $time`,
     results => {
         console.error("seeing non-boot papers:")
         console.error(results)
         for (let i=0; i<results.length; i+=1) {
-            if (results[i].camId.toString() == "99") {
-                continue;
-            }
-            const id = results[i].id.toString().padStart(4, '0');
-            if (["2042", "1101"].indexOf(id) >= 0) {
-                continue; // skip the masterlist replicators
-            }
-            if (nonBootFactSubcriptions[id] !== "SUBSCRIBED" && id !== MY_ID_STR) {
-                nonBootFactSubcriptions[id] = "SUBSCRIBED";
-                subscribe(id);
+            if (results[i].camId.toString() !== "99") {
+                checkRunningPaper(results[i].id);
             }
         }
     }

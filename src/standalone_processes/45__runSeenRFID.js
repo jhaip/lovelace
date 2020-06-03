@@ -58,8 +58,8 @@ room.on(`$photonId read $value on sensor $sensorId`,
   room.subscriptionPrefix(1);
   if (!!results) {
     results.forEach(({ photonId, value, sensorId, paperId }) => {
-      room.assert(`camera 90 sees paper ${paperId} at ${sensorScreenLocations[photonId][sensorId]} @ 1`);
-
+      // room.assert(`camera 90 sees paper ${paperId} at ${sensorScreenLocations[photonId][sensorId]} @ 1`);
+      room.assert(`wish ${paperId} would be running`); 
     });
   }
   room.subscriptionPostfix();

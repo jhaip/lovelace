@@ -273,15 +273,14 @@ room.on(
           `has source code`, ["text", cleanSourceCode]);
         // claim it's not running to force the paper to be killed
         // so the source code change is used when it starts again
-        console.log(`retract ${currentTargetName}`)
-        let postCompiledTargetName = currentTargetName.replace(".prejs", ".js");
+        console.log(`retract ${currentTargetName} ${currentTargetId}`)
         room.retractAll(
-          `wish`, ["text", postCompiledTargetName], `would be running`
+          `wish ${currentTargetId} would be running`
         )
         setTimeout(() => {
-          room.assert(`wish`, ["text", postCompiledTargetName], `would be running`)
+          room.assert(`wish ${currentTargetId} would be running`)
           room.flush();
-          console.log(`claim ${currentTargetName}`)
+          console.log(`claim ${currentTargetName} ${currentTargetId}`)
         }, 2000);
       } else if (specialKey === "C-n") {
         const language = currentTargetName.split(".")[1];

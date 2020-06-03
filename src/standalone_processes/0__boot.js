@@ -23,8 +23,8 @@ const child = execFile(
 
 /*** Start the programs that actually starts all boot programs ***/
 room.assert(`camera 99 sees paper 1900 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
-room.assert('wish', ["text", "1900__processManager.js"], 'would be running')
-room.assert('wish', ["text", "826__runSeenPapers.js"], 'would be running')
+room.assert('wish 1900 would be running')
+room.assert('wish 826 would be running')
 // room.assert('wish "390__initialProgramCode.js" would be running')
 
 /*** Initial boot values ***/
@@ -72,8 +72,11 @@ room.assert(`camera 99 sees paper 12 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) 
 room.assert(`camera 99 sees paper 911 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Highlight all laser regions
 room.assert(`camera 99 sees paper 912 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+// Animation
+room.assert(`camera 99 sees paper 401 at TL (0, 1080) TR (0, 0) BR (1920, 0) BL (1920, 1080) @ 1`)
 
 room.assert(`Photon400035001547343433313338 can flash photon Photon3c002f000e47343432313031`)
+room.assert(`camera 1 has projector calibration TL ( 0 , 0 ) TR ( 1920 , 0 ) BR ( 1920 , 1080 ) BL ( 0 , 1080 ) @ 9`)
 room.assert(`camera 2 has projector calibration TL ( 512 , 282 ) TR ( 1712 , 229 ) BR ( 1788 , 961 ) BL ( 483 , 941 ) @ 9`)
 
 run();

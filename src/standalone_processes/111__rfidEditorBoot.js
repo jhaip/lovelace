@@ -22,9 +22,8 @@ const child = execFile(
 
 
 /*** Start the programs that actually starts all boot programs ***/
-room.assert(`camera 99 sees paper 1900 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
-room.assert('wish', ["text", "1900__processManager.js"], 'would be running')
-room.assert('wish', ["text", "826__runSeenPapers.js"], 'would be running')
+room.assert('wish 1900 would be running')
+room.assert('wish 826 would be running')
 // room.assert('wish "390__initialProgramCode.js" would be running')
 
 /*** Initial boot values ***/
@@ -35,37 +34,35 @@ room.assert('wish', ["text", "826__runSeenPapers.js"], 'would be running')
 // Printing Manager:
 // room.assert(`camera 99 sees paper 498 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Program Editor (may not be needed now?)
-room.assert(`camera 99 sees paper 577 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+room.assert('wish 577 would be running')
 // Run Seen Papers
-room.assert(`camera 99 sees paper 826 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+room.assert('wish 826 would be running')
 // Paper Details - maybe
 // room.assert(`camera 99 sees paper 620 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Create New Paper
-room.assert(`camera 99 sees paper 1459 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+room.assert('wish 1459 would be running')
 // Dots to papers
 // room.assert(`camera 99 sees paper 1800 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Print paper
 // room.assert(`camera 99 sees paper 1382 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
-// Process Manager
-room.assert(`camera 99 sees paper 1900 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Persist Projector Calibration
 // room.assert(`camera 99 sees paper 989 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Debug web viewer
-room.assert(`camera 99 sees paper 10 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+room.assert('wish 10 would be running')
 // Latency measurement
-room.assert(`camera 99 sees paper 11 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+room.assert('wish 11 would be running')
 // HTTP Client
-room.assert(`camera 90 sees paper 20 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+room.assert('wish 20 would be running')
 // JS compiler
-room.assert(`camera 99 sees paper 40 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+room.assert('wish 40 would be running')
 // Run Seen RFID
-room.assert(`camera 99 sees paper 45 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+room.assert('wish 45 would be running')
 // Photon Flasher
 // room.assert(`camera 99 sees paper 46 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Pointing At - maybe
 // room.assert(`camera 99 sees paper 277 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // RFID Paper Map
-room.assert(`camera 99 sees paper 30 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+room.assert('wish 30 would be running')
 // Region Debug Editor
 // room.assert(`camera 99 sees paper 12 at TL (1, 1) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Claim laser region as laser calibration
@@ -85,11 +82,11 @@ room.assert(`paper 1013 has width 1920 height 600 angle 0 at ( 0 , 0 )`)
 // Non boot facts
 // room.assert(`camera 99 sees paper 1101 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Masterlist Web Display
-room.assert(`camera 99 sees paper 1247 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+room.assert('wish 1247 would be running')
 // Web Display 2
-room.assert(`camera 99 sees paper 1248 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+room.assert('wish 1248 would be running')
 // Thermal Print Code
-room.assert(`camera 99 sees paper 980 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+room.assert('wish 980 would be running')
 // Thermal Printer
 // room.assert(`camera 99 sees paper 791 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Circuit Playground Proxy
@@ -118,13 +115,13 @@ room.assert(`camera`, ["text", "1997"], `should calibrate to ${o} ${o} ${w - o} 
 // Calendar Helper (highlight date)
 // room.assert(`camera 99 sees paper 1803 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
 // Regiom debug viewwer
-room.assert(`camera 99 sees paper 12 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+room.assert('wish 12 would be running')
 
 // Proxy Particle Soil Data
-room.assert(`camera 99 sees paper 47 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+room.assert('wish 47 would be running')
 // Proxy Flower Lamp
-room.assert(`camera 99 sees paper 48 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+room.assert('wish 48 would be running')
 // Proxy Ribbon String Motor
-room.assert(`camera 99 sees paper 49 at TL (0, 0) TR (2, 1) BR (2, 2) BL (1, 2) @ 1`)
+room.assert('wish 49 would be running')
 
 run();
