@@ -8,6 +8,9 @@ let nameToProcessIdCache = {};
 
 function runPaper(name) {
   console.error(`making ${name} be running!`)
+  if (name.includes(".prejs")) {
+    name = name.replace(".prejs", ".js");
+  }
   // kill any old processes that weren't correctly killed before
   pkill.full(`${name}`, function (err, validPid) {
     if (err) {
@@ -23,8 +26,6 @@ function runPaper(name) {
     } else if (name.includes('.go')) {
       languageProcess = 'go'
       runArgs = ['run', programSource]
-    } else if (name.includes(".prejs")) {
-      programSource = programSource.replace(".prejs", ".js")
     }
     const child = spawn(languageProcess, runArgs)
     // child.stdout.on('data', (data) => {
