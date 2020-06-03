@@ -8,9 +8,6 @@ let nameToProcessIdCache = {};
 
 function runPaper(name) {
   console.error(`making ${name} be running!`)
-  if (name.includes(".prejs")) {
-    name = name.replace(".prejs", ".js");
-  }
   // kill any old processes that weren't correctly killed before
   pkill.full(`${name}`, function (err, validPid) {
     if (err) {
@@ -89,7 +86,10 @@ room.on(
     console.error(results)
     let shouldBeRunningNameToProcessIds = {};
     results.forEach(result => {
-      const paperName = result.name;
+      let paperName = result.name;
+      if (paperName.includes(".prejs")) {
+        paperName = paperName.replace(".prejs", ".js");
+      }
       shouldBeRunningNameToProcessIds[paperName] = true;
       if (!(paperName in nameToProcessIdCache)) {
         runPaper(paperName)
