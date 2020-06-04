@@ -22,4 +22,4 @@ when time is $time:
   cleanup
   let ill = room.newIllumination();
   drawFace(ill, time);
-  room.draw(ill, "web2");
+  room.draw(ill);

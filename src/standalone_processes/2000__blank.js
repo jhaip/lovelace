@@ -28,7 +28,7 @@ room.on(`time is $time`,
   room.cleanup()
   let ill = room.newIllumination();
   drawFace(ill, time);
-  room.draw(ill, "web2");
+  room.draw(ill);
 
     });
   }

@@ -7,7 +7,7 @@ room.onGetSource('source', `I wish I was highlighted $color`,
     results.forEach(({ color, source }) => {
   let ill = room.newIllumination()
   ill.fill(color)
-  ill.rect(0, 0, 2000, 2000);
+  ill.rect(0, 0, 1920, 1080);
   room.draw(ill, source)
 
 

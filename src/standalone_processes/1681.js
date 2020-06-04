@@ -27,7 +27,7 @@ room.on(`paper $id has width $width height $height angle $angle at ($x, $y)`,
                     ill.text(paperMiddleX, paperMiddleY, `${id}`)
                     ill.nostroke()
                     ill.ellipse(myX - 10, myY - 10, 20, 20)
-                    room.draw(ill, "global")
+                    room.draw(ill, "1993")
                 }
             });
         }

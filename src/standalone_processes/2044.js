@@ -14,7 +14,7 @@ let ill = room.newIllumination();
 ill.fontcolor(150, 100, 100);
 ill.fontsize(200);
 ill.text(20, 160, timeString);
-room.draw(ill, "web2");
+room.draw(ill, "1999");
 
 
     });
