@@ -26,7 +26,7 @@ function render() {
       ill.text(20, 100+i*24, `${F[key][i]}`)
     }
   }
-   room.draw(ill, "1999");
+   room.draw(ill);
 }
 
 room.on(`keyboard $ typed key $k @ $t`,

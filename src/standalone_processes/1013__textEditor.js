@@ -180,7 +180,7 @@ const render = () => {
   ill.text(origin[0], (origin[1] + (cursorPosition[1] - windowPosition[1]) * lineHeight), cursorLine);
   ill.fontcolor(255, 255, 255, 255)
   room.draw(ill)
-  room.draw(ill, "1999")
+  room.draw(ill)
   console.log("done rendering")
 }
 

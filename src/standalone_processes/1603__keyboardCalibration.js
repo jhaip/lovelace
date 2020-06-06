@@ -27,7 +27,7 @@ function draw() {
     })
     ill.pop();
     room.retractMine(`draw graphics %`)
-    room.draw(ill, "1999");
+    room.draw(ill);
 }
 
 function move(dx, dy) {

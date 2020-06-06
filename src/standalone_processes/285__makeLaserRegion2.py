@@ -15,7 +15,6 @@ is_toggleable = True
 region_name = ""
 projection_matrixes = {}
 camera_to_display_map = {}
-STATUS_DRAW_TARGET = "1999"
 
 def project(calibration_id, x, y):
     global projection_matrixes
@@ -43,7 +42,7 @@ def sub_callback_calibration(results):
             camera_to_display_map[str(result["cameraId"])] = str(result["displayId"])
 
 def render_mode():
-    global MODE, is_toggleable, region_name, STATUS_DRAW_TARGET
+    global MODE, is_toggleable, region_name
     RENDER_MODE_SUBSCRIPTION_ID = "99"
     claims = []
     claims.append({
@@ -64,7 +63,7 @@ def render_mode():
     elif MODE == "naming":
         region_name_text = region_name if region_name else "..."
         ill.text(0, 0, "region name:\n{}\npress enter\nto accept".format(region_name_text))
-    claims.append(ill.to_batch_claim(get_my_id_str(), RENDER_MODE_SUBSCRIPTION_ID, STATUS_DRAW_TARGET))
+    claims.append(ill.to_batch_claim(get_my_id_str(), RENDER_MODE_SUBSCRIPTION_ID))
     return claims
 
 

@@ -97,4 +97,28 @@ def sub_callback_graphics(results):
                 ]})
     batch(claims)
 
+@subscription([
+    "$ $ default display for $programNumber is $displayId",
+    "$ $ draw graphics $graphics on $programNumber"])
+def sub_callback_graphics2(results):
+    claims = []
+    claims.append({"type": "retract", "fact": [
+        ["id", get_my_id_str()],
+        ["id", "2"],
+        ["postfix", ""],
+    ]})
+    if results:
+        for result in results:
+            if len(graphics_json) > 0:
+                claims.append({"type": "claim", "fact": [
+                    ["id", get_my_id_str()],
+                    ["id", "1"],
+                    ["text", "draw"],
+                    ["text", "graphics"],
+                    ["text", result["graphics"]],
+                    ["text", "on"],
+                    ["integer", result["displayId"]],
+                ]})
+    batch(claims)
+
 init(__file__)

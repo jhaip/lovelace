@@ -19,7 +19,7 @@ L.forEach((v, i) => {
   ill.text(0, i*25, `LAG: ${v}`)
   ill.rect(100, i*25, Math.min(+v, 1000), 20)
 })
-room.draw(ill, "1999")
+room.draw(ill)
 
 
     });
