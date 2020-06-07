@@ -111,7 +111,7 @@ def sub_callback_graphics2(results):
         for result in results:
             claims.append({"type": "claim", "fact": [
                 ["id", get_my_id_str()],
-                ["id", "1"],
+                ["id", "2"],
                 ["text", "draw"],
                 ["text", "graphics"],
                 ["text", result["graphics"]],
