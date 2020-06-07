@@ -109,15 +109,17 @@ def sub_callback_graphics2(results):
     ]})
     if results:
         for result in results:
-            claims.append({"type": "claim", "fact": [
-                ["id", get_my_id_str()],
-                ["id", "2"],
-                ["text", "draw"],
-                ["text", "graphics"],
-                ["text", result["graphics"]],
-                ["text", "on"],
-                ["integer", result["displayId"]],
-            ]})
+            graphics_json = json.loads(result["graphics"])
+            if len(graphics_json) > 0:
+                claims.append({"type": "claim", "fact": [
+                    ["id", get_my_id_str()],
+                    ["id", "2"],
+                    ["text", "draw"],
+                    ["text", "graphics"],
+                    ["text", json.dumps(graphics_json)],
+                    ["text", "on"],
+                    ["integer", result["displayId"]],
+                ]})
     batch(claims)
 
 init(__file__)
