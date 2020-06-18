@@ -190,7 +190,7 @@ def sub_callback_laser_dots(results):
             SIZE = 5
             for pt in projected_poly:
                 ill.ellipse(pt[0] - SIZE, pt[1] - SIZE, SIZE * 2, SIZE * 2)
-            draw_target = "global"
+            draw_target = get_my_id_str()
             if CURRENT_CAMERA_TARGET in camera_to_display_map:
                 draw_target = camera_to_display_map[CURRENT_CAMERA_TARGET]
             claims.append(ill.to_batch_claim(get_my_id_str(), "2", draw_target))
