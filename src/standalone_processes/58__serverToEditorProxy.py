@@ -10,7 +10,7 @@ proxy_client = None
 proxy_connected = False
 last_proxy_heartbeat = time.time()
 health_check_delay_s = 10
-PROXY_URL = "10.0.0.22"
+PROXY_URL = "192.168.1.34"
 
 def check_and_connect_proxy_server():
     global proxy_context, proxy_client, proxy_connected, PROXY_URL, last_proxy_heartbeat, health_check_delay_s

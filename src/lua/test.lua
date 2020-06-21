@@ -7,7 +7,7 @@ local uuid = require("uuid")
 uuid.seed()
 
 local MY_ID_STR = "1999"
-local RPC_URL = "10.0.0.22" -- "localhost" -- "10.0.0.22"
+local RPC_URL = "192.168.1.34" -- "localhost" -- "192.168.1.34"
 local server_listening = false
 local init_ping_id = uuid()
 local SUBSCRIPTION_ID_LEN = #init_ping_id

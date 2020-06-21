@@ -5,7 +5,7 @@ import logging
 import time
 import sys
 
-helper2.rpc_url = "10.0.0.22"
+helper2.rpc_url = "192.168.1.34"
 
 init(__file__, skipListening=True)
 

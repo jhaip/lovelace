@@ -4,7 +4,7 @@ import cv2
 import room_pb2
 
 camera = cv2.VideoCapture(0)
-addr = 'tcp://10.0.0.222:5555'
+addr = 'tcp://192.168.1.342:5555'
 ctx = zmq.Context()
 s2 = ctx.socket(zmq.PAIR)
 s2.connect(addr)
