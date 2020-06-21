@@ -32,7 +32,7 @@ String myID = System.deviceID();
 
 void publishValueMessage(char body[])
 {
-    request.ip = {10, 0, 0, 22};
+    request.ip = {192, 168, 1, 34};
     request.port = 5000;
     request.path = "/cleanup-claim";
     request.body = body;

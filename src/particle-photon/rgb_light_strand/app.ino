@@ -69,7 +69,7 @@ void retract() {
 
     // Particle.publish("retract", str, PRIVATE);
     // request.hostname = "requestbin.fullcontact.com"; // "10.0.0.162";
-    request.ip = {10, 0, 0, 22}; // {52, 222, 150, 205};
+    request.ip = {192, 168, 1, 34}; // {52, 222, 150, 205};
     request.port = 5000;
     request.path = "/retract"; // "/18fjmkf1";
     request.body = str;
@@ -87,7 +87,7 @@ void publishValueMessage(int r, int g, int b) {
     // Serial.println(str);
     // Particle.publish("assert", str, PRIVATE);
     // request.hostname = NULL; // "10.0.0.162";
-    request.ip = {10, 0, 0, 22};
+    request.ip = {192, 168, 1, 34};
     request.port = 5000;
     request.path = "/cleanup-claim";
     // request.body = "{\"test\": 5}"; // str;
@@ -99,7 +99,7 @@ void publishValueMessage(int r, int g, int b) {
 }
 
 void getWishes(int color[]) {
-    request.ip = {10, 0, 0, 22};
+    request.ip = {192, 168, 1, 34};
     request.port = 5000;
     request.path = "/select?first=1&subscription=%5B%22%24%20wish%20RGB%20light%20strand%20is%20color%20%24r%20%24g%20%24b%22%5D";
     http.get(request, response, headers);

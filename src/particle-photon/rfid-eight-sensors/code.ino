@@ -111,7 +111,7 @@ void publishValueMessages(String val1, String val2, String val3, String val4, St
             (const char *)myID, val8.c_str(), 8,
             (const char *)myID);
     Serial.println(str);
-    request.ip = {10, 0, 0, 22};
+    request.ip = {192, 168, 1, 34};
     request.port = 5000;
     request.path = "/cleanup-claim";
     request.body = str;
