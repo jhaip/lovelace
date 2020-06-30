@@ -204,12 +204,15 @@ def main(ARGS):
                     ["postfix", ""],
                 ]
             })
+            claim_text = 'UNKNOWN'
+            if len(text) > 0:
+                claim_text = text
             claims.append({"type": "claim", "fact": [
                 ["id", get_my_id_str()],
                 ["id", "0"],
                 ["text", "microphone"],
                 ["text", "heard"],
-                ["text", str(text)],
+                ["text", str(claim_text)],
                 ["text", "@"],
                 ["integer", str(int(time.time()*1000.0))],
             ]})
