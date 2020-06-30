@@ -12,6 +12,10 @@ from scipy import signal
 
 logging.basicConfig(level=20)
 
+# Follow this tutorial to install deepspeech:
+# https://www.hackster.io/dmitrywat/offline-speech-recognition-on-raspberry-pi-4-with-respeaker-c537e7
+# This code is an augumented version of https://github.com/mozilla/DeepSpeech-examples/tree/r0.7/mic_vad_streaming
+# At the time of writing this, I was using deepspeech 0.7.4
 # sudo PROG_SPACE_SERVER_URL='192.168.1.34' python3 src/standalone_processes/792__deepspeech.py -m ~/deepspeech-0.7.4-models.tflite -s ~/deepspeech-0.7.4-models.scorer
 
 class Audio(object):
