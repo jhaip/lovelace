@@ -12,7 +12,7 @@ from scipy import signal
 
 logging.basicConfig(level=20)
 
-# sudo python3 792__deepspeech.py -m deepspeech-0.7.4-models.tflite -s deepspeech-0.7.4-models.scorer
+# sudo PROG_SPACE_SERVER_URL='192.168.1.34' python3 src/standalone_processes/792__deepspeech.py -m ~/deepspeech-0.7.4-models.tflite -s ~/deepspeech-0.7.4-models.scorer
 
 class Audio(object):
     """Streams raw audio from microphone. Data is received in a separate thread, and stored in a buffer, to be read from."""
@@ -213,6 +213,7 @@ def main(ARGS):
                 ["text", "@"],
                 ["integer", str(int(time.time()*1000.0))],
             ]})
+            batch(claims)
             stream_context = model.createStream()
 
 if __name__ == '__main__':
