@@ -61,7 +61,7 @@ app.put('/region/:regionId', (req, res) => {
     }
     if (typeof data.x1 !== "undefined") {
         room.retractAll(`region "${regionId}" at %`);
-        room.assert(`region "${regionId}" at ${data.x1} ${data.y1} ${data.x2} ${data.y2} ${data.x3} ${data.y3} ${data.x4} ${data.y4} on camera "1997"`);
+        room.assert(`region "${regionId}" at ${data.x1} ${data.y1} ${data.x2} ${data.y2} ${data.x3} ${data.y3} ${data.x4} ${data.y4} on camera`, ["text", "1997"]);
     }
     room.flush();
     res.status(200).send('OK');
