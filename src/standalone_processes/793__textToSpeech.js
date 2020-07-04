@@ -7,7 +7,10 @@ room.onGetSource('wisherId',
         room.subscriptionPrefix(1);
         if (!!results && results.length > 0) {
             results.forEach(({ wisherId, text }) => {
-                const child = spawn('espeak', ["-ven+m7", text, "2>/dev/null"])
+                runArgs = ["-ven+m7", text, "2>/dev/null"]
+                console.log(runArgs)
+                const child = spawn('espeak', runArgs)
+                console.log("done")
                 room.retractFromSource(wisherId, `wish speaker said $`)
             });
         }
