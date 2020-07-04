@@ -13,7 +13,7 @@ Environment=PATH=/home/pi/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/u
 Environment=PROG_SPACE_SERVER_URL='192.168.1.34'
 Restart=always
 ExecStart=/usr/bin/python3 /home/pi/lovelace/src/standalone_processes/792__deepspeech.py -m /home/pi/deepspeech-0.7.4-models.tflite -s /home/pi/deepspeech-0.7.4-models.scorer && /usr/bin/node /home/pi/lovelace/src/standalone_processes/793__textToSpeech.js
-ExecStop=/usr/bin/pkill -f standalone_processes/792__deepspeech.py
+ExecStop=/usr/bin/pkill -f standalone_processes
 
 [Install]
 WantedBy=multi-user.target
