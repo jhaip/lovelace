@@ -238,10 +238,15 @@ def init(root_filename, skipListening=False):
     logging.info(context.closed)
     logging.info("socket closed:")
     logging.info(client.closed)
-    r = listen()  # assumes the first message recv'd will be the PING response
+    logging.info("socket HWM")
+    logging.info(client.hwm)
+    r = listen(False)  # assumes the first message recv'd will be the PING response
+    while not r:
+        logging.info("listening...")
+        r = listen(False)
+    logging.info(r)
     logging.info("done listening")
     print("done listening")
-    logging.info(r)
     print(r)
 
     # time.sleep(1.0)
