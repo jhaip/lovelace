@@ -223,11 +223,22 @@ def init(root_filename, skipListening=False):
     # print("-")
     tracer = init_jaeger_tracer()
     client.setsockopt(zmq.IDENTITY, MY_ID_STR.encode())
+    client.setsockopt(zmq.LINGER, 0)
     client.connect("tcp://{0}:5570".format(rpc_url))
     print("connected")
-    client.send_multipart([".....PING{}{}".format(MY_ID_STR, init_ping_id).encode()])
+    logging.info("connected")
+    s = client.send_multipart([".....PING{}{}".format(MY_ID_STR, init_ping_id).encode()], track=True)
     print("sent ping")
-    listen()  # assumes the first message recv'd will be the PING response
+    while s.pending:
+        print("pending...")
+        logging.info("pending...")
+    print("send is complete")
+    logging.info("send is complete")
+    r = listen()  # assumes the first message recv'd will be the PING response
+    logging.info("done listening")
+    print("done listening")
+    logging.info(r)
+    print(r)
 
     # time.sleep(1.0)
     
