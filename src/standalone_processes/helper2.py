@@ -227,7 +227,7 @@ def init(root_filename, skipListening=False):
     client.connect("tcp://{0}:5570".format(rpc_url))
     print("connected")
     logging.info("connected")
-    s = client.send_multipart([".....PING{}{}".format(MY_ID_STR, init_ping_id).encode()], track=True)
+    s = client.send_multipart([".....PING{}{}".format(MY_ID_STR, init_ping_id).encode()], copy=False, track=True)
     print("sent ping")
     while s.pending:
         print("pending...")
