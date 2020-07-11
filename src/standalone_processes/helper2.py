@@ -234,8 +234,10 @@ def init(root_filename, skipListening=False):
         logging.info("pending...")
     print("send is complete")
     logging.info("send is complete")
-    logging.info("context closed: ", context.closed)
-    logging.info("socket closed: ", client.closed)
+    logging.info("context closed:")
+    logging.info(context.closed)
+    logging.info("socket closed:")
+    logging.info(client.closed)
     r = listen()  # assumes the first message recv'd will be the PING response
     logging.info("done listening")
     print("done listening")
