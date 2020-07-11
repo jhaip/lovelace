@@ -241,10 +241,7 @@ def init(root_filename, skipListening=False):
     logging.info(client.closed)
     logging.info("socket HWM")
     logging.info(client.hwm)
-    r = listen(False)  # assumes the first message recv'd will be the PING response
-    while not r:
-        logging.info("listening...")
-        r = listen(False)
+    r = listen()  # assumes the first message recv'd will be the PING response
     logging.info(r)
     logging.info("done listening")
     print("done listening")
