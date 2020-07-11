@@ -206,7 +206,7 @@ def check_server_connection():
 
 
 def init(root_filename, skipListening=False):
-    global MY_ID, MY_ID_STR, py_subscriptions, py_prehook, tracer
+    global MY_ID, MY_ID_STR, py_subscriptions, py_prehook, tracer, context, client
     scriptName = os.path.basename(root_filename)
     scriptNameNoExtension = os.path.splitext(scriptName)[0]
     fileDir = os.path.dirname(os.path.realpath(root_filename))
