@@ -7,7 +7,7 @@ import random
 import os
 import sys
 import opentracing
-from opentracing import Format, Tracer
+# from opentracing import Format, Tracer
 from jaeger_client import Config
 
 
@@ -135,7 +135,7 @@ def listen(blocking=True):
     except zmq.Again:
         return False
     string = raw_msg[0].decode()
-    span = tracer.start_span('client-'+MY_ID+'-recv', references=opentracing.child_of(ROOM_SPAN_CONTEXT))
+    # span = tracer.start_span('client-'+MY_ID+'-recv', references=opentracing.child_of(ROOM_SPAN_CONTEXT))
     # preSpan = tracer.start_span('client-'+MY_ID+'-prerecv', child_of=span)
     source_len = 4
     server_send_time_len = 13
@@ -219,9 +219,17 @@ def init(root_filename, skipListening=False):
     print(MY_ID)
     print(MY_ID_STR)
     print("tcp://{0}:5570".format(rpc_url))
+
+    logging.info("about to destroy")
+    context.destroy()
+    logging.info("done destroying")
+    context = zmq.Context()
+    client = context.socket(zmq.DEALER)
+    logging.info("done recreating")
+
     # print(logPath)
     # print("-")
-    tracer = init_jaeger_tracer()
+    # tracer = init_jaeger_tracer()
     client.setsockopt(zmq.IDENTITY, MY_ID_STR.encode())
     client.setsockopt(zmq.LINGER, 0)
     client.connect("tcp://{0}:5570".format(rpc_url))
@@ -286,10 +294,13 @@ def subscription(expr):
 
 
 def tracer_cleanup():
-    global tracer
-    if tracer is not None:
-        time.sleep(2)   # yield to IOLoop to flush the spans - https://github.com/jaegertracing/jaeger-client-python/issues/50
-        tracer.close()  # flush any buffered spans
+    global context
+    # global tracer, context
+    # if tracer is not None:
+    #     time.sleep(2)   # yield to IOLoop to flush the spans - https://github.com/jaegertracing/jaeger-client-python/issues/50
+    #     tracer.close()  # flush any buffered spans
+    if context and not context.closed:
+        context.destroy()
 
 import atexit
 atexit.register(tracer_cleanup)
