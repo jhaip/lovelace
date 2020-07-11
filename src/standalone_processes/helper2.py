@@ -229,7 +229,7 @@ def init(root_filename, skipListening=False):
     logging.info("connected")
     s = client.send_multipart([".....PING{}{}".format(MY_ID_STR, init_ping_id).encode()], copy=False, track=True)
     print("sent ping")
-    while s.done:
+    while not s.done:
         print("pending...")
         logging.info("pending...")
     print("send is complete")
