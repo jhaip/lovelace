@@ -7,7 +7,7 @@ room.onGetSource('wisherId',
         room.subscriptionPrefix(1);
         if (!!results && results.length > 0) {
             results.forEach(({ wisherId, text }) => {
-                runArgs = ["-voice", "rms", "-t"]
+                runArgs = ["-voice", "rms", "-t", text]
                 console.log(runArgs)
                 const child = spawn('flite', runArgs)
                 console.log("done")
