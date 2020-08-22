@@ -84,6 +84,26 @@ function cmd() {
     love ./hello.love 1997
     cd ../../..
     echo -e "booting"
+  elif [ "$1" == "lightcrafter" ]
+  then
+    pkill -f "hello.love"
+    v4l2-ctl \
+      --set-ctrl=brightness=10 \
+      --set-ctrl=contrast=0 \
+      --set-ctrl=saturation=-100 \
+      --set-ctrl=sharpness=128 \
+      --set-ctrl=exposure_time_absolute=100
+    v4l2-ctl --device /dev/video0 --set-fmt-video=width=160,height=120,pixelformat=MPEG
+    export DISPLAY=:0
+    export PROG_SPACE_SERVER_URL="192.168.1.34"
+    python3 src/standalone_processes/1622__seeLaserLamp2.py 1998 &
+    cd src/lua/graphics_test
+    # lua calendar-calibration.lua &
+    rm hello.love
+    zip hello.love main.lua helper.lua matrix.lua json.lua zhelpers.lua Inconsolata-Regular.ttf
+    love ./hello.love 1998
+    cd ../../..
+    echo -e "booting"
   elif [ "$1" == "pieditorstart" ]
   then
     pkill -f "hello.love"
