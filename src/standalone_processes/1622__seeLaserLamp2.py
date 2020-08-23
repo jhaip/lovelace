@@ -72,8 +72,8 @@ def claim_data(data):
         x = int(sum([d[0][0] for d in datum])/len(datum))
         y = int(sum([d[0][1] for d in datum])/len(datum))
         v = cv2.contourArea(datum)
-        if v < 20:
-            continue
+        # if v < 20:
+        #     continue
         if DEBUG:
             logging.info((x, y))
         claims.append({"type": "claim", "fact": [
