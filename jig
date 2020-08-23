@@ -92,7 +92,7 @@ function cmd() {
       --set-ctrl=contrast=0 \
       --set-ctrl=saturation=-100 \
       --set-ctrl=sharpness=128 \
-      --set-ctrl=exposure_time_absolute=100
+      --set-ctrl=exposure_absolute=15
     v4l2-ctl --device /dev/video0 --set-fmt-video=width=160,height=120,pixelformat=MPEG
     export DISPLAY=:0
     export PROG_SPACE_SERVER_URL="192.168.1.34"
