@@ -204,6 +204,7 @@ function updateCurrentlyPlaying(nRetries) {
             }
         } else {
             if (response.statusCode === 204) {
+                const currentTimeMs = (new Date()).getTime()
                 room.cleanup()
                 room.assert(`currently playing Spotify song is nothing @ ${currentTimeMs}`);
                 room.flush()
