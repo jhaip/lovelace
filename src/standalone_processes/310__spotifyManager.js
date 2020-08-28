@@ -2,13 +2,6 @@
  * Original code copied from https://github.com/spotify/web-api-auth-examples/blob/master/authorization_code/app.js
  */
 
-// TODO notes from 2020-08-27 night:
-// * claim general status to the room
-// * save access token and refresh token in global context so it can be used everywhere
-// * save state of access token / refresh token
-// * add a method to get a new access token using refresh token and refresh API method
-//   and otherwise ask user to log in via web site
-
 const { room, myId, run } = require('../helper2')(__filename);
 var express = require('express'); // Express web server framework
 var request = require('request'); // "Request" library
@@ -20,6 +13,9 @@ const { ZMQ_ROUTER_MANDATORY } = require('zeromq');
 var client_id = process.env.SPOTIFY_CLIENT_ID; // Your client id
 var client_secret = process.env.SPOTIFY_CLIENT_SECRET; // Your secret
 var redirect_uri = 'localhost:8888/callback'; // Your redirect uri
+
+var cached_access_token = undefined;
+var cached_refresh_token = undefined;
 
 /**
  * Generates a random string containing numbers and letters
@@ -50,7 +46,7 @@ app.get('/login', function (req, res) {
     res.cookie(stateKey, state);
 
     // your application requests authorization
-    var scope = 'user-read-private user-read-email';
+    var scope = 'user-read-private user-read-email user-read-currently-playing user-modify-playback-state';
     res.redirect('https://accounts.spotify.com/authorize?' +
         querystring.stringify({
             response_type: 'code',
@@ -95,6 +91,9 @@ app.get('/callback', function (req, res) {
 
                 var access_token = body.access_token,
                     refresh_token = body.refresh_token;
+                
+                cached_access_token = access_token;
+                cached_refresh_token = refresh_token;
 
                 var options = {
                     url: 'https://api.spotify.com/v1/me',
@@ -147,10 +146,45 @@ app.get('/refresh_token', function (req, res) {
     });
 });
 
-function updateCurrentlyPlaying() {
+function attemptLoginAndTryAgain(retryFunction) {
+    console.log("attempting to fetch a new access token using the refresh token")
+    var authOptions = {
+        url: 'https://accounts.spotify.com/api/token',
+        headers: { 'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64')) },
+        form: {
+            grant_type: 'refresh_token',
+            refresh_token: cached_refresh_token
+        },
+        json: true
+    };
+
+    request.post(authOptions, function (error, response, body) {
+        if (!error && response.statusCode === 200) {
+            cached_access_token = body.access_token;
+            retryFunction();
+        } else {
+            console.log("failed getting access token using refresh token, user needs to login again")
+            cached_access_token = undefined;
+            cached_refresh_token = undefined;
+            room.cleanup()
+            room.assert("Spotify manager status is LOGIN_REQUIRED_AT_LOCALHOST_8888")
+            room.flush()
+        }
+    });
+}
+
+function updateCurrentlyPlaying(nRetries) {
+    if (nRetries > 1) {
+        console.log("MAX NUMBER OF RETRIES REACHED, GIVING UP")
+        room.cleanup()
+        room.assert("Spotify manager status is MAX_ERRORS_REACHED")
+        room.flush()
+        return;
+    }
+
     var options = {
         url: 'https://api.spotify.com/v1/me/player/currently-playing',
-        headers: { 'Authorization': 'Bearer ' + access_token },
+        headers: { 'Authorization': 'Bearer ' + cached_access_token },
         json: true
     };
 
@@ -160,27 +194,36 @@ function updateCurrentlyPlaying() {
             console.log("ERROR")
             console.log(error);
             console.log(response)
-            // TODO: log error to room
             if (response.statusCode === 401) {
-                // TODO:
-                // Fetch new access token using refresh token
-                // retry updateCurrentlyPlaying() again
+                attemptLoginAndTryAgain(() => updateCurrentlyPlaying(nRetries+1))
             }
         } else {
             if (response.statusCode === 204) {
+                room.cleanup()
                 room.assert(`currently playing Spotify song is nothing @ ${currentTimeMs}`);
+                room.flush()
             } else {
                 // console.log(body);
                 const songTitle = body.item.name;
                 const songArtist = body.item.artists.map(a => a.name).join(", ");
                 const currentTimeMs = (new Date()).getTime()
+                room.cleanup()
                 room.assert(`currently playing Spotify song is`, ["text", songTitle], `by`, ["text", songArtist], `@ ${currentTimeMs}`);
+                room.flush()
             }
         }
     });
 }
 
-function playSpotifyUri(uri) {
+function playSpotifyUri(uri, nRetries) {
+    if (nRetries > 1) {
+        console.log("MAX NUMBER OF RETRIES REACHED, GIVING UP")
+        room.cleanup()
+        room.assert("Spotify manager status is MAX_ERRORS_REACHED")
+        room.flush()
+        return;
+    }
+
     var jsonBody = {};
     if (uri.includes("track")) {
         jsonBody = {
@@ -191,7 +234,7 @@ function playSpotifyUri(uri) {
     }
     var options = {
         url: 'https://api.spotify.com/v1/me/player/play',
-        headers: { 'Authorization': 'Bearer ' + access_token },
+        headers: { 'Authorization': 'Bearer ' + cached_access_token },
         method: 'PUT',
         json: jsonBody
     };
@@ -202,19 +245,20 @@ function playSpotifyUri(uri) {
             console.log("ERROR")
             console.log(error);
             console.log(response)
-            // TODO: log error to room
             if (response.statusCode === 401) {
-                // TODO:
-                // Fetch new access token using refresh token
-                // retry updateCurrentlyPlaying() again
+                attemptLoginAndTryAgain(() => playSpotifyUri(uri, nRetries + 1))
             }
             if (response.statusCode === 404) {
                 console.log("Device probably needs to be selected")
-                // TOOD: log this to the room
+                room.cleanup()
+                room.assert("Spotify manager status is SELECTED_DEVICE_NEEDED")
+                room.flush()
             }
         } else {
-            // TODO: clear wish to play song?
             console.log("successfully started playing song")
+            room.cleanup()
+            room.assert("Spotify manager status is PLAYING_SONG")
+            room.flush()
         }
     });
 }
@@ -225,6 +269,7 @@ room.on(
         room.subscriptionPrefix(1);
         if (!!results) {
             updateCurrentlyPlaying();
+            room.retractAll("wish currently Spotify song would be updated")
         }
         room.subscriptionPostfix();
     });
@@ -236,6 +281,7 @@ room.on(
         if (!!results && results.length > 0) {
             playSpotifyUri(results[0].spotifyUri);
         }
+        room.retractAll("wish $ would be played on Spotify")
         room.subscriptionPostfix();
     });
 
