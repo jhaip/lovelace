@@ -7,7 +7,7 @@ import random
 import os
 import sys
 import opentracing
-# from opentracing import Format, Tracer
+from opentracing import Format, Tracer
 from jaeger_client import Config
 
 
@@ -135,7 +135,7 @@ def listen(blocking=True):
     except zmq.Again:
         return False
     string = raw_msg[0].decode()
-    # span = tracer.start_span('client-'+MY_ID+'-recv', references=opentracing.child_of(ROOM_SPAN_CONTEXT))
+    span = tracer.start_span('client-'+MY_ID+'-recv', references=opentracing.child_of(ROOM_SPAN_CONTEXT))
     # preSpan = tracer.start_span('client-'+MY_ID+'-prerecv', child_of=span)
     source_len = 4
     server_send_time_len = 13
@@ -206,7 +206,7 @@ def check_server_connection():
 
 
 def init(root_filename, skipListening=False):
-    global MY_ID, MY_ID_STR, py_subscriptions, py_prehook, tracer, context, client
+    global MY_ID, MY_ID_STR, py_subscriptions, py_prehook, tracer
     scriptName = os.path.basename(root_filename)
     scriptNameNoExtension = os.path.splitext(scriptName)[0]
     fileDir = os.path.dirname(os.path.realpath(root_filename))
@@ -219,41 +219,15 @@ def init(root_filename, skipListening=False):
     print(MY_ID)
     print(MY_ID_STR)
     print("tcp://{0}:5570".format(rpc_url))
-
-    logging.info("about to destroy")
-    context.destroy()
-    logging.info("done destroying")
-    context = zmq.Context()
-    client = context.socket(zmq.DEALER)
-    logging.info("done recreating")
-
     # print(logPath)
     # print("-")
-    # tracer = init_jaeger_tracer()
+    tracer = init_jaeger_tracer()
     client.setsockopt(zmq.IDENTITY, MY_ID_STR.encode())
-    client.setsockopt(zmq.LINGER, 0)
     client.connect("tcp://{0}:5570".format(rpc_url))
     print("connected")
-    logging.info("connected")
-    s = client.send_multipart([".....PING{}{}".format(MY_ID_STR, init_ping_id).encode()], copy=False, track=True)
+    client.send_multipart([".....PING{}{}".format(MY_ID_STR, init_ping_id).encode()])
     print("sent ping")
-    logging.info(".....PING{}{}".format(MY_ID_STR, init_ping_id))
-    while not s.done:
-        print("pending...")
-        logging.info("pending...")
-    print("send is complete")
-    logging.info("send is complete")
-    logging.info("context closed:")
-    logging.info(context.closed)
-    logging.info("socket closed:")
-    logging.info(client.closed)
-    logging.info("socket HWM")
-    logging.info(client.hwm)
-    r = listen()  # assumes the first message recv'd will be the PING response
-    logging.info(r)
-    logging.info("done listening")
-    print("done listening")
-    print(r)
+    listen()  # assumes the first message recv'd will be the PING response
 
     # time.sleep(1.0)
     
@@ -294,13 +268,10 @@ def subscription(expr):
 
 
 def tracer_cleanup():
-    global context
-    # global tracer, context
-    # if tracer is not None:
-    #     time.sleep(2)   # yield to IOLoop to flush the spans - https://github.com/jaegertracing/jaeger-client-python/issues/50
-    #     tracer.close()  # flush any buffered spans
-    if context and not context.closed:
-        context.destroy()
+    global tracer
+    if tracer is not None:
+        time.sleep(2)   # yield to IOLoop to flush the spans - https://github.com/jaegertracing/jaeger-client-python/issues/50
+        tracer.close()  # flush any buffered spans
 
 import atexit
 atexit.register(tracer_cleanup)
