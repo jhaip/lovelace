@@ -124,4 +124,7 @@ room.assert('wish 48 would be running')
 // Proxy Ribbon String Motor
 room.assert('wish 49 would be running')
 
+// Spotify Manager
+room.assert('wish 310 would be running')
+
 run();
