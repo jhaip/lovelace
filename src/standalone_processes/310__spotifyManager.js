@@ -193,7 +193,8 @@ function updateCurrentlyPlaying(nRetries) {
         if (!!error || (response.statusCode !== 200 && response.statusCode !== 204)) {
             console.log("ERROR")
             console.log(error);
-            console.log(response)
+            console.log(response.statusCode)
+            console.log(response.body)
             if (response.statusCode === 401) {
                 attemptLoginAndTryAgain(() => updateCurrentlyPlaying(nRetries+1))
             }
@@ -244,7 +245,8 @@ function playSpotifyUri(uri, nRetries) {
         if (!!error || response.statusCode !== 200) {
             console.log("ERROR")
             console.log(error);
-            console.log(response)
+            console.log(response.statusCode)
+            console.log(response.body)
             if (response.statusCode === 401) {
                 attemptLoginAndTryAgain(() => playSpotifyUri(uri, nRetries + 1))
             }
