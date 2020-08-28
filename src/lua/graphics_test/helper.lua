@@ -120,6 +120,7 @@ function room.init(skipListening, passed_in_my_id_str)
     })
     zassert(client, err)
     print("room connected")
+    print(".....PING" .. MY_ID_STR .. init_ping_id)
     -- TODO: set MY_ID, MY_ID_STR
     local err = client:send_multipart{".....PING" .. MY_ID_STR .. init_ping_id}
     print(err)
