@@ -124,6 +124,7 @@ function room.init(skipListening, passed_in_my_id_str)
     -- TODO: set MY_ID, MY_ID_STR
     local err = client:send_multipart{".....PING" .. MY_ID_STR .. init_ping_id}
     print(err)
+    print(type(err))
     print("room sent ping")
     room.listen(true)  -- assumes the first message recv'd will be the PING response
     print("received ping response")
