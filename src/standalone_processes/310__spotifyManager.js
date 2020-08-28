@@ -36,7 +36,7 @@ var stateKey = 'spotify_auth_state';
 
 var app = express();
 
-app.use(express.static(__dirname + '/public'))
+app.use(express.static('./src/spotify-manager-web-public'))
     .use(cors())
     .use(cookieParser());
 
