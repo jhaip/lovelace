@@ -59,6 +59,8 @@ app.get('/login', function (req, res) {
 
 app.get('/callback', function (req, res) {
 
+    console.log("/callback")
+
     // your application requests refresh and access tokens
     // after checking the state parameter
 
@@ -94,6 +96,7 @@ app.get('/callback', function (req, res) {
                 
                 cached_access_token = access_token;
                 cached_refresh_token = refresh_token;
+                console.log("cached_access_token and cached_refresh_token set")
 
                 var options = {
                     url: 'https://api.spotify.com/v1/me',
@@ -161,6 +164,7 @@ function attemptLoginAndTryAgain(retryFunction) {
     request.post(authOptions, function (error, response, body) {
         if (!error && response.statusCode === 200) {
             cached_access_token = body.access_token;
+            console.log("cached_access_token set")
             retryFunction();
         } else {
             console.log("failed getting access token using refresh token, user needs to login again")
@@ -191,7 +195,7 @@ function updateCurrentlyPlaying(nRetries) {
     // use the access token to access the Spotify Web API
     request.get(options, function (error, response, body) {
         if (!!error || (response.statusCode !== 200 && response.statusCode !== 204)) {
-            console.log("ERROR")
+            console.log("ERROR - update current playing")
             console.log(error);
             console.log(response.statusCode)
             console.log(response.body)
@@ -243,7 +247,7 @@ function playSpotifyUri(uri, nRetries) {
     // use the access token to access the Spotify Web API
     request(options, function (error, response, body) {
         if (!!error || response.statusCode !== 200) {
-            console.log("ERROR")
+            console.log("ERROR - play song")
             console.log(error);
             console.log(response.statusCode)
             console.log(response.body)
@@ -268,6 +272,7 @@ function playSpotifyUri(uri, nRetries) {
 room.on(
     `wish currently Spotify song would be updated`,
     results => {
+        console.log("wish current song would be updated")
         room.subscriptionPrefix(1);
         if (!!results) {
             updateCurrentlyPlaying();
@@ -279,6 +284,7 @@ room.on(
 room.on(
     `wish $spotifyUri would be played on Spotify`,
     results => {
+        console.log("wish song would be played")
         room.subscriptionPrefix(2);
         if (!!results && results.length > 0) {
             playSpotifyUri(results[0].spotifyUri);
