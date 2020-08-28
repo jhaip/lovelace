@@ -112,16 +112,20 @@ function room.get_my_id_str()
 end
 
 function room.init(skipListening, passed_in_my_id_str)
+    print("room init")
     MY_ID_STR = passed_in_my_id_str
     client, err = context:socket(zmq.DEALER, {
         identity = MY_ID_STR;
         connect = "tcp://" .. RPC_URL .. ":5570";
     })
     zassert(client, err)
+    print("room connected")
     -- TODO: set MY_ID, MY_ID_STR
     local err = client:send_multipart{".....PING" .. MY_ID_STR .. init_ping_id}
     print(err)
+    print("room sent ping")
     room.listen(true)  -- assumes the first message recv'd will be the PING response
+    print("received ping response")
 
     for i = 1, #my_prehooks do
         my_prehooks[i]()
