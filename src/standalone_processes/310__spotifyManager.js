@@ -12,7 +12,7 @@ const { ZMQ_ROUTER_MANDATORY } = require('zeromq');
 
 var client_id = process.env.SPOTIFY_CLIENT_ID; // Your client id
 var client_secret = process.env.SPOTIFY_CLIENT_SECRET; // Your secret
-var redirect_uri = '192.168.1.34:8888/callback'; // Your redirect uri
+var redirect_uri = 'http://192.168.1.34:8888/callback'; // Your redirect uri
 
 var cached_access_token = undefined;
 var cached_refresh_token = undefined;
