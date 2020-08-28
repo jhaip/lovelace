@@ -190,7 +190,7 @@ function updateCurrentlyPlaying(nRetries) {
 
     // use the access token to access the Spotify Web API
     request.get(options, function (error, response, body) {
-        if (!!error || response.statusCode !== 200) {
+        if (!!error || (response.statusCode !== 200 && response.statusCode !== 204)) {
             console.log("ERROR")
             console.log(error);
             console.log(response)
