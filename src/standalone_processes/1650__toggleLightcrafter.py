@@ -15,14 +15,13 @@ def turn_off():
     logging.info("turning lightcrafter off")
     GPIO.output(PIN_HOST_PRESENTZ, GPIO.LOW)
     GPIO.output(PIN_PROJ_ON_EXT, GPIO.LOW)
-    GPIO.output(PIN_HOST_PRESENTZ, GPIO.HIGH)
 
 def turn_on():
     logging.info("turning lightcrafter on")
     GPIO.output(PIN_HOST_PRESENTZ, GPIO.LOW)
     GPIO.output(PIN_PROJ_ON_EXT, GPIO.HIGH)
     GPIO.output(PIN_HOST_PRESENTZ, GPIO.HIGH)
-    time.sleep(1)
+    time.sleep(0.5)
     call('sudo i2cset -y 11 0x1b 0x0c 0x00 0x00 0x00 0x13 i', shell=True)
     call('sudo i2cset -y 11 0x1b 0x0b 0x00 0x00 0x00 0x00 i', shell=True)
 
