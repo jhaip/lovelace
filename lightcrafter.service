@@ -3,7 +3,7 @@ Description=Toggle Lightcrafter Project Display
 After=network.target
 
 [Service]
-Type=oneshot
+Type=simple
 User=root
 # Copy this file to /etc/systemd/system
 # sudo systemctl daemon-reload
