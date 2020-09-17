@@ -11,7 +11,7 @@ User=pi
 # Run at boot: sudo systemctl enable lightcrafter
 Environment=PATH=/home/pi/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 RemainAfterExit=yes
-ExecStart=/usr/bin/sudo /usr/bin/python3 /home/pi/lovelace/src/standalone_processes/1650__toggleLightcrafter.py
+ExecStart=/usr/bin/sudo /usr/bin/python3 /home/pi/lovelace/src/standalone_processes/1650__toggleLightcrafter.py &
 ExecStop=/usr/bin/pkill -f standalone_processes/1650__toggleLightcrafter.py
 
 [Install]
