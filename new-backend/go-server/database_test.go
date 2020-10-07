@@ -57,8 +57,8 @@ func TestQueryNoMatches(t *testing.T) {
 	}
 	results_as_str := marshal_query_result(results)
 	fmt.Println(results_as_str)
-	if results_as_str != "" {
-		t.Error("results should be \"\" as string")
+	if results_as_str != "[]" {
+		t.Error("results should be \"[]\" as string")
 	}
 }
 
