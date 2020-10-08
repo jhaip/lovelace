@@ -6,11 +6,16 @@ import (
 
 type Subscription3 struct {
 	query                   [][]Term
+	/* Fact table cache = queryPartMatchingFacts
+	   For each query part, a fact table filtered to only facts matching that query part
+	   Index of "queryPartMatchingFacts" corresponds to index in "query"
+	 */
 	queryPartMatchingFacts  []map[string]Fact
 }
 
 func setupSubscriber(query [][]Term, preExistingFacts map[string]Fact) Subscription3 {
 	subscriber := Subscription3{query, make([]map[string]Fact, len(query))}
+	// Initialize the queryPartMatchingFacts cache
 	for i, queryPart := range query {
 		subscriber.queryPartMatchingFacts[i] = make(map[string]Fact)
 		for factKey, fact := range preExistingFacts {
@@ -39,8 +44,7 @@ func updateQueryPartMatchingFactsFromRetract(sub Subscription3, factQuery Fact) 
 func updateQueryPartMatchingFactsFromClaim(sub Subscription3, fact Fact) bool {
 	anythingChanged := false
 	for i := 0; i < len(sub.queryPartMatchingFacts); i++ {
-		empty_env := QueryResult{map[string]Term{}}
-		did_match, _ := fact_match(Fact{sub.query[i]}, fact, empty_env)
+		did_match, _ := fact_match(Fact{sub.query[i]}, fact, QueryResult{})
 		if did_match {
 			claim(&sub.queryPartMatchingFacts[i], fact) // can we modify the subscriber cache in place like this?
 			anythingChanged = true
@@ -56,29 +60,19 @@ func subscriberBatchUpdateV3(sub Subscription3, batch_messages []BatchMessage) (
 		for j, term := range batch_message.Fact {
 			terms[j] = Term{term[0], term[1]}
 		}
-		batchMessageUpdatedSubscriberOutput := false
 		if batch_message.Type == "claim" {
 			anythingChanged := updateQueryPartMatchingFactsFromClaim(sub, Fact{terms})
-			if anythingChanged {
-				batchMessageUpdatedSubscriberOutput = true
-			}
+			updatedSubscriberOutput = updatedSubscriberOutput || anythingChanged
 		} else if batch_message.Type == "retract" {
 			anythingChanged := updateQueryPartMatchingFactsFromRetract(sub, Fact{terms})
-			if anythingChanged {
-				batchMessageUpdatedSubscriberOutput = true
-			}
+			updatedSubscriberOutput = updatedSubscriberOutput || anythingChanged
 		} else if batch_message.Type == "death" {
 			// TODO: don't reply logic from server.go that also does this retract
 			dying_source := batch_message.Fact[0][1]
 			clearSourceClaims := []Term{Term{"id", dying_source}, Term{"postfix", ""}}
 			// TODO: clearSourceSubscriptions := []Term{Term{"text", "subscription"}, Term{"id", dying_source}, Term{"postfix", ""}}
 			anythingChanged := updateQueryPartMatchingFactsFromRetract(sub, Fact{clearSourceClaims})
-			if anythingChanged {
-				batchMessageUpdatedSubscriberOutput = true
-			}
-		}
-		if batchMessageUpdatedSubscriberOutput {
-			updatedSubscriberOutput = true
+			updatedSubscriberOutput = updatedSubscriberOutput || anythingChanged
 		}
 	}
 	return sub, updatedSubscriberOutput
@@ -89,8 +83,7 @@ func subscriberCollectSolutions(sub Subscription3) []QueryResult {
 	for i, val := range sub.query {
 		subQueryAsFact[i] = Fact{val}
 	}
-	empty_env := QueryResult{map[string]Term{}}
-	return collect_solutions_v3(sub.queryPartMatchingFacts, subQueryAsFact, 0, empty_env)
+	return collect_solutions_v3(sub.queryPartMatchingFacts, subQueryAsFact, 0, QueryResult{})
 }
 
 func startSubscriberV3(subscriptionData Subscription, notifications chan<- Notification, preExistingFacts map[string]Fact) {
