@@ -29,31 +29,31 @@ func setupSubscriber(query [][]Term, preExistingFacts map[string]Fact) Subscript
 	return subscriber
 }
 
-func updateQueryPartMatchingFactsFromRetract(sub Subscription3, factQuery Fact) bool {
+func updateQueryPartMatchingFactsFromRetract(sub *Subscription3, factQuery Fact) bool {
 	anythingChanged := false
-	for i := 0; i < len(sub.queryPartMatchingFacts); i++ {
-		prevSize := len(sub.queryPartMatchingFacts[i])
-		retract(&sub.queryPartMatchingFacts[i], factQuery) // can we modify the subscriber cache in place like this?
-		if prevSize != len(sub.queryPartMatchingFacts[i]) {
+	for i := 0; i < len((*sub).queryPartMatchingFacts); i++ {
+		prevSize := len((*sub).queryPartMatchingFacts[i])
+		retract(&(*sub).queryPartMatchingFacts[i], factQuery) // can we modify the subscriber cache in place like this?
+		if prevSize != len((*sub).queryPartMatchingFacts[i]) {
 			anythingChanged = true
 		}
 	}
 	return anythingChanged
 }
 
-func updateQueryPartMatchingFactsFromClaim(sub Subscription3, fact Fact) bool {
+func updateQueryPartMatchingFactsFromClaim(sub *Subscription3, fact Fact) bool {
 	anythingChanged := false
-	for i := 0; i < len(sub.queryPartMatchingFacts); i++ {
-		did_match, _ := fact_match(Fact{sub.query[i]}, fact, QueryResult{})
+	for i := 0; i < len((*sub).queryPartMatchingFacts); i++ {
+		did_match, _ := fact_match(Fact{(*sub).query[i]}, fact, QueryResult{})
 		if did_match {
-			claim(&sub.queryPartMatchingFacts[i], fact) // can we modify the subscriber cache in place like this?
+			claim(&(*sub).queryPartMatchingFacts[i], fact) // can we modify the subscriber cache in place like this?
 			anythingChanged = true
 		}
 	}
 	return anythingChanged
 }
 
-func subscriberBatchUpdateV3(sub Subscription3, batch_messages []BatchMessage) (Subscription3, bool) {
+func subscriberBatchUpdateV3(sub *Subscription3, batch_messages []BatchMessage) bool {
 	updatedSubscriberOutput := false
 	for _, batch_message := range batch_messages {
 		terms := make([]Term, len(batch_message.Fact))
@@ -75,7 +75,7 @@ func subscriberBatchUpdateV3(sub Subscription3, batch_messages []BatchMessage) (
 			updatedSubscriberOutput = updatedSubscriberOutput || anythingChanged
 		}
 	}
-	return sub, updatedSubscriberOutput
+	return updatedSubscriberOutput
 }
 
 func subscriberCollectSolutions(sub Subscription3) []QueryResult {
@@ -90,8 +90,7 @@ func startSubscriberV3(subscriptionData Subscription, notifications chan<- Notif
 	subscriber := setupSubscriber(subscriptionData.Query, preExistingFacts)
 	zap.L().Info("inside startSubscriber v3")
 	for batch_messages := range subscriptionData.batch_messages {
-		updatedResults := false
-		subscriber, updatedResults = subscriberBatchUpdateV3(subscriber, batch_messages)
+		updatedResults := subscriberBatchUpdateV3(&subscriber, batch_messages)
 		if updatedResults {
 			results := subscriberCollectSolutions(subscriber)
 			// TODO: sort results?
