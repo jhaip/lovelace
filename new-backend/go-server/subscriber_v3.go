@@ -78,21 +78,32 @@ func subscriberBatchUpdateV3(sub *Subscription3, batch_messages []BatchMessage) 
 	return updatedSubscriberOutput
 }
 
-func subscriberCollectSolutions(sub Subscription3) []QueryResult {
-	subQueryAsFact := make([]Fact, len(sub.query))
-	for i, val := range sub.query {
-		subQueryAsFact[i] = Fact{val}
+func subscriberCollectSolutions(queryPartMatchingFacts []map[string]Fact, query []Fact, currentQueryIndex int, env QueryResult) []QueryResult {
+	if len(query) == 0 {
+		return []QueryResult{env}
 	}
-	return collect_solutions_v3(sub.queryPartMatchingFacts, subQueryAsFact, 0, QueryResult{})
+	solutions := make([]QueryResult, 0)
+	// compare first part of query to all facts
+	for _, fact := range queryPartMatchingFacts[currentQueryIndex] {
+		did_match, new_env := fact_match(query[0], fact, env)
+		if did_match {
+			solutions = append(solutions, subscriberCollectSolutions(queryPartMatchingFacts, query[1:], currentQueryIndex + 1, new_env)...)
+		}
+	}
+	return solutions
 }
 
 func startSubscriberV3(subscriptionData Subscription, notifications chan<- Notification, preExistingFacts map[string]Fact) {
 	subscriber := setupSubscriber(subscriptionData.Query, preExistingFacts)
+	subQueryAsFact := make([]Fact, len(subscriber.query))
+	for i, val := range subscriber.query {
+		subQueryAsFact[i] = Fact{val}
+	}
 	zap.L().Info("inside startSubscriber v3")
 	for batch_messages := range subscriptionData.batch_messages {
 		updatedResults := subscriberBatchUpdateV3(&subscriber, batch_messages)
 		if updatedResults {
-			results := subscriberCollectSolutions(subscriber)
+			results := subscriberCollectSolutions(subscriber.queryPartMatchingFacts, subQueryAsFact, 0, QueryResult{})
 			// TODO: sort results?
 			results_as_str := marshal_query_result(results)
 			notifications <- Notification{subscriptionData.Source, subscriptionData.Id, results_as_str}

@@ -130,21 +130,6 @@ func collect_solutions(facts map[string]Fact, query []Fact, env QueryResult) []Q
 	return solutions
 }
 
-func collect_solutions_v3(queryPartMatchingFacts []map[string]Fact, query []Fact, currentQueryIndex int, env QueryResult) []QueryResult {
-	if len(query) == 0 {
-		return []QueryResult{env}
-	}
-	solutions := make([]QueryResult, 0)
-	// compare first part of query to all facts
-	for _, fact := range queryPartMatchingFacts[currentQueryIndex] {
-		did_match, new_env := fact_match(query[0], fact, env)
-		if did_match {
-			solutions = append(solutions, collect_solutions_v3(queryPartMatchingFacts, query[1:], currentQueryIndex + 1, new_env)...)
-		}
-	}
-	return solutions
-}
-
 func select_facts(facts map[string]Fact, query []Fact) []QueryResult {
 	empty_env := QueryResult{map[string]Term{}}
 	return collect_solutions(facts, query, empty_env)
