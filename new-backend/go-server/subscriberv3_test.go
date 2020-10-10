@@ -115,9 +115,66 @@ func TestMakeSubscriberV3(t *testing.T) {
 	}
 }
 
-// TODO: add test with subscription 
-// where a new fact is added to the database, but the resulting notification is the same
-// $A $ $B, $B $C
 // where the $ allows unique facts but the result is still just (A, B)
+/* Test where a new fact is added to the database, but the resulting notification is the same
+ * Results should be cached and should not send a notification.
+ */
+func TestSubscriberV3NewClaimSameResult(t *testing.T) {
+	db := make(map[string]Fact)
+	claim(&db, Fact{[]Term{Term{"text", "Sensor"}, Term{"text", "is"}, Term{"text", "low"}}})
+
+	source := "1234"
+	subscriptionId := "21dcca0a-ed5e-4593-b92e-fc9f16499cc8"
+	query_part1 := []Term{
+		Term{"variable", "A"},
+		Term{"variable", ""},
+		Term{"variable", "B"},
+	}
+	query := [][]Term{query_part1}
+	subscription := Subscription{source, subscriptionId, query, make(chan []BatchMessage, 1000), &sync.WaitGroup{}, &sync.WaitGroup{}}
+	subscription.dead.Add(1)
+	subscription.warmed.Add(1)
+	notifications := make(chan Notification, 1000)
+	go startSubscriberV3(subscription, notifications, db)
+
+	time.Sleep(CHANNEL_MESSAGE_DELIVERY_TEST_WAIT)
+
+	if len(notifications) != 1 {
+		t.Error("Wrong count of notifications", len(notifications))
+		return
+	}
+
+	// Make a claim a unique claim that matches the subscription query, but does not product a unique result
+	messages := make([]BatchMessage, 1)
+	messages[0] = BatchMessage{"claim", [][]string{[]string{"text", "Sensor"}, []string{"text", "was"}, []string{"text", "low"}}}
+	subscription.batch_messages <- messages
+
+	time.Sleep(CHANNEL_MESSAGE_DELIVERY_TEST_WAIT)
+
+	// If last result cache added to subscriber worker: change this to 1
+	EXPECT_COUNT := 2
+	if len(notifications) != EXPECT_COUNT {
+		t.Error("Notification count is not correct", EXPECT_COUNT, len(notifications))
+		return
+	}
+
+	// check the original notification result
+	expectedResult := make(map[string][]string)
+	expectedResult["A"] = []string{"text", "Sensor"}
+	expectedResult["B"] = []string{"text", "low"}
+
+	// All notifications should contain the same results
+	for i := 0; i < EXPECT_COUNT; i++ {
+		notification := <-notifications
+		encoded_results := parseNotificationResult(notification, t)
+		for _, encoded_result := range encoded_results {
+			if !reflect.DeepEqual(expectedResult, encoded_result) {
+				t.Error("Wrong notification result", expectedResult, encoded_result, i)
+				return
+			}
+		}
+		
+	}
+}
 
 // TODO: add fact about sort order
