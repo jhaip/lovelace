@@ -34,7 +34,7 @@ func updateQueryPartMatchingFactsFromRetract(sub *Subscription3, factQuery Fact)
 	anythingChanged := false
 	for i := 0; i < len((*sub).queryPartMatchingFacts); i++ {
 		prevSize := len((*sub).queryPartMatchingFacts[i])
-		retract(&(*sub).queryPartMatchingFacts[i], factQuery) // can we modify the subscriber cache in place like this?
+		retract(&(*sub).queryPartMatchingFacts[i], factQuery)
 		if prevSize != len((*sub).queryPartMatchingFacts[i]) {
 			anythingChanged = true
 		}
@@ -47,12 +47,11 @@ func updateQueryPartMatchingFactsFromClaim(sub *Subscription3, fact Fact) bool {
 	for i := 0; i < len((*sub).queryPartMatchingFacts); i++ {
 		did_match, _ := fact_match(Fact{(*sub).query[i]}, fact, QueryResult{})
 		if did_match {
-			// prevLen := len((*sub).queryPartMatchingFacts[i])
-			claim(&(*sub).queryPartMatchingFacts[i], fact) // can we modify the subscriber cache in place like this?
-			// if len((*sub).queryPartMatchingFacts[i]) != prevLen {
-			// 	anythingChanged = true
-			// }
-			anythingChanged = true
+			prevSize := len((*sub).queryPartMatchingFacts[i])
+			claim(&(*sub).queryPartMatchingFacts[i], fact)
+			if prevSize != len((*sub).queryPartMatchingFacts[i]) {
+				anythingChanged = true
+			}
 		}
 	}
 	return anythingChanged
@@ -115,6 +114,8 @@ func startSubscriberV3(subscriptionData Subscription, notifications chan<- Notif
 	for batch_messages := range subscriptionData.batch_messages {
 		updatedResults := subscriberBatchUpdateV3(&subscriber, batch_messages)
 		if updatedResults {
+			// repr.Println("UPDATED RESULTS ***********************")
+			// repr.Println(subscriber.queryPartMatchingFacts, repr.Indent("  "), repr.OmitEmpty(true))
 			results := subscriberCollectSolutions(subscriber.queryPartMatchingFacts, subQueryAsFact, 0, QueryResult{})
 			// TODO: sort results?
 			results_as_str := marshal_query_result(results)

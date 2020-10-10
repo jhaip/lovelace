@@ -9,7 +9,7 @@ import (
 	"github.com/alecthomas/repr"
 )
 
-const CHANNEL_MESSAGE_DELIVERY_TEST_WAIT = time.Duration(10) * time.Millisecond
+const CHANNEL_MESSAGE_DELIVERY_TEST_WAIT = time.Duration(1000) * time.Millisecond
 
 func makeFactDatabase() map[string]Fact {
 	db := make(map[string]Fact)
@@ -58,6 +58,7 @@ func TestMakeSubscriberV3(t *testing.T) {
 
 	if len(notifications) != 2 {
 		t.Error("Wrong count of notifications", len(notifications))
+		return
 	}
 
 	notification := <-notifications
@@ -70,6 +71,7 @@ func TestMakeSubscriberV3(t *testing.T) {
 	expectedResult[0]["C"] = []string{"integer", "0"}
 	if !reflect.DeepEqual(expectedResult, encoded_results) {
 		t.Error("Wrong notification result", expectedResult, encoded_results)
+		return
 	}
 	// repr.Println(notification, repr.Indent("  "), repr.OmitEmpty(true))
 	// repr.Println(encoded_results, repr.Indent("  "), repr.OmitEmpty(true))
@@ -87,6 +89,7 @@ func TestMakeSubscriberV3(t *testing.T) {
 	expectedResult2[1]["C"] = []string{"integer", "0"}
 	if !reflect.DeepEqual(expectedResult2, encoded_results2) {
 		t.Error("Wrong notification result", expectedResult2, encoded_results2)
+		return
 	}
 	// repr.Println(notification2, repr.Indent("  "), repr.OmitEmpty(true))
 
@@ -96,14 +99,25 @@ func TestMakeSubscriberV3(t *testing.T) {
 	time.Sleep(CHANNEL_MESSAGE_DELIVERY_TEST_WAIT)
 
 	if len(notifications) != 0 {
-		// notification3 := <-notifications
-		// encoded_results3 := parseNotificationResult(notification3, t)
-		// repr.Println(expectedResult2, repr.Indent("  "), repr.OmitEmpty(true))
-		// repr.Println(encoded_results3, repr.Indent("  "), repr.OmitEmpty(true))
-		// if !reflect.DeepEqual(expectedResult2, encoded_results3) {
-		// 	t.Error("Wrong notification result", expectedResult2, encoded_results3)
-		// }
+		repr.Println("Wrong count of notifications")
+		notification3 := <-notifications
+		encoded_results3 := parseNotificationResult(notification3, t)
+		repr.Println(expectedResult2, repr.Indent("  "), repr.OmitEmpty(true))
+		repr.Println(encoded_results3, repr.Indent("  "), repr.OmitEmpty(true))
+		if !reflect.DeepEqual(expectedResult2, encoded_results3) {
+			t.Error("Wrong notification result", expectedResult2, encoded_results3)
+		} else {
+			repr.Println("Notification is correct but should not have happened")
+		}
 		repr.Println("Wrong count of notifications")
 		t.Error("Wrong count of notifications", len(notifications))
+		return
 	}
 }
+
+// TODO: add test with subscription 
+// where a new fact is added to the database, but the resulting notification is the same
+// $A $ $B, $B $C
+// where the $ allows unique facts but the result is still just (A, B)
+
+// TODO: add fact about sort order
