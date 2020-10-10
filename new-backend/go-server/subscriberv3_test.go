@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 	"reflect"
-	// "github.com/alecthomas/repr"
+	"github.com/alecthomas/repr"
 )
 
 const CHANNEL_MESSAGE_DELIVERY_TEST_WAIT = time.Duration(10) * time.Millisecond
@@ -46,7 +46,7 @@ func TestMakeSubscriberV3(t *testing.T) {
 	subscription.dead.Add(1)
 	subscription.warmed.Add(1)
 	notifications := make(chan Notification, 1000)
-	go startSubscriber(subscription, notifications, makeFactDatabase())
+	go startSubscriberV3(subscription, notifications, makeFactDatabase())
 
 	time.Sleep(CHANNEL_MESSAGE_DELIVERY_TEST_WAIT)
 
@@ -59,8 +59,9 @@ func TestMakeSubscriberV3(t *testing.T) {
 	if len(notifications) != 2 {
 		t.Error("Wrong count of notifications", len(notifications))
 	}
-	
+
 	notification := <-notifications
+
 	encoded_results := parseNotificationResult(notification, t)
 	expectedResult := make([]map[string][]string, 1)
 	expectedResult[0] = make(map[string][]string)
@@ -88,4 +89,21 @@ func TestMakeSubscriberV3(t *testing.T) {
 		t.Error("Wrong notification result", expectedResult2, encoded_results2)
 	}
 	// repr.Println(notification2, repr.Indent("  "), repr.OmitEmpty(true))
+
+	// Test that a repeated claim does not change the result:
+	subscription.batch_messages <- messages
+
+	time.Sleep(CHANNEL_MESSAGE_DELIVERY_TEST_WAIT)
+
+	if len(notifications) != 0 {
+		// notification3 := <-notifications
+		// encoded_results3 := parseNotificationResult(notification3, t)
+		// repr.Println(expectedResult2, repr.Indent("  "), repr.OmitEmpty(true))
+		// repr.Println(encoded_results3, repr.Indent("  "), repr.OmitEmpty(true))
+		// if !reflect.DeepEqual(expectedResult2, encoded_results3) {
+		// 	t.Error("Wrong notification result", expectedResult2, encoded_results3)
+		// }
+		repr.Println("Wrong count of notifications")
+		t.Error("Wrong count of notifications", len(notifications))
+	}
 }

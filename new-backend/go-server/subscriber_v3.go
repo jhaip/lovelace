@@ -2,6 +2,7 @@ package main
 
 import (
 	"go.uber.org/zap"
+	// "github.com/alecthomas/repr"
 )
 
 type Subscription3 struct {
@@ -46,7 +47,11 @@ func updateQueryPartMatchingFactsFromClaim(sub *Subscription3, fact Fact) bool {
 	for i := 0; i < len((*sub).queryPartMatchingFacts); i++ {
 		did_match, _ := fact_match(Fact{(*sub).query[i]}, fact, QueryResult{})
 		if did_match {
+			// prevLen := len((*sub).queryPartMatchingFacts[i])
 			claim(&(*sub).queryPartMatchingFacts[i], fact) // can we modify the subscriber cache in place like this?
+			// if len((*sub).queryPartMatchingFacts[i]) != prevLen {
+			// 	anythingChanged = true
+			// }
 			anythingChanged = true
 		}
 	}
@@ -99,6 +104,13 @@ func startSubscriberV3(subscriptionData Subscription, notifications chan<- Notif
 	for i, val := range subscriber.query {
 		subQueryAsFact[i] = Fact{val}
 	}
+
+	// claim resoults for initial state
+	// TODO: DRY up this?
+	results_pre := subscriberCollectSolutions(subscriber.queryPartMatchingFacts, subQueryAsFact, 0, QueryResult{})
+	results_as_str_pre := marshal_query_result(results_pre)
+	notifications <- Notification{subscriptionData.Source, subscriptionData.Id, results_as_str_pre}
+
 	zap.L().Info("inside startSubscriber v3")
 	for batch_messages := range subscriptionData.batch_messages {
 		updatedResults := subscriberBatchUpdateV3(&subscriber, batch_messages)
