@@ -281,7 +281,7 @@ function cmd() {
   elif [ "$1" == "rfideditorstart3" ]
   then
     cd new-backend/go-server
-    /usr/local/go/bin/go run server.go parser2.go subscriber_v3.go database.go &
+    /usr/local/go/bin/go run server.go parser2.go subscriber.go database.go &
     echo -e "running server"
     cd ../..
     sleep 2

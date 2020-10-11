@@ -146,8 +146,8 @@ func subscribe_worker(subscription_messages <-chan string,
 				subscription.batch_messages <- batch_messages
 			}
 			subscriberMutex.Unlock()
-			// go startSubscriber(newSubscription, notifications, copyDatabase(db))
-			go startSubscriberV3(newSubscription, notifications, copyDatabase(db))
+			go startSubscriber(newSubscription, notifications, copyDatabase(db))
+			// go startSubscriberV3(newSubscription, notifications, copyDatabase(db))
 			// subscriptions_notifications <- true // is this still needed?
 		}
 	}
