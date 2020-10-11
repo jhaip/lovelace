@@ -3,29 +3,16 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	// "log"
 	"os"
-	"io"
 	"io/ioutil"
 	"runtime"
 	"sort"
 	"strconv"
 	"sync"
 	"time"
-
-	// "net/http"
-	_ "net/http/pprof"
-
-	_ "github.com/mattn/go-sqlite3"
 	zmq "github.com/pebbe/zmq4"
 	"go.uber.org/zap"
-	// "runtime/trace"
-
 	b64 "encoding/base64"
-
-	opentracing "github.com/opentracing/opentracing-go"
-	jaeger "github.com/uber/jaeger-client-go"
-	config "github.com/uber/jaeger-client-go/config"
 )
 
 var dbMutex sync.RWMutex
@@ -70,24 +57,6 @@ type Notification struct {
 type BatchMessage struct {
 	Type string     `json:"type"`
 	Fact [][]string `json:"fact"`
-}
-
-// initJaeger returns an instance of Jaeger Tracer that samples 100% of traces and logs all spans to stdout.
-func initJaeger(service string) (opentracing.Tracer, io.Closer) {
-    cfg := &config.Configuration{
-        Sampler: &config.SamplerConfig{
-            Type:  "const",
-            Param: 1,
-        },
-        Reporter: &config.ReporterConfig{
-            LogSpans: false,
-        },
-    }
-    tracer, closer, err := cfg.New(service, config.Logger(jaeger.StdLogger))
-    if err != nil {
-        panic(fmt.Sprintf("ERROR: cannot init Jaeger: %v\n", err))
-    }
-    return tracer, closer
 }
 
 func checkErr(err error) {
@@ -320,12 +289,10 @@ func batch_worker(batch_messages <-chan string, subscriptions_notifications chan
 				terms[j] = Term{term[0], term[1]}
 			}
 			if batch_message.Type == "claim" {
-				// claims <- terms
 				dbMutex.Lock()
 				claim(db, Fact{terms})
 				dbMutex.Unlock()
 			} else if batch_message.Type == "retract" {
-				// retractions <- terms
 				dbMutex.Lock()
 				retract(db, Fact{terms})
 				dbMutex.Unlock()
@@ -377,19 +344,9 @@ func NewLogger() (*zap.Logger, error) {
 }
 
 func main() {
-	// tracer, closer := initJaeger("room-service")
-	// defer closer.Close()
-	// opentracing.SetGlobalTracer(tracer)
-
 	logger, loggerCreateError := NewLogger() // zap.NewDevelopment()
 	checkErr(loggerCreateError)
 	zap.ReplaceGlobals(logger)
-
-	runtime.SetMutexProfileFraction(5)
-
-	// go func() {
-	// 	log.Println(http.ListenAndServe("localhost:6060", nil))
-	// }()
 
 	factDatabase := make_fact_database()
 
@@ -415,18 +372,6 @@ func main() {
 	go batch_worker(batch_messages, subscriptions_notifications, &factDatabase, &subscriptions)
 
 	zap.L().Info("listening...")
-	// rootSpan := tracer.StartSpan("run-test")
-	// mapc := opentracing.TextMapCarrier(make(map[string]string))
-	// err := tracer.Inject(rootSpan.Context(), opentracing.TextMap, mapc)
-	// checkErr(err)
-	// zap.L().Info(mapc["uber-trace-id"])
-	
-	// go func() {
-	// 	time.Sleep(time.Duration(40) * time.Second)
-	// 	// rootSpan.Finish()
-	// 	// closer.Close()
-	// 	panic("time elapsed - ending");
-	// }()
 	for {
 		zmqClient.Lock()
 		rawMsg, recvErr := client.RecvMessage(zmq.DONTWAIT)
@@ -438,17 +383,12 @@ func main() {
 		rawMsgId := rawMsg[0]
 		msg := rawMsg[1]
 		zmqClient.Unlock()
-		// span := rootSpan.Tracer().StartSpan(
-		// 	"zmq-recv-loop",
-		// 	opentracing.ChildOf(rootSpan.Context()),
-		// )
 		event_type := msg[0:event_type_len]
 		// source := msg[event_type_len:(event_type_len + source_len)]
 		source := rawMsgId
 		val := msg[(event_type_len + source_len):]
 		if event_type == ".....PING" {
 			zap.L().Debug("got PING", zap.String("source", source), zap.String("value", val))
-			// notifications <- Notification{source, val, mapc["uber-trace-id"]}
 			notifications <- Notification{source, val, ""}
 		} else if event_type == "SUBSCRIBE" {
 			subscription_messages <- msg
@@ -456,6 +396,5 @@ func main() {
 			batch_messages <- msg
 		}
 		time.Sleep(time.Duration(1) * time.Microsecond)
-		// span.Finish()
 	}
 }
