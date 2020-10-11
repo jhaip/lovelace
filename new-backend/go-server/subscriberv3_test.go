@@ -176,5 +176,3 @@ func TestSubscriberV3NewClaimSameResult(t *testing.T) {
 		
 	}
 }
-
-// TODO: add fact about sort order
