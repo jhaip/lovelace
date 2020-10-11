@@ -7,7 +7,7 @@ function cmd() {
   if [ "$1" == "start" ]
   then
     cd new-backend/go-server
-    go run server.go parser2.go subscriber.go database.go &
+    go run server.go parser2.go subscriber_v3.go database.go &
     echo -e "running server"
     cd ../..
     sleep 2
