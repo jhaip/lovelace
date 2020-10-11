@@ -99,6 +99,7 @@ func subscriberCollectSolutions(queryPartMatchingFacts []map[string]Fact, query 
 
 func startSubscriberV3(subscriptionData Subscription, notifications chan<- Notification, preExistingFacts map[string]Fact) {
 	subscriber := setupSubscriber(subscriptionData.Query, preExistingFacts)
+	subscriptionData.warmed.Done()
 	subQueryAsFact := make([]Fact, len(subscriber.query))
 	for i, val := range subscriber.query {
 		subQueryAsFact[i] = Fact{val}
